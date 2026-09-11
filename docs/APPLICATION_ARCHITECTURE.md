@@ -546,3 +546,19 @@ layout. It rejects a destination already containing that Widget. Whole-Board
 scopes follow the destination Board; explicit LiveCard scopes retain only IDs
 belonging to it, without moving LiveCards. Both card types use `CardBoardSelect`
 with pending/error handling; these data-scope rules belong to the Widget adapter.
+
+
+Preset chart Widgets use the same shell, visibility gating and data hook as
+custom and LiveCard views. `WidgetChartContent` validates the selected named
+`{ rows }` result; `widget-chart-options` maps observations to ECharts options.
+ECharts and the word-cloud plugin load in a separate lazy module. Instances
+survive data and view updates, resize with `ResizeObserver`, reapply resolved
+RGB theme tokens when ancestor theme classes change, and dispose on unmount.
+The view never fetches data. Source-style placement `patch` contains independent
+`params`, `metadata`, and `view` sections. `configureLiveWidget` merges sparse
+fields and removes a section when its value is null. Existing replacement
+Actions write the same sections. The Rust wire reader and export normalization
+migrate legacy top-level params/metadata once on read. Data fingerprints exclude
+all view/metadata settings. The SDK chart option parser is shared by catalog
+validation, persisted view normalization and patch validation; malformed query
+rows produce an inline state rather than being coerced to zero.

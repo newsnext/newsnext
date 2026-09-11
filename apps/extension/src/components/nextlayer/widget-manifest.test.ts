@@ -87,3 +87,14 @@ describe("built-in Widget UI", () => {
     expect(() => parseLocalWidgetManifests([{ ...widget, view: { type: "live-card", query: "items", presentation: "invalid" } }], SERVER_URL)).toThrow("Invalid Widget UI")
   })
 })
+
+describe("chart Widget manifests", () => {
+  const base = { id: "chart", title: "Chart", height: 2, minHeight: 1, width: 2, minWidth: 1 }
+  it("parses chart mappings and rejects unknown or out-of-range configuration", () => {
+    const view = { type: "chart", chart: "line", query: "stats", label: "day", value: "count", limit: 30 }
+    expect(parseLocalWidgetManifests([{ ...base, view }], SERVER_URL)[0]?.view).toEqual(view)
+    for (const patch of [{ chart: "unknown" }, { limit: 0 }, { decimals: 7 }, { target: 0 }, { value: "" }, { unknown: true }]) {
+      expect(() => parseLocalWidgetManifests([{ ...base, view: { ...view, ...patch } }], SERVER_URL)).toThrow()
+    }
+  })
+})

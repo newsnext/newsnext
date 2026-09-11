@@ -1405,3 +1405,85 @@ selection controls. Metadata drafts preview locally; saving changes presentation
 without changing source parameters. `liveCard.resetMetadata` clears saved display
 overrides independently of `liveCard.resetParams`. Widget metadata uses the same
 fields through `nextLayer.setLiveWidgetMetadata`; its data inputs remain separate.
+
+
+### Preset chart Widgets
+
+Use `view: { "type": "chart", "chart": "bar", "query": "observations" }`
+for a built-in visualization. No HTML, chart library import, or network request is
+needed in the view. Supported presets are `metric`, `line`, `area`, `bar`,
+`ranking` (horizontal bars), `stacked-bar`, `donut`, `scatter`, `heatmap`,
+`histogram`, `radar`, `funnel`, `table`, `word-cloud`, and `progress`.
+The host uses ECharts and its word-cloud extension; metric and table views use
+semantic HTML. The front contains only the visualization and shared card header.
+
+Return a named result from `data.mjs`:
+
+```js
+export default async function load() {
+  return { observations: { rows: [
+    { label: "Research", value: 42 },
+    { label: "Products", value: 28 },
+  ] } }
+}
+```
+
+A minimal matching `widget.json`:
+
+```json
+{
+  "title": "Topic share",
+  "color": "teal",
+  "view": { "type": "chart", "chart": "donut", "query": "observations" }
+}
+```
+
+Rows use a string or numeric `label` and a finite numeric `value`. Strings are
+never coerced to numbers and malformed data is reported visibly. Use `series`
+to group lines or bars; declare its field explicitly, for example
+`"series": "source"`. `scatter` uses numeric `x` and `y`; `heatmap` uses scalar
+`x` and `y` category coordinates and numeric `value` for intensity. Coordinate
+fields default to `x`/`y`, falling back to `label`/`value`. `label`, `value`,
+`series`, `x`, and `y` in the view select literal row field names, not expressions.
+Aggregate duplicate labels within each Cartesian/radar series in the data
+producer. Missing series observations remain gaps rather than zeroes.
+
+View options are `limit` (1–500, default 100), `sort` (`none`, `asc`, `desc`,
+default data order), `decimals` (0–6, default 1), `suffix` (default empty),
+`bins` (1–50, default 10), and `target` (positive progress target, default 100).
+Sorting happens before the row limit; histograms bin the selected rows. Query
+results may contain at most 10,000 rows. Donut, stacked bars, funnel, radar,
+word cloud, and progress require non-negative values. Radar requires at least
+three selected observations. Empty rows are a normal empty state.
+
+The card back has a separate **View** section with Edit, Save, Cancel and Reset.
+Field mapping and chart choices live here, separate from producer **Parameters**.
+Changing the view never changes the query identifier or executes another data
+pipeline. A placement stores Source-style sparse overrides in
+`patch: { params, metadata, view }`. Each view field falls back to `widget.json`.
+Legacy top-level placement `params`/`metadata` migrate when data is read.
+
+```ts
+await client.actions.nextLayer.configureLiveWidget({
+  boardId, widgetId,
+  patch: { view: { chart: "bar", limit: 12 }, metadata: { title: "Top topics" } },
+})
+// Reset only presentation. Keep data parameters and metadata overrides.
+await client.actions.nextLayer.configureLiveWidget({
+  boardId, widgetId, patch: { view: null },
+})
+```
+
+Patch sections merge field by field; omitted fields are retained. Arrays replace
+as values. `null` resets an entire section; `{}` is an empty merge. Existing
+`setLiveWidgetParams` and `setLiveWidgetMetadata` replace their respective sections,
+so `{}` with those Actions still resets them. Only resolved data parameters and
+scope affect the daemon's data identity; metadata and view patches do not.
+
+Runnable examples for all fifteen presets live in `examples/widgets`. Copy its
+contents (including the shared `demo-data.mjs`) to the Widget directory reported
+by `newsnext status`, then install the `demo-*` directories on a Board through
+`nextLayer.installLiveWidget`. The shared producer contains deterministic sample
+data; its `dataset` parameter is editable on the back. Use the extension's Cosmos
+**Patterns → Widgets → Gallery** for interactive previews and **States** for
+empty, malformed and negative-value examples.

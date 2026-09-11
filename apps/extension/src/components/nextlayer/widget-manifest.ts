@@ -1,10 +1,12 @@
+import type { WidgetChartView } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
-import { isThemeColor } from "@newsnext/sdk/models"
+import { isThemeColor, parseWidgetChartView } from "@newsnext/sdk/models"
 import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
 
 export type WidgetUi
-  = | { type: "custom" }
+  = | WidgetChartView
+    | { type: "custom" }
     | { type: "live-card", query: string, presentation?: "ranking" | "list" }
 
 export interface LocalWidgetManifest {
@@ -99,6 +101,7 @@ function isGridSize(value: unknown, maximum: number): value is number {
 }
 
 export function parseWidgetUi(value: unknown): WidgetUi {
+  if (isRecord(value) && value.type === "chart") return parseWidgetChartView(value)
   if (value === undefined) return { type: "custom" }
   if (isRecord(value) && value.type === "custom") return { type: "custom" }
   if (isRecord(value) && value.type === "live-card" && isIdentifier(value.query)

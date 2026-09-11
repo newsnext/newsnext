@@ -1049,3 +1049,12 @@ provider's immutable identity. Registry configuration, loader results, and Radar
 literal/extracted colors validate against the same named palette. The common
 `CardMetadataSettings` editor renders Title, Description, Home, Badge, and Color;
 its preview stays outside query identity. LiveCard metadata reset preserves params.
+
+
+Chart Widgets consume named non-item query results through a validated `{ rows }`
+contract. They share the Source parameter editor and use independent placement
+patch sections for data parameters, display metadata and chart options. Native
+protocol 28 serializes these overrides under `LiveWidget.patch`, with legacy
+placement fields migrated on read. See the preset authoring contract in
+[SOURCE_GUIDELINE.md](SOURCE_GUIDELINE.md#preset-chart-widgets) and renderer
+lifecycle in [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md#layers-and-widgets).

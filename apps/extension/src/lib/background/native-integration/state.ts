@@ -8,7 +8,7 @@ import { getWorkerId } from "../worker-identity"
 export const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-export const PROTOCOL_VERSION = 27
+export const PROTOCOL_VERSION = 28
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"
 export const RECONNECT_ALARM_PERIOD_MINUTES = 0.5

@@ -8,7 +8,7 @@ import type {
 } from "../board"
 import type { LiveCard, LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { isThemeColor } from "@newsnext/sdk/models"
+import { isThemeColor, parseWidgetChartOptions } from "@newsnext/sdk/models"
 import {
   APPLICATION_DATA_VERSION,
   createEmptyApplicationData,
@@ -148,6 +148,13 @@ function normalizeLiveWidgets(
     }
     const dataScope = normalizeWidgetDataScope(candidate.dataScope, boardCardIds)
     if (!dataScope) return []
+    const patch = isRecord(candidate.patch) ? candidate.patch : candidate
+    let view
+    try {
+      view = patch.view === undefined ? undefined : parseWidgetChartOptions(patch.view, true)
+    } catch {
+      view = undefined
+    }
     seen.add(candidate.widgetId)
     return [{
       dataScope,
@@ -157,20 +164,25 @@ function normalizeLiveWidgets(
         x: layout.x,
         y: layout.y,
       },
-      ...(isRecord(candidate.metadata)
-        ? {
-            metadata: {
-              ...(typeof candidate.metadata.badge === "string" ? { badge: candidate.metadata.badge } : {}),
-              ...(typeof candidate.metadata.desc === "string" ? { desc: candidate.metadata.desc } : {}),
-              ...(typeof candidate.metadata.home === "string" ? { home: candidate.metadata.home } : {}),
-              ...(typeof candidate.metadata.title === "string" && candidate.metadata.title.trim()
-                ? { title: candidate.metadata.title.trim() }
-                : {}),
-              ...(isThemeColor(candidate.metadata.color) ? { color: candidate.metadata.color } : {}),
-            },
-          }
+      ...((patch.metadata || patch.params || view)
+        ? { patch: {
+            ...(isRecord(patch.metadata)
+              ? {
+                  metadata: {
+                    ...(typeof patch.metadata.badge === "string" ? { badge: patch.metadata.badge } : {}),
+                    ...(typeof patch.metadata.desc === "string" ? { desc: patch.metadata.desc } : {}),
+                    ...(typeof patch.metadata.home === "string" ? { home: patch.metadata.home } : {}),
+                    ...(typeof patch.metadata.title === "string" && patch.metadata.title.trim()
+                      ? { title: patch.metadata.title.trim() }
+                      : {}),
+                    ...(isThemeColor(patch.metadata.color) ? { color: patch.metadata.color } : {}),
+                  },
+                }
+              : {}),
+            ...(isRecord(patch.params) ? { params: patch.params } : {}),
+            ...(view ? { view } : {}),
+          } }
         : {}),
-      ...(isRecord(candidate.params) ? { params: candidate.params } : {}),
       widgetId: candidate.widgetId,
     }]
   })

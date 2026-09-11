@@ -1,0 +1,56 @@
+{
+  "title": "Activity heatmap",
+  "color": "teal",
+  "width": 2,
+  "height": 1,
+  "view": {
+    "type": "chart",
+    "chart": "heatmap",
+    "query": "observations"
+  },
+  "params": {
+    "dataset": {
+      "type": "select",
+      "title": "Demo dataset",
+      "default": "heatmap",
+      "values": [
+        {
+          "label": "Categories",
+          "value": "categories"
+        },
+        {
+          "label": "Metrics",
+          "value": "metrics"
+        },
+        {
+          "label": "Trend",
+          "value": "trend"
+        },
+        {
+          "label": "Series",
+          "value": "series"
+        },
+        {
+          "label": "Scatter",
+          "value": "scatter"
+        },
+        {
+          "label": "Heatmap",
+          "value": "heatmap"
+        },
+        {
+          "label": "Distribution",
+          "value": "distribution"
+        },
+        {
+          "label": "Funnel",
+          "value": "funnel"
+        },
+        {
+          "label": "Words",
+          "value": "words"
+        }
+      ]
+    }
+  }
+}

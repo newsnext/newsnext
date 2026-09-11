@@ -1,4 +1,4 @@
-import type { WidgetMetadata } from "@newsnext/sdk/models"
+import type { WidgetChartOptions, WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
@@ -25,10 +25,12 @@ import { boardsAtom } from "@/store/board"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
 import { useLiveWidgetData } from "./use-live-widget-data"
 import { DeleteWidgetButton, WidgetBoardSelect } from "./widget-actions"
+import { WidgetChartContent } from "./widget-chart-content"
 import { WidgetItemListContent } from "./widget-item-list-content"
 import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
 import { parseLocalWidgetManifests } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
+import { WidgetViewSettings } from "./widget-view-settings"
 
 const WIDGET_PROTOCOL_VERSION = 1
 
@@ -43,6 +45,7 @@ interface LiveWidgetCardProps {
   title: string
   url?: string
   ui: WidgetUi
+  viewPatch?: Partial<WidgetChartOptions>
   dataRevision: string
   refreshIntervalMs: number
   dataFiles: string[]
@@ -89,6 +92,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
     [frame.params, parameterState.savedParams],
   )
   const dataQuery = useLiveWidgetData({ ...frame, params: resolvedParams }, active)
+  const chartView = useMemo(() => frame.ui.type === "chart" ? { ...frame.ui, ...frame.viewPatch } : undefined, [frame.ui, frame.viewPatch])
   async function saveParams(params: Record<string, unknown>): Promise<void> {
     await actions.nextLayer.setLiveWidgetParams({ boardId: frame.boardId, widgetId: frame.widgetId, params })
     parameterState.commitParams(params)
@@ -153,38 +157,40 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
             </>
           )}
         >
-          {frame.ui.type === "live-card"
-            ? (
-                <WidgetItemListContent
-                  color={color}
-                  ui={frame.ui}
-                  title={title}
-                  isFetching={dataQuery.isContentFetching}
-                  onRefresh={dataQuery.refetch}
-                  queries={dataQuery.data?.queries ?? {}}
-                  statusMessage={dataQuery.isContentFetching
-                    ? undefined
-                    : dataQuery.error?.message ?? (
-                      !dataQuery.data
-                        ? t("widgetDataLoading")
-                        : undefined
-                    )}
-                />
-              )
-            : (
-                <iframe
-                  ref={iframeRef}
-                  className="relative size-full border-0 bg-transparent"
-                  referrerPolicy="no-referrer"
-                  sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-                  src={frame.url}
-                  title={title}
-                  onLoad={() => {
-                    loadedRef.current = true
-                    postData()
-                  }}
-                />
-              )}
+          {chartView
+            ? <WidgetChartContent view={chartView} queries={dataQuery.data?.queries ?? {}} statusMessage={dataQuery.error?.message ?? (!dataQuery.data ? t("widgetDataLoading") : undefined)} />
+            : frame.ui.type === "live-card"
+              ? (
+                  <WidgetItemListContent
+                    color={color}
+                    ui={frame.ui}
+                    title={title}
+                    isFetching={dataQuery.isContentFetching}
+                    onRefresh={dataQuery.refetch}
+                    queries={dataQuery.data?.queries ?? {}}
+                    statusMessage={dataQuery.isContentFetching
+                      ? undefined
+                      : dataQuery.error?.message ?? (
+                        !dataQuery.data
+                          ? t("widgetDataLoading")
+                          : undefined
+                      )}
+                  />
+                )
+              : (
+                  <iframe
+                    ref={iframeRef}
+                    className="relative size-full border-0 bg-transparent"
+                    referrerPolicy="no-referrer"
+                    sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+                    src={frame.url}
+                    title={title}
+                    onLoad={() => {
+                      loadedRef.current = true
+                      postData()
+                    }}
+                  />
+                )}
         </WidgetFace>
         <WidgetFace
           avatarSeed={frame.widgetId}
@@ -216,6 +222,15 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
               await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, widgetId: frame.widgetId, metadata: { ...frame.metadata, ...metadata } })
             }}
           />
+          {frame.ui.type === "chart" && (
+            <WidgetViewSettings
+              view={frame.ui}
+              patch={frame.viewPatch}
+              onSave={async (view) => {
+                await actions.nextLayer.configureLiveWidget({ boardId: frame.boardId, widgetId: frame.widgetId, patch: { view } })
+              }}
+            />
+          )}
           <ParameterSettings
             params={frame.params}
             draftSourceParams={parameterState.draftParams}
@@ -409,9 +424,10 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           title={manifest.title}
           url={manifest.url}
           ui={manifest.view}
+          viewPatch={placement.patch?.view}
           params={manifest.params}
-          paramsValue={placement.params}
-          metadata={placement.metadata}
+          paramsValue={placement.patch?.params}
+          metadata={placement.patch?.metadata}
           dataRevision={manifest.dataRevision}
           refreshIntervalMs={manifest.refreshIntervalMs}
           dataFiles={manifest.dataFiles}

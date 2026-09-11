@@ -1,4 +1,4 @@
-import type { BoardDeleteInput, WidgetMetadata } from "@newsnext/sdk/models"
+import type { BoardDeleteInput, WidgetMetadata, WidgetPatch } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type {
   Board,
@@ -9,6 +9,7 @@ import type {
 } from "../board"
 import type { LiveCardPatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
+import { parseWidgetChartOptions } from "@newsnext/sdk/models"
 import { createBoard } from "../board"
 import { mergeLiveCardPatch } from "../source/live-cards"
 
@@ -254,7 +255,7 @@ export function setLiveWidgetMetadataMutation(
     ...board,
     nextLayer: {
       liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.widgetId === input.widgetId
-        ? { ...widget, metadata }
+        ? { ...widget, patch: { ...widget.patch, metadata } }
         : widget),
     },
   })
@@ -270,10 +271,30 @@ export function setLiveWidgetParamsMutation(
     ...board,
     nextLayer: {
       liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.widgetId === input.widgetId
-        ? { ...widget, params: input.params }
+        ? { ...widget, patch: { ...widget.patch, params: input.params } }
         : widget),
     },
   })
+}
+
+/** Sparse field merge; null resets a whole section, matching Source override semantics. */
+export function configureLiveWidgetMutation(
+  data: ApplicationData,
+  input: { boardId: string, widgetId: string, patch: { [K in keyof WidgetPatch]?: WidgetPatch[K] | null } },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  assertWidgetInstalled(board, input.widgetId)
+  if (input.patch.view) parseWidgetChartOptions(input.patch.view, true)
+  return replaceBoard(data, { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.map((widget) => {
+    if (widget.widgetId !== input.widgetId) return widget
+    const patch = { ...widget.patch }
+    for (const key of ["params", "metadata", "view"] as const) {
+      const value = input.patch[key]
+      if (value === null) delete patch[key]
+      else if (value !== undefined) Object.assign(patch, { [key]: { ...patch[key], ...value } })
+    }
+    return { ...widget, patch }
+  }) } })
 }
 
 export function setLiveWidgetLayoutsMutation(

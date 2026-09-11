@@ -8,6 +8,7 @@ import type {
 import { actionContracts } from "@newsnext/sdk/actions"
 import {
   configureLiveCardMutation,
+  configureLiveWidgetMutation,
   createBoardMutation,
   createLiveCardMutation,
   deleteBoardMutation,
@@ -94,6 +95,10 @@ const nextLayerSetWidgetDataScopeAction = defineAction(actionContracts["nextLaye
   await context.mutate(data => setLiveWidgetDataScopeMutation(data, input))
 ))
 
+const nextLayerConfigureWidgetAction = defineAction(actionContracts["nextLayer.configureLiveWidget"], async (input, context: ApplicationActionContext) => (
+  await context.mutate(data => configureLiveWidgetMutation(data, input))
+))
+
 const nextLayerSetWidgetMetadataAction = defineAction(actionContracts["nextLayer.setLiveWidgetMetadata"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => setLiveWidgetMetadataMutation(data, input))
 ))
@@ -175,6 +180,7 @@ export const applicationActionDefinitions = [
   nextLayerSetWidgetLayoutsAction,
   nextLayerSetWidgetParamsAction,
   nextLayerSetWidgetMetadataAction,
+  nextLayerConfigureWidgetAction,
   liveCardMoveAction,
   liveCardCreateAction,
   liveCardConfigureAction,

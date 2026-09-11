@@ -182,10 +182,20 @@ describe("widget parameter persistence", () => {
       widgetId: "feed",
       dataScope: { type: "board" },
       layout: { x: 0, y: 0, width: 6, height: 4 },
-      params: { limit: 5, enabled: false, categories: ["tech"] },
-      metadata: { title: "My feed", color: "teal", badge: "https://example.com/badge.png", home: "https://example.com", desc: "Description" },
+      patch: { params: { limit: 5, enabled: false, categories: ["tech"] }, metadata: { title: "My feed", color: "teal", badge: "https://example.com/badge.png", home: "https://example.com", desc: "Description" }, view: { chart: "bar", limit: 10 } },
     }]
     const restored = parsePersistedDataExport(serializePersistedDataExport(data))
     expect(restored?.data.boards?.[0]?.nextLayer.liveWidgets).toEqual(data.boards[0]!.nextLayer.liveWidgets)
+  })
+})
+
+describe("legacy Widget settings", () => {
+  it("migrates old placements once and honors an explicit patch", () => {
+    const data = createData()
+    const widget = { widgetId: "chart", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 }, params: { enabled: false }, metadata: { title: "Custom" } }
+    const legacy = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [widget] } }] }
+    expect(normalizeApplicationData(legacy).boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false }, metadata: { title: "Custom" } })
+    const current = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [{ ...widget, patch: { view: { chart: "line" } } }] } }] }
+    expect(normalizeApplicationData(current).boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ view: { chart: "line" } })
   })
 })

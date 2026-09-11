@@ -522,3 +522,12 @@ header/theme preview, not Widget data request identity. Both card kinds use the
 same face/header/settings components; `FlipAnimate` keeps faces mounted while
 marking the hidden face inert. Browser interaction checks were not run for this
 refactor; type checks do not establish drag, focus, or animation correctness.
+
+
+Widget preset charts load ECharts lazily. Keep each chart instance until its
+container unmounts; update options in place, observe container size rather than
+window size, and disconnect observers alongside disposal. Ancestor class/style
+observers cover theme changes without observing chart-generated descendants.
+View configuration is separate from producer parameters and must not enter the
+data query identity. Validate chart changes with resize, flip, theme, and fresh
+mount interactions as well as deterministic data/option tests.

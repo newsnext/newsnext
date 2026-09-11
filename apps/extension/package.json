@@ -35,6 +35,8 @@
     "canvas-confetti": "^1.9.4",
     "defu": "catalog:",
     "dexie": "^4.4.5",
+    "echarts": "^5.6.0",
+    "echarts-wordcloud": "^2.1.0",
     "es-toolkit": "catalog:",
     "fast-xml-parser": "^5.11.1",
     "i18next": "^26.4.2",

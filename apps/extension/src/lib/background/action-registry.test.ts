@@ -72,8 +72,8 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(42)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(21)
+    expect(actions).toHaveLength(43)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(22)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(17)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({

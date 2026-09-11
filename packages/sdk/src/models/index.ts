@@ -15,3 +15,5 @@ export * from "./params.js"
 export * from "./radar.js"
 export * from "./source.js"
 export * from "./util.js"
+
+export * from "./widget-view.js"

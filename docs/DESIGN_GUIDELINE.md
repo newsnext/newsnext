@@ -1016,3 +1016,14 @@ full identifiers, sharing metadata, and raw configuration behind native disclosu
 LiveCard and LiveWidget use the shared `components/card-shell` frame, header,
 refresh primitives, and drag preview. Product-specific content and settings stay
 in their adapters; the shell does not branch on the entity type or fetch data.
+
+
+Preset visualizations use ECharts with restrained axes, compact labels, scoped
+palette colors, transparent backgrounds and no toolbar, zoom controls or export
+buttons. Series legends identify data but do not toggle it. Disable chart
+animation so polling and card flips remain stable. Word clouds keep words
+horizontal. Resolve CSS theme colors to RGB before passing them to Canvas.
+Metric and table presets use semantic HTML; charts also expose their observations
+in a screen-reader table. Keep view controls in a separate View section on the
+back using the shared card settings and parameter fields. Cancel discards drafts,
+Save updates the placement patch, and Reset removes only view overrides.

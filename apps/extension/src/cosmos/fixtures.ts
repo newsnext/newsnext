@@ -1,5 +1,10 @@
 export const COSMOS_FIXTURES = [
   {
+    path: "src/cosmos/Patterns/Widgets.fixture.tsx",
+    rendererFixture: { type: "multi" as const, fixtureNames: ["Gallery", "States"] as string[] },
+    load: () => import("@/cosmos/patterns/widgets.fixture"),
+  },
+  {
     path: "src/cosmos/Basics/Foundation.fixture.tsx",
     rendererFixture: {
       type: "multi" as const,

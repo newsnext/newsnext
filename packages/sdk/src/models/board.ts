@@ -1,5 +1,6 @@
 import type { CardMetadata } from "./card.js"
 import type { Color } from "./color.js"
+import type { WidgetChartOptions } from "./widget-view.js"
 
 export type BoardLayer = "now" | "next"
 export type NowLayerAutomaticSortMode = "addedAt" | "provider"
@@ -24,9 +25,14 @@ export interface LiveWidgetLayout {
 
 export type WidgetMetadata = CardMetadata
 
-export interface LiveWidget {
+export interface WidgetPatch {
   metadata?: WidgetMetadata
   params?: Record<string, unknown>
+  view?: Partial<WidgetChartOptions>
+}
+
+export interface LiveWidget {
+  patch?: WidgetPatch
   dataScope: LiveWidgetDataScope
   layout: LiveWidgetLayout
   widgetId: string

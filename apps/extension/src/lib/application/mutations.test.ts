@@ -1,19 +1,6 @@
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
-import {
-  createBoardMutation,
-  createLiveCardMutation,
-  deleteLiveCardMutation,
-  installLiveWidgetMutation,
-  moveLiveCardMutation,
-  moveLiveWidgetMutation,
-  resetLiveCardMetadataMutation,
-  setLiveWidgetDataScopeMutation,
-  setLiveWidgetLayoutsMutation,
-  setLiveWidgetMetadataMutation,
-  setLiveWidgetParamsMutation,
-  setNowLayerManualOrderMutation,
-} from "./mutations"
+import { configureLiveWidgetMutation, createBoardMutation, createLiveCardMutation, deleteLiveCardMutation, installLiveWidgetMutation, moveLiveCardMutation, moveLiveWidgetMutation, resetLiveCardMetadataMutation, setLiveWidgetDataScopeMutation, setLiveWidgetLayoutsMutation, setLiveWidgetMetadataMutation, setLiveWidgetParamsMutation, setNowLayerManualOrderMutation } from "./mutations"
 
 const dependencies = { createId: () => "new", now: () => 100, workerId: "worker-a" }
 
@@ -236,9 +223,9 @@ describe("application mutations", () => {
     }).data
     expect(saved.boards[0]?.nextLayer.liveWidgets[0]).toEqual({
       ...configured.boards[0]?.nextLayer.liveWidgets[0],
-      metadata: { title: "My feed", color: "teal" },
+      patch: { ...configured.boards[0]?.nextLayer.liveWidgets[0]?.patch, metadata: { title: "My feed", color: "teal" } },
     })
-    expect(configured.boards[0]?.nextLayer.liveWidgets[0]?.metadata).toBeUndefined()
+    expect(configured.boards[0]?.nextLayer.liveWidgets[0]?.patch?.metadata).toBeUndefined()
     const reset = setLiveWidgetMetadataMutation(saved, {
       boardId: "reading",
       widgetId: "latest",
@@ -246,7 +233,7 @@ describe("application mutations", () => {
     }).data
     expect(reset.boards[0]?.nextLayer.liveWidgets[0]).toEqual({
       ...configured.boards[0]?.nextLayer.liveWidgets[0],
-      metadata: {},
+      patch: { ...configured.boards[0]?.nextLayer.liveWidgets[0]?.patch, metadata: {} },
     })
     expect(() => setLiveWidgetMetadataMutation(saved, {
       boardId: "reading",
@@ -267,10 +254,10 @@ describe("application mutations", () => {
       widgetId: "latest",
       params: { limit: 5, enabled: false },
     }).data
-    expect(installed.boards[0]?.nextLayer.liveWidgets[0]?.params).toBeUndefined()
+    expect(installed.boards[0]?.nextLayer.liveWidgets[0]?.patch?.params).toBeUndefined()
     expect(saved.boards[0]?.nextLayer.liveWidgets[0]).toEqual({
       ...installed.boards[0]?.nextLayer.liveWidgets[0],
-      params: { limit: 5, enabled: false },
+      patch: { params: { limit: 5, enabled: false } },
     })
     expect(saved.boards.slice(1)).toEqual(installed.boards.slice(1))
     const reset = setLiveWidgetParamsMutation(saved, {
@@ -278,7 +265,7 @@ describe("application mutations", () => {
       widgetId: "latest",
       params: {},
     }).data
-    expect(reset.boards[0]?.nextLayer.liveWidgets[0]?.params).toEqual({})
+    expect(reset.boards[0]?.nextLayer.liveWidgets[0]?.patch?.params).toEqual({})
     expect(() => setLiveWidgetParamsMutation(saved, {
       boardId: "reading",
       widgetId: "missing",
@@ -305,5 +292,18 @@ describe("application mutations", () => {
       type: "cards",
       cardIds: [],
     })
+  })
+})
+
+describe("widget patches", () => {
+  it("merges sparse sections, preserves falsy values and resets only the requested section", () => {
+    const installed = installLiveWidgetMutation(createData(), { boardId: "reading", widgetId: "chart", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 } }).data
+    const first = configureLiveWidgetMutation(installed, { boardId: "reading", widgetId: "chart", patch: { params: { enabled: false, count: 0 }, metadata: { title: "Chart" }, view: { chart: "line", limit: 10 } } }).data
+    const second = configureLiveWidgetMutation(first, { boardId: "reading", widgetId: "chart", patch: { view: { chart: "bar" } } }).data
+    expect(second.boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false, count: 0 }, metadata: { title: "Chart" }, view: { chart: "bar", limit: 10 } })
+    const reset = configureLiveWidgetMutation(second, { boardId: "reading", widgetId: "chart", patch: { view: null } }).data
+    expect(reset.boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false, count: 0 }, metadata: { title: "Chart" } })
+    expect(first.boards[0]?.nextLayer.liveWidgets[0]?.patch?.view?.chart).toBe("line")
+    expect(() => configureLiveWidgetMutation(first, { boardId: "reading", widgetId: "chart", patch: { view: { limit: 0 } } })).toThrow()
   })
 })
