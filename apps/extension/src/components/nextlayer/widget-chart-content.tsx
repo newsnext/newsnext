@@ -7,9 +7,9 @@ import { WidgetSummaryContent } from "./widget-summary-content"
 
 const WidgetEchart = lazy(() => import("./widget-echart"))
 
-interface Props { view: WidgetChartView, queries: Record<string, unknown>, statusMessage?: string }
+interface Props { view: WidgetChartView, queries: Record<string, unknown> }
 
-export function WidgetChartContent({ view, queries, statusMessage }: Props): React.JSX.Element {
+export function WidgetChartContent({ view, queries }: Props): React.JSX.Element {
   const result = useMemo(() => {
     try {
       return { rows: parseChartRows(queries[view.query], view), error: undefined }
@@ -18,28 +18,30 @@ export function WidgetChartContent({ view, queries, statusMessage }: Props): Rea
     }
   }, [queries, view])
   const { rows } = result
-  const message = statusMessage ?? result.error
-  if (!rows.length) return <div role="status" className="flex size-full items-center justify-center p-4 text-center text-sm text-muted-foreground">{message ?? "No data to display."}</div>
+
   return (
     <div className="relative flex size-full min-h-0 flex-col overflow-auto p-3 text-foreground" onPointerDown={event => event.stopPropagation()}>
-      {message && <p role="status" className="mb-2 text-xs text-muted-foreground">{message}</p>}
-      {view.chart === "metric"
-        ? (
-            <div className="grid flex-1 content-center gap-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))" }}>
-              {rows.map((row, i) => (
-                <div key={i} className="min-w-0">
-                  <p className="truncate text-xs text-muted-foreground" title={row.label}>{row.label}</p>
-                  <p className="mt-1 truncate text-3xl font-semibold tracking-tight tabular-nums" title={formatChartValue(row.value, view)}>{formatChartValue(row.value, view)}</p>
+      {rows.length > 0 && (
+        <>
+          {view.chart === "metric"
+            ? (
+                <div className="grid flex-1 content-center gap-5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))" }}>
+                  {rows.map((row, i) => (
+                    <div key={i} className="min-w-0">
+                      <p className="truncate text-xs text-muted-foreground" title={row.label}>{row.label}</p>
+                      <p className="mt-1 truncate text-3xl font-semibold tracking-tight tabular-nums" title={formatChartValue(row.value, view)}>{formatChartValue(row.value, view)}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )
-        : ["trend-metric", "change-ranking", "status", "timeline"].includes(view.chart)
-            ? <WidgetSummaryContent rows={rows} view={view} />
-            : view.chart === "table"
-              ? <DataTable rows={rows} view={view} />
-              : <Suspense fallback={<p role="status" className="m-auto text-sm text-muted-foreground">Loading chart…</p>}><WidgetEchart rows={rows} view={view} /></Suspense>}
-      {!["table", "status", "timeline", "trend-metric", "change-ranking"].includes(view.chart) && <div className="sr-only"><DataTable rows={rows} view={view} /></div>}
+              )
+            : ["trend-metric", "change-ranking", "status", "timeline"].includes(view.chart)
+                ? <WidgetSummaryContent rows={rows} view={view} />
+                : view.chart === "table"
+                  ? <DataTable rows={rows} view={view} />
+                  : <Suspense fallback={null}><WidgetEchart rows={rows} view={view} /></Suspense>}
+          {!["table", "status", "timeline", "trend-metric", "change-ranking"].includes(view.chart) && <div className="sr-only"><DataTable rows={rows} view={view} /></div>}
+        </>
+      )}
     </div>
   )
 }

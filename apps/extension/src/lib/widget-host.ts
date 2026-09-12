@@ -1,5 +1,21 @@
 /** Protocol shared by the iframe host and extension background. */
 export const WIDGET_SDK_PORT = "newsnext.widget.sdk"
+export const WIDGET_STATUS_MESSAGE = "newsnext.widget.status"
+export const WIDGET_SIZE_MESSAGE = "newsnext.widget.size"
+
+/** Custom Widget views report their own empty or malformed status to the host. */
+export interface WidgetStatusMessage {
+  type: typeof WIDGET_STATUS_MESSAGE
+  version: 1
+  message: string | null
+}
+
+/** Custom Widget views report their content height so the host can size the iframe. */
+export interface WidgetSizeMessage {
+  type: typeof WIDGET_SIZE_MESSAGE
+  version: 1
+  height: number
+}
 
 export interface WidgetSdkRequest {
   type: typeof WIDGET_SDK_PORT
@@ -12,6 +28,22 @@ export function isWidgetSdkRequest(value: unknown): value is WidgetSdkRequest {
     && value.type === WIDGET_SDK_PORT
     && value.version === 1
     && isRecord(value.request)
+}
+
+export function isWidgetStatus(value: unknown): value is WidgetStatusMessage {
+  return isRecord(value)
+    && value.type === WIDGET_STATUS_MESSAGE
+    && value.version === 1
+    && (value.message === null || typeof value.message === "string")
+}
+
+export function isWidgetSize(value: unknown): value is WidgetSizeMessage {
+  return isRecord(value)
+    && value.type === WIDGET_SIZE_MESSAGE
+    && value.version === 1
+    && typeof value.height === "number"
+    && Number.isFinite(value.height)
+    && value.height >= 0
 }
 
 export function isWidgetSdkControl(value: unknown): value is { type: "next" | "cancel" } {

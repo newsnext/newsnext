@@ -12,12 +12,10 @@ interface WidgetItemListContentProps {
   title: string
   color: Color
   queries: Record<string, unknown>
-  isFetching: boolean
   onRefresh: () => void
-  statusMessage?: string
 }
 
-export function WidgetItemListContent({ ui, title, color, queries, statusMessage, isFetching, onRefresh }: WidgetItemListContentProps): React.JSX.Element {
+export function WidgetItemListContent({ ui, title, color, queries, onRefresh }: WidgetItemListContentProps): React.JSX.Element {
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const result = useMemo(() => {
     try {
@@ -29,14 +27,11 @@ export function WidgetItemListContent({ ui, title, color, queries, statusMessage
   const identity = useMemo(() => ({ name: title, color }), [title, color])
   const groups = useMemo(() => [{ items: result.items, sourceKey: ui.query }], [result.items, ui.query])
   const markScale = useSourceMarkScales(groups).get(ui.query)
-  const message = isFetching ? undefined : statusMessage ?? result.error
 
   return (
     <div ref={setScrollElement} className="relative size-full overflow-y-auto px-2 py-2" onPointerDown={event => event.stopPropagation()}>
-      {message && <p role="status" className="p-2 text-sm text-muted-foreground">{message}</p>}
-      {!isFetching && !message && result.items.length === 0 && <p role="status" className="p-2 text-sm text-muted-foreground">No matching items.</p>}
       <LiveCardIdentityContext value={identity}>
-        {message && result.items.length === 0 && <SourceErrorState onRefresh={onRefresh} />}
+        {result.error && result.items.length === 0 && <SourceErrorState onRefresh={onRefresh} />}
         <LiveCardItems items={result.items} presentationType={ui.presentation} scrollElement={scrollElement} markScale={markScale} />
       </LiveCardIdentityContext>
     </div>

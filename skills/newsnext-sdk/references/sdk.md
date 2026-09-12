@@ -174,6 +174,10 @@ host environment. The background accepts this transport only from its own
 
 ## Widget clients
 
+When authoring a Widget rather than only querying its data, read
+`docs/WIDGET_GUIDELINE.md` if it is available; it is the canonical manifest,
+view, and custom document contract for this repository.
+
 Inside an installed Widget iframe, use the browser entry:
 
 ```ts
@@ -297,6 +301,23 @@ Neither `entry` nor `data.entry` is a supported manifest field.
 Preserve original millisecond `publishedAt` values; never substitute fetch time.
 When displaying an HN submission, use its discussion URL and submission time,
 not a timestamp that implies the linked article was published then.
+
+A custom view receives `newsnext.widget.data` messages from the host, carrying
+`status` (`loading`, `ready`, or `error`), `stale`, `queries`, and the resolved
+`params`, and answers with `newsnext.widget.ready` once its message listener is
+installed. The host repeats the latest payload after each load and refresh.
+Report empty or malformed data with `newsnext.widget.status`
+(`{ "type": "newsnext.widget.status", "version": 1, "message": "No data to display." }`,
+`message: null` clears it) instead of drawing status text; the host renders that
+message in the shared status layer together with its own loading and error
+states. The document must not scroll or show a scrollbar: keep its natural
+content height and report it with `newsnext.widget.size`
+(`{ "type": "newsnext.widget.size", "version": 1, "height": 128 }`). The host
+sizes the iframe and its content panel owns the scrolling state, so do not give
+`html`, `body`, or an inner element a viewport height or `overflow: auto`. Keep
+the host-owned shell, surface, and refresh chrome out of the document, use the
+NewsNext semantic tokens, and declare `color-scheme: light dark` so
+`light-dark()` follows the app theme.
 
 
 ### Widget parameters
@@ -441,7 +462,8 @@ by `newsnext status`, then install the `demo-*` directories on a Board through
 `nextLayer.installLiveWidget`. The shared producer contains deterministic sample
 data; its `dataset` parameter is editable on the back. Use the extension's Cosmos
 **Patterns → Widgets → Gallery** for interactive previews and **States** for
-empty, malformed and negative-value examples.
+empty, malformed and negative-value examples. The `demo-custom-html` example
+renders a custom `index.html` view from the same `newsnext.widget.data` message.
 
 #### Additional preset data
 

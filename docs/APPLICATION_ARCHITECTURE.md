@@ -422,6 +422,12 @@ unbounded buffering. Abort, iterator return, document pagehide, iframe unmount,
 and port disconnection release the request and terminate its SDK child process.
 Timeouts cover waiting for a response, not time spent consuming yielded data.
 The host delivers data to the iframe through the Widget view ready/data messages.
+Custom views answer with `newsnext.widget.status` (`message: string | null`) to
+report their own empty or malformed state; the host accepts that message only
+from the mounted iframe and renders it through the shared status layer.
+`newsnext.widget.size` (`height: number`) lets a custom view report its content
+height; the host sizes the iframe to it and scrolls the content panel instead of
+letting the embedded document scroll.
 
 Generic transformation graphs, transitive provenance, replay, and a complete
 Widget preview/maintenance workflow remain target scope in the [PRD](PRD.md) and

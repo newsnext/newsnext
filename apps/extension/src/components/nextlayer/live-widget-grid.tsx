@@ -15,18 +15,22 @@ import { canDragCardHeader, generateCardDragPreview } from "@/components/card-sh
 import { CardMetadataSettings } from "@/components/card-shell/settings/metadata-settings"
 import { ParameterSettings } from "@/components/card-shell/settings/parameter-settings"
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
+import { SourceStatusMessage } from "@/components/live-card/card-source-state"
 import { useI18n } from "@/hooks/use-i18n"
 import { useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
 import { useSortable } from "@/hooks/use-sortable"
 import { useSourceParams } from "@/hooks/use-source-params"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
+import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
 import { useLiveWidgetData } from "./use-live-widget-data"
 import { DeleteWidgetButton, WidgetBoardSelect } from "./widget-actions"
 import { WidgetChartContent } from "./widget-chart-content"
+import { parseChartRows } from "./widget-chart-data"
 import { WidgetItemListContent } from "./widget-item-list-content"
+import { parseWidgetItems } from "./widget-items"
 import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
 import { parseLocalWidgetManifests } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
@@ -94,6 +98,29 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
   )
   const dataQuery = useLiveWidgetData({ ...frame, params: resolvedParams }, active)
   const chartView = useMemo(() => frame.ui.type === "chart" ? { ...frame.ui, ...frame.viewPatch } : undefined, [frame.ui, frame.viewPatch])
+  const isContentLoading = !dataQuery.data || dataQuery.isContentFetching
+  const [viewStatus, setViewStatus] = useState<string>()
+  const [viewHeight, setViewHeight] = useState<number>()
+  const contentStatus = useMemo(() => {
+    const queries = dataQuery.data?.queries ?? {}
+    if (frame.ui.type === "live-card") {
+      try {
+        return parseWidgetItems(queries[frame.ui.query]).length === 0 ? "No matching items." : undefined
+      } catch (error) {
+        return error instanceof Error ? error.message : "Invalid Widget data"
+      }
+    }
+    if (chartView) {
+      try {
+        return parseChartRows(queries[chartView.query], chartView).length === 0 ? "No data to display." : undefined
+      } catch (error) {
+        return error instanceof Error ? error.message : "Invalid chart data."
+      }
+    }
+    return undefined
+  }, [dataQuery.data, frame.ui, chartView])
+  const customStatus = frame.ui.type === "custom" ? viewStatus : undefined
+  const statusMessage = isContentLoading ? undefined : dataQuery.error?.message ?? contentStatus ?? customStatus
   async function saveParams(params: Record<string, unknown>): Promise<void> {
     await actions.nextLayer.setLiveWidgetParams({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, params })
     parameterState.commitParams(params)
@@ -123,8 +150,13 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
 
   useEffect(() => {
     function handleMessage(event: MessageEvent<unknown>): void {
-      if (event.source !== iframeRef.current?.contentWindow || !isWidgetReady(event.data)) return
-      postData()
+      if (event.source !== iframeRef.current?.contentWindow) return
+      if (isWidgetReady(event.data)) {
+        postData()
+        return
+      }
+      if (isWidgetStatus(event.data)) setViewStatus(event.data.message ?? undefined)
+      if (isWidgetSize(event.data)) setViewHeight(event.data.height)
     }
     window.addEventListener("message", handleMessage)
     return () => window.removeEventListener("message", handleMessage)
@@ -141,7 +173,8 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
           title={title}
           metadata={frame.metadata}
           headerRef={isFlipped ? undefined : setHandleRef}
-          isFetching={dataQuery.isContentFetching}
+          isFetching={isContentLoading}
+          statusMessage={statusMessage}
           actions={(
             <>
               <CardRefreshButton
@@ -160,38 +193,41 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
           )}
         >
           {chartView
-            ? <WidgetChartContent view={chartView} queries={dataQuery.data?.queries ?? {}} statusMessage={dataQuery.error?.message ?? (!dataQuery.data ? t("widgetDataLoading") : undefined)} />
+            ? (
+                <WidgetChartContent
+                  view={chartView}
+                  queries={dataQuery.data?.queries ?? {}}
+                />
+              )
             : frame.ui.type === "live-card"
               ? (
                   <WidgetItemListContent
                     color={color}
                     ui={frame.ui}
                     title={title}
-                    isFetching={dataQuery.isContentFetching}
                     onRefresh={dataQuery.refetch}
                     queries={dataQuery.data?.queries ?? {}}
-                    statusMessage={dataQuery.isContentFetching
-                      ? undefined
-                      : dataQuery.error?.message ?? (
-                        !dataQuery.data
-                          ? t("widgetDataLoading")
-                          : undefined
-                      )}
                   />
                 )
               : (
-                  <iframe
-                    ref={iframeRef}
-                    className="relative size-full border-0 bg-transparent"
-                    referrerPolicy="no-referrer"
-                    sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-                    src={frame.url}
-                    title={title}
-                    onLoad={() => {
-                      loadedRef.current = true
-                      postData()
-                    }}
-                  />
+                  <div className="size-full overflow-y-auto">
+                    <iframe
+                      ref={iframeRef}
+                      className="relative w-full border-0 bg-transparent"
+                      style={{ height: viewHeight ? `${viewHeight}px` : "100%" }}
+                      referrerPolicy="no-referrer"
+                      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+                      src={frame.url}
+                      title={title}
+                      onLoad={() => {
+                        loadedRef.current = true
+                        // A reloaded view re-derives its own status and size from the payload we resend.
+                        setViewStatus(undefined)
+                        setViewHeight(undefined)
+                        postData()
+                      }}
+                    />
+                  </div>
                 )}
         </WidgetFace>
         <WidgetFace
@@ -284,11 +320,12 @@ interface WidgetFaceProps {
   headerRef?: (element: HTMLDivElement | null) => void
   back?: boolean
   isFetching?: boolean
+  statusMessage?: string
   actions: ReactNode
   children: ReactNode
 }
 
-function WidgetFace({ avatarSeed, title, metadata, headerRef, back = false, actions, children, isFetching = false }: WidgetFaceProps): React.JSX.Element {
+function WidgetFace({ avatarSeed, title, metadata, headerRef, back = false, actions, children, isFetching = false, statusMessage }: WidgetFaceProps): React.JSX.Element {
   return (
     <CardShell header={<CardHeader avatarSeed={avatarSeed} title={title} providerTitle={title} badge={metadata?.badge} desc={metadata?.desc} home={metadata?.home} dragHandleRef={headerRef} actions={actions} />}>
       {back
@@ -299,6 +336,7 @@ function WidgetFace({ avatarSeed, title, metadata, headerRef, back = false, acti
               <CardContentTransition className="relative size-full" isFetching={isFetching}>
                 {children}
               </CardContentTransition>
+              {statusMessage && <SourceStatusMessage message={statusMessage} />}
             </div>
           )}
     </CardShell>

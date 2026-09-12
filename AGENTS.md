@@ -50,6 +50,18 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Keep documented design requirements aligned with the implemented React
   components and Tailwind utilities.
 
+### Widget Documentation
+
+- `docs/WIDGET_GUIDELINE.md` is the canonical reference for Widget definitions,
+  views, preset data contracts, and the custom HTML document contract.
+- Update it in the same change when Widget-facing behavior changes, including
+  manifest fields, views, parameters, metadata, data producers, host messages,
+  content design, surface treatment, or the Widget examples.
+- Keep grid layout and Layer navigation behavior in the Design Guideline, source
+  configuration in the Source Authoring Guide, and host internals in the
+  Application Architecture. Link between them instead of duplicating
+  explanations.
+
 ### Performance Documentation
 
 - `docs/PERFORMANCE_GUIDELINE.md` is the canonical reference for React

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Custom HTML Widget</title>
+  <style>
+    /* The host owns the shell, surface, and status layer, so this document only
+       styles its own content. It redeclares the NewsNext semantic tokens it needs
+       with the app's values and resolves them through `light-dark()`. */
+    :root {
+      /* Opting into both schemes lets `light-dark()` follow the host's color
+         scheme, which reaches the iframe through `prefers-color-scheme`. */
+      color-scheme: light dark;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      --foreground: light-dark(oklch(37.1% 0 none), oklch(87% 0 none));
+      --muted: oklch(70.8% 0 none / 10%);
+      --duration: 150ms;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * { box-sizing: border-box; }
+    /* The document never scrolls or shows a scrollbar, not even while the host
+       is still applying the reported height. */
+    html, body { overflow: hidden; background: transparent; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.4286;
+      color: var(--foreground);
+    }
+    /* The document never scrolls and never shows a scrollbar. It keeps its
+       natural height and reports it to the host, whose content panel owns the
+       scrolling state. */
+    ol {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      padding: 8px;
+      list-style: none;
+    }
+    li {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      transition: background-color var(--duration) var(--ease);
+    }
+    li:hover { background-color: var(--muted); }
+    .label {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      li { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main id="root"></main>
+  <script>
+    const root = document.getElementById("root")
+    const numberFormat = new Intl.NumberFormat()
+
+    function valueText(value) {
+      if (typeof value === "number") return numberFormat.format(value)
+      return value === undefined || value === null ? "" : String(value)
+    }
+
+    // The host owns loading, empty, and error presentation. This view only reports
+    // its own status so the shell can draw it in the shared status layer.
+    function reportStatus(message) {
+      parent.postMessage({ type: "newsnext.widget.status", version: PROTOCOL_VERSION, message }, "*")
+    }
+
+    // The host sizes the iframe to this height, so the document itself never
+    // scrolls; the content panel scrolls when the content is taller than the card.
+    function reportSize() {
+      parent.postMessage({
+        type: "newsnext.widget.size",
+        version: PROTOCOL_VERSION,
+        height: Math.ceil(root.getBoundingClientRect().height),
+      }, "*")
+    }
+
+    function render(payload) {
+      // Keep the shell empty until data is ready; the host owns loading and error
+      // presentation, so this view only draws data once it has arrived.
+      if (payload.status !== "ready") {
+        reportStatus(null)
+        root.replaceChildren()
+        reportSize()
+        return
+      }
+      const rows = payload.queries && payload.queries.observations && payload.queries.observations.rows
+      if (!Array.isArray(rows) || rows.length === 0) {
+        reportStatus("No data to display.")
+        root.replaceChildren()
+        reportSize()
+        return
+      }
+      reportStatus(null)
+      const list = document.createElement("ol")
+      for (const row of rows) {
+        const item = document.createElement("li")
+        const label = document.createElement("span")
+        label.className = "label"
+        label.textContent = row && row.label !== undefined ? String(row.label) : ""
+        const value = document.createElement("span")
+        value.className = "value"
+        value.textContent = valueText(row ? row.value : undefined)
+        item.append(label, value)
+        list.append(item)
+      }
+      root.replaceChildren(list)
+      reportSize()
+    }
+
+    const PROTOCOL_VERSION = 1
+
+    // Reflow from card resizing, late fonts, or images resizes the iframe too.
+    new ResizeObserver(reportSize).observe(root)
+
+    window.addEventListener("message", event => {
+      if (event.source !== window.parent) return
+      const data = event.data
+      if (!data || data.type !== "newsnext.widget.data" || data.version !== PROTOCOL_VERSION) return
+      render(data)
+    })
+
+    parent.postMessage({ type: "newsnext.widget.ready", version: PROTOCOL_VERSION }, "*")
+  </script>
+</body>
+</html>

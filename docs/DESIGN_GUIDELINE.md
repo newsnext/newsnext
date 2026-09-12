@@ -147,7 +147,9 @@ grid, and host-owned content on both faces of LiveCards and LiveWidgets. Use
 native scroll containers and the shared `scrollbar-hidden` utility at these
 boundaries; do not mount custom scrollbar components or initialize overlay
 instances there. Preserve keyboard scrolling, existing scroll refs, and virtual
-lists. Embedded Widget documents own their internal styles.
+lists. Embedded Widget documents never scroll or show a scrollbar of their own;
+the host content panel owns that scrolling state, as described in the
+[Widget Guideline](WIDGET_GUIDELINE.md#custom-html-documents).
 
 Place visible tracks against the scrolling surface's outer edge. In Settings
 and Board dialogs, move the shell's 10px right padding into the content scroller
@@ -344,7 +346,7 @@ flip/focus behavior, and refresh feedback must use the same components.
 Provider identity remains unchanged by display overrides. Source-specific
 permissions and Widget-specific data diagnostics belong to data-adapter content.
 
-### Next Layer Widget surfaces
+### Next Layer surfaces
 
 Next Layer uses the shared Pragmatic Drag and Drop infrastructure and one pure
 ordered packing function for initial layout, live drag previews, resize previews,
@@ -355,8 +357,9 @@ Widget cannot trigger LiveCard moves in the Board or Header. The shared header
 trash target dispatches by drag kind and requires the originating Board and Widget
 IDs before accepting Widget removal.
 
-Widget width and height use half-LiveCard units in manifests, persisted layouts,
-and resize steps: `2 × 2` matches a 400px × 500px LiveCard.
+Widget footprints use the half-LiveCard units defined in the
+[Widget Guideline](WIDGET_GUIDELINE.md#widget-definition): `2 × 2` matches a
+400px × 500px LiveCard.
 Widths range from one through two cards in half-card increments (2, 3, or 4 units). With the shared 24px gutter, visible widths are 400px, 612px, and 824px. Keep that
 gutter and those widths at every viewport size. Center complete card columns,
 up to four LiveCards; allow horizontal scrolling when the widest Widget cannot
@@ -394,68 +397,9 @@ scatter layer is pending, entering, or exiting; initial width measurement must
 settle without competing motion. Keep Widget container overflow visible during
 navigation and enable horizontal scrolling afterward only when content overflows.
 
-Treat LiveCard as a built-in Widget UI, independent of the data producer.
-Widgets selecting `view: { type: "live-card", query: "feed" }` render through the shared `LiveCardItems` presentation layer
-in the extension; do not recreate item rows, time formatting, previews, or
-statistics in local HTML. Only custom UIs need an iframe. Preserve the same
-shell, details back, palette, and controls for either renderer. Empty item
-results are an ordinary empty state; malformed data must show an error.
-
-Keep the trusted Widget shell outside the iframe. LiveCards and Widgets share
-`CardShell`, `CardHeader`, `CardBackContent`, and `CardHeaderActionButton`;
-Source identity is a leading slot in the common header. Keep surface, spacing,
-back scrolling, and action placement in these shared components. Match the compact LiveCard header on both Widget
-faces: a single title line in a 32px row and an 8px gap before the content panel.
-LiveCards and Widgets share `CardRefreshButton` and the content refresh
-background/opacity treatment. Disable the refresh button while fetching, spin its
-indicator, and apply content dimming/pulsing only for initial loading and explicit
-refreshes. Keep automatic background refreshes visually stable when data exists.
-Explicit feedback lasts at least 500ms through the shared minimum-duration helper.
-A failed background refresh retains the last successful items. First-load errors
-reuse the LiveCard retry action; error details remain available in the shell.
-
-Set each Widget's `color` property in `widget.json`
-using the same named palette as LiveCards (for example, `blue` or `teal`). It
-defaults to `slate` when omitted. Apply this palette to the shell so the outer
-surface, nested `zenith-theme-400` wash, and header controls use the Widget's
-scoped `theme-*` tokens independently of the Board color. The host owns the
-title, refresh state and button, drag behavior, nested `2xl` content surface,
-and error or connection treatment. Widgets also have a host-owned details back,
-opened with the same information icon as LiveCards and closed with a back arrow.
-Reuse `FlipAnimate` for the Y-axis transition and the same shell on both faces.
-Keep slot content overflow `visible` so the perspective animation
-can extend beyond the cell. Keep clipping inside each face's nested content panel,
-and raise hovered or focused grid items above their neighbors.
-Keep the iframe mounted during flips and make the hidden face inert so keyboard
-focus cannot enter it. `FlipAnimate` owns `inert` and `aria-hidden` for both kinds
-of card. Register only the visible face's header as the drag handle, and build the
-drag preview from that header. Both faces remain draggable. The back's removal
-action shares `DeleteCardButton` and its two-step confirmation with LiveCards;
-removing a Widget deletes its Board placement. The back shows snapshot status, the number of scoped LiveCards, and the last
-update time. Place the common metadata editor in a section first, separate
-from business parameters. Use the LiveCard metadata editing pattern and shared
-`ThemeSelector` palette. Save applies Board placement overrides to both faces;
-Cancel discards the draft and Reset restores the `widget.json` defaults.
-Preview the draft identity in the back header and theme without persisting it or
-changing data inputs. Use `CardSettingsSection` for both metadata and parameter
-editors: share Edit/Cancel/Save/Reset controls, validation gates, pending-state
-field disabling, and inline errors. Keep failed saves editable and clear errors
-when cancelling or starting a new edit. Allow settings action rows and the shared
-color palette to wrap within narrow Widget widths; do not force a six-column
-palette or fixed height when the available width is smaller.
-When `widget.json` declares parameters, place their settings above
-the status details. Reuse the LiveCard `ParameterSettings` section and fields,
-including read-only values, Edit, Cancel, Reset, Save, and inline validation.
-Keep drafts local until Save; Reset clears placement overrides to manifest
-defaults. Hide the parameter section when none are declared.
-
-Keep the iframe and its document background transparent so the host's nested
-surface remains visible. iframe content must not repeat the title, refresh
-control, outer padding, rounded shell, or background. It may render links as
-normal new-tab links; the host sandbox permits popups while retaining script,
-DOM, storage, and same-origin isolation. Widget content should use NewsNext
-semantic typography, foreground, muted, divider, hover, spacing, and motion
-tokens instead of defining an unrelated visual system.
+Widget definitions, views, custom HTML documents, and the Widget shell treatment
+belong to the [Widget Guideline](WIDGET_GUIDELINE.md). This section keeps the grid
+and Layer behavior that both Layers share.
 
 Preserve Now Layer's intrinsic centered LiveCard layout inside the same maximum
 content width as Next Layer. Limit both Layers to the equivalent width of a
@@ -1059,30 +1003,6 @@ full identifiers, sharing metadata, and raw configuration behind native disclosu
 LiveCard and LiveWidget use the shared `components/card-shell` frame, header,
 refresh primitives, and drag preview. Product-specific content and settings stay
 in their adapters; the shell does not branch on the entity type or fetch data.
-
-
-Preset visualizations use ECharts with restrained axes, compact labels, scoped
-palette colors, transparent backgrounds and no toolbar, zoom controls or export
-buttons. Series legends identify data but do not toggle it. Disable chart
-animation so polling and card flips remain stable. Word clouds keep words
-horizontal. Resolve CSS theme colors to RGB before passing them to Canvas.
-Metric and table presets use semantic HTML; charts also expose their observations
-in a screen-reader table. Keep view controls in a separate View section on the
-back using the shared card settings and parameter fields. Cancel discards drafts,
-Save updates the placement patch, and Reset removes only view overrides.
-
-Advanced Widget presets keep controls on the card back. Trend metrics combine a
-value and explicit period delta with a compact ECharts sparkline. Status rows show
-a written state beside their colored dot; timelines include local display times
-and machine-readable timestamps. Bullet charts separate actual bars, reference
-bands, and target markers. Missing comparison baselines display explicit text.
-### Widget instance identity
-
-LiveWidget placements have independent instance identity. Reusing a Widget
-definition within one Board is allowed; edits, dragging, resizing and removal
-must target only the selected `liveWidgetId`. Moving an instance to another
-Board preserves its identity and does not disable Boards containing the same
-definition. Definition-based avatars may remain identical across instances.
 
 ### Workspace connection decisions
 

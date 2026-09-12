@@ -445,7 +445,7 @@ the Source loader's nonempty-result requirement or 50-item collection cap.
 LiveCard Widget renderer consumes the same normalized items as NowLayer through
 `LiveCardItems`; query and JS data do not bypass item validation. Data execution
 and view rendering are independent; see the data-only Widget contract in
-[SOURCE_GUIDELINE.md](SOURCE_GUIDELINE.md#data-only-widgets-with-built-in-ui) and
+[WIDGET_GUIDELINE.md](WIDGET_GUIDELINE.md#data-producers) and
 the runtime lifecycle in [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 
 Loader metadata is response-scoped and remains part of the load result stored in
@@ -1068,7 +1068,7 @@ view/drag identity target the instance, while the producer receives the
 definition ID and resolved inputs. Snapshot identity excludes instance ID,
 title, palette and layout, allowing equal inputs to share the request-protection
 cache. See the preset authoring contract in
-[SOURCE_GUIDELINE.md](SOURCE_GUIDELINE.md#preset-chart-widgets) and renderer
+[WIDGET_GUIDELINE.md](WIDGET_GUIDELINE.md#preset-chart-views) and renderer
 lifecycle in [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 
 Widget producer analytics live in the transport-free `@newsnext/sdk/analytics`

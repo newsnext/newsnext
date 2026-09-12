@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activity digest</title>
+  <style>
+    /* The host owns the shell, surface, scroll container, and status layer, so
+       this document only styles its own content. It redeclares the NewsNext
+       semantic tokens it needs with the app's values and resolves them through
+       `light-dark()`. */
+    :root {
+      /* Opting into both schemes lets `light-dark()` follow the host's color
+         scheme, which reaches the iframe through `prefers-color-scheme`. */
+      color-scheme: light dark;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      --foreground: light-dark(oklch(37.1% 0 none), oklch(87% 0 none));
+      --muted-foreground: light-dark(oklch(43.9% 0 none), oklch(70.8% 0 none));
+      --muted: oklch(70.8% 0 none / 10%);
+      --track: color-mix(in oklab, var(--foreground) 8%, transparent);
+      --rule: color-mix(in oklab, var(--foreground) 10%, transparent);
+      --line: color-mix(in oklab, var(--foreground) 45%, transparent);
+      --area: color-mix(in oklab, var(--foreground) 10%, transparent);
+      --hover: color-mix(in oklab, var(--foreground) 6%, transparent);
+      --duration: 150ms;
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* The document never scrolls or shows a scrollbar, not even while the host
+       is still applying the reported height. */
+    html, body { overflow: hidden; background: transparent; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.4286;
+      color: var(--foreground);
+    }
+    /* The document never scrolls and never shows a scrollbar. It keeps its
+       natural height and reports it to the host, whose content panel owns the
+       scrolling state. */
+    #root {
+      display: grid;
+      gap: 14px;
+      padding: 12px;
+    }
+    .stats {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+    }
+    .tile {
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background-color: var(--muted);
+    }
+    .tile-label { font-size: 12px; color: var(--muted-foreground); }
+    .tile-value {
+      overflow: hidden;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tile-hint { font-size: 12px; color: var(--muted-foreground); }
+    .note { grid-column: 1 / -1; font-size: 12px; color: var(--muted-foreground); }
+    .panel { display: grid; gap: 8px; }
+    .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .panel-title { margin: 0; font-size: 14px; font-weight: 600; opacity: 0.8; }
+    .panel-hint {
+      margin: 0;
+      overflow: hidden;
+      font-size: 12px;
+      color: var(--muted-foreground);
+      font-variant-numeric: tabular-nums;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .chart {
+      position: relative;
+      height: 56px;
+      border-bottom: 1px solid var(--rule);
+      outline: none;
+    }
+    .chart:focus-visible { outline: 2px solid var(--line); outline-offset: 2px; border-radius: 8px; }
+    .chart svg { display: block; width: 100%; height: 100%; }
+    .chart .dot {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background-color: var(--foreground);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: left var(--duration) var(--ease), top var(--duration) var(--ease);
+    }
+    .bars { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .bar { display: grid; align-items: center; gap: 8px; grid-template-columns: minmax(0, 1fr) minmax(48px, 38%) auto; }
+    .bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { height: 6px; border-radius: 999px; background-color: var(--track); }
+    .bar-fill { display: block; height: 100%; border-radius: 999px; background-color: var(--line); }
+    .bar-value { min-width: 2ch; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+    .topics { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    .topic { display: grid; gap: 4px; padding: 6px 8px; border-radius: 12px; transition: background-color var(--duration) var(--ease); }
+    .topic:hover { background-color: var(--hover); }
+    .topic-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    .topic-name { display: flex; min-width: 0; align-items: baseline; gap: 6px; }
+    .topic-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .topic-change, .topic-count { font-size: 12px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+    .topic-change { flex-shrink: 0; }
+    .topic-chart { position: relative; height: 20px; }
+    .topic-chart svg { display: block; width: 100%; height: 100%; }
+    .items { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+    .item-link {
+      display: grid;
+      gap: 2px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      color: inherit;
+      text-decoration: none;
+      transition: background-color var(--duration) var(--ease);
+    }
+    .item-link:hover, .item-link:focus-visible { background-color: var(--hover); }
+    .item-link:focus-visible { outline: 2px solid var(--line); outline-offset: -2px; }
+    .item-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-meta { overflow: hidden; font-size: 12px; color: var(--muted-foreground); text-overflow: ellipsis; white-space: nowrap; }
+    @media (prefers-reduced-motion: reduce) {
+      .topic, .item-link, .chart .dot { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main id="root"></main>
+  <script>
+    const PROTOCOL_VERSION = 1
+    const root = document.getElementById("root")
+    const numberFormat = new Intl.NumberFormat()
+    const dayFormat = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" })
+
+    function element(tag, className, text) {
+      const node = document.createElement(tag)
+      if (className) node.className = className
+      if (text !== undefined) node.textContent = text
+      return node
+    }
+
+    function svgElement(tag, attributes) {
+      const node = document.createElementNS("http://www.w3.org/2000/svg", tag)
+      for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, String(value))
+      return node
+    }
+
+    function panel(title) {
+      const section = element("section", "panel")
+      const head = element("div", "panel-head")
+      const hint = element("p", "panel-hint")
+      head.append(element("h2", "panel-title", title), hint)
+      section.append(head)
+      return { section, hint }
+    }
+
+    function relativeTime(timestamp) {
+      const minutes = Math.round((Date.now() - timestamp) / 60_000)
+      if (minutes < 1) return "just now"
+      if (minutes < 60) return `${minutes}m ago`
+      const hours = Math.round(minutes / 60)
+      if (hours < 24) return `${hours}h ago`
+      const days = Math.round(hours / 24)
+      return days < 7 ? `${days}d ago` : dayFormat.format(new Date(timestamp))
+    }
+
+    function formatDay(label) {
+      const [year, month, day] = label.split("-").map(Number)
+      return dayFormat.format(new Date(year, month - 1, day))
+    }
+
+    function plural(count, noun) {
+      return `${numberFormat.format(count)} ${noun}${count === 1 ? "" : "s"}`
+    }
+
+    // Deltas stay monochrome: more items is not automatically good news, so the
+    // direction is stated in text instead of borrowing a semantic status color.
+    function deltaText(change) {
+      if (change === null) return "no earlier data"
+      if (change === 0) return "• no change"
+      return `${change > 0 ? "▲" : "▼"} ${Math.abs(change)}%`
+    }
+
+    function sparkline(points, className) {
+      const height = 100
+      const max = Math.max(1, ...points.map(point => point.value))
+      const position = index => points.length < 2 ? 50 : (index / (points.length - 1)) * 100
+      const level = value => height - (value / max) * (height - 6) - 3
+      const line = points.map((point, index) => `${index === 0 ? "M" : "L"}${position(index).toFixed(2)},${level(point.value).toFixed(2)}`).join(" ")
+      const svg = svgElement("svg", { viewBox: `0 0 100 ${height}`, preserveAspectRatio: "none", "aria-hidden": "true" })
+      svg.append(
+        svgElement("path", { d: `${line} L100,${height} L0,${height} Z`, fill: "var(--area)" }),
+        svgElement("path", { d: line, fill: "none", stroke: "var(--line)", "stroke-width": 1.5, "stroke-linejoin": "round", "stroke-linecap": "round", "vector-effect": "non-scaling-stroke" }),
+      )
+      const chart = element("div", className)
+      chart.append(svg)
+      return { chart, svg, position, level }
+    }
+
+    function buildStats(digest) {
+      const { totals, window: range, busiest, freshest } = digest
+      const stats = element("section", "stats")
+      const tiles = [
+        ["Items", numberFormat.format(totals.items), totals.change === null ? "No earlier baseline" : `${deltaText(totals.change)} vs previous window`],
+        ["Sources", numberFormat.format(totals.sources), `across the last ${range.days} days`],
+        ["Busiest day", busiest ? formatDay(busiest.label) : "—", busiest ? plural(busiest.value, "item") : "No activity"],
+        ["Freshest", freshest ? relativeTime(freshest) : "—", freshest ? `published ${dayFormat.format(new Date(freshest))}` : "No activity"],
+      ]
+      for (const [label, value, hint] of tiles) {
+        const tile = element("div", "tile")
+        tile.append(element("p", "tile-label", label), element("p", "tile-value", value), element("p", "tile-hint", hint))
+        stats.append(tile)
+      }
+      if (totals.undated) {
+        stats.append(element("p", "note", `Excluded ${plural(totals.undated, "item")} without a publication time.`))
+      }
+      if (totals.capped) {
+        stats.append(element("p", "note", "Based on the newest 500 items in this Board's scope."))
+      }
+      return stats
+    }
+
+    function buildDaily(digest) {
+      const { section, hint } = panel("Daily activity")
+      hint.setAttribute("aria-live", "polite")
+      const { chart, svg, position, level } = sparkline(digest.daily, "chart")
+      const dot = element("span", "dot")
+      chart.append(dot)
+      chart.tabIndex = 0
+      chart.setAttribute("role", "group")
+      chart.setAttribute("aria-label", `Items published per day over the last ${digest.window.days} days; use the arrow keys to read each day`)
+
+      let selected = digest.daily.length - 1
+      const select = index => {
+        selected = Math.min(digest.daily.length - 1, Math.max(0, index))
+        const point = digest.daily[selected]
+        dot.style.left = `${position(selected)}%`
+        dot.style.top = `${level(point.value)}%`
+        hint.textContent = `${formatDay(point.label)} · ${plural(point.value, "item")}`
+      }
+      digest.daily.forEach((point, index) => {
+        const width = 100 / digest.daily.length
+        const hit = svgElement("rect", { x: index * width, y: 0, width, height: 100, fill: "transparent", "pointer-events": "all" })
+        hit.addEventListener("pointerenter", () => select(index))
+        svg.append(hit)
+      })
+      chart.addEventListener("focus", () => select(selected))
+      chart.addEventListener("keydown", event => {
+        const step = event.key === "ArrowLeft" ? -1 : event.key === "ArrowRight" ? 1 : 0
+        if (!step && event.key !== "Home" && event.key !== "End") return
+        event.preventDefault()
+        select(event.key === "Home" ? 0 : event.key === "End" ? digest.daily.length - 1 : selected + step)
+      })
+      select(selected)
+      section.append(chart)
+      return section
+    }
+
+    function buildSources(digest) {
+      const { section } = panel("Top sources")
+      if (!digest.sources.length) {
+        section.append(element("p", "note", "No publications in this window."))
+        return section
+      }
+      const max = Math.max(...digest.sources.map(row => row.value))
+      const list = element("ul", "bars")
+      for (const row of digest.sources) {
+        const item = element("li", "bar")
+        const track = element("span", "bar-track")
+        const fill = element("span", "bar-fill")
+        fill.style.width = `${Math.round((row.value / max) * 100)}%`
+        track.append(fill)
+        item.append(element("span", "bar-label", row.label), track, element("span", "bar-value", numberFormat.format(row.value)))
+        item.title = `${row.label}: ${plural(row.value, "item")} (${row.share}%)`
+        list.append(item)
+      }
+      section.append(list)
+      return section
+    }
+
+    function buildTopics(digest) {
+      const { section } = panel("Topics")
+      if (!digest.topics.length) {
+        section.append(element("p", "note", "Add comma-separated topics on the card back."))
+        return section
+      }
+      const list = element("ul", "topics")
+      for (const topic of digest.topics) {
+        const item = element("li", "topic")
+        const head = element("div", "topic-head")
+        const name = element("div", "topic-name")
+        const change = element("span", "topic-change", deltaText(topic.change))
+        change.title = `${plural(topic.previous, "item")} in the previous window`
+        name.append(element("span", "topic-label", topic.label), change)
+        head.append(name, element("span", "topic-count", plural(topic.value, "item")))
+        item.append(head, sparkline(topic.history, "topic-chart").chart)
+        list.append(item)
+      }
+      section.append(list)
+      return section
+    }
+
+    function buildHighlights(digest) {
+      const { section } = panel("Highlights")
+      if (!digest.highlights.length) {
+        section.append(element("p", "note", "No publications in this window."))
+        return section
+      }
+      const list = element("ol", "items")
+      for (const highlight of digest.highlights) {
+        const link = element("a", "item-link")
+        link.href = highlight.url
+        link.target = "_blank"
+        link.rel = "noreferrer"
+        link.append(
+          element("span", "item-title", highlight.label),
+          element("span", "item-meta", `${highlight.source} · ${relativeTime(highlight.publishedAt)}`),
+        )
+        const item = element("li")
+        item.append(link)
+        list.append(item)
+      }
+      section.append(list)
+      return section
+    }
+
+    // The host owns loading, empty, and error presentation, so this view reports
+    // its own status instead of drawing status text.
+    function reportStatus(message) {
+      parent.postMessage({ type: "newsnext.widget.status", version: PROTOCOL_VERSION, message }, "*")
+    }
+
+    // The host sizes the iframe to this height, so the document never scrolls;
+    // the content panel scrolls when the digest is taller than the card.
+    function reportSize() {
+      parent.postMessage({
+        type: "newsnext.widget.size",
+        version: PROTOCOL_VERSION,
+        height: Math.ceil(root.getBoundingClientRect().height),
+      }, "*")
+    }
+
+    function render(payload) {
+      const digest = payload.status === "ready" ? payload.queries && payload.queries.digest : null
+      if (!digest || !Array.isArray(digest.daily) || !digest.totals) {
+        if (payload.status === "ready") reportStatus("Invalid Widget data")
+        else reportStatus(null)
+        root.replaceChildren()
+        reportSize()
+        return
+      }
+      if (!digest.totals.items) {
+        reportStatus(`No items published in the last ${digest.window.days} days.`)
+        root.replaceChildren()
+        reportSize()
+        return
+      }
+      reportStatus(null)
+      root.replaceChildren(
+        buildStats(digest),
+        buildDaily(digest),
+        buildSources(digest),
+        buildTopics(digest),
+        buildHighlights(digest),
+      )
+      reportSize()
+    }
+
+    // Reflow from card resizing or late fonts resizes the iframe too.
+    new ResizeObserver(reportSize).observe(root)
+
+    window.addEventListener("message", event => {
+      if (event.source !== window.parent) return
+      const data = event.data
+      if (!data || data.type !== "newsnext.widget.data" || data.version !== PROTOCOL_VERSION) return
+      render(data)
+    })
+
+    parent.postMessage({ type: "newsnext.widget.ready", version: PROTOCOL_VERSION }, "*")
+  </script>
+</body>
+</html>

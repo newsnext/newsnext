@@ -396,7 +396,7 @@ Do not remove renders that are required to update Motion props, measured scatter
 vectors, or drag state. Optimize the content boundary instead.
 
 Use the shared exit-then-reveal sequence for both Layers; its visual contract is
-in [Design Guideline](DESIGN_GUIDELINE.md#next-layer-widget-surfaces). Keep
+in [Design Guideline](DESIGN_GUIDELINE.md#next-layer-surfaces). Keep
 transition work outside card content and never transform or blur the full page.
 
 ### Observe against the real scroll container

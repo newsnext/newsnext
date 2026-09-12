@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame } from "./widget-host.js"
+import { isWidgetSdkControl, isWidgetSdkRequest, isWidgetSize, isWidgetStatus, sdkErrorFrame } from "./widget-host.js"
 
 describe("widget SDK messages", () => {
   it("accepts SDK envelopes without confusing them with snapshot messages", () => {
@@ -21,6 +21,43 @@ describe("widget SDK messages", () => {
     expect(isWidgetSdkControl({ type: "cancel" })).toBe(true)
     for (const value of [null, [], "next", {}, { type: "data" }, { type: "newsnext.widget.sdk", request: {} }]) {
       expect(isWidgetSdkControl(value)).toBe(false)
+    }
+  })
+
+  it("accepts only custom view status reports", () => {
+    expect(isWidgetStatus({ type: "newsnext.widget.status", version: 1, message: "No data to display." })).toBe(true)
+    expect(isWidgetStatus({ type: "newsnext.widget.status", version: 1, message: null })).toBe(true)
+    for (const value of [
+      null,
+      [],
+      "status",
+      {},
+      { type: "newsnext.widget.status", version: 2, message: null },
+      { type: "newsnext.widget.status", version: 1 },
+      { type: "newsnext.widget.status", version: 1, message: 3 },
+      { type: "newsnext.widget.data", version: 1, message: null },
+    ]) {
+      expect(isWidgetStatus(value)).toBe(false)
+    }
+  })
+
+  it("accepts only finite non-negative custom view sizes", () => {
+    expect(isWidgetSize({ type: "newsnext.widget.size", version: 1, height: 238 })).toBe(true)
+    expect(isWidgetSize({ type: "newsnext.widget.size", version: 1, height: 0 })).toBe(true)
+    for (const value of [
+      null,
+      [],
+      "size",
+      {},
+      { type: "newsnext.widget.size", version: 2, height: 120 },
+      { type: "newsnext.widget.size", version: 1 },
+      { type: "newsnext.widget.size", version: 1, height: "120" },
+      { type: "newsnext.widget.size", version: 1, height: Number.NaN },
+      { type: "newsnext.widget.size", version: 1, height: Number.POSITIVE_INFINITY },
+      { type: "newsnext.widget.size", version: 1, height: -1 },
+      { type: "newsnext.widget.status", version: 1, message: null },
+    ]) {
+      expect(isWidgetSize(value)).toBe(false)
     }
   })
 })

@@ -14,6 +14,7 @@ the time is right.
 - [Application architecture](docs/APPLICATION_ARCHITECTURE.md)
 - [Source authoring guide](docs/SOURCE_GUIDELINE.md)
 - [Source architecture](docs/SOURCE_ARCHITECTURE.md)
+- [Widget guideline](docs/WIDGET_GUIDELINE.md)
 - [Proposed data stream processing](docs/DATA_STREAM_ARCHITECTURE.md)
 - [Design guideline](docs/DESIGN_GUIDELINE.md)
 - [Performance guideline](docs/PERFORMANCE_GUIDELINE.md)

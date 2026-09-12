@@ -1,0 +1,40 @@
+{
+  "title": "Activity digest",
+  "color": "indigo",
+  "width": 2,
+  "height": 2,
+  "minWidth": 2,
+  "minHeight": 1,
+  "view": {
+    "type": "custom"
+  },
+  "data": {
+    "queries": {
+      "recent": {
+        "type": "latest",
+        "limit": 500
+      }
+    }
+  },
+  "params": {
+    "days": {
+      "type": "number",
+      "title": "Window (days)",
+      "default": 14,
+      "min": 3,
+      "max": 60
+    },
+    "topics": {
+      "type": "text",
+      "title": "Topics",
+      "default": "AI, research, design"
+    },
+    "highlights": {
+      "type": "number",
+      "title": "Highlights",
+      "default": 5,
+      "min": 1,
+      "max": 10
+    }
+  }
+}

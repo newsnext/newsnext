@@ -35,7 +35,7 @@ export function WidgetSummaryContent({ rows, view }: { rows: ChartRow[], view: W
             )}
             {row.detail && <p className="mt-1 text-xs text-muted-foreground">{row.detail}</p>}
             {row.timestamp && <time dateTime={row.timestamp} className="mt-1 block text-xs text-muted-foreground">{new Date(row.timestamp).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</time>}
-            {row.history && <div className="flex h-16 min-h-0"><Suspense fallback={<span className="text-xs text-muted-foreground">Loading trend…</span>}><WidgetEchart compact view={{ ...view, chart: "line", series: undefined }} rows={row.history.map((value, i) => ({ label: String(i + 1), value, series: "", x: i, y: value }))} /></Suspense></div>}
+            {row.history && <div className="flex h-16 min-h-0"><Suspense fallback={null}><WidgetEchart compact view={{ ...view, chart: "line", series: undefined }} rows={row.history.map((value, i) => ({ label: String(i + 1), value, series: "", x: i, y: value }))} /></Suspense></div>}
           </li>
         )
       })}
