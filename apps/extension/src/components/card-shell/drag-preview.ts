@@ -17,9 +17,7 @@ export function generateCardDragPreview({
   container.style.width = `${previewWidth}px`
 
   const layer = document.createElement("div")
-  layer.dataset.dragPreview = ""
   layer.className = "relative rounded-3xl shadow-md"
-  layer.style.width = `${previewWidth}px`
   layer.style.padding = "0.625rem"
   const surfaceColor = getComputedStyle(surface).backgroundColor
   layer.style.background = `linear-gradient(${surfaceColor}, ${surfaceColor}), ${backgroundColor}`
