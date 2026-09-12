@@ -1,4 +1,4 @@
-import type { ConnectedFetchInput, FetchResponse, LiveCard, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse } from "../models/index.js"
+import type { ConnectedFetchInput, FetchResponse, LiveCard, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse, WidgetCatalogEntry } from "../models/index.js"
 import Type from "typebox"
 import { defineActionContract } from "./definition.js"
 import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
@@ -22,6 +22,23 @@ const WorkspaceSummaryResult = Type.Object({
   liveWidgets: Type.Integer({ minimum: 0 }),
 }, { additionalProperties: false })
 
+// `view` and `params` carry the Widget manifest schema the extension validates before rendering.
+const WidgetCatalogEntryResult = Type.Unsafe<WidgetCatalogEntry>(Type.Object({
+  id: Identifier,
+  title: Type.String(),
+  color: Type.String(),
+  width: Type.Integer({ minimum: 1 }),
+  height: Type.Integer({ minimum: 1 }),
+  minWidth: Type.Integer({ minimum: 1 }),
+  minHeight: Type.Integer({ minimum: 1 }),
+  url: Type.Optional(Type.String()),
+  view: Type.Unknown(),
+  params: Type.Unknown(),
+  dataRevision: Type.String(),
+  dataFiles: Type.Array(Type.String()),
+  refreshIntervalMs: Type.Number(),
+}, { additionalProperties: false }))
+
 const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.Object({
   workspaceConflict: Type.Optional(Type.Object({
     revision: Type.Integer({ minimum: 0 }),
@@ -34,6 +51,7 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
     id: Identifier,
     cardIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
   }, { additionalProperties: false })),
+  widgets: Type.Array(WidgetCatalogEntryResult),
   connectionError: Type.Optional(Type.Object({
     code: Type.Optional(Type.String()),
     message: Type.String(),

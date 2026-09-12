@@ -13,7 +13,6 @@ import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { BACKGROUND_DIAGNOSTICS_CHANGED } from "../diagnostics-events"
-import { WIDGET_CATALOG_CHANGED } from "../widget-catalog-events"
 import { initializeWorkerIdentity } from "../worker-identity"
 import { summarizeWorkspace } from "../workspace-resolution"
 import {
@@ -145,6 +144,7 @@ function getNativeIntegrationStatus(): NativeIntegrationStatus {
     daemonVersion: runtime.daemonVersion,
     capabilities: [...runtime.capabilities],
     offlineWorkers: runtime.offlineWorkers.map(worker => ({ ...worker })),
+    widgets: runtime.widgetCatalog.map(entry => ({ ...entry })),
     connectionError: runtime.connectionError,
     state: runtime.enabled ? runtime.connectionState : "disabled",
     workerId: runtime.workerId,
@@ -216,6 +216,7 @@ function resetConnectionState(
   runtime.capabilities = []
   runtime.workerRoutingRevision = 0
   runtime.offlineWorkers = []
+  runtime.widgetCatalog = []
   runtime.widgetServerOrigin = undefined
   runtime.connectionState = state
   runtime.connectionError = error
@@ -300,6 +301,7 @@ function connect(): void {
   runtime.connectionState = "connecting"
   runtime.daemonVersion = undefined
   runtime.capabilities = []
+  runtime.widgetCatalog = []
   runtime.widgetServerOrigin = undefined
   let nextPort: NativePort
   try {
@@ -374,6 +376,7 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.capabilities = [...message.capabilities]
       runtime.workerRoutingRevision = message.workerRoutingRevision
       runtime.offlineWorkers = message.offlineWorkers
+      runtime.widgetCatalog = message.widgets
       runtime.widgetServerOrigin = message.widgetServerUrl
       runtime.connectionError = undefined
       void initializeSharedWorkspace(connection, message.workspace, message.localCardIds).then(() => {
@@ -519,7 +522,7 @@ function handleNotification(connection: NativePort, method: string, params: unkn
       }
       break
     case "widgetCatalogChanged":
-      void browser.runtime.sendMessage({ type: WIDGET_CATALOG_CHANGED }).catch(() => undefined)
+      runtime.widgetCatalog = notification.params.widgets
       break
   }
 }

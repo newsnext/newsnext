@@ -25,11 +25,19 @@ export interface LocalWidgetManifest {
   width: number
 }
 
-export function parseLocalWidgetManifests(
+/** The catalog the daemon publishes, or the reason its definitions cannot be rendered. */
+export interface WidgetCatalog {
+  error?: string
+  widgets: LocalWidgetManifest[]
+}
+
+/** Validates the catalog the daemon pushes over the native protocol. */
+export function parseWidgetCatalog(
   value: unknown,
-  serverOrigin: string,
+  serverOrigin: string | undefined,
 ): LocalWidgetManifest[] {
-  if (!Array.isArray(value)) throw new Error("The widget server returned an invalid manifest list")
+  if (!serverOrigin) return []
+  if (!Array.isArray(value)) throw new Error("The daemon returned an invalid Widget catalog")
   const expectedOrigin = new URL(serverOrigin).origin
   const ids = new Set<string>()
   return value.map((candidate) => {
@@ -41,7 +49,7 @@ export function parseLocalWidgetManifests(
       || !isGridSize(candidate.minWidth, candidate.width)
       || !isGridSize(candidate.height, 100)
       || !isGridSize(candidate.minHeight, candidate.height)) {
-      throw new Error("The widget server returned an invalid widget manifest")
+      throw new Error("The daemon returned an invalid Widget manifest")
     }
     if (ids.has(candidate.id)) throw new Error(`Duplicate widget ID '${candidate.id}'`)
     ids.add(candidate.id)

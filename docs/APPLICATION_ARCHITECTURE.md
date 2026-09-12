@@ -272,24 +272,18 @@ pointer for sorting and trash drops. Shared card header rules, native previews,
 and placeholder styling keep feedback consistent; each Layer retains its own
 layout and persistence logic.
 
-Widget catalog discovery isolates invalid or unfinished directories: `/widgets`
-returns valid renderable definitions and logs each rejected manifest with its
+Widget catalog discovery isolates invalid or unfinished directories: the daemon
+lists valid renderable definitions and logs each rejected manifest with its
 Widget ID and validation error. A rejected definition still fails when queried
 directly. Old local manifests must remove `id`, `entry`, and `data.entry` when
 these match the directory name, `index.html`, and `data.mjs`; the loader continues
 to enforce the current schema rather than silently accepting obsolete fields.
-The daemon watches the Widget directory and advertises the additive
-`widgetCatalogPush` capability. Each settled burst of filesystem activity
-publishes a `widgetCatalogChanged` revision to connected browsers; the extension
-background forwards it to open pages, which invalidate the catalog query and
-refetch instead of waiting for the next poll. Watching is best effort, so the
-periodic catalog poll remains as the fallback, and a daemon without the
-capability keeps the short interval. Catalog responses carry a strong `ETag`
-derived from the serialized definitions, so a poll that finds nothing new is
-answered with `304` and no payload. The built catalog is cached and dropped by
-those same directory changes, which keeps that validator free to serve; cache
-entries also expire on their own, so a missing watcher delays a change instead of
-leaving the catalog stale.
+The catalog is protocol data rather than an HTTP resource: `ready` carries the
+current definitions next to the Workspace, and each settled burst of filesystem
+activity publishes a `widgetCatalogChanged` payload to connected browsers. The
+extension background caches the newest payload, and open pages revalidate it
+before rendering. Watching is best effort, so a daemon without it keeps the
+definitions it read at startup instead of rescanning on demand.
 
 Local Widget files and `widget.json` live in the CLI's Widget directory. Each
 Widget's directory name is its ID; the manifest has no configurable `id`. The
@@ -408,10 +402,11 @@ inputs; SDK requests can compute data independently of any mounted view.
 Placed views call `liveWidgets.data`; there is no separate placed Snapshot Action
 or Native Messaging request. Cache identity depends on Widget definition,
 resolved inputs, and parameters, independent of Board placement.
-The loopback HTTP server serves assets and presentation metadata, not
-an unauthenticated endpoint that executes local JavaScript. NextLayer does not
-observe NowLayer's query cache. The host owns title, palette, refresh state,
-layout, and the details back, including local data entry filenames.
+The loopback HTTP server serves Widget documents only, and the native protocol
+carries the catalog that names them; neither is an unauthenticated endpoint that
+executes local JavaScript. NextLayer does not observe NowLayer's query cache. The
+host owns title, palette, refresh state, layout, and the details back, including
+local data entry filenames.
 
 Widgets can also import `createClient` from `@newsnext/sdk/widget` and actively
 query history, fetch through the browser, execute Sources, and invoke every typed

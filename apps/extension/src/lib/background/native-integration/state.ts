@@ -1,4 +1,4 @@
-import type { OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/models"
+import type { OfflineWorker as NativeOfflineWorker, WidgetCatalogEntry } from "@newsnext/sdk/models"
 import type { NativeIntegrationState, NativeIntegrationStatus, NativePort } from "./types"
 import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
@@ -8,9 +8,9 @@ import { getWorkerId } from "../worker-identity"
 export const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-// Protocol 29 adds the required LiveWidget instance ID. Workspace resolution
-// uses existing Workspace fields and does not change the native wire format.
-export const PROTOCOL_VERSION = 29
+// Protocol 30 carries the Widget catalog inside Ready and every catalog push
+// instead of serving it from the loopback Widget server.
+export const PROTOCOL_VERSION = 30
 export const WORKSPACE_SYNCED_AT_KEY = "newsnext-workspace-synced-at"
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"
@@ -40,6 +40,7 @@ interface NativeIntegrationRuntime {
   port: NativePort | undefined
   reconnectAttempt: number
   reconnectTimer: ReturnType<typeof setTimeout> | undefined
+  widgetCatalog: WidgetCatalogEntry[]
   widgetServerOrigin: string | undefined
   workerId: string
   workerRoutingRevision: number
@@ -62,6 +63,7 @@ export const runtime: NativeIntegrationRuntime = {
   port: undefined,
   reconnectAttempt: 0,
   reconnectTimer: undefined,
+  widgetCatalog: [],
   widgetServerOrigin: undefined,
   workerId: getWorkerId(),
   workerRoutingRevision: 0,

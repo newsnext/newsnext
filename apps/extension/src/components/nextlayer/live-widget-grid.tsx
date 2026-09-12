@@ -3,12 +3,10 @@ import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
 import type { SortableWidgetNode } from "./sortable-widget-grid"
-import type { WidgetUi } from "./widget-manifest"
+import type { WidgetCatalog, WidgetUi } from "./widget-manifest"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { browser } from "#imports"
 import { CardBackContent, CardShell } from "@/components/card-shell"
 import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
 import { CardContentBackground, CardContentTransition, CardRefreshButton } from "@/components/card-shell/card-refresh"
@@ -23,7 +21,6 @@ import { useSortable } from "@/hooks/use-sortable"
 import { useSourceParams } from "@/hooks/use-source-params"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
-import { isWidgetCatalogChangedMessage } from "@/lib/background/widget-catalog-events"
 import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
@@ -34,7 +31,7 @@ import { parseChartRows } from "./widget-chart-data"
 import { WidgetItemListContent } from "./widget-item-list-content"
 import { parseWidgetItems } from "./widget-items"
 import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
-import { parseLocalWidgetManifests } from "./widget-manifest"
+import { parseWidgetCatalog } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
 import { WidgetViewSettings } from "./widget-view-settings"
 
@@ -375,48 +372,13 @@ function useElementVisible(ref: RefObject<Element | null>): boolean {
   return visible
 }
 
-function useWidgetServerOrigin() {
+function useNativeWidgetConnection() {
   const query = useNativeIntegrationStatus()
   return {
     isLoading: query.isLoading,
     serverOrigin: query.data?.widgetServerOrigin,
     state: query.data?.state,
-    catalogPushes: query.data?.capabilities.includes("widgetCatalogPush") ?? false,
-  }
-}
-
-const LOCAL_WIDGETS_QUERY_KEY = ["local-widgets"] as const
-
-/** The daemon pushes catalog changes, so the interval only covers missed or unavailable pushes. */
-const CATALOG_FALLBACK_INTERVAL_MS = 60_000
-
-function useLocalWidgets(serverOrigin: string | undefined, catalogPushes: boolean) {
-  const queryClient = useQueryClient()
-  const query = useQuery({
-    queryKey: [...LOCAL_WIDGETS_QUERY_KEY, serverOrigin],
-    queryFn: async ({ signal }) => {
-      if (!serverOrigin) return []
-      const response = await fetch(`${serverOrigin}/widgets`, { signal })
-      if (!response.ok) throw new Error(`Widget server returned HTTP ${response.status}`)
-      return parseLocalWidgetManifests(await response.json(), serverOrigin)
-    },
-    enabled: serverOrigin !== undefined,
-    refetchInterval: catalogPushes ? CATALOG_FALLBACK_INTERVAL_MS : 5_000,
-  })
-  useEffect(() => {
-    if (!catalogPushes) return
-    const handleMessage = (message: unknown): void => {
-      if (isWidgetCatalogChangedMessage(message)) {
-        void queryClient.invalidateQueries({ queryKey: LOCAL_WIDGETS_QUERY_KEY })
-      }
-    }
-    browser.runtime.onMessage.addListener(handleMessage)
-    return () => browser.runtime.onMessage.removeListener(handleMessage)
-  }, [catalogPushes, queryClient])
-  return {
-    error: query.error instanceof Error ? query.error.message : undefined,
-    isLoading: query.isLoading,
-    widgets: query.data ?? [],
+    entries: query.data?.widgets,
   }
 }
 
@@ -428,17 +390,23 @@ interface LiveWidgetGridProps {
 
 export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridProps) {
   const { t } = useI18n()
-  const connection = useWidgetServerOrigin()
-  const manifestQuery = useLocalWidgets(connection.serverOrigin, connection.catalogPushes)
+  const connection = useNativeWidgetConnection()
+  const catalog = useMemo<WidgetCatalog>(() => {
+    try {
+      return { widgets: parseWidgetCatalog(connection.entries, connection.serverOrigin) }
+    } catch (error) {
+      return { error: error instanceof Error ? error.message : "Invalid Widget catalog", widgets: [] }
+    }
+  }, [connection.entries, connection.serverOrigin])
   const boards = useAtomValue(boardsAtom)
   const board = boards.find(candidate => candidate.id === boardId)
   const widgets = useMemo(() => {
-    const manifestsById = new Map(manifestQuery.widgets.map(widget => [widget.id, widget]))
+    const manifestsById = new Map(catalog.widgets.map(widget => [widget.id, widget]))
     return board?.nextLayer.liveWidgets.flatMap((placement) => {
       const manifest = manifestsById.get(placement.widgetId)
       return manifest ? [{ manifest, placement }] : []
     }) ?? []
-  }, [board?.nextLayer.liveWidgets, manifestQuery.widgets])
+  }, [board?.nextLayer.liveWidgets, catalog.widgets])
   const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement }) => {
     const minW = clampWidgetWidth(manifest.minWidth)
     return {
@@ -456,19 +424,18 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
     const updates = getChangedWidgetLayouts(layout, board.nextLayer.liveWidgets)
     if (updates.length > 0) await actions.nextLayer.setLiveWidgetLayouts({ boardId, liveWidgets: updates })
   }, [board, boardId])
-  const isLoading = connection.isLoading || manifestQuery.isLoading
   useLayoutEffect(() => {
-    if (!isLoading && (widgets.length === 0 || connection.state !== "connected" || manifestQuery.error)) onReady?.()
-  }, [connection.state, isLoading, manifestQuery.error, onReady, widgets.length])
+    if (!connection.isLoading && (widgets.length === 0 || connection.state !== "connected" || catalog.error)) onReady?.()
+  }, [catalog.error, connection.isLoading, connection.state, onReady, widgets.length])
 
-  if (isLoading) return null
+  if (connection.isLoading) return null
   if (connection.state !== "connected" || !connection.serverOrigin) {
     return <NextLayerMessage>{t("connectAppForWidgets")}</NextLayerMessage>
   }
-  if (manifestQuery.error) {
+  if (catalog.error) {
     return (
       <NextLayerMessage>
-        {t("loadWidgetsFailed", { error: String(manifestQuery.error) })}
+        {t("loadWidgetsFailed", { error: catalog.error })}
       </NextLayerMessage>
     )
   }

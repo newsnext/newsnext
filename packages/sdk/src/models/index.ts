@@ -1,4 +1,5 @@
 export type { OfflineWorker } from "../protocol/OfflineWorker.js"
+export type { WidgetCatalogEntry } from "../protocol/WidgetCatalogEntry.js"
 export type { Worker } from "../protocol/Worker.js"
 export * from "./application.js"
 export * from "./board.js"

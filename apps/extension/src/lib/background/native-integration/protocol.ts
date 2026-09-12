@@ -7,7 +7,7 @@ import { normalizeApplicationData } from "../../settings/persisted-data"
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
 import { parseWorkspacePatch } from "../workspace-patch"
 import { parseCollectionStatus } from "./collection-status"
-import { parseLocalCardIds, parseRevision } from "./message-values"
+import { parseLocalCardIds, parseRevision, parseWidgetCatalog } from "./message-values"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 
 type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & { capabilities: string[] }
@@ -45,6 +45,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
         ? value.capabilities
         : [],
       widgetServerUrl: parseWidgetServerOrigin(value.widgetServerUrl),
+      widgets: parseWidgetCatalog(value.widgets),
       workspace: parseWorkspace(value.workspace),
       localCardIds: parseLocalCardIds(value.localCardIds),
       workerRoutingRevision: parseRevision(value.workerRoutingRevision, "Worker routing"),
@@ -150,7 +151,7 @@ export function parseNativeNotification(method: string, params: unknown): Native
     case "collectionStatusChanged":
       return { method, params: { status: parseCollectionStatus(params.status) } }
     case "widgetCatalogChanged":
-      return { method, params: {} }
+      return { method, params: { widgets: parseWidgetCatalog(params.widgets) } }
     default:
       throw new Error(`Unsupported native notification '${method}'`)
   }
