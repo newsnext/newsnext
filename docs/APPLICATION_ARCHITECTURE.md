@@ -28,8 +28,30 @@ The CLI daemon is optional. When present, it coordinates and broadcasts an
 in-memory Workspace and routes a LiveCard load to its bound Worker without
 exposing Worker identity to application code. Each browser persists the
 Workspace's last-update time. The first browser connected after daemon startup
-supplies the initial baseline. If a later browser has a newer snapshot, the
-daemon adopts and broadcasts it, including persisted LiveCard ownership.
+supplies the initial baseline. Later registrations never replace an existing
+Workspace, regardless of timestamps. The joining browser compares its local data
+with the shared snapshot before writing either side. An unchanged previously
+synced mirror adopts the shared snapshot; differing new or locally edited
+snapshots pause synchronization for an explicit decision in CLI Settings:
+
+- **Overwrite shared data:** replace shared Boards, LiveCards, Widgets, and
+  settings with local data through a revision-checked commit.
+- **Merge both:** union entity IDs, retaining shared fields, settings, and Board
+  ownership on conflicts. Append local-only membership and Widget instances;
+  Widget card scopes remain restricted to their resulting Board. Instances of
+  the same Widget definition remain distinct.
+- **Discard local data:** adopt the shared Workspace without committing changes
+  to it.
+
+Pending decisions retain local browser storage across disconnects and background
+restarts. Shared notifications update only the pending shared snapshot. The
+resolution Action requires the displayed shared revision; stale choices must be
+reviewed again. Before applying any choice, the browser saves both snapshots at
+`newsnext-workspace-resolution-backup`. The last successful synchronization time
+is persisted separately from offline changes. Mutations are rejected during
+initial synchronization and pending decisions, preventing unintended writes and
+circular waits between the application mutation and Workspace mirror queues.
+
 Browser storage remains the durable owner. Without the CLI, the extension reads
 its local Workspace and runs locally owned Loaders directly.
 
@@ -52,7 +74,7 @@ Each browser mirrors the complete Workspace in one versioned envelope:
 
 ```ts
 interface ApplicationData {
-  version: 7
+  version: 8
   boards: Board[]
   liveCards: LiveCard[]
 }
@@ -63,9 +85,16 @@ The background application repository applies acknowledged daemon commits to
 Action dispatchers. Every Board reference resolves against the mirrored
 Workspace LiveCard collection.
 
-Application data accepts version 7 only, with `liveCards`, `cardId`, `cardIds`,
+Application data writes version 8, with `liveCards`, `cardId`, `cardIds`,
 `nextLayer.liveWidgets`, and explicit Widget scopes `{ type: "cards", cardIds }`.
-Old application exports are not converted. The daemon keeps Workspace in memory
+Only application version 8 and export version 6 are accepted. Completed migrations
+are not rerun; existing instance IDs remain opaque and are preserved verbatim.
+New instances use 16-character Nano IDs. Unsupported versions or
+malformed collection envelopes throw before initialization or storage writes;
+only an absent storage key may initialize an empty Workspace. Never treat an
+unrecognized persisted version as new-user data. When changing schemas in a live
+development checkout, install migration readers before bumping the version:
+background hot reload can otherwise run an intermediate incompatible build. The daemon keeps Workspace in memory
 and receives the browser projection. New databases initialize schema 15; existing
 databases must already use schema 15. Startup does not run legacy migrations,
 search-index backfills, or table cleanup.
@@ -73,7 +102,7 @@ search-index backfills, or table cleanup.
 Single-Board ownership remains canonical. Persistence normalization
 keeps the first Board in persisted Board order as the owner if malformed data
 contains duplicates and removes duplicate Layer references. Actions and domain
-mutations accept only the version 7 model.
+mutations accept only the version 8 model.
 
 ### LiveCard
 
@@ -203,8 +232,15 @@ another persistent entity. Shared item rendering lets a LiveWidget display the
 standard list content without becoming a LiveCard.
 
 A Widget definition remains identified by its directory's `widgetId`. A LiveWidget
-is a placement addressed by `(boardId, widgetId)`, with at most one placement of
-that definition per Board. No independent `liveWidgetId` is introduced.
+is an independent instance with a globally unique `liveWidgetId`. Multiple instances
+may reference the same definition, including within one Board. Installation creates
+a new instance and returns its ID; configuration, removal, layout and movement
+Actions address `liveWidgetId` within its owning Board. Moving preserves identity,
+settings and dimensions. Definitions remain exclusively in the filesystem.
+Native protocol 29 requires instance IDs and rejects duplicate ownership.
+React keys, drag identifiers and iframe data messages carry instance identity;
+data computation and cache identity continue to use the definition and its inputs,
+so equal inputs can share results across instances.
 
 `client.liveCards.data({ cardId })` delegates to `liveCard.load`, returning the
 existing SourceLoadResponse including normalized content, timestamps, resolved
@@ -219,9 +255,9 @@ preference; switching views does not change membership or trigger collection.
 Both share the root scroll container with restoration keyed by Board and Layer.
 
 NowLayer owns LiveCards and LiveCard-scoped queries. NextLayer owns the Board's
-`nextLayer.liveWidgets`: each entry has `widgetId`, grid `layout` (`x`, `y`, `width`,
+`nextLayer.liveWidgets`: each entry has `liveWidgetId`, `widgetId`, grid `layout` (`x`, `y`, `width`,
 `height`), `dataScope` (the whole Board or selected `cardIds`), and optional
-`params` and `metadata` overrides. Metadata uses shared `CardMetadata`: optional `title`, `badge`, `desc`, `home`, and `color`,
+`patch.params`, `patch.metadata`, and `patch.view` overrides. Metadata uses shared `CardMetadata`: optional `title`, `badge`, `desc`, `home`, and `color`,
 using the same title and named palette contract as Source definitions. Widget
 layout persistence encodes order as `x: 0`, `y: orderIndex`, alongside dimensions.
 The React grid derives positions with ordered packing and uses the shared
@@ -542,7 +578,7 @@ and subscription performance to [Performance Guideline](PERFORMANCE_GUIDELINE.md
 
 `nextLayer.moveLiveWidget` atomically transfers the placement to another Board,
 preserving metadata, params, and dimensions and appending it to the destination
-layout. It rejects a destination already containing that Widget. Whole-Board
+layout. Other instances of the same definition may coexist there. Whole-Board
 scopes follow the destination Board; explicit LiveCard scopes retain only IDs
 belonging to it, without moving LiveCards. Both card types use `CardBoardSelect`
 with pending/error handling; these data-scope rules belong to the Widget adapter.

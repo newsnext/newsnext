@@ -1,4 +1,4 @@
-import type { ConnectedFetchInput, FetchResponse } from "@newsnext/sdk/models"
+import type { ConnectedFetchInput, FetchResponse, WorkspaceResolution } from "@newsnext/sdk/models"
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { LiveCard } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
@@ -44,6 +44,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     getCollectionStatus: () => Promise<NativeCollectionStatus>
     setCollectionSubscribed: (enabled: boolean) => void
     getStatus: () => Promise<NativeIntegrationStatus>
+    resolveWorkspace: (input: { resolution: WorkspaceResolution, expectedRevision: number }) => Promise<NativeIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
   }
   liveCardRouter: {
@@ -116,6 +117,8 @@ const liveCardReadCacheAction = defineAction(actionContracts["liveCard.readCache
 
 const nativeIntegrationSetEnabledAction = defineAction(actionContracts["nativeIntegration.setEnabled"], async (input, context: BackgroundActionContext) => await context.nativeIntegration.setEnabled(input))
 
+const nativeIntegrationResolveWorkspaceAction = defineAction(actionContracts["nativeIntegration.resolveWorkspace"], async (input, context: BackgroundActionContext) => await context.nativeIntegration.resolveWorkspace(input))
+
 const workerRegenerateIdentityAction = defineAction(actionContracts["worker.regenerateIdentity"], async (_input, context: BackgroundActionContext) => (
   await context.workerManagement.regenerateIdentity()
 ))
@@ -135,6 +138,7 @@ export const backgroundActionDefinitions = [
   nativeIntegrationGetLogsAction,
   nativeIntegrationGetStatusAction,
   nativeIntegrationSetEnabledAction,
+  nativeIntegrationResolveWorkspaceAction,
   workerRegenerateIdentityAction,
   workerTakeOverAction,
 ] as const

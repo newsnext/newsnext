@@ -314,7 +314,7 @@ schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
 
 Placed Widgets show these settings on their back, with Edit, Save, Cancel, and
 Reset. Values belong to the Widget's Board placement. Reset clears overrides.
-Use `client.actions.nextLayer.setLiveWidgetParams({ boardId, widgetId, params })` to
+Use `client.actions.nextLayer.setLiveWidgetParams({ boardId, liveWidgetId, params })` to
 replace overrides programmatically. Pass `{}` to restore manifest defaults.
 
 `data.mjs` receives resolved values as `context.params`; custom HTML receives
@@ -346,15 +346,15 @@ using a string title and the same named color palette as Sources. The Widget bac
 exposes these separately from business parameters. Board placements may override
 them with `metadata: { title, color, badge, desc, home }`, the same identity fields
 as Cards. Use
-`client.actions.nextLayer.setLiveWidgetMetadata({ boardId, widgetId, metadata })` to
+`client.actions.nextLayer.setLiveWidgetMetadata({ boardId, liveWidgetId, metadata })` to
 replace those overrides; `{}` restores the definition. Blank titles also fall
 back to the definition. Metadata edits affect the shell and built-in view title,
 without reloading the data pipeline.
 
 
-Use `client.actions.nextLayer.moveLiveWidget({ boardId, targetBoardId, widgetId })` to
-move a placement while keeping its dimensions, metadata, and params. The target
-must not already contain the Widget. Board-wide data follows the new Board;
+Use `client.actions.nextLayer.moveLiveWidget({ boardId, targetBoardId, liveWidgetId })` to
+move an instance while keeping its ID, dimensions, metadata, and params. The target
+may contain other instances of the same definition. Board-wide data follows the new Board;
 explicit LiveCard selections are restricted to that Board's LiveCards.
 `client.actions.liveCard.resetMetadata({ cardId })` resets a Card's saved
 metadata independently of its Source parameters.
@@ -416,16 +416,16 @@ Field mapping and chart choices live here, separate from producer **Parameters**
 Changing the view never changes the query identifier or executes another data
 pipeline. A placement stores Source-style sparse overrides in
 `patch: { params, metadata, view }`. Each view field falls back to `widget.json`.
-Legacy top-level placement `params`/`metadata` migrate when data is read.
+Only explicit `patch` sections are read; top-level placement settings are ignored.
 
 ```ts
 await client.actions.nextLayer.configureLiveWidget({
-  boardId, widgetId,
+  boardId, liveWidgetId,
   patch: { view: { chart: "bar", limit: 12 }, metadata: { title: "Top topics" } },
 })
 // Reset only presentation. Keep data parameters and metadata overrides.
 await client.actions.nextLayer.configureLiveWidget({
-  boardId, widgetId, patch: { view: null },
+  boardId, liveWidgetId, patch: { view: null },
 })
 ```
 
@@ -490,3 +490,26 @@ is present; null observations break the window. `compareItems` deduplicates by
 identity, keeping the first item. `periodChange` returns current, previous, delta,
 and percent (null for a zero baseline). Invalid numbers and invalid window/count
 arguments throw rather than silently changing observations.
+
+
+Widget definitions and instances have separate identities. `widget.json` remains
+in the directory named by `widgetId`; it is never copied into Workspace storage.
+`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, layout })` creates an
+independent instance and returns `{ liveWidgetId }`. Repeated calls may use the
+same definition in the same Board. Use `liveWidgetId` for configuration, movement,
+removal, and layout updates; keep using `widgetId` for `client.liveWidgets.data`.
+Each instance stores its own sparse `patch`, `dataScope`, and `layout`. Identical
+definition inputs share the daemon's result cache. Host data messages expose both
+`widgetId` and `liveWidgetId`; iframe source-window checks isolate each instance.
+
+### Workspace connection decisions
+
+A browser with local changes may report `state: "workspaceConflict"` from
+`client.actions.nativeIntegration.getStatus()`. Its `workspaceConflict` contains
+local/shared entity counts and the shared revision. After the user chooses a
+strategy, call `client.actions.nativeIntegration.resolveWorkspace({ resolution,
+expectedRevision })` on that Worker. `resolution` is `overwrite` (local replaces
+shared), `merge` (union IDs; shared conflicts and settings win), or `discard`
+(shared replaces local). Do not infer overwrite or discard authorization from a
+request to connect. Both snapshots are backed up before resolution; stale
+revisions require reviewing the latest status again.

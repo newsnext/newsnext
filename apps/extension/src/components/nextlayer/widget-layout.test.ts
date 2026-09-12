@@ -5,7 +5,8 @@ import { clampWidgetWidth, getChangedWidgetLayouts, getClosestWidgetDropTarget, 
 const cellSize = { width: WIDGET_COLUMN_WIDTH, height: WIDGET_ROW_HEIGHT }
 
 const widget = {
-  widgetId: "headlines",
+  widgetId: "headlines-definition",
+  liveWidgetId: "headlines",
   dataScope: { type: "board" as const },
   layout: { x: 0, y: 0, width: 3, height: 4 },
 }
@@ -16,7 +17,7 @@ describe("getChangedWidgetLayouts", () => {
       { id: "widget-headlines", x: 1, y: 2, w: 3, h: 5 },
       { id: "widget-missing", x: 0, y: 0, w: 1, h: 1 },
     ], [widget])).toEqual([{
-      widgetId: "headlines",
+      liveWidgetId: "headlines",
       layout: { x: 0, y: 0, width: 3, height: 5 },
     }])
   })
@@ -65,13 +66,13 @@ describe("getWidgetGridLayout", () => {
 })
 
 it("saves user order independently of viewport positions", () => {
-  const widgets = [widget, { ...widget, widgetId: "second", layout: { ...widget.layout, y: 1 } }]
+  const widgets = [widget, { ...widget, liveWidgetId: "second", layout: { ...widget.layout, y: 1 } }]
   expect(getChangedWidgetLayouts([
     { id: "widget-second", x: 0, y: 0, w: 3, h: 4 },
     { id: "widget-headlines", x: 0, y: 4, w: 3, h: 4 },
   ], widgets)).toEqual([
-    { widgetId: "second", layout: { x: 0, y: 0, width: 3, height: 4 } },
-    { widgetId: "headlines", layout: { x: 0, y: 1, width: 3, height: 4 } },
+    { liveWidgetId: "second", layout: { x: 0, y: 0, width: 3, height: 4 } },
+    { liveWidgetId: "headlines", layout: { x: 0, y: 1, width: 3, height: 4 } },
   ])
 })
 
@@ -88,16 +89,17 @@ describe("widget insertion order", () => {
     expect(ordered.map(node => node.id)).toEqual(["widget-a", "widget-d", "widget-b", "widget-c"])
     const packed = getWidgetGridLayout(8, ordered)
     const widgets = original.map((node, order) => ({
-      widgetId: node.id.slice("widget-".length),
+      widgetId: "shared-definition",
+      liveWidgetId: node.id.slice("widget-".length),
       dataScope: { type: "board" as const },
       layout: { x: 0, y: order, width: node.w, height: node.h },
     }))
     const updates = getChangedWidgetLayouts(packed, widgets)
     const reloaded = widgets.map(widget => ({
       ...widget,
-      layout: updates.find(update => update.widgetId === widget.widgetId)?.layout ?? widget.layout,
+      layout: updates.find(update => update.liveWidgetId === widget.liveWidgetId)?.layout ?? widget.layout,
     })).sort((a, b) => a.layout.y - b.layout.y)
-    expect(reloaded.map(widget => widget.widgetId)).toEqual(["a", "d", "b", "c"])
+    expect(reloaded.map(widget => widget.liveWidgetId)).toEqual(["a", "d", "b", "c"])
     expect(original.map(node => node.id)).toEqual(["widget-a", "widget-b", "widget-c", "widget-d"])
   })
 

@@ -21,7 +21,7 @@ import {
 } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 5
+export const PERSISTED_DATA_EXPORT_VERSION = 6
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -64,8 +64,12 @@ export interface PersistedDataExport {
 }
 
 export function normalizeApplicationData(value: unknown): ApplicationData {
+  if (value === undefined) return createEmptyApplicationData()
   if (!isRecord(value) || value.version !== APPLICATION_DATA_VERSION) {
-    return createEmptyApplicationData()
+    throw new Error("Unsupported Application data version; stored data must be preserved until a compatible version is available")
+  }
+  if (!Array.isArray(value.boards) || !Array.isArray(value.liveCards)) {
+    throw new TypeError("Invalid Application data; refusing to replace stored collections with empty data")
   }
 
   const liveCards = normalizeLiveCards(value.liveCards)
@@ -87,6 +91,7 @@ export function normalizeBoards(
   const seenIds = new Set<string>()
   const seenNames: string[] = []
   const assignedCardIds = new Set<string>()
+  const assignedLiveWidgetIds = new Set<string>()
   return value.flatMap((candidate) => {
     const identity = normalizeBoardIdentity(candidate, seenIds, seenNames)
     if (!identity || !isRecord(candidate)) return []
@@ -117,7 +122,7 @@ export function normalizeBoards(
         },
       },
       nextLayer: {
-        liveWidgets: normalizeLiveWidgets(nextLayer.liveWidgets, new Set(ids)),
+        liveWidgets: normalizeLiveWidgets(nextLayer.liveWidgets, new Set(ids), assignedLiveWidgetIds),
       },
     }]
   })
@@ -126,15 +131,17 @@ export function normalizeBoards(
 function normalizeLiveWidgets(
   value: unknown,
   boardCardIds: ReadonlySet<string>,
+  seen: Set<string>,
 ): LiveWidget[] {
   if (!Array.isArray(value)) return []
-  const seen = new Set<string>()
   return value.flatMap((candidate) => {
     if (!isRecord(candidate)
+      || typeof candidate.liveWidgetId !== "string"
+      || candidate.liveWidgetId.trim().length === 0
       || typeof candidate.widgetId !== "string"
       || candidate.widgetId.trim().length === 0
       || !/^[\w-]+$/.test(candidate.widgetId)
-      || seen.has(candidate.widgetId)
+      || seen.has(candidate.liveWidgetId)
       || !isRecord(candidate.layout)) {
       return []
     }
@@ -148,14 +155,14 @@ function normalizeLiveWidgets(
     }
     const dataScope = normalizeWidgetDataScope(candidate.dataScope, boardCardIds)
     if (!dataScope) return []
-    const patch = isRecord(candidate.patch) ? candidate.patch : candidate
+    const patch = isRecord(candidate.patch) ? candidate.patch : {}
     let view
     try {
       view = patch.view === undefined ? undefined : parseWidgetChartOptions(patch.view, true)
     } catch {
       view = undefined
     }
-    seen.add(candidate.widgetId)
+    seen.add(candidate.liveWidgetId)
     const width = Math.max(MIN_WIDGET_WIDTH, layout.width)
     return [{
       dataScope,
@@ -185,6 +192,7 @@ function normalizeLiveWidgets(
           } }
         : {}),
       widgetId: candidate.widgetId,
+      liveWidgetId: candidate.liveWidgetId,
     }]
   })
 }
@@ -325,8 +333,10 @@ export function normalizePersistedUserData(data: PersistedUserData): PersistedUs
 }
 
 function normalizePartialPersistedUserData(
-  data: Record<string, unknown>,
+  value: unknown,
 ): Partial<PersistedUserData> {
+  if (!isRecord(value)) return {}
+  const data = value
   const hasLiveCards = Object.hasOwn(data, "liveCards")
   const hasBoards = Object.hasOwn(data, "boards")
   if ((hasBoards || hasLiveCards) && data.version !== APPLICATION_DATA_VERSION) {

@@ -14,6 +14,7 @@ import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { BACKGROUND_DIAGNOSTICS_CHANGED } from "../diagnostics-events"
 import { initializeWorkerIdentity } from "../worker-identity"
+import { summarizeWorkspace } from "../workspace-resolution"
 import {
   classifyNativeIntegrationFailure,
   getNativeIntegrationReconnectDelay,
@@ -36,6 +37,7 @@ import {
   PROTOCOL_VERSION,
   RECONNECT_ALARM_PERIOD_MINUTES,
   runtime,
+  WORKSPACE_SYNCED_AT_KEY,
   WORKSPACE_UPDATED_AT_KEY,
 } from "./state"
 import {
@@ -47,7 +49,9 @@ import {
   commitSettings,
   createWorkspace,
   enqueueIncomingWorkspace,
+  initializeSharedWorkspace,
   registerApplicationDataSync,
+  resolveWorkspace,
 } from "./workspace-sync"
 
 export type {
@@ -92,6 +96,12 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
       sendCollectionSubscription()
     },
     getStatus: async () => getNativeIntegrationStatus(),
+    resolveWorkspace: async ({ resolution, expectedRevision }) => {
+      await resolveWorkspace(resolution, expectedRevision)
+      sendCollectionSubscription()
+      notifyDiagnostics()
+      return getNativeIntegrationStatus()
+    },
     setEnabled: ({ enabled }) => setNativeIntegrationEnabled(enabled),
   },
   workerManagement: {
@@ -124,6 +134,13 @@ function getConnectedActionContext(): BackgroundActionContext {
 
 function getNativeIntegrationStatus(): NativeIntegrationStatus {
   return {
+    workspaceConflict: runtime.pendingWorkspace
+      ? {
+          revision: runtime.pendingWorkspace.revision,
+          local: summarizeWorkspace(runtime.workspace),
+          shared: summarizeWorkspace(runtime.pendingWorkspace),
+        }
+      : undefined,
     daemonVersion: runtime.daemonVersion,
     capabilities: [...runtime.capabilities],
     offlineWorkers: runtime.offlineWorkers.map(worker => ({ ...worker })),
@@ -159,6 +176,10 @@ async function setNativeIntegrationEnabled(
 
 async function executeCommand(connection: NativePort, request: ExtensionCommand): Promise<unknown> {
   if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected")
+  if (runtime.connectionState !== "connected" && request.type !== "action.list"
+    && !["nativeIntegration.getStatus", "nativeIntegration.resolveWorkspace", "nativeIntegration.setEnabled"].includes(request.name)) {
+    throw new Error("Resolve this browser's Workspace in Settings before using connected Actions")
+  }
   try {
     return request.type === "action.list"
       ? actionRegistry.list()
@@ -188,6 +209,7 @@ function resetConnectionState(
 ): void {
   if (runtime.port) closeNativeRpc(runtime.port, error?.message ?? "NewsNext App disconnected")
   runtime.port = undefined
+  runtime.pendingWorkspace = undefined
   runtime.collectionStatus = undefined
   runtime.daemonVersion = undefined
   runtime.capabilities = []
@@ -352,17 +374,17 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.workerRoutingRevision = message.workerRoutingRevision
       runtime.offlineWorkers = message.offlineWorkers
       runtime.widgetServerOrigin = message.widgetServerUrl
-      runtime.connectionState = "connected"
       runtime.connectionError = undefined
-      sendCollectionSubscription()
-      notifyDiagnostics()
-      resolveNativeConnection(connection)
-      enqueueIncomingWorkspace(
-        connection,
-        () => message.workspace,
-        message.localCardIds,
-        "Failed to apply the NewsNext Workspace",
-      )
+      void initializeSharedWorkspace(connection, message.workspace, message.localCardIds).then(() => {
+        if (runtime.port !== connection) return
+        if (runtime.connectionState === "connected") {
+          resolveNativeConnection(connection)
+          sendCollectionSubscription()
+        } else {
+          rejectNativeConnection(new Error("Resolve the Workspace in Settings to finish connecting"))
+        }
+        notifyDiagnostics()
+      }).catch(error => failConnection(connection, error instanceof Error ? error.message : "Failed to initialize Workspace"))
     } else if (message.type === "rpc") {
       void receiveNativeRpc(connection, message.message).catch((error) => {
         console.error("Failed to process native RPC message", error)
@@ -440,6 +462,7 @@ export async function registerNativeIntegration(): Promise<void> {
   const stored = await browser.storage.local.get([
     PERSISTED_DATA_SLICES.settings.key,
     WORKSPACE_UPDATED_AT_KEY,
+    WORKSPACE_SYNCED_AT_KEY,
   ])
   const application = await readApplicationData()
   const settings = normalizePersistedSettings(stored[PERSISTED_DATA_SLICES.settings.key])
@@ -449,6 +472,8 @@ export async function registerNativeIntegration(): Promise<void> {
   const updatedAt = Number.isSafeInteger(storedUpdatedAt) && Number(storedUpdatedAt) >= 0
     ? Number(storedUpdatedAt)
     : 0
+  const syncedAt = stored[WORKSPACE_SYNCED_AT_KEY]
+  runtime.workspaceSyncedAt = Number.isSafeInteger(syncedAt) && Number(syncedAt) >= 0 ? Number(syncedAt) : undefined
   runtime.workspace = createWorkspace(application, 0, updatedAt, settings)
   const hasPermission = await hasNativeIntegrationPermission()
   runtime.enabled = settings.general.nativeIntegrationEnabled && hasPermission

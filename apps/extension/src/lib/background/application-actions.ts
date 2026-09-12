@@ -79,9 +79,11 @@ const nowLayerSetManualOrderAction = defineAction(actionContracts["nowLayer.setM
   await context.mutate(data => setNowLayerManualOrderMutation(data, input))
 ))
 
-const nextLayerInstallWidgetAction = defineAction(actionContracts["nextLayer.installLiveWidget"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => installLiveWidgetMutation(data, input))
-))
+const nextLayerInstallWidgetAction = defineAction(actionContracts["nextLayer.installLiveWidget"], async (input, context: ApplicationActionContext) => {
+  const result = await context.mutate((data, dependencies) => installLiveWidgetMutation(data, input, dependencies))
+  if (!result.liveWidgetId) throw new Error("Widget creation returned no instance ID")
+  return { liveWidgetId: result.liveWidgetId }
+})
 
 const nextLayerMoveWidgetAction = defineAction(actionContracts["nextLayer.moveLiveWidget"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => moveLiveWidgetMutation(data, input))

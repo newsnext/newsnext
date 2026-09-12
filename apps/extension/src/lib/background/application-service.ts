@@ -138,11 +138,12 @@ export async function readApplicationData(): Promise<ApplicationData> {
 async function loadApplicationData(): Promise<ApplicationData> {
   const key = PERSISTED_DATA_SLICES.application.key
   const stored = await browser.storage.local.get(key)
-  const data = normalizeApplicationData(stored[key])
+  const original = stored[key]
+  const data = normalizeApplicationData(original)
   const initialized = ensureApplicationDataIntegrity(data, {
     boardName: getInitialBoardName(),
   })
-  if (initialized === data) return data
+  if (JSON.stringify(original) === JSON.stringify(initialized)) return initialized
   await browser.storage.local.set({ [key]: initialized })
   return initialized
 }

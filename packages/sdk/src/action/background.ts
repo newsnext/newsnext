@@ -16,7 +16,18 @@ const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
   Type.Null(),
 ]))
 
+const WorkspaceSummaryResult = Type.Object({
+  boards: Type.Integer({ minimum: 0 }),
+  liveCards: Type.Integer({ minimum: 0 }),
+  liveWidgets: Type.Integer({ minimum: 0 }),
+}, { additionalProperties: false })
+
 const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.Object({
+  workspaceConflict: Type.Optional(Type.Object({
+    revision: Type.Integer({ minimum: 0 }),
+    local: WorkspaceSummaryResult,
+    shared: WorkspaceSummaryResult,
+  }, { additionalProperties: false })),
   daemonVersion: Type.Optional(Type.String()),
   capabilities: Type.Array(Type.String()),
   offlineWorkers: Type.Array(Type.Object({
@@ -31,6 +42,7 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
     "disabled",
     "connected",
     "connecting",
+    "workspaceConflict",
     "daemonOutdated",
     "hostNotInstalled",
     "protocolIncompatible",
@@ -211,6 +223,17 @@ const nativeIntegrationSetEnabledAction = defineActionContract({
   result: NativeIntegrationStatusResult,
 })
 
+const nativeIntegrationResolveWorkspaceAction = defineActionContract({
+  name: "nativeIntegration.resolveWorkspace",
+  kind: "mutation",
+  description: "Resolve local and shared Workspace differences before synchronization. Overwrite replaces shared data, merge keeps shared conflicts, discard uses shared data.",
+  params: Type.Object({
+    resolution: stringEnum(["overwrite", "merge", "discard"] as const),
+    expectedRevision: Type.Integer({ minimum: 0 }),
+  }, { additionalProperties: false }),
+  result: NativeIntegrationStatusResult,
+})
+
 const workerRegenerateIdentityAction = defineActionContract({
   name: "worker.regenerateIdentity",
   kind: "mutation",
@@ -279,6 +302,7 @@ export const backgroundActionContracts = [
   liveCardLoadAction,
   liveCardReadCacheAction,
   nativeIntegrationSetEnabledAction,
+  nativeIntegrationResolveWorkspaceAction,
   workerRegenerateIdentityAction,
   workerTakeOverAction,
 ] as const

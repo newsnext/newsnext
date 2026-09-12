@@ -82,7 +82,7 @@ export function useTrashFeature(
 
     try {
       if (target.kind === "widget") {
-        await actions.nextLayer.removeLiveWidget({ boardId: target.boardId, widgetId: target.widgetId })
+        await actions.nextLayer.removeLiveWidget({ boardId: target.boardId, liveWidgetId: target.liveWidgetId })
       } else {
         await deleteLiveCard(target.cardId)
       }

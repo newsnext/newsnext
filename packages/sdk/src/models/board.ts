@@ -35,6 +35,7 @@ export interface WidgetPatch {
 }
 
 export interface LiveWidget {
+  liveWidgetId: string
   patch?: WidgetPatch
   dataScope: LiveWidgetDataScope
   layout: LiveWidgetLayout

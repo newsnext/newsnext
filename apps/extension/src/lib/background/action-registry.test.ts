@@ -7,7 +7,7 @@ import {
 
 function createContext(): BackgroundActionContext {
   return {
-    data: vi.fn(async () => ({ boards: [], liveCards: [], version: 7 as const })),
+    data: vi.fn(async () => ({ boards: [], liveCards: [], version: 8 as const })),
     mutate: vi.fn(async () => ({ cardId: "new" })),
     replace: vi.fn(async data => data),
     requireSources: vi.fn(async () => undefined),
@@ -44,6 +44,7 @@ function createContext(): BackgroundActionContext {
         state: "disabled" as const,
         workerId: "worker",
       })),
+      resolveWorkspace: vi.fn(),
       setEnabled: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
@@ -72,8 +73,8 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(43)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(22)
+    expect(actions).toHaveLength(44)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(23)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(17)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({
@@ -115,7 +116,7 @@ describe("action Registry", () => {
       timeoutMs: 10_000,
       url: "https://example.com/api",
     }, "connected", ActionContext)).rejects.toThrow("browser-managed")
-    const data = { boards: [], liveCards: [], version: 7 as const }
+    const data = { boards: [], liveCards: [], version: 8 as const }
     await expect(executeRegisteredAction("application.replace", data, "connected", ActionContext))
       .resolves
       .toEqual(data)

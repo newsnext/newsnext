@@ -1,3 +1,4 @@
+import type { WorkspaceResolution } from "@newsnext/sdk/models"
 import type { NativeIntegrationStatus } from "@/lib/background/native-integration"
 import type { StaticMessageKey } from "@/lib/i18n"
 import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
@@ -29,6 +30,7 @@ interface StatusPresentation {
 const STATUS_PRESENTATION: Record<NativeIntegrationStatus["state"], StatusPresentation> = {
   disabled: { dotClassName: "bg-muted-foreground/50", labelKey: "disabled" },
   connected: { dotClassName: "bg-emerald-500", labelKey: "connected" },
+  workspaceConflict: { dotClassName: "bg-amber-500", labelKey: "workspaceChoiceRequired" },
   connecting: { dotClassName: "bg-amber-500", labelKey: "connecting" },
   daemonOutdated: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
   hostNotInstalled: { dotClassName: "bg-destructive", labelKey: "nativeHostNotInstalled" },
@@ -46,6 +48,7 @@ const CHECKING_PRESENTATION: StatusPresentation = {
 export function NativeIntegrationSettings(): React.JSX.Element {
   const { t } = useI18n()
   const [status, setStatus] = useState<NativeIntegrationStatus>()
+  const [resolution, setResolution] = useState<WorkspaceResolution>("merge")
   const [logs, setLogs] = useState<NativeLogEntry[]>([])
   const [logLevel, setLogLevel] = useState<"all" | NativeLogEntry["level"]>("all")
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
@@ -174,6 +177,44 @@ export function NativeIntegrationSettings(): React.JSX.Element {
             onCheckedChange={enabled => void handleEnabledChange(enabled)}
           />
         </div>
+
+        {isEnabled && status?.workspaceConflict && (
+          <div className="space-y-3 border-t pt-3">
+            <p className="text-sm font-medium">{t("workspaceChoiceRequired")}</p>
+            <p className="text-xs leading-5 text-muted-foreground">{t("workspaceChoiceDescription")}</p>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-xs">
+              <dt>{t("workspaceLocal")}</dt>
+              <dd>{t("workspaceCounts", { ...status.workspaceConflict.local })}</dd>
+              <dt>{t("workspaceShared")}</dt>
+              <dd>{t("workspaceCounts", { ...status.workspaceConflict.shared })}</dd>
+            </dl>
+            <fieldset disabled={updating} className="space-y-2">
+              <legend className="sr-only">{t("workspaceChoiceRequired")}</legend>
+              {(["merge", "overwrite", "discard"] as const).map(option => (
+                <label key={option} className="flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-xs">
+                  <input type="radio" name="workspace-resolution" value={option} checked={resolution === option} onChange={() => setResolution(option)} className="mt-0.5" />
+                  <span className="space-y-1">
+                    <span className="block font-medium">{t(option === "merge" ? "workspaceMerge" : option === "overwrite" ? "workspaceOverwrite" : "workspaceDiscard")}</span>
+                    <span className="block leading-5 text-muted-foreground">{t(option === "merge" ? "workspaceMergeDescription" : option === "overwrite" ? "workspaceOverwriteDescription" : "workspaceDiscardDescription")}</span>
+                  </span>
+                </label>
+              ))}
+            </fieldset>
+            <Button
+              size="sm"
+              disabled={updating}
+              onClick={() => {
+                const conflict = status.workspaceConflict
+                if (!conflict) return
+                void runUpdate(async () => {
+                  setStatus(await actions.nativeIntegration.resolveWorkspace({ resolution, expectedRevision: conflict.revision }))
+                }).then(() => refreshStatus())
+              }}
+            >
+              {t("workspaceApplyChoice")}
+            </Button>
+          </div>
+        )}
 
         {isEnabled && status?.connectionError && (
           <p role="alert" className="whitespace-pre-wrap wrap-anywhere text-xs leading-5 text-destructive">

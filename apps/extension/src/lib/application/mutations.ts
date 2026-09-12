@@ -40,6 +40,7 @@ export interface ApplicationMutationExecution {
 export interface ApplicationMutationResult {
   boardId?: string
   cardId?: string
+  liveWidgetId?: string
 }
 
 export function createBoardMutation(
@@ -159,38 +160,39 @@ export function installLiveWidgetMutation(
     layout: LiveWidgetLayout
     widgetId: string
   },
+  dependencies: Pick<ApplicationMutationDependencies, "createId">,
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
   assertWidgetId(input.widgetId)
   assertWidgetDataScope(board, input.dataScope)
   assertWidgetLayout(input.layout)
-  if (board.nextLayer.liveWidgets.some(widget => widget.widgetId === input.widgetId)) {
-    throw new Error(`Widget '${input.widgetId}' is already installed in Board '${input.boardId}'`)
+  const liveWidgetId = dependencies.createId()
+  if (!liveWidgetId || data.boards.some(board => board.nextLayer.liveWidgets.some(widget => widget.liveWidgetId === liveWidgetId))) {
+    throw new Error("LiveWidget instance ID must be unique")
   }
-  return replaceBoard(data, {
+  const execution = replaceBoard(data, {
     ...board,
     nextLayer: {
       liveWidgets: [...board.nextLayer.liveWidgets, {
         dataScope: input.dataScope,
         layout: input.layout,
         widgetId: input.widgetId,
+        liveWidgetId,
       }],
     },
   })
+  return { ...execution, result: { liveWidgetId } }
 }
 
 export function moveLiveWidgetMutation(
   data: ApplicationData,
-  input: { boardId: string, targetBoardId: string, widgetId: string },
+  input: { boardId: string, targetBoardId: string, liveWidgetId: string },
 ): ApplicationMutationExecution {
   const source = getBoard(data, input.boardId)
   const target = getBoard(data, input.targetBoardId)
-  assertWidgetInstalled(source, input.widgetId)
+  assertWidgetInstalled(source, input.liveWidgetId)
   if (source.id === target.id) return { data }
-  if (target.nextLayer.liveWidgets.some(widget => widget.widgetId === input.widgetId)) {
-    throw new Error("The target Board already contains this Widget")
-  }
-  const widget = source.nextLayer.liveWidgets.find(widget => widget.widgetId === input.widgetId)!
+  const widget = source.nextLayer.liveWidgets.find(widget => widget.liveWidgetId === input.liveWidgetId)!
   const moved = {
     ...widget,
     layout: { ...widget.layout, x: 0, y: Math.max(-1, ...target.nextLayer.liveWidgets.map(item => item.layout.y)) + 1 },
@@ -202,7 +204,7 @@ export function moveLiveWidgetMutation(
     data: {
       ...data,
       boards: data.boards.map(board => board.id === source.id
-        ? { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.filter(item => item.widgetId !== input.widgetId) } }
+        ? { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.filter(item => item.liveWidgetId !== input.liveWidgetId) } }
         : board.id === target.id
           ? { ...board, nextLayer: { liveWidgets: [...board.nextLayer.liveWidgets, moved] } }
           : board),
@@ -212,29 +214,29 @@ export function moveLiveWidgetMutation(
 
 export function removeLiveWidgetMutation(
   data: ApplicationData,
-  input: { boardId: string, widgetId: string },
+  input: { boardId: string, liveWidgetId: string },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.widgetId)
+  assertWidgetInstalled(board, input.liveWidgetId)
   return replaceBoard(data, {
     ...board,
     nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.filter(widget => widget.widgetId !== input.widgetId),
+      liveWidgets: board.nextLayer.liveWidgets.filter(widget => widget.liveWidgetId !== input.liveWidgetId),
     },
   })
 }
 
 export function setLiveWidgetDataScopeMutation(
   data: ApplicationData,
-  input: { boardId: string, dataScope: LiveWidgetDataScope, widgetId: string },
+  input: { boardId: string, dataScope: LiveWidgetDataScope, liveWidgetId: string },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.widgetId)
+  assertWidgetInstalled(board, input.liveWidgetId)
   assertWidgetDataScope(board, input.dataScope)
   return replaceBoard(data, {
     ...board,
     nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.widgetId === input.widgetId
+      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
         ? { ...widget, dataScope: input.dataScope }
         : widget),
     },
@@ -243,10 +245,10 @@ export function setLiveWidgetDataScopeMutation(
 
 export function setLiveWidgetMetadataMutation(
   data: ApplicationData,
-  input: { boardId: string, widgetId: string, metadata: WidgetMetadata },
+  input: { boardId: string, liveWidgetId: string, metadata: WidgetMetadata },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.widgetId)
+  assertWidgetInstalled(board, input.liveWidgetId)
   const metadata = { ...input.metadata }
   const title = metadata.title?.trim()
   if (title) metadata.title = title
@@ -254,7 +256,7 @@ export function setLiveWidgetMetadataMutation(
   return replaceBoard(data, {
     ...board,
     nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.widgetId === input.widgetId
+      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
         ? { ...widget, patch: { ...widget.patch, metadata } }
         : widget),
     },
@@ -263,14 +265,14 @@ export function setLiveWidgetMetadataMutation(
 
 export function setLiveWidgetParamsMutation(
   data: ApplicationData,
-  input: { boardId: string, widgetId: string, params: Record<string, unknown> },
+  input: { boardId: string, liveWidgetId: string, params: Record<string, unknown> },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.widgetId)
+  assertWidgetInstalled(board, input.liveWidgetId)
   return replaceBoard(data, {
     ...board,
     nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.widgetId === input.widgetId
+      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
         ? { ...widget, patch: { ...widget.patch, params: input.params } }
         : widget),
     },
@@ -280,13 +282,13 @@ export function setLiveWidgetParamsMutation(
 /** Sparse field merge; null resets a whole section, matching Source override semantics. */
 export function configureLiveWidgetMutation(
   data: ApplicationData,
-  input: { boardId: string, widgetId: string, patch: { [K in keyof WidgetPatch]?: WidgetPatch[K] | null } },
+  input: { boardId: string, liveWidgetId: string, patch: { [K in keyof WidgetPatch]?: WidgetPatch[K] | null } },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.widgetId)
+  assertWidgetInstalled(board, input.liveWidgetId)
   if (input.patch.view) parseWidgetChartOptions(input.patch.view, true)
   return replaceBoard(data, { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.map((widget) => {
-    if (widget.widgetId !== input.widgetId) return widget
+    if (widget.liveWidgetId !== input.liveWidgetId) return widget
     const patch = { ...widget.patch }
     for (const key of ["params", "metadata", "view"] as const) {
       const value = input.patch[key]
@@ -301,16 +303,16 @@ export function setLiveWidgetLayoutsMutation(
   data: ApplicationData,
   input: {
     boardId: string
-    liveWidgets: Array<{ layout: LiveWidgetLayout, widgetId: string }>
+    liveWidgets: Array<{ layout: LiveWidgetLayout, liveWidgetId: string }>
   },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
   const updates = new Map<string, LiveWidgetLayout>()
   for (const widget of input.liveWidgets) {
-    assertWidgetInstalled(board, widget.widgetId)
+    assertWidgetInstalled(board, widget.liveWidgetId)
     assertWidgetLayout(widget.layout)
-    if (updates.has(widget.widgetId)) throw new Error("Widget layout update IDs must be unique")
-    updates.set(widget.widgetId, widget.layout)
+    if (updates.has(widget.liveWidgetId)) throw new Error("Widget layout update IDs must be unique")
+    updates.set(widget.liveWidgetId, widget.layout)
   }
   if (updates.size === 0) throw new Error("At least one Widget layout is required")
   return replaceBoard(data, {
@@ -318,7 +320,7 @@ export function setLiveWidgetLayoutsMutation(
     nextLayer: {
       liveWidgets: board.nextLayer.liveWidgets.map(widget => ({
         ...widget,
-        layout: updates.get(widget.widgetId) ?? widget.layout,
+        layout: updates.get(widget.liveWidgetId) ?? widget.layout,
       })),
     },
   })
@@ -538,9 +540,9 @@ function assertWidgetId(widgetId: string): void {
   }
 }
 
-function assertWidgetInstalled(board: Board, widgetId: string): void {
-  if (!board.nextLayer.liveWidgets.some(widget => widget.widgetId === widgetId)) {
-    throw new Error(`Widget '${widgetId}' is not installed in Board '${board.id}'`)
+function assertWidgetInstalled(board: Board, liveWidgetId: string): void {
+  if (!board.nextLayer.liveWidgets.some(widget => widget.liveWidgetId === liveWidgetId)) {
+    throw new Error(`Widget '${liveWidgetId}' is not installed in Board '${board.id}'`)
   }
 }
 

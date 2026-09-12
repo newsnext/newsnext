@@ -10,7 +10,7 @@ import {
 
 function createData(): ApplicationData {
   return {
-    version: 7,
+    version: 8,
     boards: [{
       color: "blue",
       id: "reading",

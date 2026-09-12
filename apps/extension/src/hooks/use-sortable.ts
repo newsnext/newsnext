@@ -10,7 +10,7 @@ export const SortableContext = createContext<string | null>(null)
 interface SortableProps {
   kind?: SortableKind
   boardId?: string
-  widgetId?: string
+  liveWidgetId?: string
   canDrag?: (target: Element | null) => boolean
   enabled?: boolean
   id: string
@@ -20,7 +20,7 @@ interface SortableProps {
   }) => void | (() => void)
 }
 
-export function useSortable({ canDrag, enabled = true, id, kind = "card", boardId, widgetId, onGenerateDragPreview }: SortableProps) {
+export function useSortable({ canDrag, enabled = true, id, kind = "card", boardId, liveWidgetId, onGenerateDragPreview }: SortableProps) {
   const cardId = use(SortableContext)
   const [handleRef, setHandleRef] = useState<HTMLElement | null>(null)
   const [nodeRef, setNodeRef] = useState<HTMLElement | null>(null)
@@ -33,7 +33,7 @@ export function useSortable({ canDrag, enabled = true, id, kind = "card", boardI
         canDrag: canDrag
           ? ({ input }) => canDrag(document.elementFromPoint(input.clientX, input.clientY))
           : undefined,
-        getInitialData: () => getSortableData({ id, cardId, kind, boardId, widgetId }),
+        getInitialData: () => getSortableData({ id, cardId, kind, boardId, liveWidgetId }),
         onGenerateDragPreview({ nativeSetDragImage, location }) {
           setCustomNativeDragPreview({
             getOffset: preserveOffsetOnSource({
@@ -51,7 +51,7 @@ export function useSortable({ canDrag, enabled = true, id, kind = "card", boardI
         },
       })
     }
-  }, [boardId, widgetId, canDrag, enabled, handleRef, id, cardId, kind, nodeRef, onGenerateDragPreview])
+  }, [boardId, liveWidgetId, canDrag, enabled, handleRef, id, cardId, kind, nodeRef, onGenerateDragPreview])
 
   return {
     setHandleRef,

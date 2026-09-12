@@ -3,4 +3,4 @@ import type { LiveWidgetDataScope } from "./LiveWidgetDataScope.js";
 import type { LiveWidgetLayout } from "./LiveWidgetLayout.js";
 import type { WidgetPatch } from "./WidgetPatch.js";
 
-export type LiveWidget = { patch?: WidgetPatch, dataScope: LiveWidgetDataScope, layout: LiveWidgetLayout, widgetId: string, };
+export type LiveWidget = { patch?: WidgetPatch, dataScope: LiveWidgetDataScope, layout: LiveWidgetLayout, widgetId: string, liveWidgetId: string, };

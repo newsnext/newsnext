@@ -50,6 +50,7 @@ interface LiveWidgetCardProps {
   refreshIntervalMs: number
   dataFiles: string[]
   widgetId: string
+  liveWidgetId: string
 }
 
 function LiveWidgetCard(frame: LiveWidgetCardProps) {
@@ -62,10 +63,10 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const articleRef = useRef<HTMLElement>(null)
   const { setNodeRef, setHandleRef } = useSortable({
-    id: getGridWidgetId(frame.widgetId),
+    id: getGridWidgetId(frame.liveWidgetId),
     kind: "widget",
     boardId: frame.boardId,
-    widgetId: frame.widgetId,
+    liveWidgetId: frame.liveWidgetId,
     enabled: frame.active,
     canDrag: canDragCardHeader,
     onGenerateDragPreview: generateCardDragPreview,
@@ -94,7 +95,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
   const dataQuery = useLiveWidgetData({ ...frame, params: resolvedParams }, active)
   const chartView = useMemo(() => frame.ui.type === "chart" ? { ...frame.ui, ...frame.viewPatch } : undefined, [frame.ui, frame.viewPatch])
   async function saveParams(params: Record<string, unknown>): Promise<void> {
-    await actions.nextLayer.setLiveWidgetParams({ boardId: frame.boardId, widgetId: frame.widgetId, params })
+    await actions.nextLayer.setLiveWidgetParams({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, params })
     parameterState.commitParams(params)
   }
   const dataPayload = useMemo(() => dataQuery.error
@@ -116,8 +117,9 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
       type: "newsnext.widget.data",
       version: WIDGET_PROTOCOL_VERSION,
       widgetId: frame.widgetId,
+      liveWidgetId: frame.liveWidgetId,
     }, "*")
-  }, [frame.widgetId, dataPayload, resolvedParams])
+  }, [frame.widgetId, frame.liveWidgetId, dataPayload, resolvedParams])
 
   useEffect(() => {
     function handleMessage(event: MessageEvent<unknown>): void {
@@ -200,7 +202,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
           back
           actions={(
             <>
-              <DeleteWidgetButton boardId={frame.boardId} widgetId={frame.widgetId} />
+              <DeleteWidgetButton boardId={frame.boardId} liveWidgetId={frame.liveWidgetId} />
               <CardHeaderActionButton
                 type="button"
                 aria-label={t("widgetFront")}
@@ -211,15 +213,15 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
             </>
           )}
         >
-          <WidgetBoardSelect boardId={frame.boardId} widgetId={frame.widgetId} />
+          <WidgetBoardSelect boardId={frame.boardId} liveWidgetId={frame.liveWidgetId} />
           <CardMetadataSettings
             metadata={{ ...frame.metadata, title, color }}
             onPreviewMetadataChange={setPreviewMetadata}
             onReset={async () => {
-              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, widgetId: frame.widgetId, metadata: {} })
+              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, metadata: {} })
             }}
             onSave={async (metadata) => {
-              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, widgetId: frame.widgetId, metadata: { ...frame.metadata, ...metadata } })
+              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, metadata: { ...frame.metadata, ...metadata } })
             }}
           />
           {frame.ui.type === "chart" && (
@@ -227,7 +229,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
               view={frame.ui}
               patch={frame.viewPatch}
               onSave={async (view) => {
-                await actions.nextLayer.configureLiveWidget({ boardId: frame.boardId, widgetId: frame.widgetId, patch: { view } })
+                await actions.nextLayer.configureLiveWidget({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, patch: { view } })
               }}
             />
           )}
@@ -379,7 +381,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
   const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement }) => {
     const minW = clampWidgetWidth(manifest.minWidth)
     return {
-      id: getGridWidgetId(placement.widgetId),
+      id: getGridWidgetId(placement.liveWidgetId),
       x: placement.layout.x,
       y: placement.layout.y,
       w: Math.max(minW, clampWidgetWidth(placement.layout.width)),
@@ -416,9 +418,10 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
     <SortableWidgetGrid key={boardId} onReady={onReady} nodes={nodes} enabled={viewReady} label={t("nextLayerWidgets")} onLayoutChange={saveLayout}>
       {widgets.map(({ manifest, placement }) => (
         <LiveWidgetCard
-          key={placement.widgetId}
+          key={placement.liveWidgetId}
           boardId={boardId}
           widgetId={placement.widgetId}
+          liveWidgetId={placement.liveWidgetId}
           active={viewReady}
           color={manifest.color}
           cardIds={placement.dataScope.type === "board"

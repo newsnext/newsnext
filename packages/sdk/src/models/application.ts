@@ -1,7 +1,7 @@
 import type { Board } from "./board.js"
 import type { LiveCard } from "./live-card.js"
 
-export const APPLICATION_DATA_VERSION = 7 as const
+export const APPLICATION_DATA_VERSION = 8 as const
 
 export interface ApplicationData {
   version: typeof APPLICATION_DATA_VERSION

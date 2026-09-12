@@ -19,16 +19,16 @@ it("resolves removal targets without confusing grid IDs with Widget IDs", () => 
     cardId: "grid",
     kind: "widget",
     boardId: "original-board",
-    widgetId: "weather",
-  }))).toEqual({ kind: "widget", boardId: "original-board", widgetId: "weather" })
+    liveWidgetId: "weather",
+  }))).toEqual({ kind: "widget", boardId: "original-board", liveWidgetId: "weather" })
 })
 
 it("rejects unscoped or malformed Widget removal targets", () => {
   const widget = getSortableData({ id: "widget-weather", cardId: "grid", kind: "widget" })
   expect(getSortableRemovalTarget(widget)).toBeUndefined()
   for (const invalid of [undefined, "", 42, null]) {
-    expect(getSortableRemovalTarget({ ...widget, boardId: invalid, widgetId: "weather" })).toBeUndefined()
-    expect(getSortableRemovalTarget({ ...widget, boardId: "board", widgetId: invalid })).toBeUndefined()
+    expect(getSortableRemovalTarget({ ...widget, boardId: invalid, liveWidgetId: "weather" })).toBeUndefined()
+    expect(getSortableRemovalTarget({ ...widget, boardId: "board", liveWidgetId: invalid })).toBeUndefined()
   }
   expect(getSortableRemovalTarget({ id: "weather", cardId: "board", kind: "card" })).toBeUndefined()
 })

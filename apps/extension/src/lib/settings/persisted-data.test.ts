@@ -12,7 +12,7 @@ function createData(): PersistedUserData {
   const settings = createDefaultPersistedSettings()
   settings.general.defaultBoardId = "reading"
   return {
-    version: 7,
+    version: 8,
     settings,
     boards: [{
       color: "blue",
@@ -39,7 +39,7 @@ function createData(): PersistedUserData {
 describe("persisted user data", () => {
   it("normalizes current Board membership, color, and layer state", () => {
     const data = normalizeApplicationData({
-      version: 7,
+      version: 8,
       boards: [{
         color: "blue",
         id: "reading",
@@ -53,6 +53,7 @@ describe("persisted user data", () => {
         nextLayer: {
           liveWidgets: [{
             widgetId: "latest",
+            liveWidgetId: "latest-instance",
             dataScope: { type: "cards", cardIds: ["first", "missing", "first"] },
             layout: { x: 1, y: 2, width: 6, height: 4 },
           }],
@@ -78,6 +79,7 @@ describe("persisted user data", () => {
       nextLayer: {
         liveWidgets: [{
           widgetId: "latest",
+          liveWidgetId: "latest-instance",
           dataScope: { type: "cards", cardIds: ["first"] },
           layout: { x: 1, y: 2, width: 6, height: 4 },
         }],
@@ -101,6 +103,7 @@ describe("persisted user data", () => {
       nextLayer: {
         liveWidgets: [{
           widgetId: "latest",
+          liveWidgetId: "latest-instance",
           dataScope: { type: "cards", cardIds: ["rss:feed::one"] },
           layout: { x: 0, y: 0, width: 4, height: 4 },
         }],
@@ -118,20 +121,24 @@ describe("persisted user data", () => {
     })
   })
 
-  it.each([3, 6, 8])("rejects unsupported Application Data version %s", (version) => {
-    const data = normalizeApplicationData({
-      version,
-      boards: [],
-      liveCards: [],
-    })
+  it.each([3, 6, 7, 9])("rejects unsupported Application Data version %s without resetting it", (version) => {
+    const original = { ...createData(), version }
+    const before = structuredClone(original)
+    expect(() => normalizeApplicationData(original)).toThrow("stored data must be preserved")
+    expect(original).toEqual(before)
+  })
 
-    expect(data).toEqual({ version: 7, boards: [], liveCards: [] })
+  it("initializes only absent storage and rejects malformed stored collections", () => {
+    expect(normalizeApplicationData(undefined)).toEqual({ version: 8, boards: [], liveCards: [] })
+    expect(() => normalizeApplicationData(null)).toThrow()
+    expect(() => normalizeApplicationData({ version: 8, boards: null, liveCards: [] })).toThrow("refusing")
+    expect(() => normalizeApplicationData({ version: 8, boards: [], liveCards: null })).toThrow("refusing")
   })
 
   it("round-trips the current application shape and settings", () => {
     const data = createData()
     const serialized = serializePersistedDataExport(data)
-    expect(JSON.parse(serialized).version).toBe(5)
+    expect(JSON.parse(serialized).version).toBe(6)
     expect(parsePersistedDataExport(serialized)?.data).toEqual(data)
   })
 
@@ -147,13 +154,13 @@ describe("persisted user data", () => {
     expect(parsePersistedDataExport(outdated)).toBeUndefined()
     expect(parsePersistedDataExport(JSON.stringify({ kind: "other-app", version: 5, data: {} })))
       .toBeUndefined()
-    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 7, data: {} })))
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 8, data: {} })))
       .toBeUndefined()
   })
 
   it("repairs ownership after a partial Board import", () => {
     const merged = mergePersistedUserData(createData(), {
-      version: 7,
+      version: 8,
       boards: [],
     })
     expect(merged.boards).toHaveLength(1)
@@ -180,6 +187,7 @@ describe("widget parameter persistence", () => {
     const data = createData()
     data.boards[0]!.nextLayer.liveWidgets = [{
       widgetId: "feed",
+      liveWidgetId: "feed-instance",
       dataScope: { type: "board" },
       layout: { x: 0, y: 0, width: 6, height: 4 },
       patch: { params: { limit: 5, enabled: false, categories: ["tech"] }, metadata: { title: "My feed", color: "teal", badge: "https://example.com/badge.png", home: "https://example.com", desc: "Description" }, view: { chart: "bar", limit: 10 } },
@@ -189,11 +197,12 @@ describe("widget parameter persistence", () => {
   })
 })
 
-describe("legacy Widget settings", () => {
+describe("widget normalization", () => {
   it("expands half-card placements without crossing the grid boundary", () => {
     const data = createData()
     data.boards[0]!.nextLayer.liveWidgets = [{
       widgetId: "narrow",
+      liveWidgetId: "narrow-instance",
       dataScope: { type: "board" },
       layout: { x: 11, y: 3, width: 1, height: 1 },
     }]
@@ -208,12 +217,30 @@ describe("legacy Widget settings", () => {
     expect(data.boards[0]?.nextLayer.liveWidgets[0]?.layout.width).toBe(1)
   })
 
-  it("migrates old placements once and honors an explicit patch", () => {
+  it("ignores old top-level settings and reads only an explicit patch", () => {
     const data = createData()
-    const widget = { widgetId: "chart", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 }, params: { enabled: false }, metadata: { title: "Custom" } }
+    const widget = { widgetId: "chart", liveWidgetId: "chart-instance", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 }, params: { enabled: false }, metadata: { title: "Custom" } }
     const legacy = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [widget] } }] }
-    expect(normalizeApplicationData(legacy).boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false }, metadata: { title: "Custom" } })
+    expect(normalizeApplicationData(legacy).boards[0]?.nextLayer.liveWidgets[0]?.patch).toBeUndefined()
     const current = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [{ ...widget, patch: { view: { chart: "line" } } }] } }] }
     expect(normalizeApplicationData(current).boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ view: { chart: "line" } })
+  })
+})
+
+describe("liveWidget instances", () => {
+  it("rejects old exports even when they contain current data", () => {
+    const data = createData()
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 5, data }))).toBeUndefined()
+    expect(parsePersistedDataExport(JSON.stringify({ kind: "newsnext-user-data", version: 6, data: { ...data, version: 7 } }))).toBeUndefined()
+  })
+  it("preserves opaque instance IDs and independent placements while removing duplicate ownership", () => {
+    const data = createData()
+    const first = { widgetId: "shared", liveWidgetId: "legacy:reading:shared", dataScope: { type: "board" as const }, layout: { x: 0, y: 0, width: 2, height: 2 }, patch: { params: { count: 0 } } }
+    data.boards[0]!.nextLayer.liveWidgets = [first, { ...first, liveWidgetId: "new-instance" }]
+    data.boards.push({ ...data.boards[0]!, id: "other", name: "Other", cardIds: [], nextLayer: { liveWidgets: [first] } })
+    const result = normalizeApplicationData(data)
+    expect(result.boards[0]?.nextLayer.liveWidgets).toEqual(data.boards[0]?.nextLayer.liveWidgets)
+    expect(result.boards[1]?.nextLayer.liveWidgets).toEqual([])
+    expect(normalizeApplicationData(result)).toEqual(result)
   })
 })

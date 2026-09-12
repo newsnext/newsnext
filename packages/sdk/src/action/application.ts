@@ -110,21 +110,21 @@ const nowLayerSetManualOrderAction = defineActionContract({
 const nextLayerInstallWidgetAction = defineActionContract({
   name: "nextLayer.installLiveWidget",
   kind: "mutation",
-  description: "Install a local Widget in a Board's Next Layer.",
+  description: "Create an independent instance of a local Widget in a Board's Next Layer.",
   params: Type.Object({
     boardId: Identifier,
     dataScope: WidgetDataScopeParams,
     layout: WidgetLayoutParams,
     widgetId: Identifier,
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: Type.Object({ liveWidgetId: Identifier }, { additionalProperties: false }),
 })
 
 const nextLayerMoveWidgetAction = defineActionContract({
   name: "nextLayer.moveLiveWidget",
   kind: "mutation",
   description: "Move a Widget placement to another Board while preserving its settings and size.",
-  params: Type.Object({ boardId: Identifier, targetBoardId: Identifier, widgetId: Identifier }, { additionalProperties: false }),
+  params: Type.Object({ boardId: Identifier, targetBoardId: Identifier, liveWidgetId: Identifier }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
@@ -134,7 +134,7 @@ const nextLayerRemoveWidgetAction = defineActionContract({
   description: "Remove a local Widget from a Board's Next Layer.",
   params: Type.Object({
     boardId: Identifier,
-    widgetId: Identifier,
+    liveWidgetId: Identifier,
   }, { additionalProperties: false }),
   result: EmptyObject,
 })
@@ -146,7 +146,7 @@ const nextLayerSetWidgetDataScopeAction = defineActionContract({
   params: Type.Object({
     boardId: Identifier,
     dataScope: WidgetDataScopeParams,
-    widgetId: Identifier,
+    liveWidgetId: Identifier,
   }, { additionalProperties: false }),
   result: EmptyObject,
 })
@@ -157,7 +157,7 @@ const nextLayerConfigureWidgetAction = defineActionContract({
   description: "Merge sparse params, metadata and view overrides. Null resets a section to widget.json defaults.",
   params: Type.Object({
     boardId: Identifier,
-    widgetId: Identifier,
+    liveWidgetId: Identifier,
     patch: Type.Object({
       params: Type.Optional(Type.Union([Type.Null(), Type.Record(Type.String(), Type.Unknown())])),
       metadata: Type.Optional(Type.Union([Type.Null(), Type.Object({
@@ -192,7 +192,7 @@ const nextLayerSetWidgetMetadataAction = defineActionContract({
   description: "Replace a Board Widget's display metadata overrides; an empty object restores its definition.",
   params: Type.Object({
     boardId: Identifier,
-    widgetId: Identifier,
+    liveWidgetId: Identifier,
     metadata: Type.Object({
       title: Type.Optional(Type.String()),
       badge: Type.Optional(Type.String()),
@@ -210,7 +210,7 @@ const nextLayerSetWidgetParamsAction = defineActionContract({
   description: "Replace a Board Widget's parameter overrides; pass an empty object to reset defaults.",
   params: Type.Object({
     boardId: Identifier,
-    widgetId: Identifier,
+    liveWidgetId: Identifier,
     params: Type.Record(Type.String(), Type.Unknown()),
   }, { additionalProperties: false }),
   result: EmptyObject,
@@ -224,7 +224,7 @@ const nextLayerSetWidgetLayoutsAction = defineActionContract({
     boardId: Identifier,
     liveWidgets: Type.Array(Type.Object({
       layout: WidgetLayoutParams,
-      widgetId: Identifier,
+      liveWidgetId: Identifier,
     }, { additionalProperties: false }), { minItems: 1 }),
   }, { additionalProperties: false }),
   result: EmptyObject,

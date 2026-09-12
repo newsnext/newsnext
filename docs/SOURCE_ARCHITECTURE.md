@@ -1061,8 +1061,13 @@ its preview stays outside query identity. LiveCard metadata reset preserves para
 Chart Widgets consume named non-item query results through a validated `{ rows }`
 contract. They share the Source parameter editor and use independent placement
 patch sections for data parameters, display metadata and chart options. Native
-protocol 28 serializes these overrides under `LiveWidget.patch`, with legacy
-placement fields migrated on read. See the preset authoring contract in
+protocol 29 serializes these overrides under `LiveWidget.patch`; top-level
+placement settings are ignored. Instances use globally unique `liveWidgetId`
+values independently of filesystem `widgetId` definitions. Board Actions and
+view/drag identity target the instance, while the producer receives the
+definition ID and resolved inputs. Snapshot identity excludes instance ID,
+title, palette and layout, allowing equal inputs to share the request-protection
+cache. See the preset authoring contract in
 [SOURCE_GUIDELINE.md](SOURCE_GUIDELINE.md#preset-chart-widgets) and renderer
 lifecycle in [APPLICATION_ARCHITECTURE.md](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 

@@ -1,3 +1,4 @@
+import type { WorkspaceResolution } from "@newsnext/sdk/models"
 import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { NativePort, RequireNativeConnection } from "./types"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
@@ -11,8 +12,11 @@ import {
   setApplicationDataCommitter,
 } from "../application-service"
 import { applyWorkspacePatch, createWorkspacePatch } from "../workspace-patch"
+import { mergeWorkspaces, needsWorkspaceResolution } from "../workspace-resolution"
 import { nativeRpc } from "./rpc"
-import { runtime, WORKSPACE_UPDATED_AT_KEY } from "./state"
+import { runtime, WORKSPACE_SYNCED_AT_KEY, WORKSPACE_UPDATED_AT_KEY } from "./state"
+
+let incomingWorkspaces = 0
 
 export function createWorkspace(
   value: unknown,
@@ -61,7 +65,7 @@ async function applyWorkspace(
     await mirrorApplicationData(application)
   }
   await mirrorWorkspaceSettings(nextWorkspace.settings)
-  await persistWorkspaceUpdatedAt(nextWorkspace.updatedAt)
+  await persistWorkspaceSync(nextWorkspace.updatedAt)
 }
 
 function acceptWorkspace(
@@ -77,15 +81,59 @@ function acceptWorkspace(
   })
 }
 
+export function initializeSharedWorkspace(connection: NativePort, shared: NativeWorkspace, localCardIds: string[]): Promise<void> {
+  return enqueueIncomingOperation(async () => {
+    if (!runtime.enabled || runtime.port !== connection) return
+    if (needsWorkspaceResolution(runtime.workspace, shared, runtime.workspaceSyncedAt)) {
+      runtime.pendingWorkspace = shared
+      runtime.connectionState = "workspaceConflict"
+      return
+    }
+    await applyWorkspace(shared, localCardIds)
+    runtime.connectionState = "connected"
+  })
+}
+
+export function resolveWorkspace(resolution: WorkspaceResolution, expectedRevision: number): Promise<void> {
+  return enqueueWorkspaceOperation(async () => {
+    const shared = runtime.pendingWorkspace
+    const connection = runtime.port
+    if (!runtime.enabled || !connection || !shared) throw new Error("No Workspace decision is pending")
+    if (shared.revision !== expectedRevision) throw new Error("Shared Workspace changed. Review the updated counts and choose again.")
+    // Keep both inputs durable before either side is replaced, including discard.
+    await browser.storage.local.set({
+      "newsnext-workspace-resolution-backup": { local: runtime.workspace, shared, savedAt: Date.now() },
+    })
+    let next = shared
+    if (resolution !== "discard") {
+      const candidate = resolution === "merge" ? mergeWorkspaces(shared, runtime.workspace) : runtime.workspace
+      next = await requestWorkspaceReplacement({
+        ...candidate,
+        updatedAt: nextWorkspaceUpdatedAt(Math.max(shared.updatedAt, candidate.updatedAt)),
+      }, async () => connection, shared)
+    }
+    if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected during Workspace resolution")
+    runtime.pendingWorkspace = next
+    await applyWorkspace(next, next.liveCards.filter(card => card.workerId === runtime.workerId).map(card => card.cardId))
+    runtime.pendingWorkspace = undefined
+    runtime.connectionState = "connected"
+  })
+}
+
 export function enqueueIncomingWorkspace(
   connection: NativePort,
   resolveWorkspace: () => NativeWorkspace,
   nextLocalCardIds: string[],
   errorMessage: string,
 ): void {
-  void enqueueWorkspaceOperation(async () => {
+  void enqueueIncomingOperation(async () => {
     if (!runtime.enabled || runtime.port !== connection) return
-    await applyWorkspace(resolveWorkspace(), nextLocalCardIds)
+    const next = resolveWorkspace()
+    if (runtime.pendingWorkspace) {
+      runtime.pendingWorkspace = next
+      return
+    }
+    await applyWorkspace(next, nextLocalCardIds)
   }).catch((error) => {
     console.error(errorMessage, error)
   })
@@ -96,8 +144,9 @@ function enqueueWorkspaceReplacement(
   requireConnection: RequireNativeConnection,
 ): Promise<NativeWorkspace> {
   return enqueueWorkspaceOperation(async () => {
+    assertWorkspaceConnected()
     const committed = await requestWorkspaceReplacement(update(runtime.workspace), requireConnection)
-    await persistWorkspaceUpdatedAt(committed.updatedAt)
+    await persistWorkspaceSync(committed.updatedAt)
     return committed
   })
 }
@@ -119,6 +168,7 @@ export async function commitSettings(
   }
 
   try {
+    assertWorkspaceConnected()
     await enqueueWorkspaceReplacement(current => ({
       ...current,
       updatedAt: nextWorkspaceUpdatedAt(current.updatedAt),
@@ -145,6 +195,7 @@ export function registerApplicationDataSync(requireConnection: RequireNativeConn
       await persistWorkspaceUpdatedAt(candidate.updatedAt)
       return acceptWorkspace(candidate, nextLocalCardIds)
     }
+    assertWorkspaceConnected()
     const committed = await enqueueWorkspaceReplacement(current => createWorkspace(
       application,
       current.revision,
@@ -160,7 +211,18 @@ export function registerApplicationDataSync(requireConnection: RequireNativeConn
 }
 
 export function applyWorkspaceChangePatch(patch: Parameters<typeof applyWorkspacePatch>[1]): NativeWorkspace {
-  return applyWorkspacePatch(runtime.workspace, patch)
+  return applyWorkspacePatch(runtime.pendingWorkspace ?? runtime.workspace, patch)
+}
+
+function assertWorkspaceConnected(): void {
+  if (incomingWorkspaces > 0 || runtime.connectionState !== "connected" || runtime.pendingWorkspace) {
+    throw new Error("Connect and resolve the Workspace in Settings before making changes")
+  }
+}
+
+async function persistWorkspaceSync(updatedAt: number): Promise<void> {
+  await browser.storage.local.set({ [WORKSPACE_UPDATED_AT_KEY]: updatedAt, [WORKSPACE_SYNCED_AT_KEY]: updatedAt })
+  runtime.workspaceSyncedAt = updatedAt
 }
 
 async function persistWorkspaceUpdatedAt(updatedAt: number): Promise<void> {
@@ -174,18 +236,30 @@ function nextWorkspaceUpdatedAt(current: number): number {
 async function requestWorkspaceReplacement(
   candidate: NativeWorkspace,
   requireConnection: RequireNativeConnection,
+  base: NativeWorkspace = runtime.workspace,
 ): Promise<NativeWorkspace> {
   const connection = await requireConnection()
   const routingRevision = runtime.workerRoutingRevision
   const result = await nativeRpc(connection).request("workspaceCommit", {
-    patch: createWorkspacePatch(runtime.workspace, candidate),
+    patch: createWorkspacePatch(base, candidate),
   })
   if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected during Workspace commit")
   const committed = { ...candidate, revision: result.revision }
-  acceptWorkspace(committed, runtime.workerRoutingRevision === routingRevision
-    ? result.localCardIds
-    : [...runtime.localCardIds])
+  if (!runtime.pendingWorkspace) {
+    acceptWorkspace(committed, runtime.workerRoutingRevision === routingRevision
+      ? result.localCardIds
+      : [...runtime.localCardIds])
+  }
   return committed
+}
+
+// Incoming mirrors wait for the application queue. Reject new mutations before
+// they wait on this queue, avoiding a circular wait between the two queues.
+function enqueueIncomingOperation(operation: () => Promise<void>): Promise<void> {
+  incomingWorkspaces += 1
+  return enqueueWorkspaceOperation(operation).finally(() => {
+    incomingWorkspaces -= 1
+  })
 }
 
 function enqueueWorkspaceOperation<Result>(

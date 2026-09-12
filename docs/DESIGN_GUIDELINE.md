@@ -1076,3 +1076,20 @@ value and explicit period delta with a compact ECharts sparkline. Status rows sh
 a written state beside their colored dot; timelines include local display times
 and machine-readable timestamps. Bullet charts separate actual bars, reference
 bands, and target markers. Missing comparison baselines display explicit text.
+### Widget instance identity
+
+LiveWidget placements have independent instance identity. Reusing a Widget
+definition within one Board is allowed; edits, dragging, resizing and removal
+must target only the selected `liveWidgetId`. Moving an instance to another
+Board preserves its identity and does not disable Boards containing the same
+definition. Definition-based avatars may remain identical across instances.
+
+### Workspace connection decisions
+
+CLI Settings shows an inline choice when a joining browser differs from the
+shared Workspace. Show local and shared Board, LiveCard, and Widget counts,
+explicit direction labels (Overwrite shared data / Merge both / Discard local
+data), and a separate Apply choice and sync button. Default the selection to
+Merge both without submitting it. Explain shared-ID conflict precedence and the
+cross-browser effect of overwrite before confirmation. Synchronization stays
+paused while the choice is pending; toggling integration off remains available.
