@@ -149,6 +149,8 @@ export function parseNativeNotification(method: string, params: unknown): Native
       return { method, params: { patch: parseWorkspacePatch(params.patch), localCardIds: parseLocalCardIds(params.localCardIds) } }
     case "collectionStatusChanged":
       return { method, params: { status: parseCollectionStatus(params.status) } }
+    case "widgetCatalogChanged":
+      return { method, params: {} }
     default:
       throw new Error(`Unsupported native notification '${method}'`)
   }

@@ -5,9 +5,10 @@ import type { ReactNode, RefObject } from "react"
 import type { SortableWidgetNode } from "./sortable-widget-grid"
 import type { WidgetUi } from "./widget-manifest"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { browser } from "#imports"
 import { CardBackContent, CardShell } from "@/components/card-shell"
 import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
 import { CardContentBackground, CardContentTransition, CardRefreshButton } from "@/components/card-shell/card-refresh"
@@ -22,6 +23,7 @@ import { useSortable } from "@/hooks/use-sortable"
 import { useSourceParams } from "@/hooks/use-source-params"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
+import { isWidgetCatalogChangedMessage } from "@/lib/background/widget-catalog-events"
 import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
@@ -375,12 +377,23 @@ function useElementVisible(ref: RefObject<Element | null>): boolean {
 
 function useWidgetServerOrigin() {
   const query = useNativeIntegrationStatus()
-  return { isLoading: query.isLoading, serverOrigin: query.data?.widgetServerOrigin, state: query.data?.state }
+  return {
+    isLoading: query.isLoading,
+    serverOrigin: query.data?.widgetServerOrigin,
+    state: query.data?.state,
+    catalogPushes: query.data?.capabilities.includes("widgetCatalogPush") ?? false,
+  }
 }
 
-function useLocalWidgets(serverOrigin: string | undefined) {
+const LOCAL_WIDGETS_QUERY_KEY = ["local-widgets"] as const
+
+/** The daemon pushes catalog changes, so the interval only covers missed or unavailable pushes. */
+const CATALOG_FALLBACK_INTERVAL_MS = 60_000
+
+function useLocalWidgets(serverOrigin: string | undefined, catalogPushes: boolean) {
+  const queryClient = useQueryClient()
   const query = useQuery({
-    queryKey: ["local-widgets", serverOrigin],
+    queryKey: [...LOCAL_WIDGETS_QUERY_KEY, serverOrigin],
     queryFn: async ({ signal }) => {
       if (!serverOrigin) return []
       const response = await fetch(`${serverOrigin}/widgets`, { signal })
@@ -388,8 +401,18 @@ function useLocalWidgets(serverOrigin: string | undefined) {
       return parseLocalWidgetManifests(await response.json(), serverOrigin)
     },
     enabled: serverOrigin !== undefined,
-    refetchInterval: 5_000,
+    refetchInterval: catalogPushes ? CATALOG_FALLBACK_INTERVAL_MS : 5_000,
   })
+  useEffect(() => {
+    if (!catalogPushes) return
+    const handleMessage = (message: unknown): void => {
+      if (isWidgetCatalogChangedMessage(message)) {
+        void queryClient.invalidateQueries({ queryKey: LOCAL_WIDGETS_QUERY_KEY })
+      }
+    }
+    browser.runtime.onMessage.addListener(handleMessage)
+    return () => browser.runtime.onMessage.removeListener(handleMessage)
+  }, [catalogPushes, queryClient])
   return {
     error: query.error instanceof Error ? query.error.message : undefined,
     isLoading: query.isLoading,
@@ -406,7 +429,7 @@ interface LiveWidgetGridProps {
 export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridProps) {
   const { t } = useI18n()
   const connection = useWidgetServerOrigin()
-  const manifestQuery = useLocalWidgets(connection.serverOrigin)
+  const manifestQuery = useLocalWidgets(connection.serverOrigin, connection.catalogPushes)
   const boards = useAtomValue(boardsAtom)
   const board = boards.find(candidate => candidate.id === boardId)
   const widgets = useMemo(() => {

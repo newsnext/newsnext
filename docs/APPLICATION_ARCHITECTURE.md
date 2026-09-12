@@ -278,6 +278,18 @@ Widget ID and validation error. A rejected definition still fails when queried
 directly. Old local manifests must remove `id`, `entry`, and `data.entry` when
 these match the directory name, `index.html`, and `data.mjs`; the loader continues
 to enforce the current schema rather than silently accepting obsolete fields.
+The daemon watches the Widget directory and advertises the additive
+`widgetCatalogPush` capability. Each settled burst of filesystem activity
+publishes a `widgetCatalogChanged` revision to connected browsers; the extension
+background forwards it to open pages, which invalidate the catalog query and
+refetch instead of waiting for the next poll. Watching is best effort, so the
+periodic catalog poll remains as the fallback, and a daemon without the
+capability keeps the short interval. Catalog responses carry a strong `ETag`
+derived from the serialized definitions, so a poll that finds nothing new is
+answered with `304` and no payload. The built catalog is cached and dropped by
+those same directory changes, which keeps that validator free to serve; cache
+entries also expire on their own, so a missing watcher delays a change instead of
+leaving the catalog stale.
 
 Local Widget files and `widget.json` live in the CLI's Widget directory. Each
 Widget's directory name is its ID; the manifest has no configurable `id`. The

@@ -13,6 +13,7 @@ import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { BACKGROUND_DIAGNOSTICS_CHANGED } from "../diagnostics-events"
+import { WIDGET_CATALOG_CHANGED } from "../widget-catalog-events"
 import { initializeWorkerIdentity } from "../worker-identity"
 import { summarizeWorkspace } from "../workspace-resolution"
 import {
@@ -516,6 +517,9 @@ function handleNotification(connection: NativePort, method: string, params: unkn
         runtime.collectionStatus = notification.params.status
         notifyDiagnostics()
       }
+      break
+    case "widgetCatalogChanged":
+      void browser.runtime.sendMessage({ type: WIDGET_CATALOG_CHANGED }).catch(() => undefined)
       break
   }
 }

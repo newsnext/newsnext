@@ -3,4 +3,4 @@ import type { CollectionStatus } from "./CollectionStatus.js";
 import type { OfflineWorker } from "@newsnext/sdk/models";
 import type { WorkspacePatch } from "./WorkspacePatch.js";
 
-export type NativeNotification = { "method": "workerRoutingChanged", "params": { revision: number, localCardIds: Array<string>, offlineWorkers: Array<OfflineWorker>, } } | { "method": "workspaceChanged", "params": { patch: WorkspacePatch, localCardIds: Array<string>, } } | { "method": "collectionStatusChanged", "params": { status: CollectionStatus, } };
+export type NativeNotification = { "method": "workerRoutingChanged", "params": { revision: number, localCardIds: Array<string>, offlineWorkers: Array<OfflineWorker>, } } | { "method": "workspaceChanged", "params": { patch: WorkspacePatch, localCardIds: Array<string>, } } | { "method": "collectionStatusChanged", "params": { status: CollectionStatus, } } | { "method": "widgetCatalogChanged", "params": Record<symbol, never> };
