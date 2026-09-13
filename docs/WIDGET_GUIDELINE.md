@@ -278,21 +278,20 @@ results may contain at most 10,000 rows. Donut, stacked bars, funnel, radar,
 word cloud, and progress require non-negative values. Radar requires at least
 three selected observations. Empty rows are a normal empty state.
 
-The card back has a separate **View** section with Edit, Save, Cancel and Reset.
-Field mapping and chart choices live here, separate from producer **Parameters**.
-Changing the view never changes the query identifier or executes another data
-pipeline. A placement stores Source-style sparse overrides in
-`patch: { params, metadata, view }`. Each view field falls back to `widget.json`.
+The card back has separate **Parameters** and **Metadata** sections with Edit,
+Save, Cancel and Reset. Data parameters and metadata overrides live here. A
+placement stores Source-style sparse overrides in
+`patch: { params, metadata }`. Each section falls back to `widget.json`.
 Only explicit `patch` sections are read; top-level placement settings are ignored.
 
 ```ts
 await client.actions.nextLayer.configureLiveWidget({
   boardId, liveWidgetId,
-  patch: { view: { chart: "bar", limit: 12 }, metadata: { title: "Top topics" } },
+  patch: { metadata: { title: "Top topics" } },
 })
-// Reset only presentation. Keep data parameters and metadata overrides.
+// Reset metadata. Keep data parameters.
 await client.actions.nextLayer.configureLiveWidget({
-  boardId, liveWidgetId, patch: { view: null },
+  boardId, liveWidgetId, patch: { metadata: null },
 })
 ```
 
@@ -300,7 +299,7 @@ Patch sections merge field by field; omitted fields are retained. Arrays replace
 as values. `null` resets an entire section; `{}` is an empty merge. Existing
 `setLiveWidgetParams` and `setLiveWidgetMetadata` replace their respective sections,
 so `{}` with those Actions still resets them. Only resolved data parameters and
-scope affect the daemon's data identity; metadata and view patches do not.
+scope affect the daemon's data identity; metadata patches do not.
 
 #### Additional preset data
 
@@ -420,9 +419,8 @@ buttons. Series legends identify data but do not toggle it. Disable chart
 animation so polling and card flips remain stable. Word clouds keep words
 horizontal. Resolve CSS theme colors to RGB before passing them to Canvas.
 Metric and table presets use semantic HTML; charts also expose their observations
-in a screen-reader table. Keep view controls in a separate View section on the
-back using the shared card settings and parameter fields. Cancel discards drafts,
-Save updates the placement patch, and Reset removes only view overrides.
+in a screen-reader table. Cancel discards drafts,
+Save updates the placement patch, and Reset restores widget.json defaults.
 
 Advanced Widget presets keep controls on the card back. Trend metrics combine a
 value and explicit period delta with a compact ECharts sparkline. Status rows show

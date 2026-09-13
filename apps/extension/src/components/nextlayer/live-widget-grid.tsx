@@ -1,4 +1,4 @@
-import type { WidgetChartOptions, WidgetMetadata } from "@newsnext/sdk/models"
+import type { WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
@@ -33,7 +33,6 @@ import { parseWidgetItems } from "./widget-items"
 import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
 import { parseWidgetCatalog } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
-import { WidgetViewSettings } from "./widget-view-settings"
 
 const WIDGET_PROTOCOL_VERSION = 1
 
@@ -48,7 +47,6 @@ interface LiveWidgetCardProps {
   title: string
   url?: string
   ui: WidgetUi
-  viewPatch?: Partial<WidgetChartOptions>
   dataRevision: string
   refreshIntervalMs: number
   dataFiles: string[]
@@ -96,7 +94,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
     [frame.params, parameterState.savedParams],
   )
   const dataQuery = useLiveWidgetData({ ...frame, params: resolvedParams }, active)
-  const chartView = useMemo(() => frame.ui.type === "chart" ? { ...frame.ui, ...frame.viewPatch } : undefined, [frame.ui, frame.viewPatch])
+  const chartView = useMemo(() => frame.ui.type === "chart" ? frame.ui : undefined, [frame.ui])
   const isContentLoading = !dataQuery.data || dataQuery.isContentFetching
   const [viewStatus, setViewStatus] = useState<string>()
   const [viewHeight, setViewHeight] = useState<number>()
@@ -259,15 +257,6 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
               await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, metadata: { ...frame.metadata, ...metadata } })
             }}
           />
-          {frame.ui.type === "chart" && (
-            <WidgetViewSettings
-              view={frame.ui}
-              patch={frame.viewPatch}
-              onSave={async (view) => {
-                await actions.nextLayer.configureLiveWidget({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, patch: { view } })
-              }}
-            />
-          )}
           <ParameterSettings
             params={frame.params}
             draftSourceParams={parameterState.draftParams}
@@ -458,7 +447,6 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           title={manifest.title}
           url={manifest.url}
           ui={manifest.view}
-          viewPatch={placement.patch?.view}
           params={manifest.params}
           paramsValue={placement.patch?.params}
           metadata={placement.patch?.metadata}

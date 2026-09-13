@@ -22,7 +22,7 @@ export interface WidgetChartView extends WidgetChartOptions {
   query: string
 }
 
-export function parseWidgetChartOptions(value: unknown, partial = false): Partial<WidgetChartOptions> {
+export function parseWidgetChartOptions(value: unknown): Partial<WidgetChartOptions> {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid Widget chart options")
   const result: Partial<WidgetChartOptions> = {}
   for (const [key, entry] of Object.entries(value)) {
@@ -50,7 +50,6 @@ export function parseWidgetChartOptions(value: unknown, partial = false): Partia
       default: throw new Error(`Unknown Widget chart option: ${key}`)
     }
   }
-  if (!partial && !result.chart) throw new Error("Widget chart is required")
   return result
 }
 

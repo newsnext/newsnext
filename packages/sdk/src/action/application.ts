@@ -1,6 +1,6 @@
 import type { ApplicationBoardContext, ApplicationData, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidgetDataScope, LiveWidgetLayout, SourceDescriptor } from "../models/index.js"
 import Type from "typebox"
-import { COLORS, MIN_WIDGET_WIDTH, WIDGET_CHARTS } from "../models/index.js"
+import { COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
 import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
 
@@ -154,7 +154,7 @@ const nextLayerSetWidgetDataScopeAction = defineActionContract({
 const nextLayerConfigureWidgetAction = defineActionContract({
   name: "nextLayer.configureLiveWidget",
   kind: "mutation",
-  description: "Merge sparse params, metadata and view overrides. Null resets a section to widget.json defaults.",
+  description: "Merge sparse params and metadata overrides. Null resets a section to widget.json defaults.",
   params: Type.Object({
     boardId: Identifier,
     liveWidgetId: Identifier,
@@ -166,20 +166,6 @@ const nextLayerConfigureWidgetAction = defineActionContract({
         desc: Type.Optional(Type.String()),
         home: Type.Optional(Type.String()),
         color: Type.Optional(stringEnum(COLORS)),
-      }, { additionalProperties: false })])),
-      view: Type.Optional(Type.Union([Type.Null(), Type.Object({
-        chart: Type.Optional(stringEnum(WIDGET_CHARTS)),
-        label: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })),
-        value: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })),
-        series: Type.Optional(Type.String({ maxLength: 100 })),
-        x: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })),
-        y: Type.Optional(Type.String({ minLength: 1, maxLength: 100 })),
-        limit: Type.Optional(Type.Integer({ minimum: 1, maximum: 500 })),
-        sort: Type.Optional(stringEnum(["none", "asc", "desc"] as const)),
-        decimals: Type.Optional(Type.Integer({ minimum: 0, maximum: 6 })),
-        suffix: Type.Optional(Type.String({ maxLength: 100 })),
-        target: Type.Optional(Type.Number({ exclusiveMinimum: 0 })),
-        bins: Type.Optional(Type.Integer({ minimum: 1, maximum: 50 })),
       }, { additionalProperties: false })])),
     }, { additionalProperties: false }),
   }, { additionalProperties: false }),

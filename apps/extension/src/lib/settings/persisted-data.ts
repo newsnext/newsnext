@@ -8,7 +8,7 @@ import type {
 } from "../board"
 import type { LiveCard, LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { isThemeColor, MIN_WIDGET_WIDTH, parseWidgetChartOptions } from "@newsnext/sdk/models"
+import { isThemeColor, MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 import {
   APPLICATION_DATA_VERSION,
   createEmptyApplicationData,
@@ -156,12 +156,6 @@ function normalizeLiveWidgets(
     const dataScope = normalizeWidgetDataScope(candidate.dataScope, boardCardIds)
     if (!dataScope) return []
     const patch = isRecord(candidate.patch) ? candidate.patch : {}
-    let view
-    try {
-      view = patch.view === undefined ? undefined : parseWidgetChartOptions(patch.view, true)
-    } catch {
-      view = undefined
-    }
     seen.add(candidate.liveWidgetId)
     const width = Math.max(MIN_WIDGET_WIDTH, layout.width)
     return [{
@@ -172,7 +166,7 @@ function normalizeLiveWidgets(
         x: Math.min(layout.x, 12 - width),
         y: layout.y,
       },
-      ...((patch.metadata || patch.params || view)
+      ...((patch.metadata || patch.params)
         ? { patch: {
             ...(isRecord(patch.metadata)
               ? {
@@ -188,7 +182,6 @@ function normalizeLiveWidgets(
                 }
               : {}),
             ...(isRecord(patch.params) ? { params: patch.params } : {}),
-            ...(view ? { view } : {}),
           } }
         : {}),
       widgetId: candidate.widgetId,

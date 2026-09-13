@@ -190,7 +190,7 @@ describe("widget parameter persistence", () => {
       liveWidgetId: "feed-instance",
       dataScope: { type: "board" },
       layout: { x: 0, y: 0, width: 6, height: 4 },
-      patch: { params: { limit: 5, enabled: false, categories: ["tech"] }, metadata: { title: "My feed", color: "teal", badge: "https://example.com/badge.png", home: "https://example.com", desc: "Description" }, view: { chart: "bar", limit: 10 } },
+      patch: { params: { limit: 5, enabled: false, categories: ["tech"] }, metadata: { title: "My feed", color: "teal", badge: "https://example.com/badge.png", home: "https://example.com", desc: "Description" } },
     }]
     const restored = parsePersistedDataExport(serializePersistedDataExport(data))
     expect(restored?.data.boards?.[0]?.nextLayer.liveWidgets).toEqual(data.boards[0]!.nextLayer.liveWidgets)
@@ -223,7 +223,7 @@ describe("widget normalization", () => {
     const legacy = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [widget] } }] }
     expect(normalizeApplicationData(legacy).boards[0]?.nextLayer.liveWidgets[0]?.patch).toBeUndefined()
     const current = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [{ ...widget, patch: { view: { chart: "line" } } }] } }] }
-    expect(normalizeApplicationData(current).boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ view: { chart: "line" } })
+    expect(normalizeApplicationData(current).boards[0]?.nextLayer.liveWidgets[0]?.patch).toBeUndefined()
   })
 })
 

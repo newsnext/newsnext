@@ -257,7 +257,7 @@ Both share the root scroll container with restoration keyed by Board and Layer.
 NowLayer owns LiveCards and LiveCard-scoped queries. NextLayer owns the Board's
 `nextLayer.liveWidgets`: each entry has `liveWidgetId`, `widgetId`, grid `layout` (`x`, `y`, `width`,
 `height`), `dataScope` (the whole Board or selected `cardIds`), and optional
-`patch.params`, `patch.metadata`, and `patch.view` overrides. Metadata uses shared `CardMetadata`: optional `title`, `badge`, `desc`, `home`, and `color`,
+`patch.params` and `patch.metadata` overrides. Metadata uses shared `CardMetadata`: optional `title`, `badge`, `desc`, `home`, and `color`,
 using the same title and named palette contract as Source definitions. Widget
 layout persistence encodes order as `x: 0`, `y: orderIndex`, alongside dimensions.
 The React grid derives positions with ordered packing and uses the shared
@@ -604,10 +604,10 @@ ECharts and the word-cloud plugin load in a separate lazy module. Instances
 survive data and view updates, resize with `ResizeObserver`, reapply resolved
 RGB theme tokens when ancestor theme classes change, and dispose on unmount.
 The view never fetches data. Source-style placement `patch` contains independent
-`params`, `metadata`, and `view` sections. `configureLiveWidget` merges sparse
+`params` and `metadata` sections. `configureLiveWidget` merges sparse
 fields and removes a section when its value is null. Existing replacement
 Actions write the same sections. The Rust wire reader and export normalization
 migrate legacy top-level params/metadata once on read. Data fingerprints exclude
-all view/metadata settings. The SDK chart option parser is shared by catalog
-validation, persisted view normalization and patch validation; malformed query
+all metadata settings. The SDK chart option parser is shared by catalog
+validation and patch validation; malformed query
 rows produce an inline state rather than being coerced to zero.

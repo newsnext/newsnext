@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import type { WidgetChartOptions, WidgetChartView } from "@newsnext/sdk/models"
+import type { WidgetChartView } from "@newsnext/sdk/models"
 import { WIDGET_CHARTS } from "@newsnext/sdk/models"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useState } from "react"
@@ -8,7 +8,6 @@ import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card
 import { CardContentBackground } from "@/components/card-shell/card-refresh"
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
 import { WidgetChartContent } from "@/components/nextlayer/widget-chart-content"
-import { WidgetViewSettings } from "@/components/nextlayer/widget-view-settings"
 import { datasets, presetDatasets } from "../../../../../examples/widgets/demo-data.mjs"
 
 import { FixturePage } from "../fixture-layout"
@@ -19,7 +18,6 @@ const demoQueries = Object.fromEntries(WIDGET_CHARTS.map(chart => [chart, { obse
 
 function DemoCard({ view, data = demoQueries[view.chart]! }: { view: WidgetChartView, data?: Record<string, unknown> }): React.JSX.Element {
   const [flipped, setFlipped] = useState(false)
-  const [patch, setPatch] = useState<Partial<WidgetChartOptions>>()
   const title = view.chart.replaceAll("-", " ")
   const header = <CardHeader avatarSeed={title} title={title} providerTitle="Widget demo" actions={<CardHeaderActionButton aria-label={flipped ? "Widget front" : "Widget details"} onClick={() => setFlipped(!flipped)}>{flipped ? <PhArrowCircleLeftDuotone /> : <PhInfoDuotone />}</CardHeaderActionButton>} />
   return (
@@ -28,10 +26,10 @@ function DemoCard({ view, data = demoQueries[view.chart]! }: { view: WidgetChart
         <CardShell header={header}>
           <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
             <CardContentBackground />
-            <WidgetChartContent view={{ ...view, ...patch }} queries={data} />
+            <WidgetChartContent view={view} queries={data} />
           </div>
         </CardShell>
-        <CardShell header={header}><CardBackContent><WidgetViewSettings view={view} patch={patch} onSave={async value => setPatch(value ?? undefined)} /></CardBackContent></CardShell>
+        <CardShell header={header}><CardBackContent><p className="text-sm text-muted-foreground">View is defined in widget.json.</p></CardBackContent></CardShell>
       </FlipAnimate>
     </article>
   )

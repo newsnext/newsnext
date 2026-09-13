@@ -319,13 +319,11 @@ describe("application mutations", () => {
 describe("widget patches", () => {
   it("merges sparse sections, preserves falsy values and resets only the requested section", () => {
     const installed = installLiveWidgetMutation(createData(), { boardId: "reading", widgetId: "chart", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 } }, { createId: () => "chart" }).data
-    const first = configureLiveWidgetMutation(installed, { boardId: "reading", liveWidgetId: "chart", patch: { params: { enabled: false, count: 0 }, metadata: { title: "Chart" }, view: { chart: "line", limit: 10 } } }).data
-    const second = configureLiveWidgetMutation(first, { boardId: "reading", liveWidgetId: "chart", patch: { view: { chart: "bar" } } }).data
-    expect(second.boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false, count: 0 }, metadata: { title: "Chart" }, view: { chart: "bar", limit: 10 } })
-    const reset = configureLiveWidgetMutation(second, { boardId: "reading", liveWidgetId: "chart", patch: { view: null } }).data
-    expect(reset.boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false, count: 0 }, metadata: { title: "Chart" } })
-    expect(first.boards[0]?.nextLayer.liveWidgets[0]?.patch?.view?.chart).toBe("line")
-    expect(() => configureLiveWidgetMutation(first, { boardId: "reading", liveWidgetId: "chart", patch: { view: { limit: 0 } } })).toThrow()
+    const first = configureLiveWidgetMutation(installed, { boardId: "reading", liveWidgetId: "chart", patch: { params: { enabled: false, count: 0 }, metadata: { title: "Chart" } } }).data
+    const second = configureLiveWidgetMutation(first, { boardId: "reading", liveWidgetId: "chart", patch: { metadata: { title: "Updated" } } }).data
+    expect(second.boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false, count: 0 }, metadata: { title: "Updated" } })
+    const reset = configureLiveWidgetMutation(second, { boardId: "reading", liveWidgetId: "chart", patch: { metadata: null } }).data
+    expect(reset.boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false, count: 0 } })
   })
 })
 

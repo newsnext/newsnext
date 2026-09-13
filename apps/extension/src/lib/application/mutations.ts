@@ -9,7 +9,7 @@ import type {
 } from "../board"
 import type { LiveCardPatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
-import { MIN_WIDGET_WIDTH, parseWidgetChartOptions } from "@newsnext/sdk/models"
+import { MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 import { createBoard } from "../board"
 import { mergeLiveCardPatch } from "../source/live-cards"
 
@@ -286,11 +286,10 @@ export function configureLiveWidgetMutation(
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
   assertWidgetInstalled(board, input.liveWidgetId)
-  if (input.patch.view) parseWidgetChartOptions(input.patch.view, true)
   return replaceBoard(data, { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.map((widget) => {
     if (widget.liveWidgetId !== input.liveWidgetId) return widget
     const patch = { ...widget.patch }
-    for (const key of ["params", "metadata", "view"] as const) {
+    for (const key of ["params", "metadata"] as const) {
       const value = input.patch[key]
       if (value === null) delete patch[key]
       else if (value !== undefined) Object.assign(patch, { [key]: { ...patch[key], ...value } })
