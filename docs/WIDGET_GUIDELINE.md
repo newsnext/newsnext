@@ -196,9 +196,12 @@ normal new-tab links; the host sandbox permits popups while retaining script,
 DOM, storage, and same-origin isolation. Widget content should use NewsNext
 semantic typography, foreground, muted, divider, hover, spacing, and motion
 tokens instead of defining an unrelated visual system. An embedded document
-cannot inherit the shell's custom properties, so declare the semantic tokens a
-view uses locally with the app's values and declare `color-scheme: light dark`
-so `light-dark()` follows the host's propagated scheme.
+cannot inherit the shell's custom properties, so the daemon injects its
+built-in stylesheet (`/widgets/newsnext.css`) into every served HTML document:
+it provides the semantic tokens, resolved through `light-dark()` against the
+host's propagated `color-scheme`, plus the base document styles, and documents
+must not redeclare them. The token specification is maintained in
+`cli/docs/widget-design.md`.
 
 ### SDK access inside Widgets
 
@@ -447,7 +450,11 @@ each instance, and `client.liveWidgets.data` keeps addressing the definition.
 Runnable examples for all twenty-five presets live in `examples/widgets`. Copy its
 contents (including the shared `demo-data.mjs`) to the Widget directory reported
 by `newsnext status`, then install the `demo-*` directories on a Board through
-`nextLayer.installLiveWidget`. The shared producer contains deterministic sample
+`nextLayer.installLiveWidget`. In development the daemon does the copying
+itself: it mirrors `examples/widgets` into the development Widget directory at
+startup and on every change, replacing same-named Widgets so the examples
+always win (`NEWSNEXT_EXAMPLE_WIDGETS_PATH` overrides the source). The shared
+producer contains deterministic sample
 data; its `dataset` parameter is editable on the back. Use the extension's Cosmos
 **Patterns → Widgets → Gallery** for interactive previews and **States** for
 empty, malformed and negative-value examples. The `demo-custom-html` example

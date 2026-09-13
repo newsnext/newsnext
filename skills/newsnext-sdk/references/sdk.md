@@ -315,9 +315,10 @@ content height and report it with `newsnext.widget.size`
 (`{ "type": "newsnext.widget.size", "version": 1, "height": 128 }`). The host
 sizes the iframe and its content panel owns the scrolling state, so do not give
 `html`, `body`, or an inner element a viewport height or `overflow: auto`. Keep
-the host-owned shell, surface, and refresh chrome out of the document, use the
-NewsNext semantic tokens, and declare `color-scheme: light dark` so
-`light-dark()` follows the app theme.
+the host-owned shell, surface, and refresh chrome out of the document. The
+daemon injects its built-in stylesheet (`/widgets/newsnext.css`) into every
+served HTML document, providing the NewsNext semantic tokens and base document
+styles; never declare tokens by hand.
 
 
 ### Widget parameters

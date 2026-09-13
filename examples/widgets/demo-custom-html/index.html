@@ -4,31 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Custom HTML Widget</title>
+  <!-- The daemon injects its built-in stylesheet (/widgets/newsnext.css) into
+       every served HTML document; it provides the NewsNext semantic tokens
+       (resolved through light-dark()) and the base document styles, so this
+       document only adds its own content styles. -->
   <style>
     /* The host owns the shell, surface, and status layer, so this document only
-       styles its own content. It redeclares the NewsNext semantic tokens it needs
-       with the app's values and resolves them through `light-dark()`. */
-    :root {
-      /* Opting into both schemes lets `light-dark()` follow the host's color
-         scheme, which reaches the iframe through `prefers-color-scheme`. */
-      color-scheme: light dark;
-      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-      --foreground: light-dark(oklch(37.1% 0 none), oklch(87% 0 none));
-      --muted: oklch(70.8% 0 none / 10%);
-      --duration: 150ms;
-      --ease: cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    * { box-sizing: border-box; }
-    /* The document never scrolls or shows a scrollbar, not even while the host
-       is still applying the reported height. */
-    html, body { overflow: hidden; background: transparent; }
-    body {
-      margin: 0;
-      font-family: var(--font-sans);
-      font-size: 14px;
-      line-height: 1.4286;
-      color: var(--foreground);
-    }
+       styles its own content on top of the injected built-in stylesheet. */
     /* The document never scrolls and never shows a scrollbar. It keeps its
        natural height and reports it to the host, whose content panel owns the
        scrolling state. */

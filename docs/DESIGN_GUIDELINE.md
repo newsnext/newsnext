@@ -149,7 +149,9 @@ boundaries; do not mount custom scrollbar components or initialize overlay
 instances there. Preserve keyboard scrolling, existing scroll refs, and virtual
 lists. Embedded Widget documents never scroll or show a scrollbar of their own;
 the host content panel owns that scrolling state, as described in the
-[Widget Guideline](WIDGET_GUIDELINE.md#custom-html-documents).
+[Widget Guideline](WIDGET_GUIDELINE.md#custom-html-documents). Those
+documents also take their semantic tokens and base styles from the built-in
+stylesheet the CLI serves, specified in `cli/docs/widget-design.md`.
 
 Place visible tracks against the scrolling surface's outer edge. In Settings
 and Board dialogs, move the shell's 10px right padding into the content scroller
