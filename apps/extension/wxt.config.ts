@@ -58,15 +58,15 @@ export default defineConfig({
         groups: [
           {
             name: "react-vendor",
-            test: /node_modules\/(?:@tanstack|jotai|react|react-dom|scheduler)\//,
+            test: /node_modules[/\\](?:@tanstack|jotai|react|react-dom|scheduler)[/\\]/,
           },
           {
             name: "base-ui-vendor",
-            test: /node_modules\/(?:@base-ui|lucide-react)\//,
+            test: /node_modules[/\\](?:@base-ui|lucide-react)[/\\]/,
           },
           {
             name: "motion-vendor",
-            test: /node_modules\/motion\//,
+            test: /node_modules[/\\]motion[/\\]/,
           },
         ],
       }
