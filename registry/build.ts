@@ -48,10 +48,20 @@ async function writeIfChanged(path: string, content: string): Promise<void> {
   }
 }
 
+async function scanSourceFiles(glob: Bun.Glob): Promise<string[]> {
+  const files: string[] = []
+  for await (const file of glob.scan(rootDir)) {
+    // Glob.scan yields platform-specific separators; normalize to POSIX so
+    // generated imports and provider IDs are stable across platforms.
+    files.push(file.replaceAll("\\", "/"))
+  }
+  return files
+}
+
 async function generate(): Promise<void> {
   const typescriptProviderFiles = new Set<string>()
   for (const glob of typescriptProviderGlobs) {
-    for await (const file of glob.scan(rootDir)) {
+    for (const file of await scanSourceFiles(glob)) {
       if (!TEST_FILE_REGEX.test(file)) {
         typescriptProviderFiles.add(file)
       }
@@ -107,10 +117,7 @@ async function generate(): Promise<void> {
     }
   }
 
-  const jsonProviderFiles: string[] = []
-  for await (const file of jsonProviderGlob.scan(rootDir)) {
-    jsonProviderFiles.push(file)
-  }
+  const jsonProviderFiles = await scanSourceFiles(jsonProviderGlob)
   for (const file of jsonProviderFiles.sort()) {
     const providerId = basename(file, ".json")
     if (typescriptProviderIds.has(providerId)) {
