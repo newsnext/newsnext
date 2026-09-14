@@ -4,7 +4,6 @@ import {
   createDefaultPersistedSettings,
   normalizePersistedDeviceState,
   normalizePersistedSettings,
-  normalizeRegistryUrl,
 } from "./persisted-settings"
 import { DEFAULT_SHORTCUT_SETTINGS } from "./shortcuts"
 
@@ -45,28 +44,6 @@ describe("persisted settings", () => {
     }).shortcuts).toEqual(DEFAULT_SHORTCUT_SETTINGS)
   })
 
-  it("normalizes registry URLs", () => {
-    expect(normalizePersistedSettings({
-      general: {
-        registryUrls: [
-          " https://example.com/registry.json ",
-          "https://example.com/registry.json",
-          "http://localhost:3000/registry.json",
-          "file:///tmp/registry.json",
-          "invalid",
-        ],
-      },
-      version: 1,
-    }).general.registryUrls).toEqual([
-      "https://example.com/registry.json",
-      "http://localhost:3000/registry.json",
-    ])
-  })
-
-  it("limits registry URLs by their normalized byte length", () => {
-    expect(normalizeRegistryUrl(`https://example.com/${"é".repeat(400)}`)).toBeUndefined()
-  })
-
   it("normalizes invalid device-only fields", () => {
     expect(normalizePersistedDeviceState({
       currentBoardId: 42,
@@ -77,10 +54,6 @@ describe("persisted settings", () => {
 
   it("keeps the Integration settings tab", () => {
     expect(normalizePersistedDeviceState({ settingsTab: "cli", version: 1 }).settingsTab).toBe("cli")
-  })
-
-  it("keeps the Registry settings tab", () => {
-    expect(normalizePersistedDeviceState({ settingsTab: "registry", version: 1 }).settingsTab).toBe("registry")
   })
 
   it("normalizes the synchronized locale preference", () => {

@@ -151,20 +151,13 @@ authoring and matching rules.
 ## Registry resolution
 
 The extension bundles `registry.json` as the default registry and bundles the
-generated `resolveSources` function. Users may add multiple HTTP(S) registry
-URLs in the dedicated Registry settings tab; the list is empty by default. The
-background downloads each configured declarative registry, validates it, and
-caches the last valid result for that URL in extension-local storage before
-resolving it with the bundled function:
+generated `resolveSources` function. At startup the background configures the
+runtime's external-sources loader with the bundled catalog and synchronizes
+source request rules from the resolved descriptors; the loader resolves the
+bundled registry on demand:
 
 ```text
-configured registry URLs ── per-URL validation ── per-URL cache fallback
-             │
-             ▼
-bundled registry.json ── merge in configured order
-             │             later duplicate IDs override earlier JSON entries
-             ▼
-resolveSourceRegistry ── JSON Runtime Sources
+bundled registry.json ── resolveSourceRegistry ── JSON Runtime Sources
 
 generated complete TypeScript Runtime Sources
         │
@@ -182,11 +175,11 @@ segment. Public descriptors receive an `id` only when the keyed runtime record
 is converted for clients.
 
 The extension page caches descriptor-list requests through its query client for
-consumers that need Source discovery or configuration, such as Search,
-Settings, and Drafts. Completing a registry merge invalidates that query so the
-Registry settings tab and other consumers receive the updated Source list.
-Board routes and persisted LiveCard queries neither list nor wait for
-descriptors; they render from Loader result snapshots.
+consumers that need Source discovery or configuration, such as Search and
+Drafts. The descriptor list is static for a given extension release, so no
+storage or query invalidation is needed. Board routes and persisted LiveCard
+queries neither list nor wait for descriptors; they render from Loader result
+snapshots.
 
 Static source presentation remains nested as
 `RuntimeSource.metadata: SourcePresentationMetadata`. Runtime resolution
@@ -209,32 +202,16 @@ Resolved sources are cached within the active runtime context. Concurrent
 requests share the same in-flight registry promise. Reconfiguring the external
 loader invalidates both the cached result and any previous generation.
 
-The background checks configured registries at first use, whenever the URL list
-changes, when the user requests a refresh, and every hour. A valid download
-replaces that URL's extension-local cache and reconfigures the external loader
-so subsequent requests use the merged result without an extension release.
-Source request rules are synchronized again after an update. A failed or
-invalid download falls back to the last valid cache for that URL; URLs without
-a valid download or cache are omitted while the bundled registry remains
-available. Remote data passes the same per-registry and merged-registry limits
-and parser as bundled data before it can be cached or used. Adding a URL
-requests host access for its origin. Registry downloads time out after 15
-seconds so health checks always reach a terminal state.
+The bundled catalog is trusted extension code and changes only with an
+extension release; there is no download, cache refresh, or per-URL health
+state. Source request rules are synchronized once at startup after the loader
+is configured, so declarativeNetRequest rules always reflect the bundled
+descriptors.
 
-`general.registryUrls` is portable Settings synchronized in the daemon's opaque
-Workspace snapshot. Downloaded documents, health state, and host permissions
-remain local to each browser; Workspace synchronization does not grant access.
-
-The background publishes per-URL health, last-success time, errors, and Source
-IDs to extension-local state after each check. The Registry settings tab uses
-that state for status feedback and Source provenance, and lets users reorder
-URLs to change merge precedence. Its Source browser searches the complete
-resolved list and filters it by bundled or configured Registry origin.
-
-Only declarative structured loaders come from the downloaded JSON. Executable
-TypeScript Sources and JavaScript Radar parameter functions remain trusted
-bundled code and can change only with an extension release. The resolver still
-rejects IDs duplicated between those bundled Sources and the merged JSON
+Only declarative structured loaders come from the bundled JSON registry.
+Executable TypeScript Sources and JavaScript Radar parameter functions remain
+trusted bundled code and can change only with an extension release. The
+resolver rejects IDs duplicated between those bundled Sources and the JSON
 registry.
 
 ## Source request lifecycle
@@ -490,7 +467,7 @@ Presentation order and metadata precedence follow the
 The runtime preserves validated ordering and effective `type` through persistence
 and transport; the frontend infers timelines when no explicit type applies.
 
-The extension executes registry access and source loaders through its background
+The extension resolves Sources and executes their loaders through its background
 service so loaders can use extension host permissions, cookie and local-storage
 secrets, and request rules.
 

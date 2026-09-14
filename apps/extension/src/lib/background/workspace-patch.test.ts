@@ -88,7 +88,7 @@ describe("workspace patches", () => {
     const current = workspace(4)
     const candidate = workspace(4)
     candidate.settings = JSON.stringify({
-      general: { registryUrls: ["https://example.com/registry.json"] },
+      general: { defaultBoardId: "board-a" },
       version: 1,
     })
 

@@ -95,20 +95,6 @@ export const sourceIconSettingsAtom = atom(
   },
 )
 
-export const registryUrlsAtom = atom(
-  get => get(persistedSettingsAtom).general.registryUrls,
-  (get, set, update: SettingsValueUpdate<string[]>) => {
-    const settings = get(persistedSettingsAtom)
-    const registryUrls = typeof update === "function"
-      ? update(settings.general.registryUrls)
-      : update
-    set(persistedSettingsAtom, {
-      ...settings,
-      general: { ...settings.general, registryUrls },
-    })
-  },
-)
-
 export const shortcutSettingsAtom = atom(
   get => get(persistedSettingsAtom).shortcuts,
   (get, set, update: SettingsValueUpdate<ShortcutSettings>) => {

@@ -20,7 +20,6 @@ import { DataTransferSettings } from "./data-transfer"
 import { SettingsModalShell } from "./modal-shell"
 import { NativeIntegrationSettings } from "./native-integration"
 import { PermissionsSettings } from "./permissions"
-import { RegistrySettings } from "./registry-urls"
 import { ShortcutsSettings } from "./shortcuts"
 import { SourceIconSettings } from "./source-icon"
 
@@ -80,7 +79,6 @@ function SettingsModalContent({
       onTabChange={setActiveTab}
     >
       <TabsContent value="general"><GeneralSettings /></TabsContent>
-      <TabsContent value="registry"><RegistrySettings /></TabsContent>
       <TabsContent value="cli"><NativeIntegrationSettings /></TabsContent>
       <TabsContent value="shortcuts"><ShortcutsSettings /></TabsContent>
       <TabsContent value="permissions">

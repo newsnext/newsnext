@@ -52,7 +52,7 @@ async function applySourceRequestRules(
   })
 }
 
-export function syncSourceRequestRules(
+function syncSourceRequestRules(
   requestRules: readonly SourceRequestRule[],
 ): Promise<void> {
   const synchronize = (): Promise<void> => applySourceRequestRules(requestRules)

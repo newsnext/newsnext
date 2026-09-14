@@ -40,7 +40,7 @@ describe("application queries", () => {
     expect(liveCards.map(card => card.cardId)).toEqual(["second", "first"])
   })
 
-  it("returns NowLayer cards without registry filtering", () => {
+  it("returns NowLayer cards with their Board and source IDs", () => {
     expect(getNowLayerLiveCardsQuery(createData(), "reading")).toEqual([
       { boardId: "reading", cardId: "second", sourceId: "rss:second" },
       { boardId: "reading", cardId: "first", sourceId: "rss:first" },

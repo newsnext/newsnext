@@ -196,7 +196,7 @@ order.
 
 A LiveCard is durable application data. A registry descriptor is only the
 currently available executable definition of its Source. Removing a Source
-from a new registry must not remove, hide, or reorder its LiveCards.
+from the registry must not remove, hide, or reorder its LiveCards.
 
 Successful loads include items and a serializable Source presentation snapshot.
 The owning Worker's protected Loader persists the result by Source ID, version,

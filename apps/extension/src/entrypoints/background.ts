@@ -1,16 +1,15 @@
 import { registerService } from "@webext-core/proxy-service"
 import { browser, defineBackground } from "#imports"
 import { openAppTab } from "@/lib/app-tab"
+import { registerBundledSourcesLoader } from "@/lib/background/bundled-sources"
 import {
   backgroundActionDependencies,
   registerNativeIntegration,
 } from "@/lib/background/native-integration"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
-import { registerSourceRegistryLoader } from "@/lib/background/registry"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
-import { syncConfiguredSourceRequestRules } from "@/lib/background/source-request-rules"
 
-registerSourceRegistryLoader()
+registerBundledSourcesLoader()
 const backgroundService = createBackgroundService(backgroundActionDependencies)
 const APP_MENU_ID = "app"
 const COSMOS_MENU_ID = "cosmos"
@@ -37,9 +36,6 @@ export default defineBackground(() => {
   registerRadarBadge()
   void registerNativeIntegration().catch((error) => {
     console.error("Failed to initialize the App integration", error)
-  })
-  void syncConfiguredSourceRequestRules().catch((error) => {
-    console.error("Failed to synchronize source request rules", error)
   })
 
   browser.runtime.onInstalled.addListener(registerActionMenus)

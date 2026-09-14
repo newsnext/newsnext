@@ -10,9 +10,7 @@ import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcut
 
 export const PERSISTED_SETTINGS_VERSION = 1
 
-export const MAX_REGISTRY_URLS = 20
-
-export type SettingsTabId = "general" | "registry" | "cli" | "shortcuts" | "permissions" | "data"
+export type SettingsTabId = "general" | "cli" | "shortcuts" | "permissions" | "data"
 
 export interface PersistedSettings {
   appearance: {
@@ -22,7 +20,6 @@ export interface PersistedSettings {
   general: {
     defaultBoardId: string | null
     nativeIntegrationEnabled: boolean
-    registryUrls: string[]
     sourceIcon: SourceIconSettings
   }
   shortcuts: ShortcutSettings
@@ -44,7 +41,6 @@ export function createDefaultPersistedSettings(): PersistedSettings {
     general: {
       defaultBoardId: null,
       nativeIntegrationEnabled: false,
-      registryUrls: [],
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
     shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },
@@ -86,7 +82,6 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
       nativeIntegrationEnabled: typeof general?.nativeIntegrationEnabled === "boolean"
         ? general.nativeIntegrationEnabled
         : defaults.general.nativeIntegrationEnabled,
-      registryUrls: normalizeRegistryUrls(general?.registryUrls),
       sourceIcon: normalizeSourceIconSettings(
         general?.sourceIcon,
         defaults.general.sourceIcon,
@@ -95,30 +90,6 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
     shortcuts: normalizeShortcutSettings(value.shortcuts),
     version: PERSISTED_SETTINGS_VERSION,
   }
-}
-
-export function normalizeRegistryUrl(value: unknown): string | undefined {
-  if (typeof value !== "string" || value.length > 2048) return undefined
-
-  try {
-    const url = new URL(value.trim())
-    if (url.protocol !== "https:" && url.protocol !== "http:") return undefined
-    return new TextEncoder().encode(url.href).length <= 2048 ? url.href : undefined
-  } catch {
-    return undefined
-  }
-}
-
-export function normalizeRegistryUrls(value: unknown): string[] {
-  if (!Array.isArray(value)) return []
-
-  const urls = new Set<string>()
-  for (const candidate of value) {
-    const url = normalizeRegistryUrl(candidate)
-    if (url) urls.add(url)
-    if (urls.size === MAX_REGISTRY_URLS) break
-  }
-  return [...urls]
 }
 
 export function normalizePersistedDeviceState(value: unknown): PersistedDeviceState {
@@ -140,7 +111,6 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
 
 export function isSettingsTabId(value: unknown): value is SettingsTabId {
   return value === "general"
-    || value === "registry"
     || value === "cli"
     || value === "shortcuts"
     || value === "permissions"
