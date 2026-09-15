@@ -23,6 +23,8 @@
 }
 .widget-slot:hover, .widget-slot:focus-within { z-index: 1; }
 .widget-grid[data-interacting] iframe { pointer-events: none; }
+/* Pointer resizing follows the cursor; only the committed snap animates. */
+.widget-grid[data-resizing] .widget-slot { transition: none; }
 .widget-resize-handle { position: absolute; z-index: 10; touch-action: none; }
 .widget-resize-handle:focus-visible { outline: 2px solid var(--color-theme-400); border-radius: 0.5rem; }
 .widget-resize-width { right: 0; top: 24px; bottom: 16px; width: 8px; cursor: ew-resize; }

@@ -5,8 +5,12 @@ export const WIDGET_GAP = 24
 // Split the 400 × 500 LiveCard footprint, including its gutter, into two units.
 export const WIDGET_COLUMN_WIDTH = (400 + WIDGET_GAP) / 2
 export const WIDGET_ROW_HEIGHT = (500 + WIDGET_GAP) / 2
+export const MAX_WIDGET_WIDTH = 4
+export const MAX_WIDGET_HEIGHT = 100
 
 const GRID_WIDGET_ID_PREFIX = "widget-"
+
+export type ResizeAxis = "width" | "height" | "both"
 
 export interface ChangedWidgetLayout {
   layout: LiveWidgetLayout
@@ -21,9 +25,63 @@ export interface WidgetGridNode {
   y?: number
 }
 
+export interface WidgetSlotFrame {
+  height: number
+  left: number
+  top: number
+  width: number
+}
+
+export interface WidgetResizeNode extends WidgetGridNode {
+  minH: number
+  minW: number
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+  return Math.max(minimum, Math.min(maximum, value))
+}
+
 // Manifest, persisted, and rendered sizes all use half-LiveCard units.
 export function clampWidgetWidth(width: number): number {
-  return Math.max(MIN_WIDGET_WIDTH, Math.min(4, Math.round(width)))
+  return clamp(Math.round(width), MIN_WIDGET_WIDTH, MAX_WIDGET_WIDTH)
+}
+
+// Slots and pointer resize previews share one pixel frame derived from grid spans.
+export function getWidgetSlotFrame(node: WidgetGridNode): WidgetSlotFrame {
+  return {
+    left: (node.x ?? 0) * WIDGET_COLUMN_WIDTH,
+    top: (node.y ?? 0) * WIDGET_ROW_HEIGHT,
+    width: (node.w ?? 1) * WIDGET_COLUMN_WIDTH - WIDGET_GAP,
+    height: (node.h ?? 1) * WIDGET_ROW_HEIGHT - WIDGET_GAP,
+  }
+}
+
+// Bottom edge of the packed layout, shared by grid sizing and drag placeholders.
+export function getWidgetGridHeight(nodes: readonly WidgetGridNode[]): number {
+  return Math.max(0, ...nodes.map((node) => {
+    const frame = getWidgetSlotFrame(node)
+    return frame.top + frame.height
+  }))
+}
+
+// Pointer resizing tracks the cursor in pixels within manifest minimums, the
+// two-card width, and the grid's right edge; committing snaps the span to cells.
+export function getResizedWidgetFrame(
+  node: WidgetResizeNode,
+  gridWidth: number,
+  axis: ResizeAxis,
+  delta: { x: number, y: number },
+): WidgetSlotFrame {
+  const frame = getWidgetSlotFrame(node)
+  const minWidth = node.minW * WIDGET_COLUMN_WIDTH - WIDGET_GAP
+  const maxWidth = Math.min(MAX_WIDGET_WIDTH * WIDGET_COLUMN_WIDTH - WIDGET_GAP, gridWidth - frame.left)
+  const minHeight = node.minH * WIDGET_ROW_HEIGHT - WIDGET_GAP
+  const maxHeight = MAX_WIDGET_HEIGHT * WIDGET_ROW_HEIGHT - WIDGET_GAP
+  return {
+    ...frame,
+    width: axis === "height" ? frame.width : clamp(frame.width + delta.x, minWidth, maxWidth),
+    height: axis === "width" ? frame.height : clamp(frame.height + delta.y, minHeight, maxHeight),
+  }
 }
 
 export function getWidgetColumns(availableWidth: number, nodes: readonly WidgetGridNode[]): number {
@@ -38,7 +96,7 @@ export function getResizedWidgetSize(
 ): { w: number, h: number } {
   return {
     w: Math.max(initial.minW, clampWidgetWidth(initial.w + Math.round(delta.x / WIDGET_COLUMN_WIDTH))),
-    h: Math.max(initial.minH, Math.min(100, initial.h + Math.round(delta.y / WIDGET_ROW_HEIGHT))),
+    h: clamp(initial.h + Math.round(delta.y / WIDGET_ROW_HEIGHT), initial.minH, MAX_WIDGET_HEIGHT),
   }
 }
 

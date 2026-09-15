@@ -1,12 +1,12 @@
 import type { ElementEventBasePayload } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import type { KeyboardEvent, PointerEvent, ReactNode } from "react"
-import type { WidgetDropTarget } from "./widget-layout"
+import type { ResizeAxis, WidgetDropTarget, WidgetSlotFrame } from "./widget-layout"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { isSortableData } from "@/lib/board"
 import { isDropWithin } from "@/lib/board/drop-target"
-import { getClosestWidgetDropTarget, getResizedWidgetSize, getWidgetColumns, getWidgetDropTargets, getWidgetGridLayout, WIDGET_COLUMN_WIDTH, WIDGET_GAP, WIDGET_ROW_HEIGHT } from "./widget-layout"
+import { getClosestWidgetDropTarget, getResizedWidgetFrame, getResizedWidgetSize, getWidgetColumns, getWidgetDropTargets, getWidgetGridHeight, getWidgetGridLayout, getWidgetSlotFrame, WIDGET_COLUMN_WIDTH, WIDGET_GAP, WIDGET_ROW_HEIGHT } from "./widget-layout"
 
 export interface SortableWidgetNode {
   id: string
@@ -38,14 +38,23 @@ interface DragSession {
   grabY: number
 }
 
-type ResizeAxis = "width" | "height" | "both"
 interface ResizeSession {
   original: SortableWidgetNode[]
-  preview: SortableWidgetNode[]
   node: SortableWidgetNode
   axis: ResizeAxis
   clientX: number
   clientY: number
+}
+
+interface ResizePreview extends WidgetSlotFrame {
+  id: string
+}
+
+function getResizeDelta(session: ResizeSession, event: { clientX: number, clientY: number }): { x: number, y: number } {
+  return {
+    x: session.axis === "height" ? 0 : event.clientX - session.clientX,
+    y: session.axis === "width" ? 0 : event.clientY - session.clientY,
+  }
 }
 
 export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutChange, onReady }: SortableWidgetGridProps) {
@@ -60,6 +69,7 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
   const readyRef = useRef(false)
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [resizingId, setResizingId] = useState<string | null>(null)
+  const [resizePreview, setResizePreview] = useState<ResizePreview | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const sourceVersion = JSON.stringify(nodes)
   const savedOrder = useMemo(() => [...nodes].sort((a, b) => a.y - b.y || a.x - b.x), [nodes])
@@ -68,7 +78,11 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
   const layout = useMemo(() => getWidgetGridLayout(columns, ordered), [columns, ordered])
   const byId = new Map(layout.map(node => [node.id, node]))
   const width = columns * WIDGET_COLUMN_WIDTH - WIDGET_GAP
-  const height = Math.max(dragHeight, ...layout.map(node => (node.y + node.h) * WIDGET_ROW_HEIGHT - WIDGET_GAP))
+  const height = Math.max(
+    dragHeight,
+    getWidgetGridHeight(layout),
+    resizePreview ? resizePreview.top + resizePreview.height : 0,
+  )
 
   useEffect(() => {
     const container = containerRef.current
@@ -111,7 +125,7 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
       grabX: location.initial.input.clientX - bounds.left,
       grabY: location.initial.input.clientY - bounds.top,
     }
-    setDragHeight(Math.max(0, ...layout.map(node => (node.y + node.h) * WIDGET_ROW_HEIGHT - WIDGET_GAP)))
+    setDragHeight(getWidgetGridHeight(layout))
     setDraggingId(source.data.id)
   }, [columns, enabled, layout])
 
@@ -157,35 +171,37 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
     }
   }, [commit, sourceVersion])
 
+  const commitResize = (base: SortableWidgetNode[], node: SortableWidgetNode, delta: { x: number, y: number }) => {
+    const size = getResizedWidgetSize(node, delta)
+    const next = base.map(candidate => candidate.id === node.id ? { ...candidate, ...size } : candidate)
+    commit(getWidgetGridLayout(getWidgetColumns(availableWidth, next), next))
+  }
   const startResize = (event: PointerEvent<HTMLButtonElement>, node: SortableWidgetNode, axis: ResizeAxis) => {
     if (!enabled || event.button !== 0) return
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
-    resizeRef.current = { original: layout, preview: layout, node, axis, clientX: event.clientX, clientY: event.clientY }
+    resizeRef.current = { original: layout, node, axis, clientX: event.clientX, clientY: event.clientY }
     setResizingId(node.id)
   }
   const moveResize = (event: PointerEvent<HTMLButtonElement>) => {
     const resize = resizeRef.current
     if (!resize) return
-    const size = getResizedWidgetSize(resize.node, {
-      x: resize.axis === "height" ? 0 : event.clientX - resize.clientX,
-      y: resize.axis === "width" ? 0 : event.clientY - resize.clientY,
+    // Follow the cursor in pixels; the committed span snaps back to whole cells on release.
+    setResizePreview({
+      id: resize.node.id,
+      ...getResizedWidgetFrame(resize.node, width, resize.axis, getResizeDelta(resize, event)),
     })
-    const previous = resize.preview.find(node => node.id === resize.node.id)
-    if (previous?.w === size.w && previous.h === size.h) return
-    resize.preview = resize.original.map(node => node.id === resize.node.id ? { ...node, ...size } : node)
-    setDraft({ source: sourceVersion, nodes: resize.preview })
   }
   const endResize = (event: PointerEvent<HTMLButtonElement>) => {
     const resize = resizeRef.current
     resizeRef.current = null
     setResizingId(null)
+    setResizePreview(null)
     if (!resize) return
     if (event.type === "pointercancel") {
       setDraft({ source: sourceVersion, nodes: resize.original })
     } else {
-      const nextColumns = getWidgetColumns(availableWidth, resize.preview)
-      commit(getWidgetGridLayout(nextColumns, resize.preview))
+      commitResize(resize.original, resize.node, getResizeDelta(resize, event))
     }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
   }
@@ -194,15 +210,14 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
       setDraft({ source: sourceVersion, nodes: resizeRef.current.original })
       resizeRef.current = null
       setResizingId(null)
+      setResizePreview(null)
       return
     }
     const x = axis !== "height" ? ({ ArrowLeft: -WIDGET_COLUMN_WIDTH, ArrowRight: WIDGET_COLUMN_WIDTH }[event.key]) ?? 0 : 0
     const y = axis !== "width" ? ({ ArrowUp: -WIDGET_ROW_HEIGHT, ArrowDown: WIDGET_ROW_HEIGHT }[event.key]) ?? 0 : 0
     if (!x && !y) return
     event.preventDefault()
-    const size = getResizedWidgetSize(node, { x, y })
-    const next = layout.map(candidate => candidate.id === node.id ? { ...candidate, ...size } : candidate)
-    commit(getWidgetGridLayout(getWidgetColumns(availableWidth, next), next))
+    commitResize(layout, node, { x, y })
   }
 
   return (
@@ -223,11 +238,13 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
             role="list"
             className="widget-grid"
             data-interacting={draggingId || resizingId ? "true" : undefined}
+            data-resizing={resizingId ? "true" : undefined}
             style={{ width, height }}
           >
             {nodes.map((original, index) => {
               const node = byId.get(original.id)
               if (!node) return null
+              const frame = resizePreview?.id === node.id ? resizePreview : getWidgetSlotFrame(node)
               return (
                 <div
                   key={node.id}
@@ -236,10 +253,10 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
                   aria-setsize={nodes.length}
                   className="widget-slot"
                   style={{
-                    left: node.x * WIDGET_COLUMN_WIDTH,
-                    top: node.y * WIDGET_ROW_HEIGHT,
-                    width: node.w * WIDGET_COLUMN_WIDTH - WIDGET_GAP,
-                    height: node.h * WIDGET_ROW_HEIGHT - WIDGET_GAP,
+                    left: frame.left,
+                    top: frame.top,
+                    width: frame.width,
+                    height: frame.height,
                   }}
                 >
                   <div data-widget-transition className="relative h-full">

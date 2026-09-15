@@ -386,11 +386,17 @@ immediately without saving. Re-entering resolves a fresh preview.
 The dragged slot remains visible as a subdued
 placeholder. On a valid drop, commit that exact preview; dropping outside cancels.
 Window resizing reflows order without saving. Resize from the right, bottom, or
-lower-right edges with pointer capture; arrow keys on a focused handle resize by
-one cell. Animate snapped width and height changes with the same 180ms ease
-transition as slot movement, including during pointer resizing. Disable these
-transitions only for navigation or reduced motion. Resize changes dimensions
-without changing order. Escape or pointer
+lower-right edges with pointer capture. Pointer resizing must track the cursor:
+move the dragged edges continuously at pixel precision, without the slot
+transition, so the size never lags the pointer. Clamp that preview to the
+manifest minimums, the two-card width, the grid's right edge, and the maximum
+row count, and keep neighboring slots still until the gesture ends. Grow the
+grid's height with the preview so the resized edge stays reachable. On release,
+snap the span to the nearest cell boundary and animate the snapped width and
+height with the same 180ms ease transition as slot movement. Arrow keys on a
+focused handle resize by one cell and animate immediately. Disable these
+transitions only for navigation, pointer resizing, or reduced motion. Resize
+changes dimensions without changing order. Escape or pointer
 cancellation restores the previous sizes. Honor manifest minimum dimensions.
 
 Keep iframes mounted in stable React slots while changing outer geometry. Disable

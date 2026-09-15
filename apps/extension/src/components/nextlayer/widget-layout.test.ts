@@ -1,6 +1,6 @@
 import type { WidgetDropTarget } from "./widget-layout"
 import { describe, expect, it } from "vitest"
-import { clampWidgetWidth, getChangedWidgetLayouts, getClosestWidgetDropTarget, getResizedWidgetSize, getWidgetColumns, getWidgetDropTargets, getWidgetGridLayout, WIDGET_COLUMN_WIDTH, WIDGET_ROW_HEIGHT } from "./widget-layout"
+import { clampWidgetWidth, getChangedWidgetLayouts, getClosestWidgetDropTarget, getResizedWidgetFrame, getResizedWidgetSize, getWidgetColumns, getWidgetDropTargets, getWidgetGridHeight, getWidgetGridLayout, getWidgetSlotFrame, WIDGET_COLUMN_WIDTH, WIDGET_GAP, WIDGET_ROW_HEIGHT } from "./widget-layout"
 
 const cellSize = { width: WIDGET_COLUMN_WIDTH, height: WIDGET_ROW_HEIGHT }
 
@@ -155,6 +155,41 @@ describe("fixed widget widths and resizing", () => {
     expect(getResizedWidgetSize(original, { x: -1000, y: -1000 })).toEqual({ w: 2, h: 2 })
     expect(getResizedWidgetSize(original, { x: 10000, y: 100000 })).toEqual({ w: 4, h: 100 })
     expect(original).toEqual({ w: 2, h: 4, minW: 1, minH: 2 })
+  })
+
+  it("derives slot frames and the grid height from grid spans", () => {
+    expect(getWidgetSlotFrame({ x: 1, y: 2, w: 3, h: 1 })).toEqual({
+      left: WIDGET_COLUMN_WIDTH,
+      top: WIDGET_ROW_HEIGHT * 2,
+      width: WIDGET_COLUMN_WIDTH * 3 - WIDGET_GAP,
+      height: WIDGET_ROW_HEIGHT - WIDGET_GAP,
+    })
+    expect(getWidgetGridHeight([{ y: 0, h: 2 }, { y: 3, h: 1 }])).toBe(WIDGET_ROW_HEIGHT * 4 - WIDGET_GAP)
+    expect(getWidgetGridHeight([])).toBe(0)
+  })
+
+  it("tracks the pointer within manifest minimums, the card width, and the grid edge", () => {
+    const node = { x: 0, y: 0, w: 2, h: 2, minW: 2, minH: 1 }
+    const frame = getWidgetSlotFrame(node)
+    const gridWidth = WIDGET_COLUMN_WIDTH * 4 - WIDGET_GAP
+    expect(getResizedWidgetFrame(node, gridWidth, "both", { x: 40, y: 40 })).toEqual({
+      ...frame,
+      width: frame.width + 40,
+      height: frame.height + 40,
+    })
+    expect(getResizedWidgetFrame(node, gridWidth, "height", { x: 40, y: 0 })).toEqual(frame)
+    expect(getResizedWidgetFrame(node, gridWidth, "both", { x: -1000, y: -1000 })).toEqual({
+      ...frame,
+      height: WIDGET_ROW_HEIGHT - WIDGET_GAP,
+    })
+    expect(getResizedWidgetFrame(node, gridWidth, "width", { x: 10000, y: 10000 })).toEqual({ ...frame, width: gridWidth })
+    expect(getResizedWidgetFrame(node, gridWidth, "height", { x: 10000, y: 100000 })).toEqual({ ...frame, height: WIDGET_ROW_HEIGHT * 100 - WIDGET_GAP })
+    // A Widget already at the grid's right edge cannot preview past it.
+    const trailing = { ...node, x: 2 }
+    expect(getResizedWidgetFrame(trailing, gridWidth, "width", { x: 10000, y: 0 })).toEqual({
+      ...getWidgetSlotFrame(trailing),
+      width: WIDGET_COLUMN_WIDTH * 2 - WIDGET_GAP,
+    })
   })
 })
 
