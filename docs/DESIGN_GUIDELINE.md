@@ -247,11 +247,13 @@ LiveCards define the primary NewsNext surface treatment.
   Theme mode belongs in Appearance settings rather than the title island.
   Changing the active Board color here updates the same persisted Board
   preference used by its editor.
-- LiveCard and Widget metadata settings use a separate `CardColorSelector`
+- Widget metadata settings use a separate `CardColorSelector`
   as an inline field: show a small color swatch at rest, and open a compact
   six-column swatch menu when editing. Reuse the shared inline Select surface
   and use circular hover backgrounds and selection rings around the swatches;
-  do not embed the Board icon palette in card settings.
+  do not embed the Board icon palette in card settings. LiveCard metadata
+  settings do not offer color editing; a LiveCard's palette always comes from
+  its provider.
 - While a LiveCard or Widget is being dragged, temporarily replace the header
   Dynamic Island with an enlarged red trash target. Strengthen its tint and icon
   motion when the pointer enters the island. A valid drop deletes the LiveCard
@@ -344,7 +346,9 @@ Card and Widget share one interaction model. The only Widget variations are
 resizable dimensions, content renderers, and data adapters. Identity headers,
 metadata fields, parameter controls, Board switching, removal confirmation,
 flip/focus behavior, and refresh feedback must use the same components.
-`CardMetadataSettings` renders Title, Description, Home, Badge, and Color for both.
+`CardMetadataSettings` renders Title, Description, Home, and Badge for both,
+adding Color only for Widgets; a LiveCard's palette always comes from its
+provider.
 Provider identity remains unchanged by display overrides. Source-specific
 permissions and Widget-specific data diagnostics belong to data-adapter content.
 

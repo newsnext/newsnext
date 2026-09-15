@@ -138,14 +138,14 @@ export function LiveCardFront({
 }: LiveCardFrontProps) {
   const { t } = useI18n()
   const { provider } = source
-  const { badge, color, desc, home, title } = source.metadata
+  const { badge, desc, home, title } = source.metadata
   const icon = useSourceIcon(source)
   const identity = useMemo(() => ({
     badge,
     icon,
     name: title || provider.title,
-    color: color ?? provider.color,
-  }), [badge, color, icon, provider.color, provider.title, title])
+    color: provider.color,
+  }), [badge, icon, provider.color, provider.title, title])
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const markScaleGroups = useMemo(
     () => [{ items, sourceKey: source.id }],

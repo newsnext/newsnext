@@ -39,10 +39,11 @@ export function LiveCardEditForm({
   return (
     <div className="space-y-4">
       <CardMetadataSettings
-        metadata={{ ...source.metadata, title: source.metadata.title || provider.title, color: source.metadata.color ?? provider.color }}
+        metadata={{ ...source.metadata, title: source.metadata.title || provider.title }}
         onSave={onSaveSourceMeta}
         onReset={onResetSourceMeta}
         onPreviewMetadataChange={onPreviewMetadataChange}
+        enableCustomColor={false}
       />
 
       <ParameterSettings

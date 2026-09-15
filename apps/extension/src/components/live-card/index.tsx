@@ -169,7 +169,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     <FlipAnimate
       rotate="y"
       flipped={isFlipped}
-      className={displaySource.metadata.color ?? displaySource.provider.color}
+      className={displaySource.provider.color}
     >
       <LiveCardFront
         source={displaySource}

@@ -4,9 +4,11 @@ import { renderSourceLoaderResult, validateSourceLoaderOutput } from "./loader-r
 import { compileSourceTemplate } from "./template"
 
 describe("source loader result", () => {
-  it("uses the shared named palette for Card metadata", () => {
-    expect(validateSourceLoaderOutput({ items: [{ title: "Item", url: "https://example.com" }], metadata: { color: "teal" } }).metadata?.color).toBe("teal")
-    expect(() => validateSourceLoaderOutput({ items: [{ title: "Item", url: "https://example.com" }], metadata: { color: "invalid" } })).toThrow("supported palette")
+  it("rejects color in loader metadata", () => {
+    expect(() => validateSourceLoaderOutput({
+      items: [{ title: "Item", url: "https://example.com" }],
+      metadata: { color: "teal" },
+    } as unknown as SourceLoaderResult)).toThrow("metadata.color is not supported")
   })
 
   it("preserves valid loader results", () => {

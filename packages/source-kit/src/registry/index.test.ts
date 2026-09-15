@@ -508,11 +508,9 @@ describe("source template vars", () => {
         title: "Test",
         color: "red",
       },
-    })).not.toThrow()
-    expect(() => resolveTestSource({
-      ...createSourceConfig([]),
-      metadata: { color: "invalid" },
-    } as unknown as SourceConfig)).toThrow("supported palette")
+    } as unknown as SourceConfig)).toThrow(
+      "test:test.metadata.color is not supported",
+    )
   })
 
   it("allows parsed parameters and page data in Radar metadata templates", () => {
@@ -710,7 +708,9 @@ describe("source template vars", () => {
           },
         },
       },
-    ]))).not.toThrow()
+    ] as unknown as SourceRadarRule[]))).toThrow(
+      "test:test.radar.0.patch.metadata.color is not supported",
+    )
   })
 
   it("does not expose source metadata to Radar templates", () => {
@@ -789,7 +789,6 @@ describe("source registry", () => {
       sources: {
         latest: {
           metadata: {
-            color: "red",
             icon: "source-icon",
           },
           loader: {

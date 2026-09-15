@@ -17,7 +17,6 @@ import type {
 import type { HtmlLoaderOptions } from "./loaders/html"
 import type { JsonLoaderOptions } from "./loaders/json"
 import type { CompiledSourceTemplate } from "./template"
-import { isThemeColor } from "@newsnext/sdk/models"
 
 import { createDefu } from "defu"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
@@ -196,7 +195,6 @@ function validateSourceMetadata(
     if (!isSourcePresentationMetadataKey(key)) {
       throw new TypeError(`${location}.${key} is not supported`)
     }
-    if (key === "color" && !isThemeColor(value)) throw new TypeError(`${location}.color must name a supported palette`)
     if (key === "type" && !isSourcePresentationType(value)) {
       throw new TypeError(`${location}.type must be "list" or "ranking"`)
     }

@@ -151,6 +151,7 @@ describe("buildLiveCards", () => {
       icon: "https://example.com/icon.png",
       color: "blue",
     })
+    expect(liveCard?.metadata).not.toHaveProperty("color")
     expect(liveCard).not.toHaveProperty("category")
     expect(liveCard).not.toHaveProperty("icon")
     expect(liveCard).not.toHaveProperty("color")

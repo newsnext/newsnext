@@ -95,7 +95,7 @@ describe("application mutations", () => {
 
   it("resets Card metadata without resetting its source parameters", () => {
     const data = createData()
-    data.liveCards[0]!.patch = { metadata: { title: "Custom", color: "teal" }, params: { url: "https://example.com/feed" } }
+    data.liveCards[0]!.patch = { metadata: { title: "Custom" }, params: { url: "https://example.com/feed" } }
     const reset = resetLiveCardMetadataMutation(data, { cardId: "rss:feed::one" }).data
     expect(reset.liveCards[0]?.patch).toEqual({ metadata: {}, params: data.liveCards[0]!.patch.params })
     expect(data.liveCards[0]?.patch.metadata?.title).toBe("Custom")

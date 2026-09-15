@@ -10,9 +10,10 @@ interface CardMetadataSettingsProps {
   onPreviewMetadataChange?: (metadata: CardMetadata | null) => void
   onSave: (metadata: CardMetadata) => Promise<void> | void
   onReset?: () => Promise<void> | void
+  enableCustomColor?: boolean
 }
 
-export function CardMetadataSettings({ metadata, onSave, onReset, onPreviewMetadataChange }: CardMetadataSettingsProps): React.JSX.Element {
+export function CardMetadataSettings({ metadata, onSave, onReset, onPreviewMetadataChange, enableCustomColor = true }: CardMetadataSettingsProps): React.JSX.Element {
   const { t } = useI18n()
   const [draft, setDraft] = useState<CardMetadata | null>(null)
   useEffect(() => {
@@ -20,7 +21,6 @@ export function CardMetadataSettings({ metadata, onSave, onReset, onPreviewMetad
   }, [draft, onPreviewMetadataChange])
   const isEditing = draft !== null
   const current = { ...metadata, ...draft }
-  const selectedColor = current.color ?? "slate"
   const isDirty = draft !== null && Object.keys(draft).some(key => draft[key as keyof CardMetadata] !== metadata[key as keyof CardMetadata])
 
   return (
@@ -56,13 +56,15 @@ export function CardMetadataSettings({ metadata, onSave, onReset, onPreviewMetad
       <Info label={t("badge")}>
         <EditableImage src={current.badge ?? ""} alt={`${current.title ?? ""} badge`} rounded editable={isEditing} onChange={badge => setDraft(previous => ({ ...previous, badge }))} />
       </Info>
-      <Info label={t("themeColor")}>
-        <CardColorSelector
-          value={selectedColor}
-          editable={isEditing}
-          onValueChange={color => setDraft(previous => ({ ...previous, color }))}
-        />
-      </Info>
+      {enableCustomColor && (
+        <Info label={t("themeColor")}>
+          <CardColorSelector
+            value={current.color ?? "slate"}
+            editable={isEditing}
+            onValueChange={color => setDraft(previous => ({ ...previous, color }))}
+          />
+        </Info>
+      )}
     </CardSettingsSection>
   )
 }

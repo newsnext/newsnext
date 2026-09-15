@@ -69,9 +69,9 @@ bun --filter=@newsnext/registry run build
 A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
 `sources`. `title`, `icon`, `color`, and `category` describe the provider and
 remain provider identity fields. Every source descriptor receives that provider
-identity. Source/LiveCard `metadata.color` may override the displayed card palette
-without mutating `provider.color`; it uses the same named palette. Source metadata
-shares `CardMetadata` with Widgets: `title`, `badge`, `desc`, `home`, and `color`.
+identity. Source metadata covers `title`, `badge`, `desc`, `home`, and optional
+`type`. `color` is provider identity and is never valid in Source, LiveCard, or
+Radar metadata; a card's palette always comes from its provider.
 
 `defaults` may contain `baseUrl`, `version`, `capabilities`, `loader`, `metadata`,
 `vars`, `params`, `radar`, `requestRules`, and `secrets`. Defaults recursively
@@ -754,7 +754,7 @@ Preserve the intended display order before returning so the most relevant 50
 items remain in the LiveCard result.
 
 Dynamic loader metadata always supports the complete source metadata shape:
-`title`, `badge`, `desc`, `home`, `color`, and optional `type` (`list` or `ranking`). It travels with the items through
+`title`, `badge`, `desc`, `home`, and optional `type` (`list` or `ranking`). It travels with the items through
 persistence and the in-memory Query cache and has the
 highest display priority, overriding static metadata and persisted Radar or
 LiveCard metadata patches field by field. It is unavailable until the first
@@ -1120,10 +1120,9 @@ Parse `scope.page.title` only when the value is unavailable from the top-level
 DOM, such as content rendered inside an iframe.
 
 Radar metadata can override source-owned presentation fields: `title`, `badge`,
-`desc`, `home`, `color`, and `type`. A resolved color must name a supported palette. A resolved `type` must be `list` or `ranking`.
+`desc`, `home`, and `type`. A resolved `type` must be `list` or `ranking`.
 Radar metadata uses the same selector, traversal,
-extraction, and template behavior as HTML loader fields. Provider-owned `icon` is not a valid Radar metadata field; `metadata.color` only
-changes the card presentation.
+extraction, and template behavior as HTML loader fields. Provider-owned `icon` and `color` are not valid Radar metadata fields.
 
 When a source has no parameters or explicit `radar`, an HTTP(S)
 `metadata.home` creates a same-host rule automatically. Set `radar: []` to opt

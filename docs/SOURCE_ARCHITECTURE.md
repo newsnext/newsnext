@@ -1027,12 +1027,13 @@ as scheduling. Unresolved streams report an unknown count. Diagnostics read data
 summaries without scanning observation items or holding the daemon state lock.
 
 
-`SourcePresentationMetadata` extends the shared `CardMetadata` shape used by
-Widgets. `metadata.color` controls the displayed card palette independently of the
-provider's immutable identity. Registry configuration, loader results, and Radar
-literal/extracted colors validate against the same named palette. The common
-`CardMetadataSettings` editor renders Title, Description, Home, Badge, and Color;
-its preview stays outside query identity. LiveCard metadata reset preserves params.
+`SourcePresentationMetadata` shares the base identity fields of the `CardMetadata`
+shape used by Widgets, but excludes `color`: the card palette is provider
+identity and cannot be overridden. Registry configuration, loader results, and
+Radar patches validate metadata keys against the same set. The common
+`CardMetadataSettings` editor renders Title, Description, Home, and Badge for
+LiveCards, adding Color only for Widgets; its preview stays outside query
+identity. LiveCard metadata reset preserves params.
 
 
 Chart Widgets consume named non-item query results through a validated `{ rows }`

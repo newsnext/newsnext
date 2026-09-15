@@ -2,7 +2,6 @@ import type {
   HtmlFieldConfig,
   SourceRadarRule,
 } from "../types"
-import { isThemeColor } from "@newsnext/sdk/models"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import { SOURCE_REGISTRY_LIMITS } from "./limits"
 import { compileSourceTemplate, isTemplate } from "./template"
@@ -31,7 +30,6 @@ export function validateRadarRules(
       if (field === undefined) continue
       const fieldLocation = `${patchLocation}.metadata.${key}`
       if (typeof field === "string") {
-        if (key === "color" && !isTemplate(field) && !isThemeColor(field)) throw new TypeError(`${fieldLocation} must name a supported palette`)
         if (key === "type" && !isTemplate(field) && !isSourcePresentationType(field)) {
           throw new TypeError(`${fieldLocation} must be "list" or "ranking"`)
         }

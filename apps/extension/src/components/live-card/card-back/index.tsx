@@ -59,7 +59,6 @@ export function LiveCardBack({
 
   return (
     <CardShell
-      className={previewMetadata?.color}
       header={(
         <CardHeader
           badge={previewBadge}

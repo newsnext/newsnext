@@ -78,7 +78,7 @@ export interface SourceRadarRule {
   priority?: number
 }
 
-export interface SourcePresentationMetadata extends CardMetadata {
+export interface SourcePresentationMetadata extends Omit<CardMetadata, "color"> {
   type?: SourcePresentationType
 }
 
@@ -107,7 +107,6 @@ export const SOURCE_PRESENTATION_METADATA_KEYS = [
   "badge",
   "desc",
   "home",
-  "color",
   "type",
 ] as const satisfies readonly (keyof SourcePresentationMetadata)[]
 
