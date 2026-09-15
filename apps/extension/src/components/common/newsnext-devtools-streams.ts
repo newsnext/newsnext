@@ -28,7 +28,5 @@ export function collectionExplanation(stream: NativeStreamStatus): string {
   if (stream.policy.lastOutcome === "error") return "The last attempt failed; the stream is waiting to retry."
   if (stream.activity === "due") return "Ready to collect; waiting for an available execution slot."
   if (stream.policy.lastOutcome === "cached") return "The last attempt reused cached data. Replaying the same fetch adds no observation."
-  if (stream.policy.phase === "burst") return "A recent content change keeps collection at the minimum interval."
-  if (stream.policy.phase === "learning") return "Collecting initial samples to learn how often this stream changes."
-  return "Collection timing adapts to observed content changes, within 1–60 minutes."
+  return "Collection runs on a fixed 10-minute schedule."
 }

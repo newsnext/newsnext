@@ -11,7 +11,7 @@ priorities and acceptance criteria.
 
 ## Baseline and target
 
-The daemon already collects Workspace LiveCards through adaptive automatic collection.
+The daemon already collects Workspace LiveCards through fixed-cadence automatic collection (every ten minutes per stream). The time-aware estimator remains as an independent backup in the daemon and does not control scheduling.
 History retains observations by execution Worker, Source ID, version, normalized
 parameters, and fetch time, reusing content-addressed item revisions. Unchanged
 fresh fetches remain distinct observations; replaying the same dataset/timestamp

@@ -357,7 +357,7 @@ function StreamIdentity({ stream, liveCards }: { stream: NativeStreamStatus, liv
 }
 
 function matchesStream(stream: NativeStreamStatus, filter: string, liveCards: DiagnosticLiveCards): boolean {
-  return matches(filter, stream.sourceId, stream.workerId, stream.streamId, ...stream.cardIds, ...streamLiveCardDescriptions(stream, liveCards).map(value => value.description), stream.activity, stream.policy.phase, stream.policy.lastError)
+  return matches(filter, stream.sourceId, stream.workerId, stream.streamId, ...stream.cardIds, ...streamLiveCardDescriptions(stream, liveCards).map(value => value.description), stream.activity, stream.policy.lastError)
 }
 
 function StreamsPanel({ snapshot, filter, selectedId, onSelect, attentionFirst }: PanelProps & { attentionFirst: boolean, selectedId: string | undefined, onSelect: (id: string) => void }): React.JSX.Element {
@@ -449,9 +449,6 @@ function StreamMetrics({ stream }: { stream: NativeStreamStatus }): React.JSX.El
       <details key={stream.streamId}>
         <summary style={styles.disclosure}>Policy &amp; identifiers</summary>
         <DefinitionGrid>
-          <Definition label="Learning phase" value={policy.phase} />
-          <Definition label="Learning samples" value={`${policy.sampleCount} / 64`} />
-          <Definition label="Estimated changes / hour" value={policy.estimatedChangesPerHour?.toFixed(2) ?? "Not enough observations"} />
           <Definition label="Last attempt" value={policy.lastAttemptAt === null ? "—" : formatDateTime(policy.lastAttemptAt)} />
           <Definition label="Last outcome" value={policy.lastOutcome ?? "Not loaded yet"} />
           <Definition label="Stream ID" value={stream.streamId} />

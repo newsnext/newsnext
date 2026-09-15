@@ -53,7 +53,7 @@ schemas, transport details, and command syntax in those references and the
 | Sources | Bundled registry Sources, structured/custom loaders, parameters, Radar, permissions, secrets, validation, and CLI diagnostics | Versioned maintenance grants, repair/rollback, dependency health |
 | Workspace | Browsers persist Boards, LiveCards, Widget placement/scope, and portable Settings; the daemon coordinates a revisioned in-memory snapshot | User-facing conflict and unavailable-Worker recovery |
 | Now Layer | Independent LiveCards, routed Worker-local cache, protected refresh, generic fallback when registry entries disappear | Preserve this contract as collection and Widgets expand |
-| Automatic collection | Daemon schedules all Workspace LiveCards, shares equivalent Worker-scoped streams, learns bounded intervals, and retains observations | Explicit retention controls, real-trace evaluation, broader health UX |
+| Automatic collection | Daemon schedules all Workspace LiveCards on a fixed ten-minute cadence, shares equivalent Worker-scoped streams, and retains observations | Explicit retention controls, real-trace evaluation, broader health UX |
 | History | Turso datasets, observation reads/comparisons, and collection policy persistence | Retention/compaction, richer task attribution and provenance |
 | Next Layer | Board-owned Widget layouts and scopes, local manifests/assets, sandboxed iframe rendering, on-demand data computation, and request protection caching | Full discovery/preview/maintenance workflow, reusable transformations and templates |
 | Code Widgets | Local iframe assets with host-controlled data delivery | Reviewed executable updates, resource budgets, version history, rollback, and broader acceptance testing |

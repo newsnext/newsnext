@@ -19,9 +19,6 @@ function stream(id: string, overrides: Partial<NativeStreamStatus> = {}): Native
       lastChangedAt: null,
       lastError: null,
       lastOutcome: "fresh",
-      phase: "adaptive",
-      sampleCount: 10,
-      estimatedChangesPerHour: 0.1,
       added: 0,
       removed: 0,
       edited: 0,
@@ -68,7 +65,7 @@ describe("stream diagnostic priorities", () => {
     expect(sortStreams([source, b, a], true).map(value => value.streamId)).toEqual(["b", "first", "a"])
   })
 
-  it("explains current execution before stale outcomes or learning phases", () => {
+  it("explains current execution before stale outcomes", () => {
     const failed = stream("failed")
     failed.policy.lastOutcome = "error"
     expect(needsStreamAttention(failed)).toBe(true)
@@ -77,7 +74,7 @@ describe("stream diagnostic priorities", () => {
     expect(collectionExplanation({ ...failed, activity: "offline" })).toContain("reconnects")
     const cached = stream("cached")
     cached.policy.lastOutcome = "cached"
-    cached.policy.phase = "burst"
     expect(collectionExplanation(cached)).toContain("adds no observation")
+    expect(collectionExplanation(stream("fixed", { policy: { ...stream("fixed").policy, intervalMs: 600_000 } }))).toContain("fixed 10-minute schedule")
   })
 })

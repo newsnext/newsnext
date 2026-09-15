@@ -22,9 +22,6 @@ const snapshot = {
       lastChangedAt: null,
       lastError: "Loader failed",
       lastOutcome: "error",
-      phase: "learning",
-      sampleCount: 2,
-      estimatedChangesPerHour: 1.2,
       added: 1,
       removed: 0,
       edited: 2,
@@ -37,18 +34,18 @@ describe("stream diagnostics parsing", () => {
   it("preserves shared stream identity, nullable timestamps and failure details", () => {
     expect(parseCollectionStatus(snapshot)).toEqual(snapshot)
     expect(parseCollectionStatus(snapshot).streams[0]?.observationCount).toBe(123)
+    const fixed = { ...snapshot, streams: [{ ...snapshot.streams[0], policy: { ...snapshot.streams[0]!.policy, intervalMs: 600_000 } }] }
+    expect(parseCollectionStatus(fixed).streams[0]?.policy.intervalMs).toBe(600_000)
     expect(() => parseCollectionStatus({ ...snapshot, streams: [{ ...snapshot.streams[0], observationCount: -1 }] })).toThrow()
     expect(parseCollectionStatus({ ...snapshot, streams: [{ ...snapshot.streams[0], observationCount: undefined }] }).streams[0]?.observationCount).toBeUndefined()
     expect(parseCollectionStatus({ ...snapshot, initialized: false, streams: [], persistenceError: "Database unavailable" }).persistenceError).toBe("Database unavailable")
   })
 
-  it("rejects invalid activity, interval bounds and malformed learning state", () => {
+  it("rejects invalid activity, interval bounds and malformed policy state", () => {
     for (const policy of [
       { intervalMs: 0 },
       { intervalMs: 3_600_001 },
-      { sampleCount: 65 },
       { nextRunAt: -1 },
-      { estimatedChangesPerHour: -1 },
       { lastOutcome: "unknown" },
       { lastFetchedAt: "yesterday" },
     ]) {
