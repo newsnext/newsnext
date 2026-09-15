@@ -31,7 +31,7 @@ newsnext status
 
 ### `doctor`
 
-Check the executable, selected runtime environment, Native Messaging registration, database, widget directory, daemon, protocol compatibility, connected extension, and widget server.
+Check the executable, selected runtime environment, Native Messaging registration, database, widget directory and manifests, daemon, protocol compatibility, connected extension, and widget server.
 
 ```sh
 newsnext doctor
@@ -121,6 +121,31 @@ newsnext run - articles < provider.json
 
 If authentication is required, open the login URL printed by the CLI and rerun the command afterward.
 
+## Widget manifests
+
+### `widget validate`
+
+Validate Widget manifests in the Widget directory of the selected environment and print one line per Widget. Entries of the Widget directory that are not Widget folders are ignored.
+
+```text
+newsnext widget validate [OPTIONS] [WIDGET]
+```
+
+- Without `[WIDGET]`, every Widget subdirectory is validated.
+- With `[WIDGET]`, only that Widget is validated; an unknown Widget ID fails.
+- Each line reads `ok <id>` for a valid manifest or `error <id> <message>` for a rejected one, sorted by Widget ID.
+- The command fails when any validated manifest is invalid, so it can gate scripts that install Widgets.
+- `--run` additionally executes the Widget's data pipeline — file queries, `latest` queries resolved as empty, then `data.mjs` when declared — and validates the produced data against the view contract, printing a `data ok <id> ...` or `data error <id> <message>` line per Widget.
+- `--param <KEY=VALUE>` sets a Widget parameter for a `--run`; repeat it as needed. Values that do not parse as JSON stay strings.
+
+```sh
+newsnext widget validate
+newsnext widget validate feed
+newsnext widget validate --run feed --param limit=20
+```
+
+`doctor` surfaces the same rejections as `widgetManifest.*` warnings without failing the report.
+
 ## TypeScript SDK
 
 Complex structured operations are exposed through `@newsnext/sdk`, not terminal
@@ -129,7 +154,7 @@ Actions. The former `history` and `action` CLI commands have been removed.
 See [sdk.md](sdk.md) for installation, development configuration and examples.
 
 Simple terminal operations remain `start`, `status`, `doctor`, `stop`, `restart`,
-`fetch`, `run`, and `install-native-host`.
+`fetch`, `run`, `widget validate`, and `install-native-host`.
 
 ## Native Messaging registration
 
