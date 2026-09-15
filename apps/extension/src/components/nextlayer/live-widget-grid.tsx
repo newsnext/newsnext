@@ -4,6 +4,7 @@ import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
 import type { SortableWidgetNode } from "./sortable-widget-grid"
 import type { WidgetCatalog, WidgetUi } from "./widget-manifest"
+import type { WidgetLayoutSpan } from "@/lib/widget-host"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
@@ -52,6 +53,8 @@ interface LiveWidgetCardProps {
   dataFiles: string[]
   widgetId: string
   liveWidgetId: string
+  /** Grid span in half-LiveCard units, forwarded to custom views. */
+  layout: WidgetLayoutSpan
 }
 
 function LiveWidgetCard(frame: LiveWidgetCardProps) {
@@ -142,8 +145,9 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
       version: WIDGET_PROTOCOL_VERSION,
       widgetId: frame.widgetId,
       liveWidgetId: frame.liveWidgetId,
+      layout: frame.layout,
     }, "*")
-  }, [frame.widgetId, frame.liveWidgetId, dataPayload, resolvedParams])
+  }, [frame.widgetId, frame.liveWidgetId, frame.layout, dataPayload, resolvedParams])
 
   useEffect(() => {
     function handleMessage(event: MessageEvent<unknown>): void {
@@ -393,21 +397,24 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
     const manifestsById = new Map(catalog.widgets.map(widget => [widget.id, widget]))
     return board?.nextLayer.liveWidgets.flatMap((placement) => {
       const manifest = manifestsById.get(placement.widgetId)
-      return manifest ? [{ manifest, placement }] : []
+      if (!manifest) return []
+      const minW = clampWidgetWidth(manifest.minWidth)
+      const layout: WidgetLayoutSpan = {
+        width: Math.max(minW, clampWidgetWidth(placement.layout.width)),
+        height: Math.max(manifest.minHeight, placement.layout.height),
+      }
+      return [{ manifest, placement, layout, minW }]
     }) ?? []
   }, [board?.nextLayer.liveWidgets, catalog.widgets])
-  const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement }) => {
-    const minW = clampWidgetWidth(manifest.minWidth)
-    return {
-      id: getGridWidgetId(placement.liveWidgetId),
-      x: placement.layout.x,
-      y: placement.layout.y,
-      w: Math.max(minW, clampWidgetWidth(placement.layout.width)),
-      h: Math.max(manifest.minHeight, placement.layout.height),
-      minW,
-      minH: manifest.minHeight,
-    }
-  }), [widgets])
+  const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement, layout, minW }) => ({
+    id: getGridWidgetId(placement.liveWidgetId),
+    x: placement.layout.x,
+    y: placement.layout.y,
+    w: layout.width,
+    h: layout.height,
+    minW,
+    minH: manifest.minHeight,
+  })), [widgets])
   const saveLayout = useCallback(async (layout: SortableWidgetNode[]) => {
     if (!board) return
     const updates = getChangedWidgetLayouts(layout, board.nextLayer.liveWidgets)
@@ -433,7 +440,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
 
   return (
     <SortableWidgetGrid key={boardId} onReady={onReady} nodes={nodes} enabled={viewReady} label={t("nextLayerWidgets")} onLayoutChange={saveLayout}>
-      {widgets.map(({ manifest, placement }) => (
+      {widgets.map(({ manifest, placement, layout }) => (
         <LiveWidgetCard
           key={placement.liveWidgetId}
           boardId={boardId}
@@ -453,6 +460,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           dataRevision={manifest.dataRevision}
           refreshIntervalMs={manifest.refreshIntervalMs}
           dataFiles={manifest.dataFiles}
+          layout={layout}
         />
       ))}
     </SortableWidgetGrid>

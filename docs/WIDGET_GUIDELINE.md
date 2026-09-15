@@ -172,8 +172,10 @@ results are an ordinary empty state; malformed data must show an error.
 ### Custom HTML documents
 
 A custom view receives `newsnext.widget.data` messages from the host, carrying
-`status` (`loading`, `ready`, or `error`), `stale`, `queries`, and the resolved
-`params`, and answers with `newsnext.widget.ready` once its message listener is
+`status` (`loading`, `ready`, or `error`), `stale`, `queries`, the resolved
+`params`, and the placement's grid `layout` (`{ width, height }` in half-LiveCard
+units, re-sent when the card is resized), and answers with
+`newsnext.widget.ready` once its message listener is
 installed. The host repeats the latest payload after each load and refresh.
 Report empty or malformed data with `newsnext.widget.status`
 (`{ "type": "newsnext.widget.status", "version": 1, "message": "No data to display." }`,
@@ -199,8 +201,13 @@ tokens instead of defining an unrelated visual system. An embedded document
 cannot inherit the shell's custom properties, so the daemon injects its
 built-in stylesheet (`/widgets/newsnext.css`) into every served HTML document:
 it provides the semantic tokens, resolved through `light-dark()` against the
-host's propagated `color-scheme`, plus the base document styles, and documents
-must not redeclare them. The token specification is maintained in
+host's propagated `color-scheme`, plus the base document styles and shared
+`nn-*` content components (panels, chips, row lists, bar columns), and documents
+must not redeclare them. The daemon also serves the shared view runtime at
+`/widgets/newsnext.js`; documents import it explicitly as a module. It wires
+the host protocol and grid-span layout engine (`createView`), so views render
+from a frame with the payload, measured box, and grid span instead of handling
+messages themselves. The token specification is maintained in
 `cli/docs/widget-design.md`.
 
 ### SDK access inside Widgets

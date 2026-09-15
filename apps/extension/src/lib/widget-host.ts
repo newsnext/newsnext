@@ -23,6 +23,12 @@ export interface WidgetSdkRequest {
   request: Record<string, unknown>
 }
 
+/** Grid span of a Widget placement in half-LiveCard grid units, sent with data messages. */
+export interface WidgetLayoutSpan {
+  width: number
+  height: number
+}
+
 export function isWidgetSdkRequest(value: unknown): value is WidgetSdkRequest {
   return isRecord(value)
     && value.type === WIDGET_SDK_PORT
