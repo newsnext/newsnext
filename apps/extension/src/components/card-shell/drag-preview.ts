@@ -1,3 +1,5 @@
+import { COLORS } from "@newsnext/shared/constants"
+
 export function canDragCardHeader(target: Element | null): boolean {
   return !target?.closest("[data-card-drag-excluded], button, a, input, select, textarea")
 }
@@ -21,7 +23,13 @@ export function generateCardDragPreview({
   layer.style.padding = "0.625rem"
   const surfaceColor = getComputedStyle(surface).backgroundColor
   layer.style.background = `linear-gradient(${surfaceColor}, ${surfaceColor}), ${backgroundColor}`
-  layer.style.setProperty("--color-theme-400", getComputedStyle(header).getPropertyValue("--color-theme-400"))
+  for (let node: HTMLElement | null = header; node && element.contains(node); node = node.parentElement) {
+    const color = COLORS.find(name => node.classList.contains(name))
+    if (color) {
+      layer.classList.add(color)
+      break
+    }
+  }
 
   const preview = header.cloneNode(true) as HTMLElement
   preview.style.marginBottom = "0"
