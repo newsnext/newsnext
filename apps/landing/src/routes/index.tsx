@@ -3,7 +3,7 @@ import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { GithubLogo } from "@phosphor-icons/react/ssr"
 import { createFileRoute } from "@tanstack/react-router"
 import confetti from "canvas-confetti"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import iconUrl from "../../../extension/public/icon/icon.svg?url"
 import { SiteFooter } from "../components/site-footer"
 import { SiteShell } from "../components/site-shell"
@@ -20,6 +20,8 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const { success } = Route.useSearch()
+  // Capture once: WaitlistJoined cleans the URL, which resets the search param.
+  const [joined] = useState(success)
   return (
     <SiteShell>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center pt-12 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 text-center" id="content">
@@ -48,7 +50,7 @@ function LandingPage() {
           <GithubLogo size={16} aria-hidden="true" />
           <span>Explore on GitHub</span>
         </a>
-        {success ? <WaitlistJoined /> : <WaitlistCta />}
+        {joined ? <WaitlistJoined /> : <WaitlistCta />}
       </main>
       <SiteFooter />
     </SiteShell>
