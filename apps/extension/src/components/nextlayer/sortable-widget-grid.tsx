@@ -221,7 +221,7 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
   }
 
   return (
-    <section aria-label={label}>
+    <section aria-label={label} style={{ paddingBottom: WIDGET_ROW_HEIGHT }}>
       {saveError && <p role="alert" className="mb-3 text-sm text-destructive">{saveError}</p>}
       <div ref={containerRef} className="widget-scroll-container scrollbar-hidden" data-overflow={availableWidth > 0 && width > availableWidth ? "true" : undefined}>
         <DndContext
