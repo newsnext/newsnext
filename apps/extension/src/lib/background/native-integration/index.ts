@@ -13,6 +13,7 @@ import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { BACKGROUND_DIAGNOSTICS_CHANGED } from "../diagnostics-events"
+import { BACKGROUND_NATIVE_STATUS_CHANGED } from "../native-status-events"
 import { initializeWorkerIdentity } from "../worker-identity"
 import { summarizeWorkspace } from "../workspace-resolution"
 import {
@@ -125,6 +126,12 @@ function notifyDiagnostics(): void {
   if (runtime.collectionSubscribed) void browser.runtime.sendMessage({ type: BACKGROUND_DIAGNOSTICS_CHANGED }).catch(() => undefined)
 }
 
+// Worker routing, Widget catalog, and connection state are global: push them so
+// open pages revalidate immediately instead of waiting for the status poll.
+function notifyNativeStatus(): void {
+  void browser.runtime.sendMessage({ type: BACKGROUND_NATIVE_STATUS_CHANGED }).catch(() => undefined)
+}
+
 let connectedActionContext: BackgroundActionContext | undefined
 
 function getConnectedActionContext(): BackgroundActionContext {
@@ -224,6 +231,7 @@ function resetConnectionState(
   rejectNativeConnection(connectionFailure)
   clearNativeMessageChunks()
   notifyDiagnostics()
+  notifyNativeStatus()
 }
 
 function clearReconnectBackoff(): void {
@@ -507,6 +515,7 @@ function handleNotification(connection: NativePort, method: string, params: unkn
         runtime.workerRoutingRevision = message.revision
         runtime.localCardIds = new Set(message.localCardIds)
         runtime.offlineWorkers = message.offlineWorkers
+        notifyNativeStatus()
       }
       break
     }
@@ -523,6 +532,7 @@ function handleNotification(connection: NativePort, method: string, params: unkn
       break
     case "widgetCatalogChanged":
       runtime.widgetCatalog = notification.params.widgets
+      notifyNativeStatus()
       break
   }
 }

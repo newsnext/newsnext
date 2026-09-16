@@ -282,7 +282,9 @@ The catalog is protocol data rather than an HTTP resource: `ready` carries the
 current definitions next to the Workspace, and each settled burst of filesystem
 activity publishes a `widgetCatalogChanged` payload to connected browsers. The
 extension background caches the newest payload, and open pages revalidate it
-before rendering. Watching is best effort, so a daemon without it keeps the
+before rendering: worker routing, catalog, and connection changes push a
+native-status message that invalidates the status query immediately, with the
+regular poll left as the fallback for missed messages. Watching is best effort, so a daemon without it keeps the
 definitions it read at startup instead of rescanning on demand.
 
 Local Widget files and `widget.json` live in the CLI's Widget directory. Each
