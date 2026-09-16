@@ -12,8 +12,7 @@ import { normalizePersistedSettings } from "../../settings/persisted-settings"
 import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
-import { BACKGROUND_DIAGNOSTICS_CHANGED } from "../diagnostics-events"
-import { BACKGROUND_NATIVE_STATUS_CHANGED } from "../native-status-events"
+import { emitBackgroundEvent } from "../background-events"
 import { initializeWorkerIdentity } from "../worker-identity"
 import { summarizeWorkspace } from "../workspace-resolution"
 import {
@@ -123,13 +122,13 @@ function sendCollectionSubscription(): void {
 }
 
 function notifyDiagnostics(): void {
-  if (runtime.collectionSubscribed) void browser.runtime.sendMessage({ type: BACKGROUND_DIAGNOSTICS_CHANGED }).catch(() => undefined)
+  if (runtime.collectionSubscribed) emitBackgroundEvent("diagnostics.changed", {})
 }
 
 // Worker routing, Widget catalog, and connection state are global: push them so
 // open pages revalidate immediately instead of waiting for the status poll.
 function notifyNativeStatus(): void {
-  void browser.runtime.sendMessage({ type: BACKGROUND_NATIVE_STATUS_CHANGED }).catch(() => undefined)
+  emitBackgroundEvent("nativeIntegration.statusChanged", {})
 }
 
 let connectedActionContext: BackgroundActionContext | undefined

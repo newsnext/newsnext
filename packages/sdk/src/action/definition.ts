@@ -56,3 +56,44 @@ export function createActionCatalog<const Definitions extends readonly ActionSha
   }
   return Object.fromEntries(entries) as ActionCatalog<Definitions>
 }
+
+// Background-to-UI broadcasts: one-to-many, fire-and-forget. Unlike Actions they
+// carry no caller and expect no result; receivers re-pull authoritative state.
+export interface EventContract<
+  Name extends string = string,
+  Payload extends TSchema = TSchema,
+> {
+  description: string
+  name: Name
+  payload: Payload
+}
+
+export function defineEventContract<
+  const Name extends string,
+  const Payload extends TSchema,
+>(configuration: EventContract<Name, Payload>): EventContract<Name, Payload> {
+  return configuration
+}
+
+export interface EventShape {
+  readonly name: string
+  readonly payload: TSchema
+}
+export type EventPayloadOf<Definition extends EventShape> = Static<Definition["payload"]>
+
+type EventCatalog<Definitions extends readonly EventShape[]> = {
+  [Definition in Definitions[number] as Definition["name"]]: Definition
+}
+
+export function createEventCatalog<const Definitions extends readonly EventShape[]>(
+  definitions: Definitions,
+): EventCatalog<Definitions> {
+  const entries = new Map<string, Definitions[number]>()
+  for (const definition of definitions) {
+    if (entries.has(definition.name)) {
+      throw new Error(`Duplicate Event name '${definition.name}'`)
+    }
+    entries.set(definition.name, definition)
+  }
+  return Object.fromEntries(entries) as EventCatalog<Definitions>
+}

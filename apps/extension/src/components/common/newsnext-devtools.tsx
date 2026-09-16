@@ -4,8 +4,9 @@ import type { BackgroundDiagnosticsSnapshot } from "@/lib/background/diagnostics
 import type { StreamStatus as NativeStreamStatus } from "@/lib/native-protocol/StreamStatus"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { browser } from "#imports"
+import { useBackgroundEvent } from "@/hooks/use-background-event"
 import { createBackgroundClient } from "@/lib/background"
-import { BACKGROUND_DIAGNOSTICS_PORT, isBackgroundDiagnosticsChangedMessage } from "@/lib/background/diagnostics-events"
+import { BACKGROUND_DIAGNOSTICS_PORT } from "@/lib/background/diagnostics-service"
 
 import { collectionExplanation, needsStreamAttention, sortStreams, summarizeStreams } from "./newsnext-devtools-streams"
 
@@ -110,16 +111,15 @@ export function NewsNextDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen: b
     return snapshotPromiseRef.current
   }, [])
 
+  useBackgroundEvent("diagnostics.changed", () => {
+    void readSnapshot()
+  }, devtoolsOpen)
+
   useEffect(() => {
     if (!devtoolsOpen) return
-    const handleMessage = (message: unknown): void => {
-      if (isBackgroundDiagnosticsChangedMessage(message)) void readSnapshot()
-    }
-    browser.runtime.onMessage.addListener(handleMessage)
     const initialRead = setTimeout(readSnapshot, 0)
     const subscription = browser.runtime.connect({ name: BACKGROUND_DIAGNOSTICS_PORT })
     return () => {
-      browser.runtime.onMessage.removeListener(handleMessage)
       clearTimeout(initialRead)
       subscription.disconnect()
     }

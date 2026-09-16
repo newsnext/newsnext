@@ -16,7 +16,9 @@ import {
   subscribeBackgroundActions,
 } from "./action-dispatcher"
 import { readApplicationData } from "./application-service"
-import { BACKGROUND_DIAGNOSTICS_CHANGED, BACKGROUND_DIAGNOSTICS_PORT } from "./diagnostics-events"
+import { emitBackgroundEvent } from "./background-events"
+
+export const BACKGROUND_DIAGNOSTICS_PORT = "newsnext.background-diagnostics.subscription"
 
 export interface BackgroundDiagnosticsSnapshot {
   actions: BackgroundActionRecord[]
@@ -67,9 +69,7 @@ function startDiagnosticsEvents(nativeIntegration: BackgroundActionDependencies[
   diagnosticsEventsStarted = true
 
   const broadcastChange = (): void => {
-    void browser.runtime.sendMessage({
-      type: BACKGROUND_DIAGNOSTICS_CHANGED,
-    }).catch(() => undefined)
+    emitBackgroundEvent("diagnostics.changed", {})
   }
   const subscriptions = new Set<ReturnType<typeof browser.runtime.connect>>()
   browser.runtime.onConnect.addListener((port) => {
