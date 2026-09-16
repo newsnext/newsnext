@@ -11,11 +11,12 @@ interface WidgetItemListContentProps {
   ui: Extract<WidgetUi, { type: "live-card" }>
   title: string
   color: Color
+  loading: boolean
   queries: Record<string, unknown>
   onRefresh: () => void
 }
 
-export function WidgetItemListContent({ ui, title, color, queries, onRefresh }: WidgetItemListContentProps): React.JSX.Element {
+export function WidgetItemListContent({ ui, title, color, loading, queries, onRefresh }: WidgetItemListContentProps): React.JSX.Element {
   const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null)
   const result = useMemo(() => {
     try {
@@ -31,7 +32,7 @@ export function WidgetItemListContent({ ui, title, color, queries, onRefresh }: 
   return (
     <div ref={setScrollElement} className="relative size-full overflow-y-auto px-2 py-2" onPointerDown={event => event.stopPropagation()}>
       <LiveCardIdentityContext value={identity}>
-        {result.error && result.items.length === 0 && <SourceErrorState onRefresh={onRefresh} />}
+        {!loading && result.error && result.items.length === 0 && <SourceErrorState onRefresh={onRefresh} />}
         <LiveCardItems items={result.items} presentationType={ui.presentation} scrollElement={scrollElement} markScale={markScale} />
       </LiveCardIdentityContext>
     </div>

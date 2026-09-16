@@ -206,6 +206,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
                     color={color}
                     ui={frame.ui}
                     title={title}
+                    loading={isContentLoading}
                     onRefresh={dataQuery.refetch}
                     queries={dataQuery.data?.queries ?? {}}
                   />
