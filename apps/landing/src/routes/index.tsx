@@ -2,16 +2,24 @@ import type { ReactNode } from "react"
 import { WordmarkLogo } from "@newsnext/ui/components/wordmark-logo"
 import { GithubLogo } from "@phosphor-icons/react/ssr"
 import { createFileRoute } from "@tanstack/react-router"
+import confetti from "canvas-confetti"
+import { useEffect } from "react"
 import iconUrl from "../../../extension/public/icon/icon.svg?url"
 import { SiteFooter } from "../components/site-footer"
 import { SiteShell } from "../components/site-shell"
 
+const WAITLIST_URL = "https://tally.so/r/yPBBYg"
+
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>): { success?: boolean } => ({
+    success: search.success === "" || search.success === true || search.success === "true" ? true : undefined,
+  }),
   head: () => ({ links: [{ rel: "canonical", href: "https://newsnext.app/" }] }),
   component: LandingPage,
 })
 
 function LandingPage() {
+  const { success } = Route.useSearch()
   return (
     <SiteShell>
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center pt-12 pb-16 sm:pt-16 sm:pb-24 lg:pt-20 lg:pb-28 text-center" id="content">
@@ -36,13 +44,52 @@ function LandingPage() {
             </IntroOutcome>
           </p>
         </div>
-        <a className="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-(--action) px-6 py-3 text-sm leading-normal font-medium text-(--background) transition-colors duration-150 ease-out hover:bg-(--action-hover) motion-reduce:transition-none" href="https://github.com/newsnext/newsnext" target="_blank" rel="noreferrer">
+        <a className="mt-7 inline-flex min-h-12 w-56 items-center justify-center gap-2 rounded-full bg-(--action) px-6 py-3 text-sm leading-normal font-medium text-(--background) transition-colors duration-150 ease-out hover:bg-(--action-hover) motion-reduce:transition-none" href="https://github.com/newsnext/newsnext" target="_blank" rel="noreferrer">
           <GithubLogo size={16} aria-hidden="true" />
           <span>Explore on GitHub</span>
         </a>
+        {success ? <WaitlistJoined /> : <WaitlistCta />}
       </main>
       <SiteFooter />
     </SiteShell>
+  )
+}
+
+function WaitlistCta() {
+  return (
+    <div className="mt-5 flex flex-col items-center gap-2.5">
+      <a className="inline-flex min-h-12 w-56 items-center justify-center gap-2 rounded-full bg-(--color-theme-500) px-6 py-3 text-sm leading-normal font-medium text-white transition-colors duration-150 ease-out hover:bg-(--color-theme-600) motion-reduce:transition-none" href={WAITLIST_URL} target="_blank" rel="noreferrer">
+        <span>Join the waitlist</span>
+      </a>
+      <p className="text-xs leading-normal text-balance text-(--muted)">
+        Get launch updates and vote for the sources you need.
+      </p>
+    </div>
+  )
+}
+
+function WaitlistJoined() {
+  useEffect(() => {
+    // Drop the Tally redirect query string from the address bar.
+    window.history.replaceState(window.history.state, "", "/")
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const colors = ["#f87171", "#ef4444", "#dc2626", "#ffffff"]
+    confetti({ particleCount: 90, spread: 70, startVelocity: 35, origin: { y: 0.6 }, colors })
+    const timer = setTimeout(() => {
+      confetti({ particleCount: 60, spread: 100, scalar: 0.9, origin: { y: 0.5 }, colors })
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [])
+
+  return (
+    <div className="mt-5 flex flex-col items-center gap-2.5" role="status">
+      <p className="inline-flex min-h-12 w-56 items-center justify-center rounded-full bg-(--color-theme-500) px-6 py-3 text-sm leading-normal font-medium text-white">
+        You're on the list!
+      </p>
+      <p className="text-xs leading-normal text-balance text-(--muted)">
+        We'll email you when NewsNext is ready.
+      </p>
+    </div>
   )
 }
 
