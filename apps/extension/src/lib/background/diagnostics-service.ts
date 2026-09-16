@@ -68,9 +68,6 @@ function startDiagnosticsEvents(nativeIntegration: BackgroundActionDependencies[
   if (diagnosticsEventsStarted) return
   diagnosticsEventsStarted = true
 
-  const broadcastChange = (): void => {
-    emitBackgroundEvent("diagnostics.changed", {})
-  }
   const subscriptions = new Set<ReturnType<typeof browser.runtime.connect>>()
   browser.runtime.onConnect.addListener((port) => {
     if (port.name !== BACKGROUND_DIAGNOSTICS_PORT) return
@@ -81,10 +78,10 @@ function startDiagnosticsEvents(nativeIntegration: BackgroundActionDependencies[
       if (subscriptions.size === 0) nativeIntegration.setCollectionSubscribed(false)
     })
   })
-  subscribeBackgroundActions(broadcastChange)
+  subscribeBackgroundActions(() => emitBackgroundEvent("diagnostics.changed", {}))
   browser.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local") return
-    if (diagnosticsStorageKeys.some(key => key in changes)) broadcastChange()
+    if (diagnosticsStorageKeys.some(key => key in changes)) emitBackgroundEvent("diagnostics.changed", {})
   })
 }
 

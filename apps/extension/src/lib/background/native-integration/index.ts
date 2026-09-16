@@ -125,12 +125,6 @@ function notifyDiagnostics(): void {
   if (runtime.collectionSubscribed) emitBackgroundEvent("diagnostics.changed", {})
 }
 
-// Worker routing, Widget catalog, and connection state are global: push them so
-// open pages revalidate immediately instead of waiting for the status poll.
-function notifyNativeStatus(): void {
-  emitBackgroundEvent("nativeIntegration.statusChanged", {})
-}
-
 let connectedActionContext: BackgroundActionContext | undefined
 
 function getConnectedActionContext(): BackgroundActionContext {
@@ -230,7 +224,7 @@ function resetConnectionState(
   rejectNativeConnection(connectionFailure)
   clearNativeMessageChunks()
   notifyDiagnostics()
-  notifyNativeStatus()
+  emitBackgroundEvent("nativeIntegration.statusChanged", {})
 }
 
 function clearReconnectBackoff(): void {
@@ -514,7 +508,7 @@ function handleNotification(connection: NativePort, method: string, params: unkn
         runtime.workerRoutingRevision = message.revision
         runtime.localCardIds = new Set(message.localCardIds)
         runtime.offlineWorkers = message.offlineWorkers
-        notifyNativeStatus()
+        emitBackgroundEvent("nativeIntegration.statusChanged", {})
       }
       break
     }
@@ -531,7 +525,7 @@ function handleNotification(connection: NativePort, method: string, params: unkn
       break
     case "widgetCatalogChanged":
       runtime.widgetCatalog = notification.params.widgets
-      notifyNativeStatus()
+      emitBackgroundEvent("nativeIntegration.statusChanged", {})
       break
   }
 }
