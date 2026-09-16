@@ -32,29 +32,61 @@ async function routeLiveCardRequest(
   requireConnection: RequireNativeConnection,
   actionContext: BackgroundActionContext,
 ): Promise<SourceLoadResponse | null> {
+  // Local cards execute in this browser so the response never waits on the
+  // daemon. The daemon only receives a fire-and-forget observation for history.
   if (!runtime.enabled || runtime.localCardIds.has(input.cardId)) {
-    const application = !runtime.enabled ? await readApplicationData() : runtime.workspace
-    const card = application.liveCards.find(candidate => candidate.cardId === input.cardId)
-    if (!card) throw new Error(`LiveCard '${input.cardId}' not found`)
-    if (card.workerId !== runtime.workerId) {
-      throw new Error("The LiveCard's NewsNext Worker is not connected")
-    }
-    const result = await executeRegisteredAction(
-      cacheOnly ? "loader.readLiveCardCache" : "loader.loadLiveCard",
-      { card },
-      "connected",
-      actionContext,
-      createId(),
-    )
-    if (result === null && cacheOnly) return null
-    if (!isSourceLoadResponse(result)) {
-      throw new Error("The current browser returned an invalid Source result")
-    }
+    const result = await executeLocal(input, cacheOnly, actionContext)
+    if (!cacheOnly && result) notifyObserved(input.cardId, result, requireConnection)
     return result
   }
   const connection = await requireConnection()
   const result = await nativeRpc(connection).request("liveCardGet", { cardId: input.cardId, cacheOnly })
   if (result === null && cacheOnly) return null
   if (!isSourceLoadResponse(result)) throw new Error("The NewsNext Worker returned an invalid Source result")
+  return result
+}
+
+/**
+ * Report a locally executed load to the daemon without delaying the caller.
+ * History is unavailable when the daemon is unreachable; failures are ignored.
+ */
+function notifyObserved(
+  cardId: string,
+  result: SourceLoadResponse,
+  requireConnection: RequireNativeConnection,
+): void {
+  if (!runtime.enabled) return
+  void (async () => {
+    try {
+      const connection = await requireConnection()
+      await nativeRpc(connection).request("liveCardObserved", { cardId, result })
+    } catch {
+      // History stays unavailable; the fresh response was already returned.
+    }
+  })()
+}
+
+async function executeLocal(
+  input: { cardId: string },
+  cacheOnly: boolean,
+  actionContext: BackgroundActionContext,
+): Promise<SourceLoadResponse | null> {
+  const application = !runtime.enabled ? await readApplicationData() : runtime.workspace
+  const card = application.liveCards.find(candidate => candidate.cardId === input.cardId)
+  if (!card) throw new Error(`LiveCard '${input.cardId}' not found`)
+  if (card.workerId !== runtime.workerId) {
+    throw new Error("The LiveCard's NewsNext Worker is not connected")
+  }
+  const result = await executeRegisteredAction(
+    cacheOnly ? "loader.readLiveCardCache" : "loader.loadLiveCard",
+    { card },
+    "connected",
+    actionContext,
+    createId(),
+  )
+  if (result === null && cacheOnly) return null
+  if (!isSourceLoadResponse(result)) {
+    throw new Error("The current browser returned an invalid Source result")
+  }
   return result
 }

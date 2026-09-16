@@ -288,12 +288,18 @@ Persisted results are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
 Persistence failures remain fail-open and never prevent Source execution.
 
-UI loads take a LiveCard ID and use a local fast path or `loader.loadLiveCard`
-through the daemon. Routing alone does not retain History. A disconnected owner
+UI loads take a LiveCard ID and execute in the owning browser: the local fast
+path runs directly, otherwise `loader.loadLiveCard` is relayed through the
+daemon. Every `loader.loadLiveCard` is retained in History asynchronously
+without blocking the response: daemon-relayed loads are retained by the daemon,
+while locally executed loads are reported back via `liveCardObserved` in a
+fire-and-forget notification. `loader.readLiveCardCache` never retains.
+A disconnected owner
 suspends cache reads and execution but does not remove the LiveCard or make its
 configuration read-only.
 
-The daemon retains results from automatic LiveCard collection in Turso.
+The daemon retains results from automatic LiveCard collection and every manual
+LiveCard load in Turso.
 Collection calls `loader.loadLiveCard`; it does not depend on a Job Action or table.
 Automatic collection can retain a protected cached result at its original
 `fetchedAt` to fill a foreground-history gap; dataset/timestamp uniqueness

@@ -4,6 +4,7 @@ import type { CollectionStatus } from "@/lib/native-protocol/CollectionStatus"
 import type { CollectionStatusSubscribeParams } from "@/lib/native-protocol/CollectionStatusSubscribeParams"
 import type { ExtensionCommand } from "@/lib/native-protocol/ExtensionCommand"
 import type { LiveCardGetParams } from "@/lib/native-protocol/LiveCardGetParams"
+import type { LiveCardObservedParams } from "@/lib/native-protocol/LiveCardObservedParams"
 import type { LogEntry } from "@/lib/native-protocol/LogEntry"
 import type { SdkOpenParams } from "@/lib/native-protocol/SdkOpenParams"
 import type { SdkStreamParams } from "@/lib/native-protocol/SdkStreamParams"
@@ -26,6 +27,7 @@ interface NativeMethods {
   "logsGet": { params: Record<string, never>, result: LogEntry[] }
   "collectionStatusGet": { params: Record<string, never>, result: CollectionStatus }
   "liveCardGet": { params: LiveCardGetParams, result: SourceLoadResponse | null }
+  "liveCardObserved": { params: LiveCardObservedParams, result: null }
   "workspaceCommit": { params: WorkspaceCommitParams, result: WorkspaceCommitResult }
   "workerTakeover": { params: WorkerTakeoverParams, result: null }
 }
@@ -41,6 +43,7 @@ const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMeth
     if (value === null || isSourceLoadResponse(value)) return value
     throw new Error("The NewsNext Worker returned an invalid Source result")
   },
+  "liveCardObserved": parseEmptyResult,
   "workspaceCommit": (value) => {
     if (!value || typeof value !== "object" || !("revision" in value) || !("localCardIds" in value)) {
       throw new Error("The native host returned an invalid Workspace commit")
