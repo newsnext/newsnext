@@ -135,7 +135,9 @@ const feed = result.queries.feed
 
 The result includes `queries`, completion `refreshedAt`, and LiveCard `errors`.
 With `data.mjs` present, a data-only `widget.json` can be `{}`. Without that
-file, declare `data.queries`. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
+file, declare `data.queries`. Omit both for a data-free Widget: the pipeline
+yields empty `queries`, and the host hides the refresh button. Built-in views
+still require their view query in the declared data. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including
 `~/.bun/bin` and `~/.deno/bin`, so browser launches do not depend on shell PATH.
 The selected runtime receives

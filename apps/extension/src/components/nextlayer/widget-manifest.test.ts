@@ -72,6 +72,21 @@ describe("parseWidgetCatalog", () => {
     }
     expect(() => parseWidgetCatalog([widget, widget], SERVER_URL)).toThrow("Duplicate widget ID")
   })
+
+  it("parses the data flag and assumes data when older daemons omit it", () => {
+    const widget = {
+      height: 2,
+      id: "plain",
+      minHeight: 1,
+      minWidth: 1,
+      title: "Plain",
+      url: `${SERVER_URL}/widgets/plain/index.html`,
+      width: 2,
+    }
+    expect(parseWidgetCatalog([widget], SERVER_URL)[0]?.hasData).toBe(true)
+    expect(parseWidgetCatalog([{ ...widget, hasData: false }], SERVER_URL)[0]?.hasData).toBe(false)
+    expect(() => parseWidgetCatalog([{ ...widget, hasData: "yes" }], SERVER_URL)).toThrow("Invalid Widget data flag")
+  })
 })
 
 describe("built-in Widget UI", () => {

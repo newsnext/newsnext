@@ -51,6 +51,8 @@ interface LiveWidgetCardProps {
   dataRevision: string
   refreshIntervalMs: number
   dataFiles: string[]
+  /** False when the Widget declares no data; the shell hides refresh. */
+  hasData: boolean
   widgetId: string
   liveWidgetId: string
   /** Grid span in half-LiveCard units, forwarded to custom views. */
@@ -178,11 +180,13 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
           statusMessage={statusMessage}
           actions={(
             <>
-              <CardRefreshButton
-                isFetching={dataQuery.isFetching}
-                label={t("refreshWidget", { title })}
-                onRefresh={dataQuery.refetch}
-              />
+              {frame.hasData && (
+                <CardRefreshButton
+                  isFetching={dataQuery.isFetching}
+                  label={t("refreshWidget", { title })}
+                  onRefresh={dataQuery.refetch}
+                />
+              )}
               <CardHeaderActionButton
                 type="button"
                 aria-label={t("widgetDetails")}
@@ -461,6 +465,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           dataRevision={manifest.dataRevision}
           refreshIntervalMs={manifest.refreshIntervalMs}
           dataFiles={manifest.dataFiles}
+          hasData={manifest.hasData}
           layout={layout}
         />
       ))}

@@ -10,4 +10,8 @@ export type WidgetCatalogEntry = { id: string, title: string, color: string, wid
 /**
  * Entry document for a custom view, served by the loopback Widget server.
  */
-url?: string, view: unknown, params: unknown, dataRevision: string, dataFiles: Array<string>, refreshIntervalMs: number, };
+url?: string, view: unknown, params: unknown, dataRevision: string, dataFiles: Array<string>, 
+/**
+ * False when the Widget declares no queries and no data.mjs; the host hides refresh.
+ */
+hasData: boolean, refreshIntervalMs: number, };

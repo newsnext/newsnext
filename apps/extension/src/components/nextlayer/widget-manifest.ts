@@ -12,6 +12,7 @@ export type WidgetUi
 export interface LocalWidgetManifest {
   params?: SourceParamSchemaMap
   color: Color
+  hasData: boolean
   height: number
   id: string
   minHeight: number
@@ -74,10 +75,14 @@ export function parseWidgetCatalog(
     if (typeof dataRevision !== "string") throw new Error("Invalid Widget data revision")
     const dataFiles = candidate.dataFiles ?? []
     if (!Array.isArray(dataFiles) || !dataFiles.every(isNonEmptyString)) throw new Error("Invalid Widget data files")
+    // Older daemons do not publish hasData; assume data exists to keep refresh available.
+    const hasData = candidate.hasData ?? true
+    if (typeof hasData !== "boolean") throw new Error("Invalid Widget data flag")
     return {
       ...(params ? { params } : {}),
       dataFiles,
       dataRevision,
+      hasData,
       color: candidate.color ?? "slate",
       height: candidate.height,
       id: candidate.id,
