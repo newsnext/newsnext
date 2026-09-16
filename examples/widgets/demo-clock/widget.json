@@ -1,0 +1,11 @@
+{
+  "title": "Clock",
+  "color": "slate",
+  "width": 2,
+  "height": 1,
+  "minWidth": 2,
+  "minHeight": 1,
+  "view": {
+    "type": "custom"
+  }
+}

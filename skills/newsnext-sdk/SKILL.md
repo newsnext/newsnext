@@ -30,6 +30,15 @@ When a user identifies a Board or LiveCard by name, resolve it to a unique ID
 before mutating it. Apply the requested change through its Action and read back
 the affected value to verify the result. Do not change unrelated fields.
 
+When authoring a Widget, read `docs/WIDGET_GUIDELINE.md` if it is available;
+it is the canonical manifest, view, and custom document contract. Validate with
+`newsnext widget validate --run <widgetId>` before installing.
+
+Installing a Widget mutates a Board. If the user did not name a target Board,
+list the Boards and ask which one to install into; do not pick a default.
+Resolve the chosen Board to a unique ID, install, then read back the placement
+to verify the result.
+
 Read [references/source-authoring.md](references/source-authoring.md) before investigating, creating, changing, or testing a Source. It defines the required browser-led discovery order, JSON-first implementation policy, existing-source references, and `fetch`/`run` verification loop.
 
 Keep authorization boundaries intact. Commands such as `stop` and `install-native-host` mutate state; explaining them does not authorize running them.
