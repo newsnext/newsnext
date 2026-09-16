@@ -12,6 +12,11 @@ export type WidgetCatalogEntry = { id: string, title: string, color: string, wid
  */
 url?: string, view: unknown, params: unknown, dataRevision: string, dataFiles: Array<string>, 
 /**
+ * Fingerprint of the rendered view: the custom entry document bytes, or the
+ * built-in view definition. The host reloads the view when it changes.
+ */
+viewRevision: string, 
+/**
  * False when the Widget declares no queries and no data.mjs; the host hides refresh.
  */
 hasData: boolean, refreshIntervalMs: number, };

@@ -391,7 +391,10 @@ selection and explicit `presentation: "list" | "ranking"` reuse the Source
 presentation contract. Custom views use the fixed `index.html` file and may declare
 `view: { type: "custom" }`. An omitted view selects custom UI when `index.html`
 exists; without that file it defines data only and is
-excluded from the renderable manifest list. Built-in views validate the complete
+excluded from the renderable manifest list. The daemon fingerprints the custom
+entry document as `viewRevision` (built-in views fingerprint the view
+definition), and the host keys the custom iframe on it, so editing the view
+file remounts the frame and resends the latest data payload. Built-in views validate the complete
 NewsItem contract, accept empty arrays, and cap aggregates at 500 items.
 
 For placed views, initial load, manual refresh, and visible polling use the same

@@ -21,6 +21,7 @@ export interface LocalWidgetManifest {
   url?: string
   view: WidgetUi
   dataRevision: string
+  viewRevision: string
   refreshIntervalMs: number
   dataFiles: string[]
   width: number
@@ -73,6 +74,9 @@ export function parseWidgetCatalog(
     }
     const dataRevision = candidate.dataRevision ?? "legacy"
     if (typeof dataRevision !== "string") throw new Error("Invalid Widget data revision")
+    // Older daemons omit the view fingerprint; the host keeps the loaded view then.
+    const viewRevision = candidate.viewRevision ?? "legacy"
+    if (typeof viewRevision !== "string") throw new Error("Invalid Widget view revision")
     const dataFiles = candidate.dataFiles ?? []
     if (!Array.isArray(dataFiles) || !dataFiles.every(isNonEmptyString)) throw new Error("Invalid Widget data files")
     // Older daemons do not publish hasData; assume data exists to keep refresh available.
@@ -82,6 +86,7 @@ export function parseWidgetCatalog(
       ...(params ? { params } : {}),
       dataFiles,
       dataRevision,
+      viewRevision,
       hasData,
       color: candidate.color ?? "slate",
       height: candidate.height,

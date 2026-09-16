@@ -471,7 +471,9 @@ query: stat tiles, an interactive daily chart, ranked sources, topic deltas with
 sparklines, and highlights. It reports status and height, keeps its own document
 scroll-free, and shows how a producer turns raw item envelopes into view data.
 
-Widget data and view changes are verified through the installed Widget: refresh
+Widget data and view changes are verified through the installed Widget: editing a
+custom view file remounts the placed frame automatically, while data changes
+still need an explicit refresh. Refresh
 the manifest list, confirm the placement renders, and check the empty, malformed,
 and error states the producer can produce. Next Layer grid behavior belongs to the
 [Design Guideline](DESIGN_GUIDELINE.md#next-layer-surfaces).

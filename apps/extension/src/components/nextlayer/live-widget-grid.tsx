@@ -49,6 +49,7 @@ interface LiveWidgetCardProps {
   url?: string
   ui: WidgetUi
   dataRevision: string
+  viewRevision: string
   refreshIntervalMs: number
   dataFiles: string[]
   /** False when the Widget declares no data; the shell hides refresh. */
@@ -85,7 +86,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
   useLayoutEffect(() => {
     const iframe = iframeRef.current
     if (iframe) return bindWidgetSdk(iframe)
-  }, [frame.url])
+  }, [frame.url, frame.viewRevision])
   const loadedRef = useRef(false)
   const visible = useElementVisible(articleRef)
   const documentVisible = useDocumentVisible()
@@ -219,6 +220,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
                   <div className="size-full overflow-y-auto">
                     <iframe
                       ref={iframeRef}
+                      key={frame.viewRevision}
                       className="relative w-full border-0 bg-transparent"
                       style={{ height: viewHeight ? `${viewHeight}px` : "100%" }}
                       referrerPolicy="no-referrer"
@@ -463,6 +465,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           paramsValue={placement.patch?.params}
           metadata={placement.patch?.metadata}
           dataRevision={manifest.dataRevision}
+          viewRevision={manifest.viewRevision}
           refreshIntervalMs={manifest.refreshIntervalMs}
           dataFiles={manifest.dataFiles}
           hasData={manifest.hasData}
