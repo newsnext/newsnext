@@ -1,45 +1,49 @@
 # NewsNext CLI SDK
 
-`@newsnext/sdk` provides typed access to NewsNext Actions and history through the
-CLI. The SDK and CLI are installed independently; installing the SDK does not
-download the CLI.
+The SDK ships inside the CLI and is only invoked through it. Run JavaScript
+with `newsnext eval`: the evaluated script receives a preconfigured `client`
+global targeting the invocation's environment, with no installation,
+imports, or setup beyond the CLI itself:
+
+```sh
+newsnext eval -e '
+const status = await client.status()
+console.log(JSON.stringify(status.workers.length))
+'
+newsnext eval < script.js
+```
+
+Without `--eval`, the script is read from standard input. TypeScript snippets
+require Bun or Deno; plain Node.js runs JavaScript only. `--timeout` bounds
+the whole evaluation (default 60 seconds, at most 600).
 
 ## Installation
 
-Install the SDK in the project and the CLI globally:
+Install the CLI globally, then check the daemon connection:
 
 ```sh
-npm install @newsnext/sdk
 npm install -g @newsnext/cli
 newsnext status
 ```
 
-The CLI runs independently as `newsnext`. The SDK invokes `newsnext` on PATH by
-default, or uses the client's explicit `command`. It does not resolve CLI npm
-packages or install an executable automatically.
-
-Node.js 22+ and Bun are supported. CLI packages target macOS, Linux glibc and
-Windows, on x64 and arm64. The CLI selects its platform binary through optional
-dependencies, which must remain enabled during CLI installation. No Rust compiler
-is needed.
-
-Run the TypeScript snippets in this reference inline with `bun -e '...'`, or
-with `node --input-type=module -e '...'` against the installed package.
-Plain Node.js cannot execute TypeScript sources directly.
+The evaluated `client` calls the same CLI over its machine transport, so no
+SDK package is installed separately. CLI packages target macOS, Linux glibc
+and Windows, on x64 and arm64. The CLI selects its platform binary through
+optional dependencies, which must remain enabled during CLI installation. No
+Rust compiler is needed.
 
 ## Client and environment
 
 ```ts
-import { createClient } from "@newsnext/sdk"
-
-const client = createClient({ environment: "production" })
 const status = await client.status()
 ```
 
-The default environment is production, independently of ambient `NEWSNEXT_ENV`.
-Clients hold no persistent process and need no close call. Each request owns its
-process; early iterator return or an AbortSignal terminates it. Unix cancellation
-also terminates its process group.
+The invocation selects the environment (`NEWSNEXT_ENV`, default production)
+for the daemon endpoint, database, widget directory, and Native Messaging
+host alike. Clients hold no persistent process and need no close call. Each
+request owns its process; early iterator return or an AbortSignal terminates
+it. Unix cancellation also terminates its process group. Each `eval` starts a
+fresh runtime: JavaScript variables do not persist between invocations.
 
 `timeoutMs` is 1–600000, default 60000, per daemon request. The SDK additionally
 bounds inactive CLI output waits, allowing two seconds for startup. Time spent
@@ -113,6 +117,7 @@ score, or count repeated appearances as distinct topics.
 ## Source execution, fetch and Actions
 
 ```ts
+const status = await client.status()
 const worker = status.workers.length === 1 ? status.workers[0] : undefined
 if (!worker) throw new Error("Select a connected Worker by its full ID")
 const workerId = worker.id
@@ -534,9 +539,6 @@ A full install flow resolves the Board first, installs with a Board-wide scope,
 then reads the placement back to verify:
 
 ```ts
-import { createClient } from "@newsnext/sdk"
-
-const client = createClient({ environment: "production" })
 const named = (await client.actions.board.list()).filter(board => board.name === "<board name>")
 const board = named.length === 1 ? named[0] : undefined
 if (!board) throw new Error("Expected one matching Board; select a Board ID")

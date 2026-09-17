@@ -25,7 +25,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown && bun scripts/generate-actions-reference.ts && bun scripts/vendor-sdk-bundle.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -15,7 +15,7 @@ import { FixturePage } from "../fixture-layout"
 // own their data producers; these static rows only exercise the views.
 // Minimal inline rows for previewing every chart preset. Production Widgets
 // own their data producers; these static rows only exercise the views.
-interface ObservationRows { observations: { rows: Record<string, unknown>[] } }
+interface ObservationRows extends Record<string, unknown> { observations: { rows: Record<string, unknown>[] } }
 const demoQueries: Record<WidgetChart, ObservationRows> = {
   "metric": { observations: { rows: [{ label: "Articles", value: 1248 }, { label: "Sources", value: 36 }] } },
   "line": { observations: { rows: [{ label: "Sep 1", value: 30 }, { label: "Sep 2", value: 47 }, { label: "Sep 3", value: 52 }] } },

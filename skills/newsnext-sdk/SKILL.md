@@ -17,11 +17,15 @@ Honor a repository's `AGENTS.md` when it selects another environment. Environmen
 
 Read [references/commands.md](references/commands.md) before answering a command-usage question or operating the CLI. Use `newsnext <command> --help` to confirm details if the installed version may differ from the reference.
 
-Use `@newsnext/sdk` for Board/LiveCard operations, structured history analysis, full
-snapshot exports, and other typed Actions. Read [references/sdk.md](references/sdk.md)
-before using it; that reference covers installed clients, Actions, history, and
+Use `newsnext eval` for Board/LiveCard operations, structured history analysis, full
+snapshot exports, and other typed Actions: the evaluated script receives a
+preconfigured `client` global, so no imports or setup are needed. Read
+[references/sdk.md](references/sdk.md)
+before using it; that reference covers the client, Actions, history, and
 Widget clients. Call `client.actions.<domain>.<method>`
 directly using the SDK's types; `actions.list()` is diagnostic, not a prerequisite.
+The full method catalog lives in [references/actions.md](references/actions.md);
+it is generated from the SDK contracts, so prefer it over guessing signatures.
 The former `action` and `history` terminal commands no longer exist. Use
 `history.export()` for complete observations instead of launching one CLI process
 per observation.

@@ -148,31 +148,31 @@ newsnext widget validate --run feed --param limit=20
 
 ## TypeScript SDK
 
-Complex structured operations are exposed through `@newsnext/sdk`, not terminal
-subcommands. Use the SDK for history queries, streaming exports and canonical
-Actions. The former `history` and `action` CLI commands have been removed.
-See [sdk.md](sdk.md) for installation and examples.
-
-Run SDK snippets inline instead of composing CLI flags. `bun -e '...'` runs
-the TypeScript snippets as-is. Plain Node.js runs them through
-`node --input-type=module -e '...'` once `@newsnext/sdk` is installed, but it
-cannot execute TypeScript sources directly:
-
-```sh
-npm install @newsnext/sdk
-bun -e '
-import { createClient } from "@newsnext/sdk"
-const client = createClient({ environment: "production" })
-console.log(JSON.stringify(await client.status()))
-'
-node --input-type=module -e '
-import { createClient } from "@newsnext/sdk"
-const client = createClient({ environment: "production" })
-console.log(JSON.stringify(await client.status()))
-'
+Complex structured operations run through `eval` with a preconfigured client,
+not terminal subcommands and not a separately installed SDK. See [sdk.md](sdk.md)
+for the client API, history, and examples.
 
 Simple terminal operations remain `start`, `status`, `doctor`, `stop`, `restart`,
-`fetch`, `run`, `widget validate`, and `install-native-host`.
+`fetch`, `run`, `widget validate`, `eval`, and `install-native-host`.
+
+### `eval`
+
+Evaluate JavaScript with a preconfigured NewsNext `client` global:
+
+```text
+newsnext eval [OPTIONS]
+```
+
+- With `-e, --eval <SCRIPT>`, that script is evaluated.
+- Without it, the script is read from standard input, so `newsnext eval < script.js` works and shell redirection replaces file arguments.
+- `--timeout <SECONDS>` bounds the whole evaluation; defaults to `60`, at most `600`.
+- TypeScript snippets require Bun or Deno; plain Node.js runs JavaScript only.
+- Each invocation starts a fresh runtime; variables do not persist between calls.
+
+```sh
+newsnext eval -e 'console.log((await client.actions.board.list()).length)'
+newsnext eval < boards.mjs
+```
 
 ## Native Messaging registration
 
