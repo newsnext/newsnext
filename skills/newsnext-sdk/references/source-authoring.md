@@ -63,6 +63,19 @@ Keep the configuration focused:
 - Declare every possible network hostname. Keep request options minimal and never add a request solely to enrich metadata.
 - Increase `version` only when a behavioral or result-shape change must invalidate stored results.
 
+Runnable provider examples live at `references/examples/`: `rss-provider`
+(minimal RSS feed), `json-provider` (JSON API with a `number` parameter,
+JMESPath fields, and a Liquid-conditional URL; runs live with
+`newsnext run <file> posts --param userId=1`), and `html-provider` (HTML
+scraping with CSS selectors and ranking metadata; runs live with
+`newsnext run <file> frontpage`). Copy one to
+`registry/src/<provider-id>.json`, substitute a real stream, and run it after
+every meaningful change:
+
+```sh
+newsnext run registry/src/example.json feed --param url='https://example.com/feed.xml'
+```
+
 Use TypeScript custom loaders as a last resort. They must use `context.fetch`, declare network and cookie capabilities, propagate cancellation, return `{ items, metadata? }`, and normalize multiple response shapes through shared helpers. Collect required website values through declared cookie or local-storage secrets; do not expose or commit actual secret values.
 
 ## Investigate with `fetch`

@@ -21,8 +21,8 @@ Use `newsnext eval` for Board/LiveCard operations, structured history analysis, 
 snapshot exports, and other typed Actions: the evaluated script receives a
 preconfigured `client` global, so no imports or setup are needed. Read
 [references/sdk.md](references/sdk.md)
-before using it; that reference covers the client, Actions, history, and
-Widget clients. Call `client.actions.<domain>.<method>`
+before using it; that reference covers the client, Actions, and history.
+Call `client.actions.<domain>.<method>`
 directly using the SDK's types; `actions.list()` is diagnostic, not a prerequisite.
 The full method catalog lives in [references/actions.md](references/actions.md);
 it is generated from the SDK contracts, so prefer it over guessing signatures.
@@ -35,7 +35,7 @@ before mutating it. Apply the requested change through its Action and read back
 the affected value to verify the result. Do not change unrelated fields.
 
 When authoring a Widget, follow the widget template and preset contracts in
-references/sdk.md. Validate with
+references/widget-authoring.md. Validate with
 `newsnext widget validate --run <widgetId>` before installing.
 
 Installing a Widget mutates a Board. If the user did not name a target Board,

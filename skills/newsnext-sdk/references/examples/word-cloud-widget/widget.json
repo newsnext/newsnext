@@ -1,0 +1,13 @@
+{
+  "title": "Board Word Cloud",
+  "view": { "type": "chart", "chart": "word-cloud", "query": "cloud", "sort": "desc" },
+  "data": {
+    "queries": {
+      "recent": { "type": "latest", "limit": 500, "deduplicateBy": "url" }
+    }
+  },
+  "params": {
+    "maxWords": { "type": "number", "title": "Max words", "default": 60, "min": 10, "max": 200 }
+  },
+  "refresh": { "intervalMs": 300000 }
+}

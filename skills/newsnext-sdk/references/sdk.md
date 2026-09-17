@@ -46,11 +46,19 @@ request owns its process; early iterator return or an AbortSignal terminates
 it. Unix cancellation also terminates its process group. Each `eval` starts a
 fresh runtime: JavaScript variables do not persist between invocations.
 
-`timeoutMs` is 1–600000, default 60000, per daemon request. The SDK additionally
-bounds inactive CLI output waits, allowing two seconds for startup. Time spent
+`timeoutMs` is 1–600000, default 60000, per daemon request. Time spent
 processing a yielded observation is excluded. Exports have no fixed total timeout;
 use AbortSignal for a total deadline. Killing a request does not undo an Action
 already sent to the Worker.
+
+## Work efficiently
+
+- Batch independent awaits in one `eval`: each invocation spawns a fresh
+  runtime and CLI process, so one script with several awaits beats several
+  invocations.
+- Print compact JSON (`JSON.stringify` without indentation) last, so the full
+  result lands in one output. Once a read-back verifies a mutation, stop; do
+  not re-query the same state through another surface.
 
 ## LiveCard and LiveWidget data
 
@@ -74,11 +82,13 @@ an explicit input scope; refreshing a LiveWidget does not refresh its Sources.
 ## History
 
 ```ts
+// Round 1: find the dataset.
 const datasets = await client.history.datasets({ sourceId: "weibo:hot-search" })
 const candidates = datasets.filter(dataset => dataset.params.type === "search")
 const dataset = candidates.length === 1 ? candidates[0] : undefined
 if (!dataset) throw new Error("Select a dataset by Worker and Source version")
 
+// Round 2: export and analyze.
 const titles = new Set()
 for await (const snapshot of client.history.export({
   datasetId: dataset.id,
@@ -91,18 +101,17 @@ for await (const snapshot of client.history.export({
 }
 ```
 
-- `history.datasets(filter)` collects metadata pages. Filters are `workerId`,
+- Metadata: `datasets(filter)` collects all pages; `datasetPage(query)`
+  exposes explicit `cursor` / `limit` pagination. Filters are `workerId`,
   `providerId`, `sourceId` (full qualified ID), and `sourceVersion`.
-- `history.datasetPage(query)` exposes explicit `cursor` / `limit` pagination.
-- `history.observations({ datasetId, from?, to?, cursor?, limit? })` returns one
-  metadata page with completeness diagnostics.
-- `history.get(datasetId, observedAt)` returns one exact reconstructed observation.
-- `history.compare({ datasetId, before, after })` returns additions, missing items,
+- Observations: `observations(query)` returns one metadata page with
+  completeness diagnostics; `get(datasetId, observedAt)` returns one exact
+  reconstructed observation; `compare(query)` returns additions, missing items,
   edits and movements, together with completeness diagnostics.
-- `history.export({ datasetId, from?, to? })` yields full observations in ascending
-  order through one CLI process. It throws on incomplete/missing data; any records
-  yielded before an error are only a partial export. Finish iteration successfully
-  before treating an analysis as complete.
+- `export(query)` yields full observations in ascending order through one CLI
+  process. It throws on incomplete/missing data; any records yielded before an
+  error are only a partial export. Finish iteration successfully before treating
+  an analysis as complete.
 
 All methods accept a final `{ timeoutMs?, signal? }` argument. Times accept safe,
 nonnegative Unix milliseconds, Date objects, YYYY-MM-DD (midnight UTC), or RFC 3339
@@ -150,17 +159,17 @@ transport failures may also be native process or stream errors.
 
 ### Updating an existing Board
 
-For a requested color change, resolve the name, update only the color, and verify
-it. Names are not guaranteed to be unique; do not silently pick the first match.
-The example assumes the user requested changing the AI Board to blue and the
-client already targets the intended Worker:
+Resolve the name (names are not unique), update only the requested field, and
+verify it. The example changes the AI Board to blue:
 
 ```ts
+// Round 1: resolve the name to a unique ID.
 const matches = (await client.actions.board.list()).filter(board => board.name === "AI")
 const board = matches.length === 1 ? matches[0] : undefined
 if (!board) throw new Error("Expected one AI Board; select a Board ID")
 const boardId = board.id
 
+// Round 2 (same script): update, then read back to verify.
 await client.actions.board.update({ boardId, color: "blue" })
 const updated = (await client.actions.board.list()).find(board => board.id === boardId)
 if (updated?.color !== "blue") throw new Error("Board color verification failed")
@@ -168,9 +177,7 @@ console.log({ boardId, name: updated.name, color: updated.color })
 ```
 
 The same typed client exposes `card`, `source`, `nowLayer`, `nextLayer`,
-`application`, `developer`, and Worker/native integration Actions. Consult
-`@newsnext/sdk/actions` declarations for exact methods, inputs, and results;
-do not maintain a second Action catalog in scripts. `ActionName`,
+`application`, `developer`, and Worker/native integration Actions. `ActionName`,
 `ActionInput<Name>`, and `ActionResult<Name>` are also exported by the SDK root.
 All Actions are exposed, though dynamic data such as Widget snapshots may still
 have an `unknown` result type. Browser-dependent operations require a connected
@@ -186,472 +193,13 @@ It uses the background's runtime-port SDK bridge and inherits the
 host environment. The background accepts this transport only from its own
 `app.html`; third-party pages and local widget iframes must use the Widget entry.
 
-## Widget clients
+## Widget authoring
 
-When authoring a Widget rather than only querying its data, follow the widget
-template and preset contracts later in this reference; they cover the
-manifest, views, and data producers without additional files.
+When authoring a Widget rather than only querying its data, read
+[widget-authoring.md](widget-authoring.md): it covers the manifest, views, data
+producers, parameters, and validation without additional files.
 
-Inside an installed Widget iframe, use the browser entry:
-
-```ts
-import { createClient } from "@newsnext/sdk/widget"
-
-const client = createClient()
-const boards = await client.actions.board.list()
-const datasets = await client.history.datasets()
-```
-
-Bundle this import with the Widget. Browser-aware bundlers also select the
-Widget entry for `@newsnext/sdk`. Both entries share the same Actions, history,
-`status`, `run`, and `fetch` implementation. Widget options are `workerId`,
-`timeoutMs`, and `signal`; the environment is inherited from the host, and Widgets
-cannot select an executable or working directory. The default Worker is the
-embedding extension's Worker.
-
-The host forwards requests through Native Messaging to its own CLI SDK process.
-History exports remain pull-based streams. Abort, early iterator return, iframe
-unmount, or disconnection cancels the request; this does not undo an Action
-already executed. The host must advertise the additive `sdk` capability. Update
-and reconnect the native host when the Widget client reports missing support.
-
-Manifest Snapshot queries and active SDK calls can coexist. A placement's data
-scope applies to its Snapshot queries, not to SDK access; installed local Widgets
-can call every Action, including mutations outside their Board.
-
-
-### Data-only Widgets
-
-Data and view are independent. Place custom data logic in `data.mjs` beside
-`widget.json`; the runtime discovers it automatically. The directory name is
-the Widget ID (for example, `keyword-watch/widget.json` identifies
-`keyword-watch`); do not declare `id` in the JSON:
-
-```json
-{
-  "title": "Keyword Watch",
-  "view": { "type": "live-card", "query": "feed" }
-}
-```
-
-`data.mjs` default-exports an async function. It returns named query results;
-LiveCard consumes a result containing standard NewsItems:
-
-```js
-export default async function load({ signal }) {
-  const response = await fetch("https://example.com/feed.json", { signal })
-  if (!response.ok) throw new Error(`HTTP ${response.status}`)
-  const items = await response.json() // Must conform to NewsItem.
-  return { feed: { items } }
-}
-```
-
-Alternatively, declare queries directly in the manifest:
-
-```json
-{
-  "data": {
-    "queries": {
-      "feed": { "type": "latest", "keyword": "AI", "limit": 30 }
-    }
-  }
-}
-```
-
-`latest` searches retained history for all scoped LiveCards directly in SQL.
-It applies case-insensitive literal title matching, sorting, deduplication and limit
-before returning items. Missing publication times sort last; a publication window
-excludes items without a publication time. For standalone execution,
-pass `cardIds` to the SDK; installed views use their placement's scope.
-Queries and JS may coexist: JS receives materialized results in `queries`, where
-query items use `{ value: NewsItem, cardId?, sourceId?, metadata? }` envelopes.
-Its return value replaces those results. Return raw NewsItems in output `items`
-arrays; the runtime adds the common envelope. Other named JSON results can carry
-statistics or other data independently of LiveCard.
-`latest` does not execute Sources or fetch external feeds. Board scope follows the current
-Board's complete LiveCard list. History is isolated by each LiveCard's Worker,
-Source, and resolved parameters; repeated URLs use their newest retained value.
-Items absent from the newest observation remain searchable. `publishedAt` remains
-the source publication time; refresh time is never substituted for it. No matches
-produce an empty list.
-
-Access data without a view, open page, or Board placement:
-
-```ts
-const result = await client.liveWidgets.data({ widgetId: "keyword-watch" })
-const feed = result.queries.feed
-```
-
-The result includes `queries`, completion `refreshedAt`, and LiveCard `errors`.
-The daemon enforces a fixed 60-second request protection window by retaining the
-last successful result in SQLite for each Widget and resolved data scope. Calls
-inside that window reuse the result; every request after it recomputes data.
-Automatic and manual requests follow the same rule, with no `force` option or
-additional `staleTimeMs` cache. Concurrent calls share the computed result. A
-changed data definition or resolved scope starts a separate protection window.
-Extension views retain display state but do not maintain a separate data cache.
-With `data.mjs` present, a data-only `widget.json` can be `{}`. Without that
-file, declare `data.queries`. Omit both for a data-free Widget: the pipeline
-yields empty `queries`, and the host hides the refresh button. Built-in views
-still require their view query in the declared data. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
-The daemon searches PATH and standard installation directories, including
-`~/.bun/bin` and `~/.deno/bin`, so browser launches do not depend on shell PATH.
-The selected runtime receives
-`signal`, `widgetId`, optional `boardId`, resolved `params`, and `clientOptions` for the Node SDK.
-Execution is bounded to 60 seconds, 16 MiB of JSON and 64 KiB of diagnostics.
-Use console logging for diagnostics; do not write other data to stdout. Local
-scripts are trusted code with the runtime's normal filesystem/network access.
-Each run imports a fresh module. Entry paths/symlinks must stay inside the Widget
-directory; dependencies use normal module resolution.
-
-Initial load, manual refresh and visible placed-Widget polling execute the data
-pipeline. Widgets have no background schedule; `refresh.intervalMs` controls
-visible polling. Unplaced data executes on SDK request. No separate producer or data.json is necessary. Existing
-`file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
-
-`view` may select `live-card` with optional `presentation: "list" | "ranking"`;
-omit presentation for automatic timeline/list selection. Built-in views need no HTML file. Custom views use `index.html` beside
-`widget.json` and may declare `view: { "type": "custom" }`. With `view` omitted,
-`index.html` selects a custom view; without it the Widget is data-only.
-Neither `entry` nor `data.entry` is a supported manifest field.
-Preserve original millisecond `publishedAt` values; never substitute fetch time.
-When displaying an HN submission, use its discussion URL and submission time,
-not a timestamp that implies the linked article was published then.
-
-A custom view receives `newsnext.widget.data` messages from the host, carrying
-`status` (`loading`, `ready`, or `error`), `stale`, `queries`, and the resolved
-`params`, and answers with `newsnext.widget.ready` once its message listener is
-installed. The host repeats the latest payload after each load and refresh.
-Report empty or malformed data with `newsnext.widget.status`
-(`{ "type": "newsnext.widget.status", "version": 1, "message": "No data to display." }`,
-`message: null` clears it) instead of drawing status text; the host renders that
-message in the shared status layer together with its own loading and error
-states. The document must not scroll or show a scrollbar: keep its natural
-content height and report it with `newsnext.widget.size`
-(`{ "type": "newsnext.widget.size", "version": 1, "height": 128 }`). The host
-sizes the iframe and its content panel owns the scrolling state, so do not give
-`html`, `body`, or an inner element a viewport height or `overflow: auto`. Keep
-the host-owned shell, surface, and refresh chrome out of the document. The
-daemon injects its built-in stylesheet (`/widgets/newsnext.css`) into every
-served HTML document, providing the NewsNext semantic tokens and base document
-styles; never declare tokens by hand.
-
-
-### Widget parameters
-
-Declare optional top-level `params` in `widget.json` using the same parameter
-schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
-
-```json
-{
-  "params": {
-    "limit": { "type": "number", "title": "Limit", "default": 10, "min": 1, "max": 50 }
-  }
-}
-```
-
-Placed Widgets show these settings on their back, with Edit, Save, Cancel, and
-Reset. Values belong to the Widget's Board placement. Reset clears overrides.
-Use `client.actions.nextLayer.setLiveWidgetParams({ boardId, liveWidgetId, params })` to
-replace overrides programmatically. Pass `{}` to restore manifest defaults.
-
-`data.mjs` receives resolved values as `context.params`; custom HTML receives
-`params` in each `newsnext.widget.data` message, including loading messages.
-Direct data calls accept overrides independently of Board placement:
-
-```ts
-const result = await client.liveWidgets.data({
-  widgetId: "keyword-watch",
-  params: { limit: 5 },
-})
-```
-
-Parameters participate in the daemon cache identity. Declarative queries remain
-literal; read `params` in the data script to filter/transform query results or
-choose SDK query arguments. The shared settings editor validates the Source
-schema's constraints. The daemon checks JSON types, bounds, and option membership.
-
-
-Widget layout dimensions use half-LiveCard units. Placement width must be at least
-`2` (one LiveCard); the UI supports widths `2`, `3`, and `4`, retaining half-card
-resize increments. Height may still be `1`. Older narrower placements expand to
-the minimum when loaded.
-
-### Widget display metadata
-
-`widget.json.title` and `widget.json.color` define the default display identity,
-using a string title and the same named color palette as Sources. The Widget back
-exposes these separately from business parameters. Board placements may override
-them with `metadata: { title, color, badge, desc, home }`, the same identity fields
-as Cards. Use
-`client.actions.nextLayer.setLiveWidgetMetadata({ boardId, liveWidgetId, metadata })` to
-replace those overrides; `{}` restores the definition. Blank titles also fall
-back to the definition. Metadata edits affect the shell and built-in view title,
-without reloading the data pipeline.
-
-
-Use `client.actions.nextLayer.moveLiveWidget({ boardId, targetBoardId, liveWidgetId })` to
-move an instance while keeping its ID, dimensions, metadata, and params. The target
-may contain other instances of the same definition. Board-wide data follows the new Board;
-explicit LiveCard selections are restricted to that Board's LiveCards.
-`client.actions.liveCard.resetMetadata({ cardId })` resets a Card's saved
-metadata independently of its Source parameters.
-
-
-### Preset chart Widgets
-
-Use `view: { "type": "chart", "chart": "bar", "query": "observations" }`
-for a built-in visualization. No HTML, chart library import, or network request is
-needed in the view. Supported presets are `metric`, `line`, `area`, `bar`,
-`ranking` (horizontal bars), `stacked-bar`, `donut`, `scatter`, `heatmap`,
-`histogram`, `radar`, `funnel`, `table`, `word-cloud`, `progress`,
-`trend-metric`, `change-ranking`, `calendar`, `status`, `timeline`, `treemap`,
-`bullet`, `boxplot`, `waterfall`, and `sankey`.
-The host uses ECharts and its word-cloud extension; metric and table views use
-semantic HTML, as do status, timeline and comparison summaries. The front contains only the visualization and shared card header.
-
-Return a named result from `data.mjs`:
-
-```js
-export default async function load() {
-  return { observations: { rows: [
-    { label: "Research", value: 42 },
-    { label: "Products", value: 28 },
-  ] } }
-}
-```
-
-A minimal matching `widget.json`:
-
-```json
-{
-  "title": "Topic share",
-  "color": "teal",
-  "view": { "type": "chart", "chart": "donut", "query": "observations" }
-}
-```
-
-Rows use a string or numeric `label` and a finite numeric `value`. Strings are
-never coerced to numbers and malformed data is reported visibly. Use `series`
-to group lines or bars; declare its field explicitly, for example
-`"series": "source"`. `scatter` uses numeric `x` and `y`; `heatmap` uses scalar
-`x` and `y` category coordinates and numeric `value` for intensity. Coordinate
-fields default to `x`/`y`, falling back to `label`/`value`. `label`, `value`,
-`series`, `x`, and `y` in the view select literal row field names, not expressions.
-Aggregate duplicate labels within each Cartesian/radar series in the data
-producer. Missing series observations remain gaps rather than zeroes.
-
-View options are `limit` (1–500, default 100), `sort` (`none`, `asc`, `desc`,
-default data order), `decimals` (0–6, default 1), `suffix` (default empty),
-`bins` (1–50, default 10), and `target` (positive progress target, default 100).
-Sorting happens before the row limit; histograms bin the selected rows. Query
-results may contain at most 10,000 rows. Donut, stacked bars, funnel, radar,
-word cloud, and progress require non-negative values. Radar requires at least
-three selected observations. Empty rows are a normal empty state.
-
-The card back has a separate **View** section with Edit, Save, Cancel and Reset.
-Field mapping and chart choices live here, separate from producer **Parameters**.
-Changing the view never changes the query identifier or executes another data
-pipeline. A placement stores Source-style sparse overrides in
-`patch: { params, metadata, view }`. Each view field falls back to `widget.json`.
-Only explicit `patch` sections are read; top-level placement settings are ignored.
-
-```ts
-await client.actions.nextLayer.configureLiveWidget({
-  boardId, liveWidgetId,
-  patch: { view: { chart: "bar", limit: 12 }, metadata: { title: "Top topics" } },
-})
-// Reset only presentation. Keep data parameters and metadata overrides.
-await client.actions.nextLayer.configureLiveWidget({
-  boardId, liveWidgetId, patch: { view: null },
-})
-```
-
-Patch sections merge field by field; omitted fields are retained. Arrays replace
-as values. `null` resets an entire section; `{}` is an empty merge. Existing
-`setLiveWidgetParams` and `setLiveWidgetMetadata` replace their respective sections,
-so `{}` with those Actions still resets them. Only resolved data parameters and
-scope affect the daemon's data identity; metadata and view patches do not.
-
-Author a Widget as a directory named by its ID inside the Widget directory
-reported by `newsnext status`, containing `widget.json` and optionally
-`data.mjs` and `index.html`. Install it on a Board through
-`nextLayer.installLiveWidget`; the placement's scope decides which LiveCards
-its `latest` queries search.
-
-#### Additional preset data
-
-Additional fields below have fixed names; `label` and `value` retain their view
-field mappings. Producers own comparisons, statistics, chronological ordering,
-and rank calculations. A view change does not manufacture missing fields.
-
-| Preset | Additional row fields and behavior |
-| --- | --- |
-| `trend-metric` | Finite `previous` and `history` (1–500 finite numbers, oldest first). Displays current value, period change and sparkline. Use `limit: 1` for one compact metric. |
-| `change-ranking` | Finite `previous`; optional positive integer `previousRank`. Current rank follows visible row order. Percentage changes use the absolute previous value; a zero baseline has no percentage. |
-| `calendar` | `label` is a real `YYYY-MM-DD` date; `value` is non-negative. Unique dates, maximum span 366 days between endpoints. Increase `limit` above 100 for longer periods. Missing dates remain empty. |
-| `status` | `status`: `ok`, `warning`, `error`, or `unknown`; timezone-qualified ISO `timestamp`; optional nonempty `detail`. No numeric value needed. |
-| `timeline` | Timezone-qualified ISO `timestamp`, optional nonempty `detail`. No numeric value needed. Producer order is retained. |
-| `treemap` | Non-negative category values. A flat composition treemap. |
-| `bullet` | Non-negative actual `value`, optional non-negative row `target` (falls back to view target, then 100); optional ordered non-negative `range: [low, high]`. Thin foreground marker indicates the target; shaded band indicates the reference range. |
-| `boxplot` | Ordered `box: [min, q1, median, q3, max]`; optional finite `outliers` array. `value` remains required for sorting/table switching; normally use the median. |
-| `waterfall` | Signed contributions in producer order, accumulating from zero. A starting balance is an ordinary first contribution. Zero-crossing intervals are supported. |
-| `sankey` | `label` names the source node, `destination` names the target node, non-negative `value` is flow magnitude. Cyclic flows are rejected. |
-
-Status meanings are shown in text as well as color. Sorting waterfall rows changes
-the contribution sequence; leave `sort: "none"` to preserve its meaning.
-
-#### Reusable producer analytics
-
-Import pure helpers from `@newsnext/sdk/analytics` in a data producer with the SDK
-available in its runtime module resolution. The specifier resolves through the
-workspace and the CLI's bundled SDK, not through a separately installed package.
-This entry has no browser, network,
-or transport dependencies and never mutates inputs:
-
-```js
-import { groupCount, topN, periodChange, movingAverage, timeBuckets, compareItems } from "@newsnext/sdk/analytics"
-
-const counts = groupCount(items, item => item.category)
-const rows = topN(counts, row => row.value, 10)
-const change = periodChange(currentCount, previousCount)
-const averages = movingAverage([12, 18, null, 20, 24], 2)
-const days = timeBuckets(items, item => item.publishedAt, "day")
-const { added, removed } = compareItems(previousItems, items, item => item.id)
-```
-
-`groupCount` preserves first-seen group order; `topN` preserves ties.
-`timeBuckets` counts occupied UTC hour/day/week/month buckets (Monday weeks),
-sorted chronologically; it does not fill missing buckets. Use timestamps with an
-explicit timezone. `movingAverage` returns null until a complete trailing window
-is present; null observations break the window. `compareItems` deduplicates by
-identity, keeping the first item. `periodChange` returns current, previous, delta,
-and percent (null for a zero baseline). Invalid numbers and invalid window/count
-arguments throw rather than silently changing observations.
-
-
-Widget definitions and instances have separate identities. `widget.json` remains
-in the directory named by `widgetId`; it is never copied into Workspace storage.
-`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, layout })` creates an
-independent instance and returns `{ liveWidgetId }`. Repeated calls may use the
-same definition in the same Board. Use `liveWidgetId` for configuration, movement,
-removal, and layout updates; keep using `widgetId` for `client.liveWidgets.data`.
-Each instance stores its own sparse `patch`, `dataScope`, and `layout`. Identical
-definition inputs share the daemon's result cache. Host data messages expose both
-`widgetId` and `liveWidgetId`; iframe source-window checks isolate each instance.
-
-A full install flow resolves the Board first, installs with a Board-wide scope,
-then reads the placement back to verify:
-
-```ts
-const named = (await client.actions.board.list()).filter(board => board.name === "<board name>")
-const board = named.length === 1 ? named[0] : undefined
-if (!board) throw new Error("Expected one matching Board; select a Board ID")
-const boardId = board.id
-const { liveWidgetId } = await client.actions.nextLayer.installLiveWidget({
-  boardId,
-  dataScope: { type: "board" },
-  layout: { height: 1, width: 3, x: 0, y: 0 },
-  widgetId: "<widget-id>",
-})
-const detail = await client.actions.board.get({ boardId })
-const placed = detail.board.nextLayer.liveWidgets.find(
-  widget => widget.liveWidgetId === liveWidgetId,
-)
-if (!placed) throw new Error("Widget placement missing after install")
-```
-
-`dataScope` is `{ type: "board" }` for the Board's complete LiveCard list or
-`{ type: "cards", cardIds }` for selected cards. Layout widths use half-LiveCard
-units; mirror the manifest's `width`/`height` and let the daemon normalize the
-position.
-
-A minimal real-data Widget is a directory named by its ID containing
-`widget.json` and `data.mjs`. Copy the directory into the Widget directory
-reported by `newsnext status`, then install it:
-
-```json
-{
-  "title": "Board Word Cloud",
-  "view": { "type": "chart", "chart": "word-cloud", "query": "cloud", "sort": "desc" },
-  "data": {
-    "queries": {
-      "recent": { "type": "latest", "limit": 500, "deduplicateBy": "url" }
-    }
-  },
-  "params": {
-    "maxWords": { "type": "number", "title": "Max words", "default": 60, "min": 10, "max": 200 }
-  },
-  "refresh": { "intervalMs": 300000 }
-}
-```
-
-```js
-export default function load({ params = {}, queries = {} } = {}) {
-  const maxWords = Math.min(Math.max(Number(params.maxWords) || 60, 10), 200)
-  const counts = new Map()
-  for (const envelope of queries.recent?.items ?? []) {
-    const title = envelope?.value?.title
-    if (typeof title !== "string") continue
-    for (const word of title.toLowerCase().split(/[^a-z]+/)) {
-      if (word.length < 2) continue
-      counts.set(word, (counts.get(word) ?? 0) + 1)
-    }
-  }
-  const rows = [...counts]
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, maxWords)
-  return { cloud: { rows } }
-}
-```
-
-The producer reads `{ value, cardId?, sourceId? }` envelopes from
-`queries.<name>.items` and returns named results matching the view query; the
-placement's scope decides which LiveCards the `latest` query searches.
-Validate with `newsnext widget validate --run <widgetId>` before installing:
-`--run` resolves `latest` queries as empty, so zero rows standalone are
-expected and do not indicate a broken producer. `select` parameter values are
-strings; quote them for `--param` (`--param 'window="24"'`), since a bare
-number parses as JSON and fails validation.
-
-### Custom HTML views
-
-A custom view is an `index.html` beside `widget.json` (declare
-`view: { "type": "custom" }` or omit `view`). The host owns the shell,
-surface, scroll container, and status layer; the document only styles and
-draws its own content. The protocol version is `1`. The view posts
-`{ type: "newsnext.widget.ready", version: 1 }` once its message listener is
-installed. The host then delivers
-`{ type: "newsnext.widget.data", version: 1, status, stale, queries, params, layout }`
-where `status` is `loading`, `ready`, or `error`, and `layout` is
-`{ width, height }` in half-LiveCard units, re-sent when the card is resized.
-The host repeats the latest payload after each load and refresh.
-
-Report content status with
-`{ type: "newsnext.widget.status", version: 1, message }`
-(`message: null` clears it) instead of drawing status text; the host renders
-it in the shared status layer with its own loading and error states. Report
-height with
-`{ type: "newsnext.widget.size", version: 1, height }`; the host sizes the
-iframe and its content panel owns scrolling, so the document itself must never
-scroll or show a scrollbar: no viewport height or `overflow: auto` on `html`,
-`body`, or inner elements, and keep the root at `overflow: hidden`.
-
-Keep the iframe and document background transparent so the host surface stays
-visible. Do not repeat the title, refresh control, outer padding, rounded
-shell, or background. Links may open as normal new-tab links. Use the
-NewsNext semantic typography, foreground, muted, divider, hover, spacing, and
-motion tokens instead of a separate visual system: the daemon injects its
-built-in stylesheet (`/widgets/newsnext.css`) into every served HTML document,
-providing the tokens resolved through `light-dark()` plus base styles and
-shared `nn-*` content components—do not redeclare them. For managed rendering,
-import the shared view runtime explicitly as a module,
-`import { createView } from "/widgets/newsnext.js"`, which wires the host
-protocol and grid-span layout so the view renders from a frame carrying the
-payload, measured box, and grid span instead of handling messages itself.
-
-### Workspace connection decisions
+## Workspace connection decisions
 
 A browser with local changes may report `state: "workspaceConflict"` from
 `client.actions.nativeIntegration.getStatus()`. Its `workspaceConflict` contains

@@ -1,0 +1,47 @@
+{
+  "title": "Example JSON",
+  "category": "news",
+  "color": "blue",
+  "sources": {
+    "posts": {
+      "metadata": {
+        "title": "Posts"
+      },
+      "params": {
+        "userId": {
+          "type": "number",
+          "title": "User ID",
+          "description": "Only return posts by this author ID. Zero returns every post.",
+          "default": 0,
+          "min": 0
+        }
+      },
+      "loader": {
+        "type": "json",
+        "url": "https://jsonplaceholder.typicode.com/posts{% if scope.params.userId %}?userId={{ scope.params.userId }}{% endif %}",
+        "items": "[*]",
+        "fields": {
+          "title": "title",
+          "url": {
+            "select": "id",
+            "template": "https://jsonplaceholder.typicode.com/posts/{{ scope.value }}"
+          },
+          "author": {
+            "name": {
+              "select": "userId",
+              "template": "User {{ scope.value }}"
+            }
+          },
+          "content": {
+            "text": "body"
+          }
+        }
+      },
+      "capabilities": {
+        "network": [
+          "jsonplaceholder.typicode.com"
+        ]
+      }
+    }
+  }
+}

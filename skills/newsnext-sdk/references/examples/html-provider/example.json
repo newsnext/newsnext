@@ -1,0 +1,33 @@
+{
+  "title": "Example HTML",
+  "category": "forum",
+  "color": "orange",
+  "defaults": {
+    "baseUrl": "https://news.ycombinator.com/"
+  },
+  "sources": {
+    "frontpage": {
+      "metadata": {
+        "title": "Front Page",
+        "type": "ranking"
+      },
+      "loader": {
+        "type": "html",
+        "url": "/",
+        "items": ".athing",
+        "fields": {
+          "title": ".titleline>a",
+          "url": {
+            "select": ".titleline>a",
+            "attr": "href"
+          }
+        }
+      },
+      "capabilities": {
+        "network": [
+          "news.ycombinator.com"
+        ]
+      }
+    }
+  }
+}

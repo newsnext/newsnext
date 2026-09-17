@@ -1,0 +1,18 @@
+{
+  "title": "Example",
+  "category": "news",
+  "color": "orange",
+  "sources": {
+    "feed": {
+      "params": {
+        "url": {
+          "type": "url",
+          "title": "Feed URL",
+          "default": "https://example.com/feed.xml"
+        }
+      },
+      "loader": { "type": "rss", "url": "{{ scope.params.url }}" },
+      "capabilities": { "network": ["example.com"] }
+    }
+  }
+}
