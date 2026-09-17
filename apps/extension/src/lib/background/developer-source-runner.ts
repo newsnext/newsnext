@@ -1,6 +1,7 @@
 import type { RunDeveloperSourceInput, RunDeveloperSourceOutput } from "@newsnext/sdk/models"
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceLoaderResult } from "@newsnext/source-kit/types"
+import type { SourceLoadResponse } from "../source/load-result"
 import type { SourcePermissionTarget } from "../source/permissions"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
@@ -8,6 +9,8 @@ import {
   resolveSourceRegistry,
 } from "@newsnext/source-kit/registry"
 import { normalizeSourceParams, parseSourceId, prepareSourceRequest } from "@newsnext/source-kit/runtime"
+import { toSourceLoadResult } from "../source/load-result"
+import { executeSourceSnapshot } from "./protected-source-loader"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
@@ -30,6 +33,24 @@ export function getConnectedSourceSecretProviderId(
   useProviderSecrets = false,
 ): string {
   return useProviderSecrets ? providerId : `cli:${providerId}`
+}
+
+function createSnapshotRunOutput(
+  response: SourceLoadResponse,
+  identifiers: { providerId: string, sourceId: string, sourceVersion: number },
+  fetches: BackgroundSourceFetchResult[] | undefined,
+  startedAt: number,
+): RunDeveloperSourceOutput {
+  return createRunOutput(
+    response.result,
+    identifiers.providerId,
+    identifiers.sourceId,
+    identifiers.sourceVersion,
+    response.params,
+    // A protected hit executes nothing, so there are no fetches to report.
+    response.fetchProtected ? undefined : fetches,
+    startedAt,
+  )
 }
 
 function createRunOutput(
@@ -67,17 +88,26 @@ export async function runDeveloperSource(
   if (input.providerId === undefined) {
     const request = await prepareSourceRequest(input.sourceId, input.params ?? {})
     await authorize({ ...request.source, sourceId: input.sourceId }, request.params)
-    const result = await createSourceLoaderInvoker({ fetchResults: fetches }).invoke({
-      params: request.params,
-      source: request.source,
-      sourceId: input.sourceId,
-    })
-    return createRunOutput(
-      result,
-      parseSourceId(input.sourceId).provider,
-      input.sourceId,
-      request.source.version,
-      request.params,
+    const invoker = createSourceLoaderInvoker({ fetchResults: fetches })
+    const response = await executeSourceSnapshot(
+      {
+        params: request.params,
+        sourceId: input.sourceId,
+        version: request.source.version,
+      },
+      () => invoker.invoke({
+        params: request.params,
+        source: request.source,
+        sourceId: input.sourceId,
+      }),
+    )
+    return createSnapshotRunOutput(
+      response,
+      {
+        providerId: parseSourceId(input.sourceId).provider,
+        sourceId: input.sourceId,
+        sourceVersion: request.source.version,
+      },
       fetches,
       startedAt,
     )
@@ -105,27 +135,30 @@ export async function runDeveloperSource(
   )
   const secrets = await resolveSourceSecrets(source, secretProviderId)
   const signal = new AbortController().signal
-  const result = await source.loader(params, {
-    fetch: createBackgroundSourceFetch(
-      sourceId,
-      source.capabilities.network,
-      signal,
-      fetches,
-    ),
-    secrets,
-    signal,
-    updateSecrets: async (updates) => {
-      Object.assign(secrets, updates)
-      await updateSourceSecrets(source, secretProviderId, updates)
+  const response = await executeSourceSnapshot(
+    { params, sourceId, version: source.version },
+    async () => {
+      const result = await source.loader(params, {
+        fetch: createBackgroundSourceFetch(
+          sourceId,
+          source.capabilities.network,
+          signal,
+          fetches,
+        ),
+        secrets,
+        signal,
+        updateSecrets: async (updates) => {
+          Object.assign(secrets, updates)
+          await updateSourceSecrets(source, secretProviderId, updates)
+        },
+      })
+      return toSourceLoadResult(source, sourceId, result)
     },
-  })
+  )
 
-  return createRunOutput(
-    result,
-    input.providerId,
-    sourceId,
-    source.version,
-    params,
+  return createSnapshotRunOutput(
+    response,
+    { providerId: input.providerId, sourceId, sourceVersion: source.version },
     fetches,
     startedAt,
   )

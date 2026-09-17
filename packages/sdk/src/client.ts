@@ -66,7 +66,7 @@ export class NewsNextClient {
   }
 
   readonly liveCards = {
-    /** Load a saved LiveCard through its owning Worker and the Source protection cache. */
+    /** Load a saved LiveCard through its owning Worker and the Source snapshot protection. */
     data: (query: LiveCardDataQuery, options: ActionOptions = {}): Promise<LiveCardDataResult> =>
       this.executeAction("liveCard.load", query, options),
   }

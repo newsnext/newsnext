@@ -29,7 +29,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   loader: {
     loadLiveCard: (input: { card: LiveCard }) => Promise<SourceLoadResponse>
-    readLiveCardCache: (input: { card: LiveCard }) => Promise<SourceLoadResponse | null>
+    readLiveCardSnapshot: (input: { card: LiveCard }) => Promise<SourceLoadResponse | null>
   }
   source: {
     cancel: (input: { requestId: string }) => Promise<void>
@@ -49,7 +49,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   liveCardRouter: {
     load: (input: { cardId: string }) => Promise<SourceLoadResponse>
-    readCache: (input: { cardId: string }) => Promise<SourceLoadResponse | null>
+    readSnapshot: (input: { cardId: string }) => Promise<SourceLoadResponse | null>
   }
   workerManagement: {
     regenerateIdentity: () => Promise<NativeIntegrationStatus>
@@ -99,8 +99,8 @@ const loaderLoadLiveCardAction = defineAction(actionContracts["loader.loadLiveCa
   await context.loader.loadLiveCard(input)
 ))
 
-const loaderReadLiveCardCacheAction = defineAction(actionContracts["loader.readLiveCardCache"], async (input, context: BackgroundActionContext) => (
-  await context.loader.readLiveCardCache(input)
+const loaderReadLiveCardSnapshotAction = defineAction(actionContracts["loader.readLiveCardSnapshot"], async (input, context: BackgroundActionContext) => (
+  await context.loader.readLiveCardSnapshot(input)
 ))
 
 const nativeIntegrationGetStatusAction = defineAction(actionContracts["nativeIntegration.getStatus"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getStatus())
@@ -111,8 +111,8 @@ const liveCardLoadAction = defineAction(actionContracts["liveCard.load"], async 
   await context.liveCardRouter.load(input)
 ))
 
-const liveCardReadCacheAction = defineAction(actionContracts["liveCard.readCache"], async (input, context: BackgroundActionContext) => (
-  await context.liveCardRouter.readCache(input)
+const liveCardReadSnapshotAction = defineAction(actionContracts["liveCard.readSnapshot"], async (input, context: BackgroundActionContext) => (
+  await context.liveCardRouter.readSnapshot(input)
 ))
 
 const nativeIntegrationSetEnabledAction = defineAction(actionContracts["nativeIntegration.setEnabled"], async (input, context: BackgroundActionContext) => await context.nativeIntegration.setEnabled(input))
@@ -129,12 +129,12 @@ export const backgroundActionDefinitions = [
   developerFetchAction,
   developerRunSourceAction,
   loaderLoadLiveCardAction,
-  loaderReadLiveCardCacheAction,
+  loaderReadLiveCardSnapshotAction,
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
   liveCardLoadAction,
-  liveCardReadCacheAction,
+  liveCardReadSnapshotAction,
   nativeIntegrationGetLogsAction,
   nativeIntegrationGetStatusAction,
   nativeIntegrationSetEnabledAction,

@@ -8,7 +8,7 @@ export async function restoreLiveCardResults(
   liveCards: readonly Pick<LiveCard, "cardId" | "sourceId">[],
 ): Promise<void> {
   await Promise.allSettled(liveCards.map(async (card) => {
-    const response = await actions.liveCard.readCache({
+    const response = await actions.liveCard.readSnapshot({
       cardId: card.cardId,
     })
     if (!response) return

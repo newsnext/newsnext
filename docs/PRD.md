@@ -65,7 +65,7 @@ schemas, transport details, and command syntax in those references and the
 | --- | --- |
 | Boards, LiveCards, Widget placement/scope, portable Settings | Browser storage; synchronized through the daemon's in-memory Workspace |
 | Source permissions, credentials, device identity | Owning browser only |
-| Current Source results | Owning Worker's replaceable Loader cache |
+| Current Source snapshots | Owning Worker's replaceable Loader snapshot |
 | History, collection policies, Widget data caches | Daemon-owned local Turso database |
 | Local Widget manifests and assets | CLI Widget directory |
 

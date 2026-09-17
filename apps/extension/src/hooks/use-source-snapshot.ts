@@ -10,7 +10,7 @@ import {
   SOURCE_QUERY_KEY,
 } from "@/hooks/source-query"
 
-export interface CachedSourceQuery {
+export interface SourceSnapshotQuery {
   data: SourceLoadResult
   loadedAt: number
 }
@@ -22,10 +22,10 @@ function getSourceLoadResponse(
   return value
 }
 
-function readCachedSourceQuery(
+function readSourceSnapshotQuery(
   value: unknown,
   sourceId: string,
-): CachedSourceQuery | undefined {
+): SourceSnapshotQuery | undefined {
   const response = getSourceLoadResponse(value)
   const result = response?.result
   if (
@@ -38,12 +38,12 @@ function readCachedSourceQuery(
   return { data: result, loadedAt: response.loadedAt }
 }
 
-export function findCachedLiveCardQuery(
+export function findLiveCardSnapshot(
   queryClient: QueryClient,
   cardId: string,
   sourceId: string,
-): CachedSourceQuery | undefined {
-  return readCachedSourceQuery(
+): SourceSnapshotQuery | undefined {
+  return readSourceSnapshotQuery(
     queryClient.getQueryData(
       getSourceQueryKey(createLiveCardQueryTarget(cardId)),
     ),
@@ -51,39 +51,39 @@ export function findCachedLiveCardQuery(
   )
 }
 
-export function findCachedSourceQuery(
+export function findSourceSnapshot(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
-): CachedSourceQuery | undefined {
+): SourceSnapshotQuery | undefined {
   const queries = queryClient.getQueryCache()
     .findAll({ queryKey: SOURCE_QUERY_KEY })
     .filter(query => query.state.data !== undefined)
 
   for (const query of queries) {
-    const cached = readCachedSourceQuery(query.state.data, sourceId)
-    if (!cached) continue
-    const target = createSourceQueryTarget(sourceId, cached.data.source, params)
+    const snapshot = readSourceSnapshotQuery(query.state.data, sourceId)
+    if (!snapshot) continue
+    const target = createSourceQueryTarget(sourceId, snapshot.data.source, params)
     if (query.queryHash === getSourceQueryHash(target)) {
-      return cached
+      return snapshot
     }
   }
 }
 
-export function findCachedSourceResult(
+export function findSourceSnapshotResult(
   queryClient: QueryClient,
   sourceId: string,
   params: Record<string, unknown> | undefined,
 ): SourceLoadResult | undefined {
-  return findCachedSourceQuery(queryClient, sourceId, params)?.data
+  return findSourceSnapshot(queryClient, sourceId, params)?.data
 }
 
-export function useCachedLiveCardResultFinder(): (
+export function useLiveCardSnapshotFinder(): (
   cardId: string,
   sourceId: string,
 ) => SourceLoadResult | undefined {
   const queryClient = useQueryClient()
   return useCallback((cardId, sourceId) => {
-    return findCachedLiveCardQuery(queryClient, cardId, sourceId)?.data
+    return findLiveCardSnapshot(queryClient, cardId, sourceId)?.data
   }, [queryClient])
 }

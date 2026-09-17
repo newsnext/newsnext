@@ -6,10 +6,10 @@ import {
   getSourceQueryKey,
 } from "./source-query"
 import {
-  findCachedLiveCardQuery,
-  findCachedSourceQuery,
-  findCachedSourceResult,
-} from "./use-cached-source-result"
+  findLiveCardSnapshot,
+  findSourceSnapshot,
+  findSourceSnapshotResult,
+} from "./use-source-snapshot"
 
 vi.mock("@/lib/source", () => ({
   loadSource: vi.fn(),
@@ -25,7 +25,7 @@ const source = {
   provider: { color: "blue", title: "Test" },
 } as const
 
-describe("findCachedSourceResult", () => {
+describe("findSourceSnapshotResult", () => {
   it("resolves the presentation snapshot for an unavailable Source", () => {
     const queryClient = new QueryClient()
     const target = createSourceQueryTarget(source.id, source, {})
@@ -44,15 +44,15 @@ describe("findCachedSourceResult", () => {
       }),
     )
 
-    expect(findCachedSourceResult(queryClient, source.id, {})).toBe(result)
-    expect(findCachedSourceQuery(queryClient, source.id, {})).toEqual({
+    expect(findSourceSnapshotResult(queryClient, source.id, {})).toBe(result)
+    expect(findSourceSnapshot(queryClient, source.id, {})).toEqual({
       data: result,
       loadedAt: 100,
     })
-    expect(findCachedSourceResult(queryClient, "other:feed", {})).toBeUndefined()
+    expect(findSourceSnapshotResult(queryClient, "other:feed", {})).toBeUndefined()
   })
 
-  it("ignores invalid cached results that have no Source snapshot", () => {
+  it("ignores invalid snapshot results that have no Source snapshot", () => {
     const queryClient = new QueryClient()
     const target = createSourceQueryTarget(source.id, source, {})
     queryClient.setQueryData(getSourceQueryKey(target), {
@@ -63,7 +63,7 @@ describe("findCachedSourceResult", () => {
       result: { items: [] },
     }, { updatedAt: 100 })
 
-    expect(findCachedSourceResult(queryClient, source.id, {})).toBeUndefined()
+    expect(findSourceSnapshotResult(queryClient, source.id, {})).toBeUndefined()
   })
 
   it("finds a persisted LiveCard by identity after its request configuration changes", () => {
@@ -79,10 +79,10 @@ describe("findCachedSourceResult", () => {
     })
 
     expect(
-      findCachedLiveCardQuery(queryClient, "card-a", source.id)?.data,
+      findLiveCardSnapshot(queryClient, "card-a", source.id)?.data,
     ).toBe(result)
     expect(
-      findCachedLiveCardQuery(queryClient, "card-b", source.id),
+      findLiveCardSnapshot(queryClient, "card-b", source.id),
     ).toBeUndefined()
   })
 })

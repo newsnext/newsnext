@@ -10,11 +10,11 @@ import {
   getSourceQueryKey,
   getSourceQueryOptions,
 } from "./source-query"
-import {
-  findCachedLiveCardQuery,
-  findCachedSourceQuery,
-} from "./use-cached-source-result"
 import { useIsSourceManualRequesting, useManualRequestSources } from "./use-manual-request"
+import {
+  findLiveCardSnapshot,
+  findSourceSnapshot,
+} from "./use-source-snapshot"
 
 const EMPTY_ITEMS: NewsItem[] = []
 
@@ -34,10 +34,10 @@ export function useSourceQuery({
   enabled = true,
 }: UseSourceQueryOptions) {
   const queryClient = useQueryClient()
-  const cachedQuery = cardId
-    ? findCachedLiveCardQuery(queryClient, cardId, sourceId)
-    : findCachedSourceQuery(queryClient, sourceId, params)
-  const cachedResult = cachedQuery?.data
+  const snapshotQuery = cardId
+    ? findLiveCardSnapshot(queryClient, cardId, sourceId)
+    : findSourceSnapshot(queryClient, sourceId, params)
+  const snapshotResult = snapshotQuery?.data
   const target = useMemo(
     () => cardId
       ? createLiveCardQueryTarget(cardId)
@@ -73,7 +73,7 @@ export function useSourceQuery({
     enabled: enabled && (cardId !== undefined || source.version > 0),
     placeholderData: prev => prev,
   })
-  const data = enabled ? query.data?.result ?? cachedResult : undefined
+  const data = enabled ? query.data?.result ?? snapshotResult : undefined
   const hasData = data !== undefined
 
   const handleManualRequest = useCallback(async () => {
@@ -90,7 +90,7 @@ export function useSourceQuery({
     manualRequest: handleManualRequest,
     isFetching: query.isFetching,
     isManualRequesting,
-    isLoading: query.isLoading && cachedResult === undefined,
+    isLoading: query.isLoading && snapshotResult === undefined,
     isError: query.isError && !hasData,
     errorMessage: !hasData && query.error instanceof Error ? query.error.message : undefined,
     loginUrl: hasData ? undefined : getLoginUrlFromError(query.error),

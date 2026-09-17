@@ -88,7 +88,7 @@ export const zhTW = {
   checking: "檢查中",
   clearAllData: "清除所有使用者資料",
   clearData: "清除使用者資料",
-  clearDataDescription: "刪除所有看板、LiveCard、設定、已儲存的來源密鑰、快取資料和網站權限。此操作無法復原。",
+  clearDataDescription: "刪除所有看板、LiveCard、設定、已儲存的來源密鑰、來源快照和網站權限。此操作無法復原。",
   clearing: "正在清除…",
   confirmClear: "確認清除",
   connected: "已連線",

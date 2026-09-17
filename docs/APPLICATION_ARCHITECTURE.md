@@ -218,7 +218,7 @@ resolve the Source returns an ordinary execution error while the last snapshot
 remains readable. Cards can always be selected, reordered, moved between
 Boards, or deleted.
 
-The persisted result and in-memory Query cache provide disposable acceleration
+The Source snapshot and in-memory Query cache provide disposable acceleration
 and presentation continuity; neither owns membership. Clearing them may reduce
 an unavailable card to the generic presentation, but cannot remove the LiveCard
 from Application Data.
@@ -246,8 +246,8 @@ so equal inputs can share results across instances.
 existing SourceLoadResponse including normalized content, timestamps, resolved
 parameters, and protection status. It uses the owning Worker's load/cache path;
 it does not introduce a Card Data table. Missing cards and unavailable Workers
-fail through that existing router. `liveCard.readCache` remains the explicit
-cache-only operation.
+fail through that existing router. `liveCard.readSnapshot` remains the explicit
+snapshot-only operation.
 
 
 NowLayer and NextLayer are views of one Board. `defaultLayer` persists the active

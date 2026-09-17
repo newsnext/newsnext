@@ -2,45 +2,45 @@ import type { SourceLoadResult } from "./load-result"
 import Dexie from "dexie"
 import { getSourceQueryHash } from "./query-target"
 
-const PERSISTED_SOURCE_RESULTS_DATABASE_NAME = "newsnext-extension-source-cache"
-const PERSISTED_SOURCE_RESULT_SCHEMA_VERSION = 2
-const SOURCE_RESULT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
+const SOURCE_SNAPSHOT_DATABASE_NAME = "newsnext-extension-source-snapshot"
+const SOURCE_SNAPSHOT_SCHEMA_VERSION = 2
+const SOURCE_SNAPSHOT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
-interface PersistedSourceTarget {
+export interface SourceSnapshotTarget {
   params: Record<string, unknown>
   sourceId: string
   version: number
 }
 
-interface PersistedSourceResult {
+export interface SourceSnapshot {
   fetchedAt: number
   key: string
   result: SourceLoadResult
   schemaVersion: number
 }
 
-class SourceResultDatabase extends Dexie {
-  sourceResults!: Dexie.Table<PersistedSourceResult, string>
+class SourceSnapshotDatabase extends Dexie {
+  sourceSnapshots!: Dexie.Table<SourceSnapshot, string>
 
   constructor() {
-    super(PERSISTED_SOURCE_RESULTS_DATABASE_NAME)
+    super(SOURCE_SNAPSHOT_DATABASE_NAME)
     this.version(8).stores({
-      sourceResults: "key, fetchedAt",
+      sourceSnapshots: "key, fetchedAt",
     })
   }
 }
 
-const database = new SourceResultDatabase()
+const database = new SourceSnapshotDatabase()
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function isValidPersistedSourceResult(
+function isValidSourceSnapshot(
   value: unknown,
-  target: PersistedSourceTarget,
+  target: SourceSnapshotTarget,
   key: string,
-): value is PersistedSourceResult {
+): value is SourceSnapshot {
   if (!isRecord(value) || !isRecord(value.result)) {
     return false
   }
@@ -51,7 +51,7 @@ function isValidPersistedSourceResult(
     || !Number.isFinite(fetchedAt)
     || fetchedAt <= 0
     || value.key !== key
-    || value.schemaVersion !== PERSISTED_SOURCE_RESULT_SCHEMA_VERSION
+    || value.schemaVersion !== SOURCE_SNAPSHOT_SCHEMA_VERSION
     || !Array.isArray(result.items)
     || !isValidInlinePresentation(result.inlinePresentation, result.items.length)
     || !isRecord(source)
@@ -70,48 +70,48 @@ function isValidInlinePresentation(value: unknown, itemCount: number): boolean {
     && value.every(entry => typeof entry === "string")
 }
 
-function isExpired(result: PersistedSourceResult, now = Date.now()): boolean {
-  return now - result.fetchedAt > SOURCE_RESULT_MAX_AGE_MS
+function isExpired(snapshot: SourceSnapshot, now = Date.now()): boolean {
+  return now - snapshot.fetchedAt > SOURCE_SNAPSHOT_MAX_AGE_MS
 }
 
-export async function readPersistedSourceResult(
-  target: PersistedSourceTarget,
-): Promise<PersistedSourceResult | undefined> {
+export async function readSourceSnapshot(
+  target: SourceSnapshotTarget,
+): Promise<SourceSnapshot | undefined> {
   try {
     const key = getSourceQueryHash(target)
-    const value: unknown = await database.sourceResults.get(key)
-    if (!isValidPersistedSourceResult(value, target, key) || isExpired(value)) {
-      if (value !== undefined) await database.sourceResults.delete(key)
+    const value: unknown = await database.sourceSnapshots.get(key)
+    if (!isValidSourceSnapshot(value, target, key) || isExpired(value)) {
+      if (value !== undefined) await database.sourceSnapshots.delete(key)
       return undefined
     }
     return value
   } catch (error) {
-    console.error("Failed to read persisted Source result", error)
+    console.error("Failed to read Source snapshot", error)
     return undefined
   }
 }
 
-export async function writePersistedSourceResult(
-  target: PersistedSourceTarget,
+export async function writeSourceSnapshot(
+  target: SourceSnapshotTarget,
   result: SourceLoadResult,
   fetchedAt: number,
 ): Promise<void> {
   try {
-    await database.sourceResults.put({
+    await database.sourceSnapshots.put({
       fetchedAt,
       key: getSourceQueryHash(target),
       result,
-      schemaVersion: PERSISTED_SOURCE_RESULT_SCHEMA_VERSION,
+      schemaVersion: SOURCE_SNAPSHOT_SCHEMA_VERSION,
     })
   } catch (error) {
-    console.error("Failed to persist Source result", error)
+    console.error("Failed to persist Source snapshot", error)
   }
 }
 
-export async function clearPersistedSourceResults(): Promise<void> {
+export async function clearSourceSnapshots(): Promise<void> {
   try {
-    await database.sourceResults.clear()
+    await database.sourceSnapshots.clear()
   } catch {
-    // Result cleanup should not prevent the remaining user data from being cleared.
+    // Snapshot cleanup should not prevent the remaining user data from being cleared.
   }
 }

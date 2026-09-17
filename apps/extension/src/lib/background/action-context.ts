@@ -1,7 +1,7 @@
 import type { LiveCard } from "../source"
 import type { BackgroundActionContext } from "./background-actions"
 import { loadSourceDescriptors, prepareSourceRequest } from "@newsnext/source-kit/runtime"
-import { readPersistedSourceResult } from "../source/persisted-results"
+import { readSourceSnapshot } from "../source/source-snapshot"
 import {
   mutateApplicationData,
   readApplicationData,
@@ -31,21 +31,21 @@ async function loadBoundLiveCard({ card }: { card: LiveCard }) {
   return sourceLoader.load({ params: card.patch.params, sourceId: card.sourceId })
 }
 
-async function readBoundLiveCardCache({ card }: { card: LiveCard }) {
+async function readBoundLiveCardSnapshot({ card }: { card: LiveCard }) {
   const request = await prepareSourceRequest(card.sourceId, card.patch.params ?? {})
-  const persisted = await readPersistedSourceResult({
+  const snapshot = await readSourceSnapshot({
     params: request.params,
     sourceId: card.sourceId,
     version: request.source.version,
   })
-  if (!persisted) return null
+  if (!snapshot) return null
 
   return {
     fetchProtected: true,
-    fetchedAt: persisted.fetchedAt,
+    fetchedAt: snapshot.fetchedAt,
     loadedAt: Date.now(),
     params: request.params,
-    result: persisted.result,
+    result: snapshot.result,
   }
 }
 
@@ -67,7 +67,7 @@ export function createBackgroundActionContext(
     },
     loader: {
       loadLiveCard: loadBoundLiveCard,
-      readLiveCardCache: readBoundLiveCardCache,
+      readLiveCardSnapshot: readBoundLiveCardSnapshot,
     },
     source: {
       cancel: sourceLoaderInvoker.cancel,

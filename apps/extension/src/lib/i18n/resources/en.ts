@@ -84,7 +84,7 @@ export const en = {
   checking: "Checking",
   clearAllData: "Clear all user data",
   clearData: "Clear user data",
-  clearDataDescription: "Delete all boards, LiveCards, settings, saved source secrets, cached source data, and site permissions. This cannot be undone.",
+  clearDataDescription: "Delete all boards, LiveCards, settings, saved source secrets, source snapshots, and site permissions. This cannot be undone.",
   clearing: "Clearing…",
   confirmClear: "Confirm clear",
   connected: "Connected",

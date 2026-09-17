@@ -25,7 +25,7 @@ import { rejectNativeConnection, resolveNativeConnection, waitForNativeConnectio
 import { serializeNativeIntegrationError } from "./error"
 import {
   loadRoutedLiveCard,
-  readRoutedLiveCardCache,
+  readRoutedLiveCardSnapshot,
 } from "./live-card-routing"
 import { NATIVE_INTEGRATION_PERMISSIONS } from "./permission"
 import { clearNativeMessageChunks, parseNativeHostValue, parseNativeNotification } from "./protocol"
@@ -74,7 +74,7 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
       requireNativeConnection,
       getConnectedActionContext(),
     ),
-    readCache: input => readRoutedLiveCardCache(
+    readSnapshot: input => readRoutedLiveCardSnapshot(
       input,
       requireNativeConnection,
       getConnectedActionContext(),

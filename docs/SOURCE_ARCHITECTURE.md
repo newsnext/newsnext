@@ -224,7 +224,7 @@ source ID and raw parameters
         ├─ resolve source
         ├─ normalize and validate parameters
         ├─ build a Worker-local result identity from source ID, version, and normalized parameters
-        ├─ read the persisted Source result when available
+        ├─ read the Source snapshot when available
         ├─ skip a user-triggered request during the one-minute protection interval
         ├─ resolve required secrets in the background
         ├─ execute the source loader
@@ -232,7 +232,7 @@ source ID and raw parameters
         ├─ reject an empty or malformed item result
         ├─ keep the first 50 items and normalize their explicit URLs
         ├─ render the compiled inline template to index-aligned plain text
-        ├─ persist the successful Source result and fetch time
+        ├─ persist the successful Source snapshot and fetch time
         ├─ publish the result into the page's in-memory QueryClient
         └─ infer the LiveCard presentation from effective item times and order in the UI
 ```
@@ -258,50 +258,58 @@ TanStack freshness. Manual Request is a page-side user intent that tracks
 distinct UI feedback around that refetch. Both paths send the
 same load action without a manual-request flag, so the background cannot
 distinguish them and applies the same protection behavior. A protected request
-returns the persisted result with `fetchProtected: true` and a new caller-visible
+returns the Source snapshot with `fetchProtected: true` and a new caller-visible
 `loadedAt` without executing the Source or changing its internal `fetchedAt`.
 Manual Request keeps UI feedback visible for a minimum 500ms. App query timing
 and the Source request protection interval are centralized in
 `apps/extension/src/lib/source/query-policy.ts`.
 
 The bound browser Loader writes every successful execution once to its
-Worker-local Dexie-backed Source result cache, keyed by Source ID, Source version,
-and normalized parameters. No record is shared across Workers, even when that
+Worker-local Dexie-backed Source snapshot store, keyed by Source ID, Source version,
+and normalized parameters. Every load — LiveCard, draft, or authoring run —
+therefore generates a Source snapshot, and LiveCard history persistence rides
+along with it: daemon-relayed LiveCard loads are
+retained by the daemon without blocking the response, while locally executed
+loads are reported back via a fire-and-forget `liveCardObserved` notification.
+Retaining an already-stored `fetchedAt` is a no-op because observations are
+unique per dataset and timestamp, so protected snapshot returns never duplicate
+history. Snapshot-only reads (`loader.readLiveCardSnapshot`,
+`liveCard.readSnapshot`) never execute a Source and never retain. No record is shared across Workers, even when that
 complete key matches. The same record supplies both API protection and startup
-placeholder data. LiveCard IDs are deliberately absent from this Loader cache
+placeholder data. LiveCard IDs are deliberately absent from this Loader snapshot
 because they do not affect Source execution. Page-side TanStack queries for saved
 LiveCards use only the LiveCard ID, while configuration changes explicitly
 invalidate that stable query.
 
-Each cache record contains only its schema version, derived key, validated
+Each snapshot record contains only its schema version, derived key, validated
 result, and real `fetchedAt` completion time; it does not duplicate the
 normalized target. The schema version invalidates results whose runtime result
 contract predates the active extension. When
 a Board route renders, the App asks the opaque
-LiveCard router for each referenced LiveCard's cached result. The router reads
+LiveCard router for each referenced LiveCard's Source snapshot. The router reads
 directly in the current browser when it is the binding and otherwise relays to
 the bound browser through the daemon. Successful responses seed LiveCard-scoped
 TanStack queries before Board content renders without copying another durable
-cache. Misses and failures do not discard successful responses. This hydration
+snapshot. Misses and failures do not discard successful responses. This hydration
 never executes a Source.
-Persisted results are discarded after 30 days. Increasing the Source version
+Source snapshots are discarded after 30 days. Increasing the Source version
 changes result identity immediately, while old versions age out independently.
-Persistence failures remain fail-open and never prevent Source execution.
+Snapshot persistence failures remain fail-open and never prevent Source execution.
 
 UI loads take a LiveCard ID and execute in the owning browser: the local fast
 path runs directly, otherwise `loader.loadLiveCard` is relayed through the
 daemon. Every `loader.loadLiveCard` is retained in History asynchronously
 without blocking the response: daemon-relayed loads are retained by the daemon,
 while locally executed loads are reported back via `liveCardObserved` in a
-fire-and-forget notification. `loader.readLiveCardCache` never retains.
+fire-and-forget notification. `loader.readLiveCardSnapshot` never retains.
 A disconnected owner
-suspends cache reads and execution but does not remove the LiveCard or make its
+suspends snapshot reads and execution but does not remove the LiveCard or make its
 configuration read-only.
 
 The daemon retains results from automatic LiveCard collection and every manual
 LiveCard load in Turso.
 Collection calls `loader.loadLiveCard`; it does not depend on a Job Action or table.
-Automatic collection can retain a protected cached result at its original
+Automatic collection can retain a protected snapshot at its original
 `fetchedAt` to fill a foreground-history gap; dataset/timestamp uniqueness
 prevents duplicates. Unchanged fresh fetches are separate observations. No retention path receives credentials
 or raw fetch response bodies.
@@ -318,9 +326,9 @@ the daemon, and pins an upper timestamp for ascending traversal. This is not a
 transactional snapshot: backfilled observations can still affect an earlier interval.
 
 Worker ID is the isolation boundary for all Source results, not only
-account-scoped Sources. Each Worker owns its browser credentials, Loader cache,
+account-scoped Sources. Each Worker owns its browser credentials, Loader snapshot,
 and execution environment. History includes Worker ID in its dataset identity,
-so neither cached results nor retained observations are shared when two Workers
+so neither snapshots nor retained observations are shared when two Workers
 produce the same Source ID, version, and normalized parameters. Personalized
 Sources therefore do not add the current signed-in account ID as a Source
 parameter. Account or user parameters remain part of the normalized target only
@@ -378,18 +386,18 @@ viewport root margin is applied and effectively disables preloading. After a
 LiveCard leaves that margin, its query remains active for one minute to avoid churn
 during short scrolls, then unmounts. Re-entering during that interval cancels
 the pending unmount. Successful query data remains fresh in memory for two
-minutes; this avoids redundant background loads and persisted-result reads during that
+minutes; this avoids redundant background loads and snapshot reads during that
 window. Regaining focus or remounting can revalidate
 stale queries. Active LiveCard queries also revalidate once every five minutes,
 but interval revalidation is skipped while the app is in the background.
 Inactive query data follows TanStack Query's default garbage-collection policy;
-the durable Source result remains independently available in IndexedDB. Each
+the durable Source snapshot remains independently available in IndexedDB. Each
 saved LiveCard owns one page query, while LiveCards bound to the same Worker may
-still share the Loader's Source-request cache. Source queries use offline-first
-network mode. Before rendering Board content, the App restores valid persisted
-Source results for that Board into its QueryClient. This lets LiveCards render
+still share the Loader's Source snapshot. Source queries use offline-first
+network mode. Before rendering Board content, the App restores valid Source
+snapshots for that Board into its QueryClient. This lets LiveCards render
 cached Source snapshots without loading the registry. Disabled Search observers reuse data already present in the page
-cache but do not cause other Boards' persisted results to be restored or execute
+cache but do not cause other Boards' Source snapshots to be restored or execute
 a Source.
 Stale restored queries follow the same focus, remount, and interval revalidation
 policy as queries produced in the current session. The Board projection does
@@ -417,7 +425,7 @@ protected loader separately deduplicates actual Source execution across page and
 connected CLI consumers, so concurrent callers cannot burst a third-party API.
 
 The three identities stay separate: LiveCard ID routes page queries; Worker plus
-resolved Source target isolates Loader cache and History datasets. NextLayer
+resolved Source target isolates Loader snapshots and History datasets. NextLayer
 requests on-demand Widget data through the SDK; its lifecycle is documented under
 [Layers and Widgets](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 
@@ -827,8 +835,14 @@ raw output, and dynamic include/render features are disabled.
 
 `run` and `fetch` travel through the local Rust daemon and Native Messaging host
 to the connected extension. `run` shares provider expansion, parameter validation,
-capabilities, secrets, and result validation with normal Source execution, but
-bypasses the normal persisted-result protection path for authoring. Only `--debug`
+capabilities, secrets, and result validation with normal Source execution, and
+participates in the Source snapshot store exactly like a load: it reads and
+writes the snapshot keyed by Source ID, executed version, and normalized
+parameters under the same one-minute protection, so the version controls
+snapshot isolation between authoring runs and registry loads. It never retains
+to history. Draft `source.load`
+requests without a LiveCard likewise write snapshots but never retain, since
+they have no LiveCard identity. Only `--debug`
 captures cloned request/response diagnostics. Local JSON providers use an isolated
 `cli:<provider-id>` secret namespace unless `--use-provider-secrets` is supplied;
 they do not install or modify the registry.
@@ -866,9 +880,9 @@ maintained export index. SDK builds clear `dist/` to prevent removed types from
 remaining in the published package. Commit the generated types with the change.
 Ordinary SDK builds use the committed files and do not require Rust or the
 private CLI repository. The native-messaging entry point stays browser-safe.
-Protocol 27 carries Workspace patches, LiveCard routing, Actions, cached results,
+Protocol 27 carries Workspace patches, LiveCard routing, Actions, Source snapshots,
 and SDK streams. Incompatible versions disconnect. The six extension-initiated
-request/reply operations (`workspaceCommit`, `liveCardGet`, `logsGet`,
+request/reply operations (`workspaceCommit`, `liveCardSnapshotGet`, `logsGet`,
 `collectionStatusGet`, `collectionStatusSubscribe`, and `workerTakeover`) use JSON-RPC 2.0 inside a typed
 `rpc { message }` envelope. `json-rpc-2.0` owns correlation and deadlines in the
 extension; `jsonrpsee-core` dispatches methods and makes reverse calls in the daemon. Native Hosts relay

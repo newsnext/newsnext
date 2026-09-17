@@ -11,7 +11,7 @@ const SourceLoadResponseResult = Type.Unsafe<SourceLoadResponse>(Type.Object({
   result: Type.Object({}, { additionalProperties: true }),
 }, { additionalProperties: false }))
 
-const SourceCacheResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
+const SourceSnapshotResult = Type.Unsafe<SourceLoadResponse | null>(Type.Union([
   SourceLoadResponseResult,
   Type.Null(),
 ]))
@@ -195,12 +195,12 @@ const loaderLoadLiveCardAction = defineActionContract({
   result: SourceLoadResponseResult,
 })
 
-const loaderReadLiveCardCacheAction = defineActionContract({
-  name: "loader.readLiveCardCache",
+const loaderReadLiveCardSnapshotAction = defineActionContract({
+  name: "loader.readLiveCardSnapshot",
   kind: "query",
-  description: "Read one routed Workspace LiveCard's persisted result without executing its Source.",
+  description: "Read one routed Workspace LiveCard's Source snapshot without executing its Source.",
   params: RoutedLiveCardParams,
-  result: SourceCacheResult,
+  result: SourceSnapshotResult,
 })
 
 const nativeIntegrationGetStatusAction = defineActionContract({
@@ -227,12 +227,12 @@ const liveCardLoadAction = defineActionContract({
   result: SourceLoadResponseResult,
 })
 
-const liveCardReadCacheAction = defineActionContract({
-  name: "liveCard.readCache",
+const liveCardReadSnapshotAction = defineActionContract({
+  name: "liveCard.readSnapshot",
   kind: "query",
-  description: "Read a LiveCard's persisted result through the Workspace router.",
+  description: "Read a LiveCard's Source snapshot through the Workspace router.",
   params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
-  result: SourceCacheResult,
+  result: SourceSnapshotResult,
 })
 
 const nativeIntegrationSetEnabledAction = defineActionContract({
@@ -318,11 +318,11 @@ export const backgroundActionContracts = [
   sourceLoadAction,
   sourceCancelAction,
   loaderLoadLiveCardAction,
-  loaderReadLiveCardCacheAction,
+  loaderReadLiveCardSnapshotAction,
   nativeIntegrationGetStatusAction,
   nativeIntegrationGetLogsAction,
   liveCardLoadAction,
-  liveCardReadCacheAction,
+  liveCardReadSnapshotAction,
   nativeIntegrationSetEnabledAction,
   nativeIntegrationResolveWorkspaceAction,
   workerRegenerateIdentityAction,

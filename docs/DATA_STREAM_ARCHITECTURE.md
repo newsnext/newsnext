@@ -58,8 +58,8 @@ Browser Source execution
 
 The extension owns acquisition authority. The daemon schedules and persists
 normalized results without receiving credentials. Foreground loading updates the
-replaceable cache without directly writing History; automatic collection may
-later retain that cached result at its original fetch time. Presentation never
+replaceable snapshot without directly writing History; automatic collection may
+later retain that snapshot at its original fetch time. Presentation never
 becomes a second collection path.
 
 A future Run ledger should record failures, cancellation, latency, and unchanged

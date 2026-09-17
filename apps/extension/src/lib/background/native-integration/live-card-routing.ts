@@ -18,7 +18,7 @@ export async function loadRoutedLiveCard(
   return result
 }
 
-export async function readRoutedLiveCardCache(
+export async function readRoutedLiveCardSnapshot(
   input: { cardId: string },
   requireConnection: RequireNativeConnection,
   actionContext: BackgroundActionContext,
@@ -28,20 +28,20 @@ export async function readRoutedLiveCardCache(
 
 async function routeLiveCardRequest(
   input: { cardId: string },
-  cacheOnly: boolean,
+  snapshotOnly: boolean,
   requireConnection: RequireNativeConnection,
   actionContext: BackgroundActionContext,
 ): Promise<SourceLoadResponse | null> {
   // Local cards execute in this browser so the response never waits on the
   // daemon. The daemon only receives a fire-and-forget observation for history.
   if (!runtime.enabled || runtime.localCardIds.has(input.cardId)) {
-    const result = await executeLocal(input, cacheOnly, actionContext)
-    if (!cacheOnly && result) notifyObserved(input.cardId, result, requireConnection)
+    const result = await executeLocal(input, snapshotOnly, actionContext)
+    if (!snapshotOnly && result) notifyObserved(input.cardId, result, requireConnection)
     return result
   }
   const connection = await requireConnection()
-  const result = await nativeRpc(connection).request("liveCardGet", { cardId: input.cardId, cacheOnly })
-  if (result === null && cacheOnly) return null
+  const result = await nativeRpc(connection).request("liveCardSnapshotGet", { cardId: input.cardId, snapshotOnly })
+  if (result === null && snapshotOnly) return null
   if (!isSourceLoadResponse(result)) throw new Error("The NewsNext Worker returned an invalid Source result")
   return result
 }
@@ -68,7 +68,7 @@ function notifyObserved(
 
 async function executeLocal(
   input: { cardId: string },
-  cacheOnly: boolean,
+  snapshotOnly: boolean,
   actionContext: BackgroundActionContext,
 ): Promise<SourceLoadResponse | null> {
   const application = !runtime.enabled ? await readApplicationData() : runtime.workspace
@@ -78,13 +78,13 @@ async function executeLocal(
     throw new Error("The LiveCard's NewsNext Worker is not connected")
   }
   const result = await executeRegisteredAction(
-    cacheOnly ? "loader.readLiveCardCache" : "loader.loadLiveCard",
+    snapshotOnly ? "loader.readLiveCardSnapshot" : "loader.loadLiveCard",
     { card },
     "connected",
     actionContext,
     createId(),
   )
-  if (result === null && cacheOnly) return null
+  if (result === null && snapshotOnly) return null
   if (!isSourceLoadResponse(result)) {
     throw new Error("The current browser returned an invalid Source result")
   }

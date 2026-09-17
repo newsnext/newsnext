@@ -1,6 +1,25 @@
-import type { SourceLoadResponse } from "@newsnext/sdk/models"
+import type { SourceLoaderResult, SourceLoadResponse, SourceLoadResult } from "@newsnext/sdk/models"
+import type { RuntimeSource } from "@newsnext/source-kit/types"
 
 export type { LoadedSourceDescriptor, SourceLoadResponse, SourceLoadResult } from "@newsnext/sdk/models"
+
+export function toSourceLoadResult(
+  source: Pick<RuntimeSource, "capabilities" | "metadata" | "params" | "provider" | "version">,
+  sourceId: string,
+  result: SourceLoaderResult,
+): SourceLoadResult {
+  return {
+    ...result,
+    source: {
+      capabilities: source.capabilities,
+      id: sourceId,
+      metadata: source.metadata,
+      params: source.params,
+      provider: source.provider,
+      version: source.version,
+    },
+  }
+}
 
 export function isSourceLoadResponse(value: unknown): value is SourceLoadResponse {
   return isRecord(value)

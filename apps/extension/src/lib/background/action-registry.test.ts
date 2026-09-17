@@ -24,7 +24,7 @@ function createContext(): BackgroundActionContext {
     radar: { resolveSuggestions: vi.fn(async () => []) },
     loader: {
       loadLiveCard: vi.fn(async () => ({}) as never),
-      readLiveCardCache: vi.fn(async () => null),
+      readLiveCardSnapshot: vi.fn(async () => null),
     },
     source: {
       cancel: vi.fn(async () => undefined),
@@ -32,7 +32,7 @@ function createContext(): BackgroundActionContext {
     },
     liveCardRouter: {
       load: vi.fn(async () => ({}) as never),
-      readCache: vi.fn(async () => null),
+      readSnapshot: vi.fn(async () => null),
     },
     nativeIntegration: {
       setCollectionSubscribed: vi.fn(),

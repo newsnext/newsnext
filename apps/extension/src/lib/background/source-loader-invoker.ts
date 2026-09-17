@@ -6,6 +6,7 @@ import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   parseSourceId,
 } from "@newsnext/source-kit/runtime"
+import { toSourceLoadResult } from "../source/load-result"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"
 
@@ -65,17 +66,7 @@ export function createSourceLoaderInvoker(
           },
         })
 
-        return {
-          ...result,
-          source: {
-            capabilities: input.source.capabilities,
-            id: input.sourceId,
-            metadata: input.source.metadata,
-            params: input.source.params,
-            provider: input.source.provider,
-            version: input.source.version,
-          },
-        }
+        return toSourceLoadResult(input.source, input.sourceId, result)
       } finally {
         if (input.requestId && activeRequests.get(input.requestId) === abortController) {
           activeRequests.delete(input.requestId)

@@ -88,7 +88,7 @@ export const zhCN = {
   checking: "检查中",
   clearAllData: "清除所有用户数据",
   clearData: "清除用户数据",
-  clearDataDescription: "删除所有看板、LiveCard、设置、已保存的来源密钥、缓存数据和网站权限。此操作无法撤销。",
+  clearDataDescription: "删除所有看板、LiveCard、设置、已保存的来源密钥、来源快照和网站权限。此操作无法撤销。",
   clearing: "正在清除…",
   confirmClear: "确认清除",
   connected: "已连接",

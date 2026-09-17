@@ -3,8 +3,8 @@ import type { SourceLoadResponse } from "../../source/load-result"
 import type { CollectionStatus } from "@/lib/native-protocol/CollectionStatus"
 import type { CollectionStatusSubscribeParams } from "@/lib/native-protocol/CollectionStatusSubscribeParams"
 import type { ExtensionCommand } from "@/lib/native-protocol/ExtensionCommand"
-import type { LiveCardGetParams } from "@/lib/native-protocol/LiveCardGetParams"
 import type { LiveCardObservedParams } from "@/lib/native-protocol/LiveCardObservedParams"
+import type { LiveCardSnapshotGetParams } from "@/lib/native-protocol/LiveCardSnapshotGetParams"
 import type { LogEntry } from "@/lib/native-protocol/LogEntry"
 import type { SdkOpenParams } from "@/lib/native-protocol/SdkOpenParams"
 import type { SdkStreamParams } from "@/lib/native-protocol/SdkStreamParams"
@@ -26,7 +26,7 @@ interface NativeMethods {
   "sdk.cancel": { params: SdkStreamParams, result: null }
   "logsGet": { params: Record<string, never>, result: LogEntry[] }
   "collectionStatusGet": { params: Record<string, never>, result: CollectionStatus }
-  "liveCardGet": { params: LiveCardGetParams, result: SourceLoadResponse | null }
+  "liveCardSnapshotGet": { params: LiveCardSnapshotGetParams, result: SourceLoadResponse | null }
   "liveCardObserved": { params: LiveCardObservedParams, result: null }
   "workspaceCommit": { params: WorkspaceCommitParams, result: WorkspaceCommitResult }
   "workerTakeover": { params: WorkerTakeoverParams, result: null }
@@ -39,7 +39,7 @@ const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMeth
   "sdk.cancel": parseEmptyResult,
   "logsGet": parseLogs,
   "collectionStatusGet": parseCollectionStatus,
-  "liveCardGet": (value) => {
+  "liveCardSnapshotGet": (value) => {
     if (value === null || isSourceLoadResponse(value)) return value
     throw new Error("The NewsNext Worker returned an invalid Source result")
   },
