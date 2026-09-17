@@ -30,8 +30,8 @@ When a user identifies a Board or LiveCard by name, resolve it to a unique ID
 before mutating it. Apply the requested change through its Action and read back
 the affected value to verify the result. Do not change unrelated fields.
 
-When authoring a Widget, read `docs/WIDGET_GUIDELINE.md` if it is available;
-it is the canonical manifest, view, and custom document contract. Validate with
+When authoring a Widget, follow the widget template and preset contracts in
+references/sdk.md. Validate with
 `newsnext widget validate --run <widgetId>` before installing.
 
 Installing a Widget mutates a Board. If the user did not name a target Board,

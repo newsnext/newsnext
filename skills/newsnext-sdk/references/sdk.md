@@ -23,6 +23,10 @@ Windows, on x64 and arm64. The CLI selects its platform binary through optional
 dependencies, which must remain enabled during CLI installation. No Rust compiler
 is needed.
 
+Run the TypeScript snippets in this reference inline with `bun -e '...'`, or
+with `node --input-type=module -e '...'` against the installed package.
+Plain Node.js cannot execute TypeScript sources directly.
+
 ## Client and environment
 
 ```ts
@@ -67,10 +71,10 @@ an explicit input scope; refreshing a LiveWidget does not refresh its Sources.
 ```ts
 const datasets = await client.history.datasets({ sourceId: "weibo:hot-search" })
 const candidates = datasets.filter(dataset => dataset.params.type === "search")
-if (candidates.length !== 1) throw new Error("Select a dataset by Worker and Source version")
-const dataset = candidates[0]!
+const dataset = candidates.length === 1 ? candidates[0] : undefined
+if (!dataset) throw new Error("Select a dataset by Worker and Source version")
 
-const titles = new Set<string>()
+const titles = new Set()
 for await (const snapshot of client.history.export({
   datasetId: dataset.id,
   from: "2026-09-08T00:00:00+08:00",
@@ -109,8 +113,9 @@ score, or count repeated appearances as distinct topics.
 ## Source execution, fetch and Actions
 
 ```ts
-if (status.workers.length !== 1) throw new Error("Select a connected Worker by its full ID")
-const workerId = status.workers[0]!.id
+const worker = status.workers.length === 1 ? status.workers[0] : undefined
+if (!worker) throw new Error("Select a connected Worker by its full ID")
+const workerId = worker.id
 const result = await client.run({
   sourceId: "weibo:hot-search",
   params: { type: "search" },
@@ -146,8 +151,9 @@ client already targets the intended Worker:
 
 ```ts
 const matches = (await client.actions.board.list()).filter(board => board.name === "AI")
-if (matches.length !== 1) throw new Error("Expected one AI Board; select a Board ID")
-const boardId = matches[0]!.id
+const board = matches.length === 1 ? matches[0] : undefined
+if (!board) throw new Error("Expected one AI Board; select a Board ID")
+const boardId = board.id
 
 await client.actions.board.update({ boardId, color: "blue" })
 const updated = (await client.actions.board.list()).find(board => board.id === boardId)
@@ -174,9 +180,9 @@ host environment. The background accepts this transport only from its own
 
 ## Widget clients
 
-When authoring a Widget rather than only querying its data, read
-`docs/WIDGET_GUIDELINE.md` if it is available; it is the canonical manifest,
-view, and custom document contract for this repository.
+When authoring a Widget rather than only querying its data, follow the widget
+template and preset contracts later in this reference; they cover the
+manifest, views, and data producers without additional files.
 
 Inside an installed Widget iframe, use the browser entry:
 
@@ -459,14 +465,11 @@ as values. `null` resets an entire section; `{}` is an empty merge. Existing
 so `{}` with those Actions still resets them. Only resolved data parameters and
 scope affect the daemon's data identity; metadata and view patches do not.
 
-Runnable examples live in `examples/widgets`. Copy its
-contents to the Widget directory reported
-by `newsnext status`, then install the `demo-*` directories on a Board through
-`nextLayer.installLiveWidget`. Use the extension's Cosmos
-**Patterns → Widgets → Gallery** for interactive previews of all twenty-five
-chart presets and **States** for
-empty, malformed and negative-value examples. The `demo-custom-html` example
-renders a custom `index.html` view from the same `newsnext.widget.data` message.
+Author a Widget as a directory named by its ID inside the Widget directory
+reported by `newsnext status`, containing `widget.json` and optionally
+`data.mjs` and `index.html`. Install it on a Board through
+`nextLayer.installLiveWidget`; the placement's scope decides which LiveCards
+its `latest` queries search.
 
 #### Additional preset data
 
@@ -526,6 +529,120 @@ removal, and layout updates; keep using `widgetId` for `client.liveWidgets.data`
 Each instance stores its own sparse `patch`, `dataScope`, and `layout`. Identical
 definition inputs share the daemon's result cache. Host data messages expose both
 `widgetId` and `liveWidgetId`; iframe source-window checks isolate each instance.
+
+A full install flow resolves the Board first, installs with a Board-wide scope,
+then reads the placement back to verify:
+
+```ts
+import { createClient } from "@newsnext/sdk"
+
+const client = createClient({ environment: "production" })
+const named = (await client.actions.board.list()).filter(board => board.name === "<board name>")
+const board = named.length === 1 ? named[0] : undefined
+if (!board) throw new Error("Expected one matching Board; select a Board ID")
+const boardId = board.id
+const { liveWidgetId } = await client.actions.nextLayer.installLiveWidget({
+  boardId,
+  dataScope: { type: "board" },
+  layout: { height: 1, width: 3, x: 0, y: 0 },
+  widgetId: "<widget-id>",
+})
+const detail = await client.actions.board.get({ boardId })
+const placed = detail.board.nextLayer.liveWidgets.find(
+  widget => widget.liveWidgetId === liveWidgetId,
+)
+if (!placed) throw new Error("Widget placement missing after install")
+```
+
+`dataScope` is `{ type: "board" }` for the Board's complete LiveCard list or
+`{ type: "cards", cardIds }` for selected cards. Layout widths use half-LiveCard
+units; mirror the manifest's `width`/`height` and let the daemon normalize the
+position.
+
+A minimal real-data Widget is a directory named by its ID containing
+`widget.json` and `data.mjs`. Copy the directory into the Widget directory
+reported by `newsnext status`, then install it:
+
+```json
+{
+  "title": "Board Word Cloud",
+  "view": { "type": "chart", "chart": "word-cloud", "query": "cloud", "sort": "desc" },
+  "data": {
+    "queries": {
+      "recent": { "type": "latest", "limit": 500, "deduplicateBy": "url" }
+    }
+  },
+  "params": {
+    "maxWords": { "type": "number", "title": "Max words", "default": 60, "min": 10, "max": 200 }
+  },
+  "refresh": { "intervalMs": 300000 }
+}
+```
+
+```js
+export default function load({ params = {}, queries = {} } = {}) {
+  const maxWords = Math.min(Math.max(Number(params.maxWords) || 60, 10), 200)
+  const counts = new Map()
+  for (const envelope of queries.recent?.items ?? []) {
+    const title = envelope?.value?.title
+    if (typeof title !== "string") continue
+    for (const word of title.toLowerCase().split(/[^a-z]+/)) {
+      if (word.length < 2) continue
+      counts.set(word, (counts.get(word) ?? 0) + 1)
+    }
+  }
+  const rows = [...counts]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, maxWords)
+  return { cloud: { rows } }
+}
+```
+
+The producer reads `{ value, cardId?, sourceId? }` envelopes from
+`queries.<name>.items` and returns named results matching the view query; the
+placement's scope decides which LiveCards the `latest` query searches.
+Validate with `newsnext widget validate --run <widgetId>` before installing:
+`--run` resolves `latest` queries as empty, so zero rows standalone are
+expected and do not indicate a broken producer. `select` parameter values are
+strings; quote them for `--param` (`--param 'window="24"'`), since a bare
+number parses as JSON and fails validation.
+
+### Custom HTML views
+
+A custom view is an `index.html` beside `widget.json` (declare
+`view: { "type": "custom" }` or omit `view`). The host owns the shell,
+surface, scroll container, and status layer; the document only styles and
+draws its own content. The protocol version is `1`. The view posts
+`{ type: "newsnext.widget.ready", version: 1 }` once its message listener is
+installed. The host then delivers
+`{ type: "newsnext.widget.data", version: 1, status, stale, queries, params, layout }`
+where `status` is `loading`, `ready`, or `error`, and `layout` is
+`{ width, height }` in half-LiveCard units, re-sent when the card is resized.
+The host repeats the latest payload after each load and refresh.
+
+Report content status with
+`{ type: "newsnext.widget.status", version: 1, message }`
+(`message: null` clears it) instead of drawing status text; the host renders
+it in the shared status layer with its own loading and error states. Report
+height with
+`{ type: "newsnext.widget.size", version: 1, height }`; the host sizes the
+iframe and its content panel owns scrolling, so the document itself must never
+scroll or show a scrollbar: no viewport height or `overflow: auto` on `html`,
+`body`, or inner elements, and keep the root at `overflow: hidden`.
+
+Keep the iframe and document background transparent so the host surface stays
+visible. Do not repeat the title, refresh control, outer padding, rounded
+shell, or background. Links may open as normal new-tab links. Use the
+NewsNext semantic typography, foreground, muted, divider, hover, spacing, and
+motion tokens instead of a separate visual system: the daemon injects its
+built-in stylesheet (`/widgets/newsnext.css`) into every served HTML document,
+providing the tokens resolved through `light-dark()` plus base styles and
+shared `nn-*` content components—do not redeclare them. For managed rendering,
+import the shared view runtime explicitly as a module,
+`import { createView } from "/widgets/newsnext.js"`, which wires the host
+protocol and grid-span layout so the view renders from a frame carrying the
+payload, measured box, and grid span instead of handling messages itself.
 
 ### Workspace connection decisions
 

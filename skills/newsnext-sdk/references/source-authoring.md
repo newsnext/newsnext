@@ -1,6 +1,10 @@
 # Source discovery, authoring, and testing
 
-Use this workflow when creating or changing a NewsNext Source. A Source belongs under `registry/src` in the NewsNext web repository. If `docs/SOURCE_GUIDELINE.md` is available, read it before editing; it is the canonical schema and authoring contract. Follow the repository's `AGENTS.md` for build and test commands.
+Use this workflow when creating or changing a NewsNext Source. Writing registry
+files requires a NewsNext web repository checkout, where Sources live under
+`registry/src`. With only the installed skill and CLI and no checkout, stop
+after discovery: report the requested stream, the verified feed, API, or HTML
+evidence, and the recommended transport instead of writing registry files.
 
 ## Start from the user's intent
 

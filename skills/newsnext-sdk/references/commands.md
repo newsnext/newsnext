@@ -151,7 +151,25 @@ newsnext widget validate --run feed --param limit=20
 Complex structured operations are exposed through `@newsnext/sdk`, not terminal
 subcommands. Use the SDK for history queries, streaming exports and canonical
 Actions. The former `history` and `action` CLI commands have been removed.
-See [sdk.md](sdk.md) for installation, development configuration and examples.
+See [sdk.md](sdk.md) for installation and examples.
+
+Run SDK snippets inline instead of composing CLI flags. `bun -e '...'` runs
+the TypeScript snippets as-is. Plain Node.js runs them through
+`node --input-type=module -e '...'` once `@newsnext/sdk` is installed, but it
+cannot execute TypeScript sources directly:
+
+```sh
+npm install @newsnext/sdk
+bun -e '
+import { createClient } from "@newsnext/sdk"
+const client = createClient({ environment: "production" })
+console.log(JSON.stringify(await client.status()))
+'
+node --input-type=module -e '
+import { createClient } from "@newsnext/sdk"
+const client = createClient({ environment: "production" })
+console.log(JSON.stringify(await client.status()))
+'
 
 Simple terminal operations remain `start`, `status`, `doctor`, `stop`, `restart`,
 `fetch`, `run`, `widget validate`, and `install-native-host`.
