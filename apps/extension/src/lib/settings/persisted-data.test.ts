@@ -81,7 +81,7 @@ describe("persisted user data", () => {
           widgetId: "latest",
           liveWidgetId: "latest-instance",
           dataScope: { type: "cards", cardIds: ["first"] },
-          layout: { x: 1, y: 2, width: 6, height: 4 },
+          layout: { width: 6, height: 4 },
         }],
       },
     })
@@ -105,7 +105,7 @@ describe("persisted user data", () => {
           widgetId: "latest",
           liveWidgetId: "latest-instance",
           dataScope: { type: "cards", cardIds: ["rss:feed::one"] },
-          layout: { x: 0, y: 0, width: 4, height: 4 },
+          layout: { width: 4, height: 4 },
         }],
       },
     })
@@ -189,7 +189,7 @@ describe("widget parameter persistence", () => {
       widgetId: "feed",
       liveWidgetId: "feed-instance",
       dataScope: { type: "board" },
-      layout: { x: 0, y: 0, width: 6, height: 4 },
+      layout: { width: 6, height: 4 },
       patch: { params: { limit: 5, enabled: false, categories: ["tech"] }, metadata: { title: "My feed", color: "teal", badge: "https://example.com/badge.png", home: "https://example.com", desc: "Description" } },
     }]
     const restored = parsePersistedDataExport(serializePersistedDataExport(data))
@@ -198,19 +198,17 @@ describe("widget parameter persistence", () => {
 })
 
 describe("widget normalization", () => {
-  it("expands half-card placements without crossing the grid boundary", () => {
+  it("keeps half-card placements without crossing the grid boundary", () => {
     const data = createData()
     data.boards[0]!.nextLayer.liveWidgets = [{
       widgetId: "narrow",
       liveWidgetId: "narrow-instance",
       dataScope: { type: "board" },
-      layout: { x: 11, y: 3, width: 1, height: 1 },
+      layout: { width: 1, height: 1 },
     }]
     const normalized = normalizeApplicationData(data)
     expect(normalized.boards[0]?.nextLayer.liveWidgets[0]?.layout).toEqual({
-      x: 10,
-      y: 3,
-      width: 2,
+      width: 1,
       height: 1,
     })
     expect(normalizeApplicationData(normalized)).toEqual(normalized)
@@ -219,7 +217,7 @@ describe("widget normalization", () => {
 
   it("ignores old top-level settings and reads only an explicit patch", () => {
     const data = createData()
-    const widget = { widgetId: "chart", liveWidgetId: "chart-instance", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 }, params: { enabled: false }, metadata: { title: "Custom" } }
+    const widget = { widgetId: "chart", liveWidgetId: "chart-instance", dataScope: { type: "board" }, layout: { width: 2, height: 2 }, params: { enabled: false }, metadata: { title: "Custom" } }
     const legacy = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [widget] } }] }
     expect(normalizeApplicationData(legacy).boards[0]?.nextLayer.liveWidgets[0]?.patch).toBeUndefined()
     const current = { ...data, boards: [{ ...data.boards[0], nextLayer: { liveWidgets: [{ ...widget, patch: { view: { chart: "line" } } }] } }] }
@@ -235,7 +233,7 @@ describe("liveWidget instances", () => {
   })
   it("preserves opaque instance IDs and independent placements while removing duplicate ownership", () => {
     const data = createData()
-    const first = { widgetId: "shared", liveWidgetId: "legacy:reading:shared", dataScope: { type: "board" as const }, layout: { x: 0, y: 0, width: 2, height: 2 }, patch: { params: { count: 0 } } }
+    const first = { widgetId: "shared", liveWidgetId: "legacy:reading:shared", dataScope: { type: "board" as const }, layout: { width: 2, height: 2 }, patch: { params: { count: 0 } } }
     data.boards[0]!.nextLayer.liveWidgets = [first, { ...first, liveWidgetId: "new-instance" }]
     data.boards.push({ ...data.boards[0]!, id: "other", name: "Other", cardIds: [], nextLayer: { liveWidgets: [first] } })
     const result = normalizeApplicationData(data)

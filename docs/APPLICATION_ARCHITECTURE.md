@@ -549,7 +549,7 @@ change their data scope, and save layouts through `nextLayer.installLiveWidget`,
 Source discovery, Board context, and LiveCard queries include:
 
 `source.get/list`, `liveCard.get/list`, `board.get/list/listLiveCards`,
-`board.getContext`, and `board.getConfiguration`.
+`board.getContext`, `board.getConfiguration`, and `nextLayer.listLiveWidgets`.
 
 `nowLayer.getLiveCards` returns every logical card in the requested Board in
 Board membership order. It does not filter against the current registry

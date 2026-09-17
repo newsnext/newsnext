@@ -1,4 +1,4 @@
-import type { BoardDeleteInput, WidgetMetadata, WidgetPatch } from "@newsnext/sdk/models"
+import type { BoardDeleteInput, LiveWidgetInstallSize, WidgetMetadata, WidgetPatch } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type {
   Board,
@@ -157,7 +157,7 @@ export function installLiveWidgetMutation(
   input: {
     boardId: string
     dataScope: LiveWidgetDataScope
-    layout: LiveWidgetLayout
+    size: LiveWidgetInstallSize
     widgetId: string
   },
   dependencies: Pick<ApplicationMutationDependencies, "createId">,
@@ -165,7 +165,11 @@ export function installLiveWidgetMutation(
   const board = getBoard(data, input.boardId)
   assertWidgetId(input.widgetId)
   assertWidgetDataScope(board, input.dataScope)
-  assertWidgetLayout(input.layout)
+  const layout: LiveWidgetLayout = {
+    height: input.size.height ?? 2,
+    width: input.size.width ?? 2,
+  }
+  assertWidgetLayout(layout)
   const liveWidgetId = dependencies.createId()
   if (!liveWidgetId || data.boards.some(board => board.nextLayer.liveWidgets.some(widget => widget.liveWidgetId === liveWidgetId))) {
     throw new Error("LiveWidget instance ID must be unique")
@@ -175,7 +179,7 @@ export function installLiveWidgetMutation(
     nextLayer: {
       liveWidgets: [...board.nextLayer.liveWidgets, {
         dataScope: input.dataScope,
-        layout: input.layout,
+        layout,
         widgetId: input.widgetId,
         liveWidgetId,
       }],
@@ -195,7 +199,6 @@ export function moveLiveWidgetMutation(
   const widget = source.nextLayer.liveWidgets.find(widget => widget.liveWidgetId === input.liveWidgetId)!
   const moved = {
     ...widget,
-    layout: { ...widget.layout, x: 0, y: Math.max(-1, ...target.nextLayer.liveWidgets.map(item => item.layout.y)) + 1 },
     dataScope: widget.dataScope.type === "cards"
       ? { ...widget.dataScope, cardIds: widget.dataScope.cardIds.filter(id => target.cardIds.includes(id)) }
       : widget.dataScope,
@@ -302,26 +305,28 @@ export function setLiveWidgetLayoutsMutation(
   data: ApplicationData,
   input: {
     boardId: string
-    liveWidgets: Array<{ layout: LiveWidgetLayout, liveWidgetId: string }>
+    liveWidgets: Array<{ height: number, liveWidgetId: string, width: number }>
   },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  const updates = new Map<string, LiveWidgetLayout>()
-  for (const widget of input.liveWidgets) {
-    assertWidgetInstalled(board, widget.liveWidgetId)
-    assertWidgetLayout(widget.layout)
-    if (updates.has(widget.liveWidgetId)) throw new Error("Widget layout update IDs must be unique")
-    updates.set(widget.liveWidgetId, widget.layout)
+  if (input.liveWidgets.length === 0) throw new Error("At least one Widget layout is required")
+  const storedById = new Map(board.nextLayer.liveWidgets.map(widget => [widget.liveWidgetId, widget]))
+  const liveWidgets = input.liveWidgets.map((widget) => {
+    const stored = storedById.get(widget.liveWidgetId)
+    if (!stored) throw new Error(`Widget '${widget.liveWidgetId}' is not installed in Board '${board.id}'`)
+    const layout = { height: widget.height, width: widget.width }
+    assertWidgetLayout(layout)
+    return { ...stored, layout }
+  })
+  if (new Set(liveWidgets.map(widget => widget.liveWidgetId)).size !== liveWidgets.length) {
+    throw new Error("Widget layout update IDs must be unique")
   }
-  if (updates.size === 0) throw new Error("At least one Widget layout is required")
+  if (liveWidgets.length !== board.nextLayer.liveWidgets.length) {
+    throw new Error("Widget layouts must cover every installed Widget exactly once")
+  }
   return replaceBoard(data, {
     ...board,
-    nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.map(widget => ({
-        ...widget,
-        layout: updates.get(widget.liveWidgetId) ?? widget.layout,
-      })),
-    },
+    nextLayer: { liveWidgets },
   })
 }
 
@@ -555,14 +560,9 @@ function assertWidgetDataScope(board: Board, dataScope: LiveWidgetDataScope): vo
 }
 
 function assertWidgetLayout(layout: LiveWidgetLayout): void {
-  if (!Number.isInteger(layout.x)
-    || layout.x < 0
-    || !Number.isInteger(layout.y)
-    || layout.y < 0
-    || !Number.isInteger(layout.width)
+  if (!Number.isInteger(layout.width)
     || layout.width < MIN_WIDGET_WIDTH
     || layout.width > 12
-    || layout.x + layout.width > 12
     || !Number.isInteger(layout.height)
     || layout.height < 1
     || layout.height > 100) {

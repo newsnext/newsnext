@@ -9,17 +9,17 @@ configuration, loaders, and templates belong to the
 
 ## Widget definition
 
-Widget manifest `width`, `height`, `minWidth`, and `minHeight` use half-LiveCard
+Widget manifest `width` and `height` use half-LiveCard
 grid units. `width: 2, height: 2` matches a standard 400px × 500px LiveCard.
 The 24px grid gutter is included in each footprint: one unit renders as 188px
-wide or 238px high. Width and height default to 2; `minWidth` and `minHeight`
-default to 1. Resizing and saved Board layouts use the same units. Placement
-width must be at least `2` (one LiveCard); the UI supports widths `2`, `3`, and
-`4`, retaining half-card resize increments. Height may still be `1`. Older
-narrower placements expand to the minimum when loaded.
+wide or 238px high. Width and height default to 2. Resize minima are fixed
+globally (width 1, height 1) and are not declared in the manifest. Resizing
+and saved Board layouts use the same units. Widths range from a half-card
+narrow widget to two full cards (`1`–`4`), retaining half-card resize
+increments. Height may still be `1`.
 
-When converting older local Widgets, update both the manifest sizes (including
-minimums) and the saved Board layouts. Convert old widths with
+When converting older local Widgets, update both the manifest sizes and the
+saved Board layouts. Convert old widths with
 `max(1, min(4, round(width / 2)))` and old heights with
 `max(1, round(height * 56 / 262))` to snap their previous footprints to the
 nearest new unit. Apply this once to known old data; the numeric fields alone
@@ -441,7 +441,7 @@ bands, and target markers. Missing comparison baselines display explicit text.
 
 Widget definitions and instances have separate identities. `widget.json` remains
 in the directory named by `widgetId`; it is never copied into Workspace storage.
-`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, layout })` creates an
+`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, size })` creates an
 independent instance and returns `{ liveWidgetId }`; repeated calls may use the
 same definition in the same Board. Each instance stores its own sparse `patch`,
 `dataScope`, and `layout`, so editing, dragging, resizing, moving, and removal

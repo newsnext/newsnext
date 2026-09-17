@@ -8,21 +8,22 @@ const widget = {
   widgetId: "headlines-definition",
   liveWidgetId: "headlines",
   dataScope: { type: "board" as const },
-  layout: { x: 0, y: 0, width: 3, height: 4 },
+  layout: { width: 3, height: 4 },
 }
 
 describe("getChangedWidgetLayouts", () => {
-  it("returns only installed Widgets whose layout changed", () => {
+  it("returns the full ordered sizes when a Widget moved or resized", () => {
     expect(getChangedWidgetLayouts([
       { id: "widget-headlines", x: 1, y: 2, w: 3, h: 5 },
       { id: "widget-missing", x: 0, y: 0, w: 1, h: 1 },
     ], [widget])).toEqual([{
       liveWidgetId: "headlines",
-      layout: { x: 0, y: 0, width: 3, height: 5 },
+      width: 3,
+      height: 5,
     }])
   })
 
-  it("omits unchanged and incomplete nodes", () => {
+  it("omits unchanged, unknown, and incomplete nodes", () => {
     expect(getChangedWidgetLayouts([
       { id: "widget-headlines", x: 0, y: 0, w: 3, h: 4 },
       { id: "widget-headlines", x: 1 },
@@ -31,8 +32,8 @@ describe("getChangedWidgetLayouts", () => {
 })
 
 describe("clampWidgetWidth", () => {
-  it("clamps widths to at least one card while retaining half-card increments", () => {
-    expect([1, 2, 3, 4, 6, 8, 12].map(clampWidgetWidth)).toEqual([2, 2, 3, 4, 4, 4, 4])
+  it("clamps widths to a single unit while retaining half-card increments", () => {
+    expect([0, 1, 2, 3, 4, 6, 8, 12].map(clampWidgetWidth)).toEqual([1, 1, 2, 3, 4, 4, 4, 4])
   })
 })
 
@@ -66,13 +67,13 @@ describe("getWidgetGridLayout", () => {
 })
 
 it("saves user order independently of viewport positions", () => {
-  const widgets = [widget, { ...widget, liveWidgetId: "second", layout: { ...widget.layout, y: 1 } }]
+  const widgets = [widget, { ...widget, liveWidgetId: "second" }]
   expect(getChangedWidgetLayouts([
     { id: "widget-second", x: 0, y: 0, w: 3, h: 4 },
     { id: "widget-headlines", x: 0, y: 4, w: 3, h: 4 },
   ], widgets)).toEqual([
-    { liveWidgetId: "second", layout: { x: 0, y: 0, width: 3, height: 4 } },
-    { liveWidgetId: "headlines", layout: { x: 0, y: 1, width: 3, height: 4 } },
+    { liveWidgetId: "second", width: 3, height: 4 },
+    { liveWidgetId: "headlines", width: 3, height: 4 },
   ])
 })
 
@@ -88,17 +89,17 @@ describe("widget insertion order", () => {
     const ordered = getClosestWidgetDropTarget(getWidgetDropTargets(8, original, "widget-d"), { x: 2.5, y: 1 }, cellSize)!.layout
     expect(ordered.map(node => node.id)).toEqual(["widget-a", "widget-d", "widget-b", "widget-c"])
     const packed = getWidgetGridLayout(8, ordered)
-    const widgets = original.map((node, order) => ({
+    const widgets = original.map(node => ({
       widgetId: "shared-definition",
       liveWidgetId: node.id.slice("widget-".length),
       dataScope: { type: "board" as const },
-      layout: { x: 0, y: order, width: node.w, height: node.h },
+      layout: { width: node.w, height: node.h },
     }))
     const updates = getChangedWidgetLayouts(packed, widgets)
-    const reloaded = widgets.map(widget => ({
-      ...widget,
-      layout: updates.find(update => update.liveWidgetId === widget.liveWidgetId)?.layout ?? widget.layout,
-    })).sort((a, b) => a.layout.y - b.layout.y)
+    const reloaded = updates.map(update => ({
+      ...widgets.find(widget => widget.liveWidgetId === update.liveWidgetId)!,
+      layout: { width: update.width, height: update.height },
+    }))
     expect(reloaded.map(widget => widget.liveWidgetId)).toEqual(["a", "d", "b", "c"])
     expect(original.map(node => node.id)).toEqual(["widget-a", "widget-b", "widget-c", "widget-d"])
   })
@@ -152,7 +153,7 @@ describe("fixed widget widths and resizing", () => {
     const original = { w: 2, h: 4, minW: 1, minH: 2 }
     expect(getResizedWidgetSize(original, { x: 100, y: 20 })).toEqual({ w: 2, h: 4 })
     expect(getResizedWidgetSize(original, { x: 212, y: 262 })).toEqual({ w: 3, h: 5 })
-    expect(getResizedWidgetSize(original, { x: -1000, y: -1000 })).toEqual({ w: 2, h: 2 })
+    expect(getResizedWidgetSize(original, { x: -1000, y: -1000 })).toEqual({ w: 1, h: 2 })
     expect(getResizedWidgetSize(original, { x: 10000, y: 100000 })).toEqual({ w: 4, h: 100 })
     expect(original).toEqual({ w: 2, h: 4, minW: 1, minH: 2 })
   })

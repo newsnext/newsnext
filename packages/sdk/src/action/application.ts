@@ -1,4 +1,4 @@
-import type { ApplicationBoardContext, ApplicationData, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidgetDataScope, LiveWidgetLayout, SourceDescriptor } from "../models/index.js"
+import type { ApplicationBoardContext, ApplicationData, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidget, LiveWidgetDataScope, LiveWidgetInstallSize, SourceDescriptor } from "../models/index.js"
 import Type from "typebox"
 import { COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
@@ -30,13 +30,6 @@ const LiveCardCreatedResult = Type.Object({
   cardId: Identifier,
 }, { additionalProperties: false })
 
-const WidgetLayoutParams = Type.Unsafe<LiveWidgetLayout>(Type.Object({
-  height: Type.Integer({ minimum: 1, maximum: 100 }),
-  width: Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 }),
-  x: Type.Integer({ minimum: 0, maximum: 11 }),
-  y: Type.Integer({ minimum: 0 }),
-}, { additionalProperties: false }))
-
 const WidgetDataScopeParams = Type.Unsafe<LiveWidgetDataScope>(Type.Union([
   Type.Object({ type: Type.Literal("board") }, { additionalProperties: false }),
   Type.Object({
@@ -44,6 +37,11 @@ const WidgetDataScopeParams = Type.Unsafe<LiveWidgetDataScope>(Type.Union([
     type: Type.Literal("cards"),
   }, { additionalProperties: false }),
 ]))
+
+const WidgetInstallSizeParams = Type.Unsafe<LiveWidgetInstallSize>(Type.Object({
+  height: Type.Optional(Type.Integer({ minimum: 1, maximum: 100 })),
+  width: Type.Optional(Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 })),
+}, { additionalProperties: false }))
 
 const boardCreateAction = defineActionContract({
   name: "board.create",
@@ -110,14 +108,22 @@ const nowLayerSetManualOrderAction = defineActionContract({
 const nextLayerInstallWidgetAction = defineActionContract({
   name: "nextLayer.installLiveWidget",
   kind: "mutation",
-  description: "Create an independent instance of a local Widget in a Board's Next Layer.",
+  description: "Create an independent instance of a local Widget in a Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2.",
   params: Type.Object({
     boardId: Identifier,
     dataScope: WidgetDataScopeParams,
-    layout: WidgetLayoutParams,
+    size: WidgetInstallSizeParams,
     widgetId: Identifier,
   }, { additionalProperties: false }),
   result: Type.Object({ liveWidgetId: Identifier }, { additionalProperties: false }),
+})
+
+const nextLayerListWidgetsAction = defineActionContract({
+  name: "nextLayer.listLiveWidgets",
+  kind: "query",
+  description: "List the Widget placements in a Board's Next Layer in installation order.",
+  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
+  result: typedArrayResult<LiveWidget[]>(),
 })
 
 const nextLayerMoveWidgetAction = defineActionContract({
@@ -205,12 +211,13 @@ const nextLayerSetWidgetParamsAction = defineActionContract({
 const nextLayerSetWidgetLayoutsAction = defineActionContract({
   name: "nextLayer.setLiveWidgetLayouts",
   kind: "mutation",
-  description: "Persist one or more Next Layer Widget positions and sizes.",
+  description: "Persist Widget sizes and order for a Board's Next Layer in display order.",
   params: Type.Object({
     boardId: Identifier,
     liveWidgets: Type.Array(Type.Object({
-      layout: WidgetLayoutParams,
       liveWidgetId: Identifier,
+      width: Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 }),
+      height: Type.Integer({ minimum: 1, maximum: 100 }),
     }, { additionalProperties: false }), { minItems: 1 }),
   }, { additionalProperties: false }),
   result: EmptyObject,
@@ -382,6 +389,7 @@ export const applicationActionContracts = [
   boardDeleteAction,
   nowLayerSetManualOrderAction,
   nextLayerInstallWidgetAction,
+  nextLayerListWidgetsAction,
   nextLayerRemoveWidgetAction,
   nextLayerMoveWidgetAction,
   nextLayerSetWidgetDataScopeAction,

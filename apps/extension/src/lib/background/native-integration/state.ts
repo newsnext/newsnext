@@ -8,11 +8,13 @@ import { getWorkerId } from "../worker-identity"
 export const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
+// Protocol 32 drops Widget placement coordinates; order is the Next Layer array
+// order and placements carry only sizes.
 // Protocol 31 renames the LiveCard snapshot RPC and Source snapshot Actions,
 // replacing the source-cache terminology on the wire.
 // Protocol 30 carries the Widget catalog inside Ready and every catalog push
 // instead of serving it from the loopback Widget server.
-export const PROTOCOL_VERSION = 31
+export const PROTOCOL_VERSION = 32
 export const WORKSPACE_SYNCED_AT_KEY = "newsnext-workspace-synced-at"
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"

@@ -5,6 +5,7 @@ import {
   getBoardConfigurationQuery,
   getNowLayerLiveCardsQuery,
   listBoardLiveCardsQuery,
+  listBoardLiveWidgetsQuery,
   listSourcesQuery,
 } from "./queries"
 
@@ -38,6 +39,23 @@ describe("application queries", () => {
   it("lists Board LiveCards in cardIds order", () => {
     const liveCards = listBoardLiveCardsQuery(createData(), { boardId: "reading" })
     expect(liveCards.map(card => card.cardId)).toEqual(["second", "first"])
+  })
+
+  it("lists Board Widget placements in installation order", () => {
+    const data = createData()
+    data.boards[0]!.nextLayer.liveWidgets.push({
+      dataScope: { type: "board" },
+      layout: { height: 2, width: 2 },
+      liveWidgetId: "instance-a",
+      widgetId: "snake",
+    })
+    const widgets = listBoardLiveWidgetsQuery(data, { boardId: "reading" })
+    expect(widgets.map(widget => widget.liveWidgetId)).toEqual(["instance-a"])
+  })
+
+  it("throws for Widget placements of an unknown Board", () => {
+    expect(() => listBoardLiveWidgetsQuery(createData(), { boardId: "missing" }))
+      .toThrow("Board 'missing' not found")
   })
 
   it("returns NowLayer cards with their Board and source IDs", () => {

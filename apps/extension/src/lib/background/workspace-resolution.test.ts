@@ -19,7 +19,7 @@ function workspace(suffix = "a"): Workspace {
         liveWidgetId: `instance-${suffix}`,
         widgetId: "shared-template",
         dataScope: { type: "cards", cardIds: [`card-${suffix}`] },
-        layout: { x: 0, y: 0, width: 2, height: 2 },
+        layout: { width: 2, height: 2 },
       }] },
     }],
     liveCards: [{ cardId: `card-${suffix}`, workerId: `worker-${suffix}`, sourceId: "source:a", createdAt: 1, patch: {} }],

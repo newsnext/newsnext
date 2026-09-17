@@ -181,10 +181,9 @@ choose SDK query arguments. The shared settings editor validates the Source
 schema's constraints. The daemon checks JSON types, bounds, and option membership.
 
 
-Widget layout dimensions use half-LiveCard units. Placement width must be at least
-`2` (one LiveCard); the UI supports widths `2`, `3`, and `4`, retaining half-card
-resize increments. Height may still be `1`. Older narrower placements expand to
-the minimum when loaded.
+Widget layout dimensions use half-LiveCard units. Widths range from `1` (half a
+LiveCard) to `4` (two LiveCards), retaining half-card resize increments.
+Height may still be `1`.
 
 ### Widget display metadata
 
@@ -335,7 +334,7 @@ arguments throw rather than silently changing observations.
 
 Widget definitions and instances have separate identities. `widget.json` remains
 in the directory named by `widgetId`; it is never copied into Workspace storage.
-`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, layout })` creates an
+`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, size })` creates an
 independent instance and returns `{ liveWidgetId }`. Repeated calls may use the
 same definition in the same Board. Use `liveWidgetId` for configuration, movement,
 removal, and layout updates; keep using `widgetId` for `client.liveWidgets.data`.
@@ -358,20 +357,20 @@ const boardId = board.id
 const { liveWidgetId } = await client.actions.nextLayer.installLiveWidget({
   boardId,
   dataScope: { type: "board" },
-  layout: { height: 1, width: 3, x: 0, y: 0 },
+  size: { height: 1, width: 3 },
   widgetId: "<widget-id>",
 })
-const detail = await client.actions.board.get({ boardId })
-const placed = detail.board.nextLayer.liveWidgets.find(
+const placed = (await client.actions.nextLayer.listLiveWidgets({ boardId })).find(
   widget => widget.liveWidgetId === liveWidgetId,
 )
 if (!placed) throw new Error("Widget placement missing after install")
 ```
 
 `dataScope` is `{ type: "board" }` for the Board's complete LiveCard list or
-`{ type: "cards", cardIds }` for selected cards. Layout widths use half-LiveCard
-units; mirror the manifest's `width`/`height` and let the daemon normalize the
-position.
+`{ type: "cards", cardIds }` for selected cards. `size` takes the manifest's
+`width`/`height` (from `client.actions.nativeIntegration.getWidgets()`) in
+half-LiveCard units; the placement always appends after the Board's existing
+Widgets. Omitted `width`/`height` fall back to 2.
 
 A minimal real-data Widget lives at `references/examples/word-cloud-widget/`
 (`widget.json` and `data.mjs`). Scaffold new Widgets with

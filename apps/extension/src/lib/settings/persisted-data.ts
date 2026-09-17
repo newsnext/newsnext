@@ -8,7 +8,7 @@ import type {
 } from "../board"
 import type { LiveCard, LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { isThemeColor, MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
+import { isThemeColor } from "@newsnext/sdk/models"
 import {
   APPLICATION_DATA_VERSION,
   createEmptyApplicationData,
@@ -146,10 +146,7 @@ function normalizeLiveWidgets(
       return []
     }
     const layout = candidate.layout
-    if (!isIntegerBetween(layout.x, 0, 11)
-      || !isIntegerBetween(layout.y, 0, Number.MAX_SAFE_INTEGER)
-      || !isIntegerBetween(layout.width, 1, 12)
-      || layout.x + layout.width > 12
+    if (!isIntegerBetween(layout.width, 1, 12)
       || !isIntegerBetween(layout.height, 1, 100)) {
       return []
     }
@@ -157,14 +154,11 @@ function normalizeLiveWidgets(
     if (!dataScope) return []
     const patch = isRecord(candidate.patch) ? candidate.patch : {}
     seen.add(candidate.liveWidgetId)
-    const width = Math.max(MIN_WIDGET_WIDTH, layout.width)
     return [{
       dataScope,
       layout: {
         height: layout.height,
-        width,
-        x: Math.min(layout.x, 12 - width),
-        y: layout.y,
+        width: layout.width,
       },
       ...((patch.metadata || patch.params)
         ? { patch: {

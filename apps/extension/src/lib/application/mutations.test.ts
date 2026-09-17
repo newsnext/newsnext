@@ -45,23 +45,46 @@ function createTargetBoard(cardIds: string[] = []): ApplicationData["boards"][nu
 }
 
 describe("application mutations", () => {
-  it("rejects half-card widths on installation and resizing while allowing one-and-a-half cards", () => {
+  it("rejects empty widths on installation and resizing while allowing half-card widths", () => {
     const input = {
       boardId: "reading",
       widgetId: "feed",
       dataScope: { type: "board" as const },
-      layout: { x: 0, y: 0, width: 1, height: 1 },
+      size: { width: 0, height: 1 },
     }
     expect(() => installLiveWidgetMutation(createData(), input, { createId: () => "feed" })).toThrow("Widget layout is invalid")
     const installed = installLiveWidgetMutation(createData(), {
       ...input,
-      layout: { ...input.layout, width: 3 },
+      size: { ...input.size, width: 1 },
     }, { createId: () => "feed" }).data
-    expect(installed.boards[0]?.nextLayer.liveWidgets[0]?.layout.width).toBe(3)
+    expect(installed.boards[0]?.nextLayer.liveWidgets[0]?.layout.width).toBe(1)
     expect(() => setLiveWidgetLayoutsMutation(installed, {
       boardId: "reading",
-      liveWidgets: [{ liveWidgetId: "feed", layout: input.layout }],
+      liveWidgets: [{ liveWidgetId: "feed", width: 0, height: 1 }],
     })).toThrow("Widget layout is invalid")
+  })
+
+  it("defaults omitted install size and appends after existing Widgets", () => {
+    const first = installLiveWidgetMutation(createData(), {
+      boardId: "reading",
+      widgetId: "feed",
+      dataScope: { type: "board" },
+      size: {},
+    }, { createId: () => "first" }).data
+    expect(first.boards[0]?.nextLayer.liveWidgets[0]?.layout).toEqual({ height: 2, width: 2 })
+    const second = installLiveWidgetMutation(first, {
+      boardId: "reading",
+      widgetId: "feed",
+      dataScope: { type: "board" },
+      size: { width: 4, height: 3 },
+    }, { createId: () => "second" }).data
+    expect(second.boards[0]?.nextLayer.liveWidgets[1]?.layout).toEqual({ height: 3, width: 4 })
+    expect(() => installLiveWidgetMutation(second, {
+      boardId: "reading",
+      widgetId: "feed",
+      dataScope: { type: "board" },
+      size: { width: 0 },
+    }, { createId: () => "third" })).toThrow("Widget layout is invalid")
   })
 
   it("moves a Widget atomically while retaining its size, metadata and parameters", () => {
@@ -71,7 +94,7 @@ describe("application mutations", () => {
       boardId: "reading",
       widgetId: "feed",
       dataScope: { type: "cards", cardIds: ["rss:feed::one"] },
-      layout: { x: 2, y: 4, width: 6, height: 3 },
+      size: { width: 6, height: 3 },
     }, { createId: () => "feed" }).data
     const configured = setLiveWidgetMetadataMutation(setLiveWidgetParamsMutation(installed, {
       boardId: "reading",
@@ -82,13 +105,13 @@ describe("application mutations", () => {
     expect(moved.boards[0]?.nextLayer.liveWidgets).toEqual([])
     expect(moved.boards[1]?.nextLayer.liveWidgets[0]).toEqual({
       ...configured.boards[0]?.nextLayer.liveWidgets[0],
-      layout: { x: 0, y: 0, width: 6, height: 3 },
+      layout: { width: 6, height: 3 },
       dataScope: { type: "cards", cardIds: [] },
     })
     expect(configured.boards[0]?.nextLayer.liveWidgets).toHaveLength(1)
     expect(moved.liveCards).toEqual(configured.liveCards)
     expect(moveLiveWidgetMutation(moved, { boardId: "target", targetBoardId: "target", liveWidgetId: "feed" }).data).toBe(moved)
-    const duplicate = installLiveWidgetMutation(moved, { boardId: "reading", widgetId: "feed", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 1 } }, { createId: () => "second-feed" }).data
+    const duplicate = installLiveWidgetMutation(moved, { boardId: "reading", widgetId: "feed", dataScope: { type: "board" }, size: { width: 2, height: 1 } }, { createId: () => "second-feed" }).data
     const together = moveLiveWidgetMutation(duplicate, { boardId: "reading", targetBoardId: "target", liveWidgetId: "second-feed" }).data
     expect(together.boards[1]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["feed", "second-feed"])
   })
@@ -205,7 +228,7 @@ describe("application mutations", () => {
     const installed = installLiveWidgetMutation(createData(), {
       boardId: "reading",
       dataScope: { type: "board" },
-      layout: { x: 0, y: 0, width: 6, height: 4 },
+      size: { width: 6, height: 4 },
       widgetId: "latest",
     }, { createId: () => "latest" }).data
 
@@ -213,7 +236,8 @@ describe("application mutations", () => {
       boardId: "reading",
       liveWidgets: [{
         liveWidgetId: "latest",
-        layout: { x: 2, y: 3, width: 8, height: 5 },
+        width: 8,
+        height: 5,
       }],
     })
 
@@ -221,8 +245,36 @@ describe("application mutations", () => {
       widgetId: "latest",
       liveWidgetId: "latest",
       dataScope: { type: "board" },
-      layout: { x: 2, y: 3, width: 8, height: 5 },
+      layout: { width: 8, height: 5 },
     }])
+  })
+
+  it("reorders Widgets through the layout update in display order", () => {
+    const first = installLiveWidgetMutation(createData(), {
+      boardId: "reading",
+      dataScope: { type: "board" },
+      size: { width: 2, height: 2 },
+      widgetId: "feed",
+    }, { createId: () => "first" }).data
+    const second = installLiveWidgetMutation(first, {
+      boardId: "reading",
+      dataScope: { type: "board" },
+      size: { width: 2, height: 2 },
+      widgetId: "feed",
+    }, { createId: () => "second" }).data
+    const reordered = setLiveWidgetLayoutsMutation(second, {
+      boardId: "reading",
+      liveWidgets: [
+        { liveWidgetId: "second", width: 2, height: 2 },
+        { liveWidgetId: "first", width: 2, height: 2 },
+      ],
+    }).data
+    expect(reordered.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId))
+      .toEqual(["second", "first"])
+    expect(() => setLiveWidgetLayoutsMutation(second, {
+      boardId: "reading",
+      liveWidgets: [{ liveWidgetId: "first", width: 2, height: 2 }],
+    })).toThrow("exactly once")
   })
 
   it("normalizes Widget metadata and resets it without changing parameters or placement", () => {
@@ -230,7 +282,7 @@ describe("application mutations", () => {
       boardId: "reading",
       widgetId: "latest",
       dataScope: { type: "board" },
-      layout: { x: 0, y: 0, width: 6, height: 4 },
+      size: { width: 6, height: 4 },
     }, { createId: () => "latest" }).data
     const configured = setLiveWidgetParamsMutation(installed, {
       boardId: "reading",
@@ -268,7 +320,7 @@ describe("application mutations", () => {
       boardId: "reading",
       widgetId: "latest",
       dataScope: { type: "board" },
-      layout: { x: 0, y: 0, width: 6, height: 4 },
+      size: { width: 6, height: 4 },
     }, { createId: () => "latest" }).data
     const saved = setLiveWidgetParamsMutation(installed, {
       boardId: "reading",
@@ -298,7 +350,7 @@ describe("application mutations", () => {
     const installed = installLiveWidgetMutation(createData(), {
       boardId: "reading",
       dataScope: { type: "cards", cardIds: ["rss:feed::one"] },
-      layout: { x: 0, y: 0, width: 6, height: 4 },
+      size: { width: 6, height: 4 },
       widgetId: "latest",
     }, { createId: () => "latest" }).data
 
@@ -318,7 +370,7 @@ describe("application mutations", () => {
 
 describe("widget patches", () => {
   it("merges sparse sections, preserves falsy values and resets only the requested section", () => {
-    const installed = installLiveWidgetMutation(createData(), { boardId: "reading", widgetId: "chart", dataScope: { type: "board" }, layout: { x: 0, y: 0, width: 2, height: 2 } }, { createId: () => "chart" }).data
+    const installed = installLiveWidgetMutation(createData(), { boardId: "reading", widgetId: "chart", dataScope: { type: "board" }, size: { width: 2, height: 2 } }, { createId: () => "chart" }).data
     const first = configureLiveWidgetMutation(installed, { boardId: "reading", liveWidgetId: "chart", patch: { params: { enabled: false, count: 0 }, metadata: { title: "Chart" } } }).data
     const second = configureLiveWidgetMutation(first, { boardId: "reading", liveWidgetId: "chart", patch: { metadata: { title: "Updated" } } }).data
     expect(second.boards[0]?.nextLayer.liveWidgets[0]?.patch).toEqual({ params: { enabled: false, count: 0 }, metadata: { title: "Updated" } })
@@ -328,7 +380,7 @@ describe("widget patches", () => {
 })
 
 it("creates independent instances from one definition and targets edits by instance ID", () => {
-  const input = { boardId: "reading", widgetId: "shared", dataScope: { type: "board" as const }, layout: { x: 0, y: 0, width: 2, height: 2 } }
+  const input = { boardId: "reading", widgetId: "shared", dataScope: { type: "board" as const }, size: { width: 2, height: 2 } }
   const first = installLiveWidgetMutation(createData(), input, { createId: () => "instance-a" })
   const second = installLiveWidgetMutation(first.data, input, { createId: () => "instance-b" })
   expect(first.result).toEqual({ liveWidgetId: "instance-a" })
@@ -336,8 +388,9 @@ it("creates independent instances from one definition and targets edits by insta
   const edited = configureLiveWidgetMutation(second.data, { boardId: "reading", liveWidgetId: "instance-b", patch: { params: { limit: 5 }, metadata: { title: "Second" } } }).data
   expect(edited.boards[0]?.nextLayer.liveWidgets[0]?.patch).toBeUndefined()
   expect(edited.boards[0]?.nextLayer.liveWidgets[1]?.patch?.params).toEqual({ limit: 5 })
-  const resized = setLiveWidgetLayoutsMutation(edited, { boardId: "reading", liveWidgets: [{ liveWidgetId: "instance-b", layout: { x: 0, y: 1, width: 4, height: 3 } }] }).data
-  expect(resized.boards[0]?.nextLayer.liveWidgets[0]?.layout).toEqual(input.layout)
+  const resized = setLiveWidgetLayoutsMutation(edited, { boardId: "reading", liveWidgets: [{ liveWidgetId: "instance-a", width: 2, height: 2 }, { liveWidgetId: "instance-b", width: 4, height: 3 }] }).data
+  expect(resized.boards[0]?.nextLayer.liveWidgets[0]?.layout).toEqual({ ...input.size })
+  expect(resized.boards[0]?.nextLayer.liveWidgets[1]?.layout).toEqual({ width: 4, height: 3 })
   const removed = removeLiveWidgetMutation(resized, { boardId: "reading", liveWidgetId: "instance-a" }).data
   expect(removed.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["instance-b"])
   expect(() => removeLiveWidgetMutation(removed, { boardId: "reading", liveWidgetId: "shared" })).toThrow()

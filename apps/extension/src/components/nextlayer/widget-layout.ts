@@ -1,4 +1,4 @@
-import type { LiveWidget, LiveWidgetLayout } from "@/lib/board"
+import type { LiveWidget } from "@/lib/board"
 import { MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 
 export const WIDGET_GAP = 24
@@ -13,8 +13,9 @@ const GRID_WIDGET_ID_PREFIX = "widget-"
 export type ResizeAxis = "width" | "height" | "both"
 
 export interface ChangedWidgetLayout {
-  layout: LiveWidgetLayout
+  height: number
   liveWidgetId: string
+  width: number
 }
 
 export interface WidgetGridNode {
@@ -186,12 +187,8 @@ export function getChangedWidgetLayouts(
   widgets: readonly LiveWidget[],
 ): ChangedWidgetLayout[] {
   const widgetsById = new Map(widgets.map(widget => [widget.liveWidgetId, widget]))
-  const orderedNodes = [...nodes].sort((a, b) => (a.y ?? 0) - (b.y ?? 0) || (a.x ?? 0) - (b.x ?? 0))
-  let order = 0
-  return orderedNodes.flatMap((node) => {
+  const ordered = nodes.flatMap((node) => {
     if (!node.id?.startsWith(GRID_WIDGET_ID_PREFIX)
-      || node.x === undefined
-      || node.y === undefined
       || node.w === undefined
       || node.h === undefined) {
       return []
@@ -199,15 +196,14 @@ export function getChangedWidgetLayouts(
     const liveWidgetId = node.id.slice(GRID_WIDGET_ID_PREFIX.length)
     const widget = widgetsById.get(liveWidgetId)
     if (!widget) return []
-    // Keep the existing wire shape, but persist an order rather than viewport coordinates.
-    const layout = { x: 0, y: order++, width: node.w, height: node.h }
-    return layoutsEqual(widget.layout, layout) ? [] : [{ liveWidgetId, layout }]
+    return [{ liveWidgetId, width: node.w, height: node.h }]
   })
-}
-
-function layoutsEqual(left: LiveWidgetLayout, right: LiveWidgetLayout): boolean {
-  return left.x === right.x
-    && left.y === right.y
-    && left.width === right.width
-    && left.height === right.height
+  if (ordered.length !== widgets.length) return []
+  const changed = ordered.some((entry, index) => {
+    const widget = widgets[index]
+    return widget?.liveWidgetId !== entry.liveWidgetId
+      || widget.layout.width !== entry.width
+      || widget.layout.height !== entry.height
+  })
+  return changed ? ordered : []
 }

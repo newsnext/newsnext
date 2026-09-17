@@ -10,8 +10,8 @@ import { getClosestWidgetDropTarget, getResizedWidgetFrame, getResizedWidgetSize
 
 export interface SortableWidgetNode {
   id: string
-  x: number
-  y: number
+  x?: number
+  y?: number
   w: number
   h: number
   minW: number
@@ -72,7 +72,7 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
   const [resizePreview, setResizePreview] = useState<ResizePreview | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const sourceVersion = JSON.stringify(nodes)
-  const savedOrder = useMemo(() => [...nodes].sort((a, b) => a.y - b.y || a.x - b.x), [nodes])
+  const savedOrder = useMemo(() => [...nodes].sort((a, b) => (a.y ?? 0) - (b.y ?? 0) || (a.x ?? 0) - (b.x ?? 0)), [nodes])
   const ordered = draft?.source === sourceVersion ? draft.nodes : savedOrder
   const columns = getWidgetColumns(availableWidth, ordered)
   const layout = useMemo(() => getWidgetGridLayout(columns, ordered), [columns, ordered])

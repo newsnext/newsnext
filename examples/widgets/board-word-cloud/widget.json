@@ -3,8 +3,6 @@
   "color": "purple",
   "width": 3,
   "height": 1,
-  "minWidth": 2,
-  "minHeight": 1,
   "view": {
     "type": "chart",
     "chart": "word-cloud",

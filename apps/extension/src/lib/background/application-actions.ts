@@ -21,6 +21,7 @@ import {
   getSourceQuery,
   installLiveWidgetMutation,
   listBoardLiveCardsQuery,
+  listBoardLiveWidgetsQuery,
   listBoardsQuery,
   listLiveCardsQuery,
   listSourcesQuery,
@@ -84,6 +85,10 @@ const nextLayerInstallWidgetAction = defineAction(actionContracts["nextLayer.ins
   if (!result.liveWidgetId) throw new Error("Widget creation returned no instance ID")
   return { liveWidgetId: result.liveWidgetId }
 })
+
+const nextLayerListWidgetsAction = defineAction(actionContracts["nextLayer.listLiveWidgets"], async (input, context: ApplicationActionContext) => (
+  listBoardLiveWidgetsQuery(await context.data(), input)
+))
 
 const nextLayerMoveWidgetAction = defineAction(actionContracts["nextLayer.moveLiveWidget"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => moveLiveWidgetMutation(data, input))
@@ -176,6 +181,7 @@ export const applicationActionDefinitions = [
   boardDeleteAction,
   nowLayerSetManualOrderAction,
   nextLayerInstallWidgetAction,
+  nextLayerListWidgetsAction,
   nextLayerRemoveWidgetAction,
   nextLayerMoveWidgetAction,
   nextLayerSetWidgetDataScopeAction,

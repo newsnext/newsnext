@@ -1,10 +1,10 @@
-import type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "@newsnext/sdk/models"
+import type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
 import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 
-export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail } from "@newsnext/sdk/models"
+export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
 
 export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDescriptor[] {
   return [...sources]
@@ -36,6 +36,13 @@ export function listBoardLiveCardsQuery(
   input: { boardId: string },
 ): LiveCard[] {
   return resolveBoardLiveCards(data, getBoard(data, input.boardId))
+}
+
+export function listBoardLiveWidgetsQuery(
+  data: ApplicationData,
+  input: { boardId: string },
+): LiveWidget[] {
+  return getBoard(data, input.boardId).nextLayer.liveWidgets
 }
 
 export function listLiveCardsQuery(data: ApplicationData): LiveCard[] {

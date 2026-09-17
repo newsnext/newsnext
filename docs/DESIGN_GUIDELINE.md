@@ -357,8 +357,9 @@ permissions and Widget-specific data diagnostics belong to data-adapter content.
 Next Layer uses the shared Pragmatic Drag and Drop infrastructure and one pure
 ordered packing function for initial layout, live drag previews, resize previews,
 and responsive reflow. Persist user order and dimensions, never screen coordinates.
-The existing wire layout stores `x: 0`, `y: orderIndex`; read older placements in
-`y`, then `x` order. Keep Widget drag data separate from LiveCard drag data so a
+Placements store only sizes; order is the Next Layer array order. Older
+placements may still carry `x`/`y` fields; ignore them and keep the stored
+order. Keep Widget drag data separate from LiveCard drag data so a
 Widget cannot trigger LiveCard moves in the Board or Header. The shared header
 trash target dispatches by drag kind and requires the originating Board and Widget
 IDs before accepting Widget removal.
@@ -366,13 +367,12 @@ IDs before accepting Widget removal.
 Widget footprints use the half-LiveCard units defined in the
 [Widget Guideline](WIDGET_GUIDELINE.md#widget-definition): `2 × 2` matches a
 400px × 500px LiveCard.
-Widths range from one through two cards in half-card increments (2, 3, or 4 units). With the shared 24px gutter, visible widths are 400px, 612px, and 824px. Keep that
+Widths range from a half-card narrow Widget to two full cards in half-card increments (1, 2, 3, or 4 units). With the shared 24px gutter, visible widths are 188px, 400px, 612px, and 824px. Keep that
 gutter and those widths at every viewport size. Center complete card columns,
 up to four LiveCards; allow horizontal scrolling when the widest Widget cannot
 fit. Horizontal cells are 212px and vertical cells are 262px, each including the
-gutter. A minimum-size `2 × 1` Widget is 400px × 238px after reserving the gutter.
-Clamp legacy half-card widths and manifest width minima to at least two units.
-New placements and layout updates must also enforce this minimum.
+gutter. A minimum-size `1 × 1` Widget is 188px × 238px after reserving the gutter.
+New placements and layout updates must use whole units of at least one.
 Do not backfill an earlier gap with a later Widget.
 
 Snapshot order and the pointer's grab offset at drag start. Precompute the packed

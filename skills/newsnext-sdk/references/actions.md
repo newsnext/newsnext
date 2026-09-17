@@ -274,11 +274,20 @@ await client.actions.nextLayer.configureLiveWidget(input: { boardId: string; liv
 
 ### nextLayer.installLiveWidget
 
-*mutation* — Create an independent instance of a local Widget in a Board's Next Layer.
+*mutation* — Create an independent instance of a local Widget in a Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2.
 
 ```ts
-await client.actions.nextLayer.installLiveWidget(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12; x: integer ≥ 0 ≤ 11; y: integer ≥ 0 }; widgetId: string })
+await client.actions.nextLayer.installLiveWidget(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; size: { height?: integer ≥ 1 ≤ 100; width?: integer ≥ 1 ≤ 12 }; widgetId: string })
 // => { liveWidgetId: string }
+```
+
+### nextLayer.listLiveWidgets
+
+*query* — List the Widget placements in a Board's Next Layer in installation order.
+
+```ts
+await client.actions.nextLayer.listLiveWidgets(input: { boardId: string })
+// => unknown[]
 ```
 
 ### nextLayer.moveLiveWidget
@@ -310,10 +319,10 @@ await client.actions.nextLayer.setLiveWidgetDataScope(input: { boardId: string; 
 
 ### nextLayer.setLiveWidgetLayouts
 
-*mutation* — Persist one or more Next Layer Widget positions and sizes.
+*mutation* — Persist Widget sizes and order for a Board's Next Layer in display order.
 
 ```ts
-await client.actions.nextLayer.setLiveWidgetLayouts(input: { boardId: string; liveWidgets: { layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12; x: integer ≥ 0 ≤ 11; y: integer ≥ 0 }; liveWidgetId: string }[] })
+await client.actions.nextLayer.setLiveWidgetLayouts(input: { boardId: string; liveWidgets: { liveWidgetId: string; width: integer ≥ 1 ≤ 12; height: integer ≥ 1 ≤ 100 }[] })
 // => {}
 ```
 
