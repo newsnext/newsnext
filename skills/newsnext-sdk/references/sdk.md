@@ -26,8 +26,9 @@ npm install -g @newsnext/cli
 newsnext status
 ```
 
-The evaluated `client` calls the same CLI over its machine transport, so no
-SDK package is installed separately. CLI packages target macOS, Linux glibc
+The evaluated `client` calls the same CLI over its machine transport. The SDK
+is not published as a standalone npm package: it ships inside the CLI and the
+workspace, so never install it separately. CLI packages target macOS, Linux glibc
 and Windows, on x64 and arm64. The CLI selects its platform binary through
 optional dependencies, which must remain enabled during CLI installation. No
 Rust compiler is needed.
@@ -179,7 +180,9 @@ extension; the SDK does not execute browser Sources inside Node.
 
 NewsNext's own extension app can import `createClient` from
 `@newsnext/sdk/extension` and call `client.liveWidgets.data({ widgetId, cardIds },
-{ signal })`. It uses the background's runtime-port SDK bridge and inherits the
+{ signal })`. The `@newsnext/sdk/*` specifiers below resolve through the workspace
+and the CLI's bundled SDK; the SDK is not installed from a registry.
+It uses the background's runtime-port SDK bridge and inherits the
 host environment. The background accepts this transport only from its own
 `app.html`; third-party pages and local widget iframes must use the Widget entry.
 
@@ -501,7 +504,9 @@ the contribution sequence; leave `sort: "none"` to preserve its meaning.
 #### Reusable producer analytics
 
 Import pure helpers from `@newsnext/sdk/analytics` in a data producer with the SDK
-available in its runtime module resolution. This entry has no browser, network,
+available in its runtime module resolution. The specifier resolves through the
+workspace and the CLI's bundled SDK, not through a separately installed package.
+This entry has no browser, network,
 or transport dependencies and never mutates inputs:
 
 ```js

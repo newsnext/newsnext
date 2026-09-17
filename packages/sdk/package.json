@@ -2,6 +2,7 @@
   "name": "@newsnext/sdk",
   "type": "module",
   "version": "1.0.0-alpha.1",
+  "private": true,
   "description": "Typed programmatic access to the NewsNext CLI",
   "license": "MPL-2.0",
   "exports": {
@@ -20,9 +21,6 @@
   ],
   "engines": {
     "node": ">=22"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "scripts": {
     "build": "tsdown && bun scripts/generate-actions-reference.ts && bun scripts/vendor-sdk-bundle.ts",

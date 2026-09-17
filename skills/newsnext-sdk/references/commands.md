@@ -168,9 +168,13 @@ newsnext eval [OPTIONS]
 - `--timeout <SECONDS>` bounds the whole evaluation; defaults to `60`, at most `600`.
 - TypeScript snippets require Bun or Deno; plain Node.js runs JavaScript only.
 - Each invocation starts a fresh runtime; variables do not persist between calls.
+- Keep `eval` output small: project only the fields needed and emit single-line
+  JSON (`JSON.stringify(...)` without indentation) instead of full pretty-printed
+  dumps, which get truncated and force repeat calls.
 
 ```sh
 newsnext eval -e 'console.log((await client.actions.board.list()).length)'
+newsnext eval -e 'console.log(JSON.stringify((await client.actions.liveCard.list()).map(c => ({cardId: c.cardId, sourceId: c.sourceId}))))'
 newsnext eval < boards.mjs
 ```
 
