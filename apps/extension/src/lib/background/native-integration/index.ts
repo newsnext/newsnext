@@ -96,6 +96,7 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
       sendCollectionSubscription()
     },
     getStatus: async () => getNativeIntegrationStatus(),
+    getWidgets: async () => runtime.widgetCatalog.map(entry => ({ ...entry })),
     resolveWorkspace: async ({ resolution, expectedRevision }) => {
       await resolveWorkspace(resolution, expectedRevision)
       sendCollectionSubscription()
@@ -144,7 +145,6 @@ function getNativeIntegrationStatus(): NativeIntegrationStatus {
     daemonVersion: runtime.daemonVersion,
     capabilities: [...runtime.capabilities],
     offlineWorkers: runtime.offlineWorkers.map(worker => ({ ...worker })),
-    widgets: runtime.widgetCatalog.map(entry => ({ ...entry })),
     connectionError: runtime.connectionError,
     state: runtime.enabled ? runtime.connectionState : "disabled",
     workerId: runtime.workerId,

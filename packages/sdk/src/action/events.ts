@@ -5,7 +5,7 @@ import { EmptyObject } from "./schema.js"
 // authoritative state through the matching query Action instead of trusting a
 // pushed snapshot, so missed messages self-heal on the next poll.
 const nativeIntegrationStatusChangedEvent = defineEventContract({
-  description: "Native worker routing, Widget catalog, or connection state changed; re-read nativeIntegration.getStatus.",
+  description: "Native worker routing, Widget catalog, or connection state changed; re-read nativeIntegration.getStatus and nativeIntegration.getWidgets.",
   name: "nativeIntegration.statusChanged",
   payload: EmptyObject,
 })

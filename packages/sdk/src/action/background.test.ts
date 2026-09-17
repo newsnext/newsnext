@@ -5,12 +5,14 @@ import { backgroundActionContracts } from "./background.js"
 const getStatus = backgroundActionContracts.find(contract => contract.name === "nativeIntegration.getStatus")
 if (!getStatus) throw new Error("nativeIntegration.getStatus contract is missing")
 
-function statusWith(entry: Record<string, unknown>): Record<string, unknown> {
+const getWidgets = backgroundActionContracts.find(contract => contract.name === "nativeIntegration.getWidgets")
+if (!getWidgets) throw new Error("nativeIntegration.getWidgets contract is missing")
+
+function status(): Record<string, unknown> {
   return {
     capabilities: [],
     offlineWorkers: [],
     state: "connected",
-    widgets: [entry],
     workerId: "worker-1",
   }
 }
@@ -31,11 +33,18 @@ const entry = {
 }
 
 describe("nativeIntegration.getStatus result", () => {
+  it("carries no Widget catalog", () => {
+    expect(() => Value.Parse(getStatus.result, status())).not.toThrow()
+    expect(() => Value.Parse(getStatus.result, { ...status(), widgets: [entry] })).toThrow()
+  })
+})
+
+describe("nativeIntegration.getWidgets result", () => {
   it("accepts catalog entries with the hasData flag", () => {
-    expect(() => Value.Parse(getStatus.result, statusWith({ ...entry, hasData: false }))).not.toThrow()
+    expect(() => Value.Parse(getWidgets.result, [{ ...entry, hasData: false }])).not.toThrow()
   })
 
   it("accepts catalog entries from daemons without the hasData flag", () => {
-    expect(() => Value.Parse(getStatus.result, statusWith(entry))).not.toThrow()
+    expect(() => Value.Parse(getWidgets.result, [entry])).not.toThrow()
   })
 })

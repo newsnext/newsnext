@@ -41,15 +41,14 @@ function createContext(): BackgroundActionContext {
       getStatus: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
-        widgets: [],
         state: "disabled" as const,
         workerId: "worker",
       })),
+      getWidgets: vi.fn(async () => []),
       resolveWorkspace: vi.fn(),
       setEnabled: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
-        widgets: [],
         state: "disabled" as const,
         workerId: "worker",
       })),
@@ -58,14 +57,12 @@ function createContext(): BackgroundActionContext {
       regenerateIdentity: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
-        widgets: [],
         state: "connecting" as const,
         workerId: "new-worker",
       })),
       takeOver: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
-        widgets: [],
         state: "disabled" as const,
         workerId: "worker",
       })),
@@ -77,9 +74,9 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(44)
+    expect(actions).toHaveLength(45)
     expect(actions.filter(action => action.kind === "mutation")).toHaveLength(23)
-    expect(actions.filter(action => action.kind === "query")).toHaveLength(17)
+    expect(actions.filter(action => action.kind === "query")).toHaveLength(18)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({
       inputSchema: { type: "object", additionalProperties: false },

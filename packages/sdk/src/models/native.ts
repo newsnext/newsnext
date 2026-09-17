@@ -1,5 +1,4 @@
 import type { OfflineWorker } from "../protocol/OfflineWorker.js"
-import type { WidgetCatalogEntry } from "../protocol/WidgetCatalogEntry.js"
 
 export type NativeIntegrationFailureState
   = | "daemonOutdated"
@@ -33,8 +32,6 @@ export interface NativeIntegrationStatus {
   daemonVersion?: string
   capabilities: string[]
   offlineWorkers: OfflineWorker[]
-  /** Renderable Widget definitions the daemon last published, including their entry URLs. */
-  widgets: WidgetCatalogEntry[]
   connectionError?: NativeIntegrationConnectionError
   state: NativeIntegrationState
   workerId: string

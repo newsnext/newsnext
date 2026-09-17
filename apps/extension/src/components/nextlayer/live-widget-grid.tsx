@@ -17,7 +17,7 @@ import { ParameterSettings } from "@/components/card-shell/settings/parameter-se
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
 import { SourceStatusMessage } from "@/components/live-card/card-source-state"
 import { useI18n } from "@/hooks/use-i18n"
-import { useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
+import { useNativeIntegrationStatus, useWidgetCatalog } from "@/hooks/use-native-integration-status"
 import { useSortable } from "@/hooks/use-sortable"
 import { useSourceParams } from "@/hooks/use-source-params"
 import { RelativeTime } from "@/hooks/useRelativeTime"
@@ -373,12 +373,13 @@ function useElementVisible(ref: RefObject<Element | null>): boolean {
 }
 
 function useNativeWidgetConnection() {
-  const query = useNativeIntegrationStatus()
+  const statusQuery = useNativeIntegrationStatus()
+  const catalogQuery = useWidgetCatalog()
   return {
-    isLoading: query.isLoading,
-    serverOrigin: query.data?.widgetServerOrigin,
-    state: query.data?.state,
-    entries: query.data?.widgets,
+    isLoading: statusQuery.isLoading || catalogQuery.isLoading,
+    serverOrigin: statusQuery.data?.widgetServerOrigin,
+    state: statusQuery.data?.state,
+    entries: catalogQuery.data,
   }
 }
 

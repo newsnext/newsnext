@@ -1,4 +1,4 @@
-import type { ConnectedFetchInput, FetchResponse, WorkspaceResolution } from "@newsnext/sdk/models"
+import type { ConnectedFetchInput, FetchResponse, WidgetCatalogEntry, WorkspaceResolution } from "@newsnext/sdk/models"
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { LiveCard } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
@@ -44,6 +44,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     getCollectionStatus: () => Promise<NativeCollectionStatus>
     setCollectionSubscribed: (enabled: boolean) => void
     getStatus: () => Promise<NativeIntegrationStatus>
+    getWidgets: () => Promise<WidgetCatalogEntry[]>
     resolveWorkspace: (input: { resolution: WorkspaceResolution, expectedRevision: number }) => Promise<NativeIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
   }
@@ -105,6 +106,8 @@ const loaderReadLiveCardSnapshotAction = defineAction(actionContracts["loader.re
 
 const nativeIntegrationGetStatusAction = defineAction(actionContracts["nativeIntegration.getStatus"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getStatus())
 
+const nativeIntegrationGetWidgetsAction = defineAction(actionContracts["nativeIntegration.getWidgets"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getWidgets())
+
 const nativeIntegrationGetLogsAction = defineAction(actionContracts["nativeIntegration.getLogs"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getLogs())
 
 const liveCardLoadAction = defineAction(actionContracts["liveCard.load"], async (input, context: BackgroundActionContext) => (
@@ -137,6 +140,7 @@ export const backgroundActionDefinitions = [
   liveCardReadSnapshotAction,
   nativeIntegrationGetLogsAction,
   nativeIntegrationGetStatusAction,
+  nativeIntegrationGetWidgetsAction,
   nativeIntegrationSetEnabledAction,
   nativeIntegrationResolveWorkspaceAction,
   workerRegenerateIdentityAction,

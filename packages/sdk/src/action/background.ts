@@ -55,7 +55,6 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
     id: Identifier,
     cardIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
   }, { additionalProperties: false })),
-  widgets: Type.Array(WidgetCatalogEntryResult),
   connectionError: Type.Optional(Type.Object({
     code: Type.Optional(Type.String()),
     message: Type.String(),
@@ -211,6 +210,14 @@ const nativeIntegrationGetStatusAction = defineActionContract({
   result: NativeIntegrationStatusResult,
 })
 
+const nativeIntegrationGetWidgetsAction = defineActionContract({
+  name: "nativeIntegration.getWidgets",
+  kind: "query",
+  description: "List the renderable Widget definitions the daemon last published, including their entry URLs.",
+  params: EmptyObject,
+  result: Type.Array(WidgetCatalogEntryResult),
+})
+
 const nativeIntegrationGetLogsAction = defineActionContract({
   name: "nativeIntegration.getLogs",
   kind: "query",
@@ -320,6 +327,7 @@ export const backgroundActionContracts = [
   loaderLoadLiveCardAction,
   loaderReadLiveCardSnapshotAction,
   nativeIntegrationGetStatusAction,
+  nativeIntegrationGetWidgetsAction,
   nativeIntegrationGetLogsAction,
   liveCardLoadAction,
   liveCardReadSnapshotAction,
