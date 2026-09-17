@@ -454,22 +454,25 @@ each instance, and `client.liveWidgets.data` keeps addressing the definition.
 
 ## Examples and verification
 
-Runnable examples for all twenty-five presets live in `examples/widgets`. Copy its
-contents (including the shared `demo-data.mjs`) to the Widget directory reported
+Runnable examples live in `examples/widgets`. Copy its
+contents to the Widget directory reported
 by `newsnext status`, then install the `demo-*` directories on a Board through
 `nextLayer.installLiveWidget`. In development the daemon does the copying
 itself: it mirrors `examples/widgets` into the development Widget directory at
 startup and on every change, replacing same-named Widgets so the examples
-always win (`NEWSNEXT_EXAMPLE_WIDGETS_PATH` overrides the source). The shared
-producer contains deterministic sample
-data; its `dataset` parameter is editable on the back. Use the extension's Cosmos
-**Patterns → Widgets → Gallery** for interactive previews and **States** for
+always win (`NEWSNEXT_EXAMPLE_WIDGETS_PATH` overrides the source). Use the extension's Cosmos
+**Patterns → Widgets → Gallery** for interactive previews of all twenty-five
+chart presets and **States** for
 empty, malformed and negative-value examples. The `demo-custom-html` example
 renders a custom `index.html` view from the same `newsnext.widget.data` message.
 The `demo-digest` example builds a multi-section dashboard from one `latest`
 query: stat tiles, an interactive daily chart, ranked sources, topic deltas with
 sparklines, and highlights. It reports status and height, keeps its own document
 scroll-free, and shows how a producer turns raw item envelopes into view data.
+The `board-word-cloud` example segments the titles collected by its own Board
+into a `word-cloud` chart: the `recent` query follows the placement's scope, so
+installing it on another Board follows that Board's LiveCards, and the `window`
+and `maxWords` parameters control the time range and keyword count.
 
 Widget data and view changes are verified through the installed Widget: editing a
 custom view file remounts the placed frame automatically, while data changes

@@ -459,12 +459,12 @@ as values. `null` resets an entire section; `{}` is an empty merge. Existing
 so `{}` with those Actions still resets them. Only resolved data parameters and
 scope affect the daemon's data identity; metadata and view patches do not.
 
-Runnable examples for all twenty-five presets live in `examples/widgets`. Copy its
-contents (including the shared `demo-data.mjs`) to the Widget directory reported
+Runnable examples live in `examples/widgets`. Copy its
+contents to the Widget directory reported
 by `newsnext status`, then install the `demo-*` directories on a Board through
-`nextLayer.installLiveWidget`. The shared producer contains deterministic sample
-data; its `dataset` parameter is editable on the back. Use the extension's Cosmos
-**Patterns → Widgets → Gallery** for interactive previews and **States** for
+`nextLayer.installLiveWidget`. Use the extension's Cosmos
+**Patterns → Widgets → Gallery** for interactive previews of all twenty-five
+chart presets and **States** for
 empty, malformed and negative-value examples. The `demo-custom-html` example
 renders a custom `index.html` view from the same `newsnext.widget.data` message.
 
