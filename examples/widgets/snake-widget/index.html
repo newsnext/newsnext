@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snake</title>
+  <style>
+    #root {
+      overflow: hidden;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .score {
+      flex: 1;
+      font-variant-numeric: tabular-nums;
+      font-weight: 650;
+      font-size: 13.5px;
+    }
+    button {
+      border: 1px solid var(--divider);
+      border-radius: 999px;
+      background: var(--muted);
+      color: inherit;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 5px 14px;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(0.95); }
+    button:active { transform: scale(0.96); }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 14px;
+      border: 1px solid var(--divider);
+      background: var(--muted);
+      touch-action: none;
+    }
+    .hint {
+      color: var(--muted-foreground);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main id="root"></main>
+  <script type="module">
+    import { createView } from "/widgets/newsnext.js"
+
+    const COLS = 20
+    const ROWS = 20
+    const STEP_MS = 130
+
+    createView({
+      root: document.getElementById("root"),
+      fill: true,
+      render(frame) {
+        if (frame.root.dataset.ready === "1") return
+        frame.root.dataset.ready = "1"
+        frame.reportStatus(null)
+        init(frame.root)
+      },
+    })
+
+    function init(root) {
+      const bar = document.createElement("div")
+      bar.className = "bar"
+      const score = document.createElement("span")
+      score.className = "score"
+      const btn = document.createElement("button")
+      btn.type = "button"
+      btn.textContent = "Restart"
+      bar.append(score, btn)
+      const canvas = document.createElement("canvas")
+      const dpr = Math.min(2, window.devicePixelRatio || 1)
+      canvas.width = COLS * 20 * dpr
+      canvas.height = ROWS * 20 * dpr
+      const hint = document.createElement("div")
+      hint.className = "hint"
+      hint.textContent = "Arrows / WASD to move. Space to restart."
+      root.replaceChildren(bar, canvas, hint)
+      const ctx = canvas.getContext("2d")
+      ctx.scale(dpr, dpr)
+      const W = COLS * 20
+      const H = ROWS * 20
+
+      let snake, dir, pending, food, points, alive, last, raf
+      reset()
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(loop)
+
+      function reset() {
+        snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }]
+        dir = { x: 1, y: 0 }
+        pending = { x: 1, y: 0 }
+        points = 0
+        alive = true
+        last = 0
+        food = spawn()
+        drawScore()
+      }
+
+      function spawn() {
+        for (;;) {
+          const p = {
+            x: Math.floor(Math.random() * COLS),
+            y: Math.floor(Math.random() * ROWS),
+          }
+          if (!snake.some(s => s.x === p.x && s.y === p.y)) return p
+        }
+      }
+
+      function drawScore() {
+        score.textContent = alive ? `Score: ${points}` : `Game over · ${points} — Restart`
+      }
+
+      function step() {
+        dir = pending
+        const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y }
+        if (head.x < 0 || head.y < 0 || head.x >= COLS || head.y >= ROWS) {
+          alive = false
+          drawScore()
+          return
+        }
+        if (snake.some(s => s.x === head.x && s.y === head.y)) {
+          alive = false
+          drawScore()
+          return
+        }
+        snake.unshift(head)
+        if (head.x === food.x && head.y === food.y) {
+          points += 1
+          food = spawn()
+        } else {
+          snake.pop()
+        }
+        drawScore()
+      }
+
+      function draw() {
+        const w = W / COLS
+        const h = H / ROWS
+        ctx.clearRect(0, 0, W, H)
+        ctx.fillStyle = "#ef4444"
+        ctx.beginPath()
+        ctx.roundRect(food.x * w + 3, food.y * h + 3, w - 6, h - 6, 5)
+        ctx.fill()
+        snake.forEach((s, i) => {
+          ctx.fillStyle = i === 0 ? "#16a34a" : "#4ade80"
+          ctx.beginPath()
+          ctx.roundRect(s.x * w + 1.5, s.y * h + 1.5, w - 3, h - 3, 4)
+          ctx.fill()
+        })
+        if (!alive) {
+          ctx.fillStyle = "rgba(0,0,0,0.5)"
+          ctx.fillRect(0, 0, W, H)
+          ctx.fillStyle = "#fff"
+          ctx.font = "bold 20px system-ui"
+          ctx.textAlign = "center"
+          ctx.fillText(`Game over · ${points}`, W / 2, H / 2)
+        }
+      }
+
+      function loop(t) {
+        if (!alive) {
+          draw()
+          return
+        }
+        if (!last) last = t
+        if (t - last >= STEP_MS) {
+          last = t
+          step()
+        }
+        draw()
+        raf = requestAnimationFrame(loop)
+      }
+
+      function turn(x, y) {
+        if (x === -dir.x && y === -dir.y) return
+        pending = { x, y }
+      }
+
+      function restart() {
+        reset()
+        cancelAnimationFrame(raf)
+        raf = requestAnimationFrame(loop)
+      }
+
+      window.addEventListener("keydown", e => {
+        const k = e.key.toLowerCase()
+        if (k === "arrowup" || k === "w") { turn(0, -1); e.preventDefault() }
+        else if (k === "arrowdown" || k === "s") { turn(0, 1); e.preventDefault() }
+        else if (k === "arrowleft" || k === "a") { turn(-1, 0); e.preventDefault() }
+        else if (k === "arrowright" || k === "d") { turn(1, 0); e.preventDefault() }
+        else if (k === " " || k === "enter") { restart(); e.preventDefault() }
+      })
+
+      let sx = 0
+      let sy = 0
+      canvas.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY })
+      canvas.addEventListener("pointerup", e => {
+        const dx = e.clientX - sx
+        const dy = e.clientY - sy
+        if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return
+        if (Math.abs(dx) > Math.abs(dy)) turn(dx > 0 ? 1 : -1, 0)
+        else turn(0, dy > 0 ? 1 : -1)
+      })
+
+      btn.addEventListener("click", restart)
+    }
+  </script>
+</body>
+</html>

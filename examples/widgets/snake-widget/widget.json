@@ -1,0 +1,9 @@
+{
+  "color": "green",
+  "title": "Snake",
+  "width": 2,
+  "height": 2,
+  "view": {
+    "type": "custom"
+  }
+}
