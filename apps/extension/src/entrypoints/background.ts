@@ -9,11 +9,10 @@ import {
 import { registerRadarBadge } from "@/lib/background/radar-badge"
 import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
 
-registerBundledSourcesLoader()
-const backgroundService = createBackgroundService(backgroundActionDependencies)
 const APP_MENU_ID = "app"
 const COSMOS_MENU_ID = "cosmos"
 const ACTION_CONTEXT = import.meta.env.MANIFEST_VERSION === 3 ? "action" : "browser_action"
+const backgroundService = createBackgroundService(backgroundActionDependencies)
 
 function registerActionMenus(): void {
   browser.contextMenus.create({
@@ -32,6 +31,7 @@ function registerActionMenus(): void {
 }
 
 export default defineBackground(() => {
+  registerBundledSourcesLoader()
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
   void registerNativeIntegration().catch((error) => {
