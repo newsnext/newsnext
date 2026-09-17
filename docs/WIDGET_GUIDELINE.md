@@ -454,6 +454,13 @@ each instance, and `client.liveWidgets.data` keeps addressing the definition.
 
 ## Examples and verification
 
+Scaffold new Widgets with `newsnext widget create <widget-id>`
+(`--preset live-card|data-only|chart|custom`, `--force` to overwrite) instead
+of creating the Widget directory by hand, then validate with
+`newsnext widget validate --run <widget-id>` before installing. Installing a
+Widget mutates a Board: when the user did not name a target Board, list the
+Boards and ask which one to install into instead of picking a default.
+
 Runnable examples live in `examples/widgets`. Copy its
 contents to the Widget directory reported
 by `newsnext status`, then install the `demo-*` directories on a Board through

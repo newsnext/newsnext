@@ -1,6 +1,23 @@
 # Widget authoring
 
-Author and install Widgets through `newsnext eval` and `newsnext widget validate`. This reference covers the manifest, views, data producers, parameters, and validation without additional files.
+Author Widgets with `newsnext widget create`, validate them with
+`newsnext widget validate`, and install them through `newsnext eval`. This reference covers the manifest, views, data producers, parameters, and validation without additional files.
+
+## Creating a Widget
+
+Scaffold a Widget instead of creating its directory by hand:
+
+```sh
+newsnext widget create <widget-id> [--preset live-card|data-only|chart|custom] [--force]
+```
+
+The default `live-card` preset generates a `widget.json` with a `live-card`
+view and a `latest` feed query. `chart` adds a sample `data.mjs`, `custom`
+adds a sample `data.mjs` and `index.html`, and `data-only` generates only
+`widget.json` with no view. The command prints the created directory; the
+directory name is the Widget ID (for example, `keyword-watch/widget.json`
+identifies `keyword-watch`). Never declare `id` in the JSON. Without
+`--force`, existing files fail the command instead of being replaced.
 
 ## Widget clients
 
@@ -326,8 +343,10 @@ Each instance stores its own sparse `patch`, `dataScope`, and `layout`. Identica
 definition inputs share the daemon's result cache. Host data messages expose both
 `widgetId` and `liveWidgetId`; iframe source-window checks isolate each instance.
 
-A full install flow resolves the Board first, installs with a Board-wide scope,
-then reads the placement back to verify:
+A full install flow asks the user for the target Board first when they did not
+name one: list the Boards, let the user pick, and never install into a
+default Board. Then resolve that Board, install with a Board-wide scope,
+and read the placement back to verify:
 
 ```ts
 // Round 1: resolve the Board.
@@ -355,8 +374,8 @@ units; mirror the manifest's `width`/`height` and let the daemon normalize the
 position.
 
 A minimal real-data Widget lives at `references/examples/word-cloud-widget/`
-(`widget.json` and `data.mjs`). Copy the directory into the Widget directory
-reported by `newsnext status`, then install it.
+(`widget.json` and `data.mjs`). Scaffold new Widgets with
+`newsnext widget create` instead of copying this directory by hand.
 
 Validate with `newsnext widget validate --run <widgetId>` before installing:
 `--run` resolves `latest` queries as empty, so zero rows standalone are

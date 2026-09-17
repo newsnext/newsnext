@@ -15,7 +15,9 @@ NEWSNEXT_ENV=production newsnext <command>
 
 Honor a repository's `AGENTS.md` when it selects another environment. Environment selection applies consistently to the daemon endpoint, database, widget directory, and Native Messaging host, so use the same `NEWSNEXT_ENV` for related commands.
 
-Read [references/commands.md](references/commands.md) before answering a command-usage question or operating the CLI. Use `newsnext <command> --help` to confirm details if the installed version may differ from the reference.
+`newsnext <command> --help` is the source of truth for command usage; consult it
+before answering a usage question or operating the CLI. [references/commands.md](references/commands.md)
+only lists the available commands and the conventions `--help` does not cover.
 
 Use `newsnext eval` for Board/LiveCard operations, structured history analysis, full
 snapshot exports, and other typed Actions: the evaluated script receives a

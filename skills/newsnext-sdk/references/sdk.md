@@ -13,9 +13,7 @@ console.log(JSON.stringify(status.workers.length))
 newsnext eval < script.js
 ```
 
-Without `--eval`, the script is read from standard input. TypeScript snippets
-require Bun or Deno; plain Node.js runs JavaScript only. `--timeout` bounds
-the whole evaluation (default 60 seconds, at most 600).
+See `newsnext eval --help` for input and timeout options.
 
 ## Installation
 

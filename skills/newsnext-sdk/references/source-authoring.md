@@ -111,6 +111,8 @@ newsnext run registry/src/example.json latest --watch
 
 For a TypeScript provider, first build the registry and run the registered Source ID unless the installed CLI version explicitly supports that local format. For a local provider that uses stored secrets, pass `--use-provider-secrets`; never print or commit the secret values.
 
+If a run requires authentication, open the login URL printed by the CLI and rerun the command afterward. Quote text parameters that contain integers beyond JavaScript's safe integer range: a bare `--param id=1983553349228987887` is parsed as a number before text coercion and can lose precision, so use `--param 'id="1983553349228987887"'` instead.
+
 Use `--worker <ID_PREFIX>` when several Workers are connected or the run must be non-interactive. Use `--verbose` for extension-side stacks after an ordinary run fails. Use `--debug` only while diagnosing requests because its output can contain sensitive headers and response bodies.
 
 Check the complete result, not just the exit status:
