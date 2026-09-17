@@ -23,7 +23,12 @@ const built = await Bun.build({ entrypoints: [distEntry], format: "esm", target:
 if (!built.success) {
   throw new Error(`SDK bundle failed: ${built.logs.join("\n")}`)
 }
-const bundled = await built.outputs[0]!.text()
+const bundled = (await built.outputs[0]!.text())
+  // Bun annotates bundled chunks with cwd-relative source paths, which differ
+  // by invocation directory. Normalize them so the vendored file is stable.
+  .split("\n")
+  .map(line => /^\s*\/\/\s*\S*dist\/\S+\.js\s*$/.test(line) ? "// <sdk-chunk>" : line)
+  .join("\n")
 mkdirSync(cliVendor, { recursive: true })
 const header = [
   "// Generated bundle of @newsnext/sdk for `newsnext eval`. Do not edit.",
