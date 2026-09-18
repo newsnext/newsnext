@@ -1,5 +1,5 @@
+import { SOURCE_HOST_REQUEST_INTERVAL_MS } from "@newsnext/shared/constants"
 import PQueue from "p-queue"
-import { SOURCE_HOST_REQUEST_INTERVAL_MS } from "./config"
 
 const hostQueues = new Map<string, PQueue>()
 

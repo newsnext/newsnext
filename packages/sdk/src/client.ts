@@ -1,11 +1,9 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
 import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
+import { SOURCE_REQUEST_TIMEOUT_MS } from "@newsnext/shared/constants"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
-
-/** Per-attempt HTTP timeout for client.fetch, mirroring SOURCE_REQUEST_TIMEOUT_MS. */
-const SOURCE_FETCH_TIMEOUT_MS = 10_000
 
 export type SdkTransport = (request: object, options: CallOptions) => AsyncGenerator<unknown>
 
@@ -64,7 +62,7 @@ export class NewsNextClient {
     // 10s per-attempt timeout, shared retry policy, HTTP errors reject.
     // The RPC timeout stays at the SDK default so retries/backoff can complete.
     const timeoutOverride = options.timeoutMs ?? this.options.timeoutMs
-    const timeoutMs = timeoutOverride ?? SOURCE_FETCH_TIMEOUT_MS
+    const timeoutMs = timeoutOverride ?? SOURCE_REQUEST_TIMEOUT_MS
     const rpcTimeoutMs = timeoutOverride ?? DEFAULT_TIMEOUT_MS
     return this.executeAction("developer.fetch", {
       ...input,

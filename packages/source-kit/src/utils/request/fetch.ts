@@ -1,10 +1,10 @@
 import type { Input, Options } from "ky"
 import type { SourceFetch } from "../../types"
-import ky from "ky"
 import {
   SOURCE_REQUEST_RETRY_COUNT,
   SOURCE_REQUEST_TIMEOUT_MS,
-} from "./config"
+} from "@newsnext/shared/constants"
+import ky from "ky"
 import { scheduleHostRequest } from "./queue"
 
 function getRequestHostname(input: Input): string | undefined {
