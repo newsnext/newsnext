@@ -88,11 +88,11 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
       if (!runtime.capabilities.includes("logsPush")) return
       // Best-effort: a level mismatch must never drop the connection.
       await nativeRpc(connection).request("logsSetLevel", { level }).catch((error) => {
-        console.error("Failed to set the NewsNext App log level", error)
+        console.error("Failed to set the NewsNext CLI log level", error)
       })
     },
     getCollectionStatus: async () => {
-      if (!runtime.capabilities.includes("collectionStatusPush")) throw new Error("This NewsNext App does not support live stream diagnostics. Update and restart the daemon.")
+      if (!runtime.capabilities.includes("collectionStatusPush")) throw new Error("This NewsNext CLI does not support live stream diagnostics. Update and restart NewsNext CLI.")
       const cached = runtime.collectionStatus
       if (cached) return cached
       const snapshot = await nativeRpc(await requireNativeConnection()).request("collectionStatusGet", {})
@@ -137,7 +137,7 @@ function sendLogsSubscription(): void {
   if (runtime.connectionState === "connected" && runtime.port && runtime.capabilities.includes("logsPush")) {
     const connection = runtime.port
     void nativeRpc(connection).request("logsSubscribe", { enabled: runtime.logsSubscribed }).catch((error) => {
-      failConnection(connection, error instanceof Error ? error.message : "Failed to subscribe to App logs")
+      failConnection(connection, error instanceof Error ? error.message : "Failed to subscribe to CLI logs")
     })
   }
 }
@@ -157,7 +157,7 @@ async function sendLogLevel(): Promise<void> {
       : settings.general.logsIssuesOnly ? "warn" : "info"
     await nativeRpc(connection).request("logsSetLevel", { level })
   } catch (error) {
-    console.error("Failed to synchronize the NewsNext App log level", error)
+    console.error("Failed to synchronize the NewsNext CLI log level", error)
   }
 }
 
@@ -217,7 +217,7 @@ async function setNativeIntegrationEnabled(
   nextEnabled: boolean,
 ): Promise<NativeIntegrationStatus> {
   if (nextEnabled && !await hasNativeIntegrationPermission()) {
-    throw new Error("NewsNext App integration requires Native Messaging permission")
+    throw new Error("NewsNext CLI integration requires Native Messaging permission")
   }
 
   const key = PERSISTED_DATA_SLICES.settings.key
@@ -237,7 +237,7 @@ async function setNativeIntegrationEnabled(
 }
 
 async function executeCommand(connection: NativePort, request: ExtensionCommand): Promise<unknown> {
-  if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected")
+  if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext CLI disconnected")
   if (runtime.connectionState !== "connected" && request.type !== "action.list"
     && !["nativeIntegration.getStatus", "nativeIntegration.resolveWorkspace", "nativeIntegration.setEnabled"].includes(request.name)) {
     throw new Error("Resolve this browser's Workspace in Settings before using connected Actions")
@@ -269,7 +269,7 @@ function resetConnectionState(
   state: NativeIntegrationFailureState = "serviceNotRunning",
   error?: NativeIntegrationConnectionError,
 ): void {
-  if (runtime.port) closeNativeRpc(runtime.port, error?.message ?? "NewsNext App disconnected")
+  if (runtime.port) closeNativeRpc(runtime.port, error?.message ?? "NewsNext CLI disconnected")
   runtime.port = undefined
   runtime.pendingWorkspace = undefined
   runtime.collectionStatus = undefined
@@ -281,7 +281,7 @@ function resetConnectionState(
   runtime.widgetServerOrigin = undefined
   runtime.connectionState = state
   runtime.connectionError = error
-  const connectionFailure = new Error(error?.message ?? "NewsNext App disconnected")
+  const connectionFailure = new Error(error?.message ?? "NewsNext CLI disconnected")
   rejectNativeConnection(connectionFailure)
   clearNativeMessageChunks()
   notifyDiagnostics()
@@ -348,11 +348,11 @@ function runtimeLastErrorMessage(): string | undefined {
 }
 
 async function requireNativeConnection(): Promise<NativePort> {
-  if (!runtime.enabled) throw new Error("NewsNext App integration is disabled")
+  if (!runtime.enabled) throw new Error("NewsNext CLI integration is disabled")
   if (runtime.connectionState === "connected" && runtime.port) return runtime.port
   if (isRetryableConnectionState() && runtime.reconnectTimer === undefined) connect()
   if (runtime.connectionState !== "connecting" || !runtime.port) {
-    throw new Error("NewsNext App is not connected")
+    throw new Error("NewsNext CLI is not connected")
   }
   return await waitForNativeConnection()
 }

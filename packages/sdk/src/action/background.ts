@@ -205,7 +205,7 @@ const loaderReadLiveCardSnapshotAction = defineActionContract({
 const nativeIntegrationGetStatusAction = defineActionContract({
   name: "nativeIntegration.getStatus",
   kind: "query",
-  description: "Get the local NewsNext App connection status.",
+  description: "Get the local NewsNext CLI connection status.",
   params: EmptyObject,
   result: NativeIntegrationStatusResult,
 })
@@ -221,7 +221,7 @@ const nativeIntegrationGetWidgetsAction = defineActionContract({
 const nativeIntegrationGetLogsAction = defineActionContract({
   name: "nativeIntegration.getLogs",
   kind: "query",
-  description: "Get recent NewsNext App service logs.",
+  description: "Get recent NewsNext CLI service logs.",
   params: EmptyObject,
   result: Type.Array(AppLogEntryResult),
 })
@@ -229,7 +229,7 @@ const nativeIntegrationGetLogsAction = defineActionContract({
 const nativeIntegrationSetLogLevelAction = defineActionContract({
   name: "nativeIntegration.setLogLevel",
   kind: "mutation",
-  description: "Set the NewsNext App service log level (off disables logging entirely).",
+  description: "Set the NewsNext CLI service log level (off disables logging entirely).",
   params: Type.Object({
     level: stringEnum(["off", "error", "warn", "info"] as const),
   }, { additionalProperties: false }),
@@ -255,7 +255,7 @@ const liveCardReadSnapshotAction = defineActionContract({
 const nativeIntegrationSetEnabledAction = defineActionContract({
   name: "nativeIntegration.setEnabled",
   kind: "mutation",
-  description: "Enable or disable the local NewsNext App connection on this device.",
+  description: "Enable or disable the local NewsNext CLI connection on this device.",
   params: Type.Object({
     enabled: Type.Boolean(),
   }, { additionalProperties: false }),

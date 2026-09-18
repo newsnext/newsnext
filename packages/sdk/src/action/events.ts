@@ -15,7 +15,7 @@ const nativeIntegrationStatusChangedEvent = defineEventContract({
 })
 
 const nativeIntegrationLogsChangedEvent = defineEventContract({
-  description: "New NewsNext App service log entries; append them to the getLogs snapshot, deduping by id.",
+  description: "New NewsNext CLI service log entries; append them to the getLogs snapshot, deduping by id.",
   name: "nativeIntegration.logsChanged",
   payload: Type.Object({
     entries: Type.Array(Type.Object({

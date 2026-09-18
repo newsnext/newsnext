@@ -25,6 +25,6 @@ export async function receiveNativeRpc(port: NativePort, message: unknown): Prom
 
 export function nativeRpc(port: NativePort): NativeRpcClient {
   const client = sessions.get(port)
-  if (!client) throw new Error("NewsNext App disconnected")
+  if (!client) throw new Error("NewsNext CLI disconnected")
   return client
 }

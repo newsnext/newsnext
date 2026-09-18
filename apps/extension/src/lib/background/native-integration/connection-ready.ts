@@ -16,7 +16,7 @@ export function waitForNativeConnection(): Promise<NativePort> {
       reject,
       timeoutId: setTimeout(() => {
         waiters.delete(waiter)
-        reject(new Error("Timed out connecting to the NewsNext App"))
+        reject(new Error("Timed out connecting to NewsNext CLI"))
       }, NATIVE_REQUEST_TIMEOUT_MS),
     }
     waiters.add(waiter)

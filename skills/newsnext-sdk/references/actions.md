@@ -220,25 +220,16 @@ await client.actions.loader.readLiveCardSnapshot(input: { card: { createdAt: num
 
 ### nativeIntegration.getLogs
 
-*query* — Get recent NewsNext App service logs.
+*query* — Get recent NewsNext CLI service logs.
 
 ```ts
 await client.actions.nativeIntegration.getLogs()
 // => { id: number; timestamp: string; level: "error" | "warn" | "info"; target: string; message: string }[]
 ```
 
-### nativeIntegration.setLogLevel
-
-*mutation* — Set the NewsNext App service log level (off disables logging entirely).
-
-```ts
-await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "error" | "warn" | "info" })
-// => {}
-```
-
 ### nativeIntegration.getStatus
 
-*query* — Get the local NewsNext App connection status.
+*query* — Get the local NewsNext CLI connection status.
 
 ```ts
 await client.actions.nativeIntegration.getStatus()
@@ -265,11 +256,20 @@ await client.actions.nativeIntegration.resolveWorkspace(input: { resolution: "ov
 
 ### nativeIntegration.setEnabled
 
-*mutation* — Enable or disable the local NewsNext App connection on this device.
+*mutation* — Enable or disable the local NewsNext CLI connection on this device.
 
 ```ts
 await client.actions.nativeIntegration.setEnabled(input: { enabled: boolean })
 // => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; widgetServerOrigin?: string }
+```
+
+### nativeIntegration.setLogLevel
+
+*mutation* — Set the NewsNext CLI service log level (off disables logging entirely).
+
+```ts
+await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "error" | "warn" | "info" })
+// => {}
 ```
 
 ### nextLayer.configureLiveWidget
@@ -444,18 +444,18 @@ Background diagnostics changed; re-read the diagnostics snapshot.
 // payload: {}
 ```
 
+### nativeIntegration.logsChanged
+
+New NewsNext CLI service log entries; append them to the getLogs snapshot, deduping by id.
+
+```ts
+// payload: { entries: { id: number; timestamp: string; level: "error" | "warn" | "info"; target: string; message: string }[] }
+```
+
 ### nativeIntegration.statusChanged
 
 Native worker routing, Widget catalog, or connection state changed; re-read nativeIntegration.getStatus and nativeIntegration.getWidgets.
 
 ```ts
 // payload: {}
-```
-
-### nativeIntegration.logsChanged
-
-New NewsNext App service log entries; append them to the getLogs snapshot, deduping by id.
-
-```ts
-// payload: { entries: { id: number; timestamp: string; level: "error" | "warn" | "info"; target: string; message: string }[] }
 ```

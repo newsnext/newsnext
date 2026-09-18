@@ -112,7 +112,7 @@ export function resolveWorkspace(resolution: WorkspaceResolution, expectedRevisi
         updatedAt: nextWorkspaceUpdatedAt(Math.max(shared.updatedAt, candidate.updatedAt)),
       }, async () => connection, shared)
     }
-    if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected during Workspace resolution")
+    if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext CLI disconnected during Workspace resolution")
     runtime.pendingWorkspace = next
     await applyWorkspace(next, next.liveCards.filter(card => card.workerId === runtime.workerId).map(card => card.cardId))
     runtime.pendingWorkspace = undefined
@@ -243,7 +243,7 @@ async function requestWorkspaceReplacement(
   const result = await nativeRpc(connection).request("workspaceCommit", {
     patch: createWorkspacePatch(base, candidate),
   })
-  if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext App disconnected during Workspace commit")
+  if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext CLI disconnected during Workspace commit")
   const committed = { ...candidate, revision: result.revision }
   if (!runtime.pendingWorkspace) {
     acceptWorkspace(committed, runtime.workerRoutingRevision === routingRevision

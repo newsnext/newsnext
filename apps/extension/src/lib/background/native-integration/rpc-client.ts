@@ -98,7 +98,7 @@ export class NativeRpcClient {
         } catch (error) {
           throw new JSONRPCErrorException(error instanceof Error ? error.message : "Invalid extension command", -32602)
         }
-        if (this.closed) throw new Error("NewsNext App disconnected")
+        if (this.closed) throw new Error("NewsNext CLI disconnected")
         if (this.executing >= 64) throw new JSONRPCErrorException("Too many outstanding Worker calls", -32001)
         this.executing += 1
         try {
@@ -109,7 +109,7 @@ export class NativeRpcClient {
       })
     }
     this.client = new JSONRPCClient((message: unknown) => {
-      if (this.closed) throw new Error("NewsNext App disconnected")
+      if (this.closed) throw new Error("NewsNext CLI disconnected")
       send(message)
     }, createId)
   }
@@ -136,7 +136,7 @@ export class NativeRpcClient {
     params: NativeMethods[Method]["params"],
     timeoutMs = this.timeoutMs,
   ): Promise<NativeMethods[Method]["result"]> {
-    if (this.closed) throw new NativeRequestNotSentError("NewsNext App disconnected")
+    if (this.closed) throw new NativeRequestNotSentError("NewsNext CLI disconnected")
     const cancelling = method === "sdk.cancel"
     // Cleanup has reserved capacity, but cannot accumulate without a bound.
     if (cancelling ? this.cancelling >= 64 : this.outstanding >= 64) {
@@ -147,7 +147,7 @@ export class NativeRpcClient {
     else this.outstanding += 1
     try {
       const value: unknown = await this.client.timeout(timeoutMs).request(method, params)
-      if (this.closed) throw new Error("NewsNext App disconnected")
+      if (this.closed) throw new Error("NewsNext CLI disconnected")
       return parsers[method](value)
     } catch (error) {
       // An unacknowledged cancellation may leave a child alive. Disconnecting

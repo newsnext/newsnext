@@ -35,6 +35,6 @@ const schema = Type.Object({
 })
 
 export function parseCollectionStatus(value: unknown): NativeCollectionStatus {
-  if (!Value.Check(schema, value)) throw new Error("The NewsNext App returned invalid stream diagnostics")
+  if (!Value.Check(schema, value)) throw new Error("NewsNext CLI returned invalid stream diagnostics")
   return value
 }

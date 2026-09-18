@@ -35,7 +35,7 @@ export default defineBackground(() => {
   registerService(BACKGROUND_SERVICE_KEY, backgroundService)
   registerRadarBadge()
   void registerNativeIntegration().catch((error) => {
-    console.error("Failed to initialize the App integration", error)
+    console.error("Failed to initialize the CLI integration", error)
   })
 
   browser.runtime.onInstalled.addListener(registerActionMenus)

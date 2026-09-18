@@ -88,7 +88,7 @@ function startDiagnosticsEvents(nativeIntegration: BackgroundActionDependencies[
 async function readCollectionDiagnostics(nativeIntegration: BackgroundActionDependencies["nativeIntegration"]): Promise<BackgroundDiagnosticsSnapshot["collection"]> {
   try {
     const connection = await nativeIntegration.getStatus()
-    if (connection.state !== "connected") return { status: null, error: `NewsNext App is ${connection.state}. Automatic collection requires a connected daemon.` }
+    if (connection.state !== "connected") return { status: null, error: `NewsNext CLI is ${connection.state}. Automatic collection requires a connected NewsNext CLI.` }
     return { status: await nativeIntegration.getCollectionStatus(), error: null }
   } catch (error) {
     return { status: null, error: error instanceof Error ? error.message : String(error) }

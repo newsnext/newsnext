@@ -350,16 +350,16 @@ export function NativeIntegrationSettings(): React.JSX.Element {
       </ConfigSection>
       {state === "connected" && (
         <ConfigSection
-          title={t("appLogs")}
+          title={t("cliLogs")}
           surfaceClassName="gap-3 p-4"
         >
           <div className="flex items-center justify-between gap-4">
             <span className="min-w-0 flex-1 truncate text-sm font-medium">
-              {t("enableAppLogs")}
+              {t("enableCliLogs")}
             </span>
             <Switch
               checked={logsEnabled}
-              aria-label={t("enableAppLogs")}
+              aria-label={t("enableCliLogs")}
               onCheckedChange={enabled => setLogsEnabled(enabled)}
             />
           </div>
@@ -377,7 +377,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
               </div>
               <div ref={overlayScrollbarsRef} className="max-h-72 overflow-y-auto rounded-xl border bg-background/25">
                 {filteredLogs.length === 0
-                  ? <p className="p-6 text-center text-xs text-muted-foreground">{t("noAppLogs")}</p>
+                  ? <p className="p-6 text-center text-xs text-muted-foreground">{t("noCliLogs")}</p>
                   : filteredLogs.map(entry => (
                       <LogRow key={entry.id} entry={entry} />
                     ))}

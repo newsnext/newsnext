@@ -432,7 +432,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
 
   if (connection.isLoading) return null
   if (connection.state !== "connected" || !connection.serverOrigin) {
-    return <NextLayerMessage>{t("connectAppForWidgets")}</NextLayerMessage>
+    return <NextLayerMessage>{t("connectCliForWidgets")}</NextLayerMessage>
   }
   if (catalog.error) {
     return (
