@@ -55,6 +55,28 @@ export const nativeIntegrationEnabledAtom = atom(
   get => get(persistedSettingsAtom).general.nativeIntegrationEnabled,
 )
 
+export const logsEnabledAtom = atom(
+  get => get(persistedSettingsAtom).general.logsEnabled,
+  (get, set, logsEnabled: boolean) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      general: { ...settings.general, logsEnabled },
+    })
+  },
+)
+
+export const logsIssuesOnlyAtom = atom(
+  get => get(persistedSettingsAtom).general.logsIssuesOnly,
+  (get, set, logsIssuesOnly: boolean) => {
+    const settings = get(persistedSettingsAtom)
+    set(persistedSettingsAtom, {
+      ...settings,
+      general: { ...settings.general, logsIssuesOnly },
+    })
+  },
+)
+
 export async function initializeSettingsStorage(): Promise<void> {
   await settingsStorage.initialize()
 }

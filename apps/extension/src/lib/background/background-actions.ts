@@ -41,6 +41,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   nativeIntegration: {
     getLogs: () => Promise<NativeLogEntry[]>
+    setLogLevel: (input: { level: string }) => Promise<void>
     getCollectionStatus: () => Promise<NativeCollectionStatus>
     setCollectionSubscribed: (enabled: boolean) => void
     getStatus: () => Promise<NativeIntegrationStatus>
@@ -110,6 +111,11 @@ const nativeIntegrationGetWidgetsAction = defineAction(actionContracts["nativeIn
 
 const nativeIntegrationGetLogsAction = defineAction(actionContracts["nativeIntegration.getLogs"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getLogs())
 
+const nativeIntegrationSetLogLevelAction = defineAction(actionContracts["nativeIntegration.setLogLevel"], async (input, context: BackgroundActionContext) => {
+  await context.nativeIntegration.setLogLevel(input)
+  return {}
+})
+
 const liveCardLoadAction = defineAction(actionContracts["liveCard.load"], async (input, context: BackgroundActionContext) => (
   await context.liveCardRouter.load(input)
 ))
@@ -139,6 +145,7 @@ export const backgroundActionDefinitions = [
   liveCardLoadAction,
   liveCardReadSnapshotAction,
   nativeIntegrationGetLogsAction,
+  nativeIntegrationSetLogLevelAction,
   nativeIntegrationGetStatusAction,
   nativeIntegrationGetWidgetsAction,
   nativeIntegrationSetEnabledAction,

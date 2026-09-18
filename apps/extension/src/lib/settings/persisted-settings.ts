@@ -20,6 +20,8 @@ export interface PersistedSettings {
   general: {
     defaultBoardId: string | null
     nativeIntegrationEnabled: boolean
+    logsEnabled: boolean
+    logsIssuesOnly: boolean
     sourceIcon: SourceIconSettings
   }
   shortcuts: ShortcutSettings
@@ -41,6 +43,8 @@ export function createDefaultPersistedSettings(): PersistedSettings {
     general: {
       defaultBoardId: null,
       nativeIntegrationEnabled: false,
+      logsEnabled: true,
+      logsIssuesOnly: false,
       sourceIcon: { ...DEFAULT_SOURCE_ICON_SETTINGS },
     },
     shortcuts: { ...DEFAULT_SHORTCUT_SETTINGS },
@@ -82,6 +86,12 @@ export function normalizePersistedSettings(value: unknown): PersistedSettings {
       nativeIntegrationEnabled: typeof general?.nativeIntegrationEnabled === "boolean"
         ? general.nativeIntegrationEnabled
         : defaults.general.nativeIntegrationEnabled,
+      logsEnabled: typeof general?.logsEnabled === "boolean"
+        ? general.logsEnabled
+        : defaults.general.logsEnabled,
+      logsIssuesOnly: typeof general?.logsIssuesOnly === "boolean"
+        ? general.logsIssuesOnly
+        : defaults.general.logsIssuesOnly,
       sourceIcon: normalizeSourceIconSettings(
         general?.sourceIcon,
         defaults.general.sourceIcon,

@@ -34,6 +34,7 @@ function createInitialWorkspace(): NativeWorkspace {
 interface NativeIntegrationRuntime {
   collectionSubscribed: boolean
   collectionStatus: NativeCollectionStatus | undefined
+  logsSubscribed: boolean
   daemonVersion: string | undefined
   capabilities: string[]
   connectionError: NativeIntegrationStatus["connectionError"]
@@ -57,6 +58,7 @@ interface NativeIntegrationRuntime {
 export const runtime: NativeIntegrationRuntime = {
   collectionSubscribed: false,
   collectionStatus: undefined,
+  logsSubscribed: false,
   daemonVersion: undefined,
   capabilities: [],
   connectionError: undefined,

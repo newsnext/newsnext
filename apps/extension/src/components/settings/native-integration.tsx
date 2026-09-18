@@ -3,24 +3,19 @@ import type { NativeIntegrationStatus } from "@/lib/background/native-integratio
 import type { StaticMessageKey } from "@/lib/i18n"
 import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
 import { Button } from "@newsnext/ui/components/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@newsnext/ui/components/select"
 import { Switch } from "@newsnext/ui/components/switch"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
-import { useAtomValueRawSync } from "jotai"
+import { useAtomValueRawSync, useSetAtom } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
 import { useAsyncAction } from "@/hooks/use-async-action"
+import { useBackgroundEvent } from "@/hooks/use-background-event"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
+import { BACKGROUND_LOGS_PORT } from "@/lib/background/native-integration"
 import { NATIVE_INTEGRATION_PERMISSIONS } from "@/lib/background/native-integration/permission"
-import { nativeIntegrationEnabledAtom } from "@/store/settings"
+import { logsEnabledAtom, logsIssuesOnlyAtom, nativeIntegrationEnabledAtom } from "@/store/settings"
 
 interface StatusPresentation {
   dotClassName: string
@@ -45,12 +40,37 @@ const CHECKING_PRESENTATION: StatusPresentation = {
   labelKey: "checking",
 }
 
+function LogRow({ entry }: { entry: NativeLogEntry }): React.JSX.Element {
+  const [headline, ...details] = entry.message.split(" · ")
+  const meta = details.filter(segment => segment !== "succeeded=true")
+  return (
+    <div className="grid grid-cols-[4.5rem_3.5rem_minmax(0,1fr)] gap-2 border-b px-3 py-2 text-xs last:border-b-0">
+      <time className="text-muted-foreground" dateTime={entry.timestamp}>
+        {new Date(entry.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+      </time>
+      <span className={entry.level === "error" ? "text-destructive" : entry.level === "warn" ? "text-amber-500" : "text-muted-foreground"}>
+        {entry.level}
+      </span>
+      <span className="min-w-0">
+        <span className="mr-2 font-mono text-muted-foreground">{entry.target}</span>
+        <span className="break-words">{headline}</span>
+        {meta.length > 0 && (
+          <span className="block truncate font-mono text-[11px] leading-5 text-muted-foreground/70" title={meta.join(" · ")}>
+            {meta.join(" · ")}
+          </span>
+        )}
+      </span>
+    </div>
+  )
+}
+
 export function NativeIntegrationSettings(): React.JSX.Element {
   const { t } = useI18n()
   const [status, setStatus] = useState<NativeIntegrationStatus>()
   const [resolution, setResolution] = useState<WorkspaceResolution>("merge")
   const [logs, setLogs] = useState<NativeLogEntry[]>([])
-  const [logLevel, setLogLevel] = useState<"all" | NativeLogEntry["level"]>("all")
+  const issuesOnly = useAtomValueRawSync(logsIssuesOnlyAtom)
+  const setIssuesOnly = useSetAtom(logsIssuesOnlyAtom)
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
     t("updateNativeIntegrationFailed"),
   )
@@ -59,6 +79,8 @@ export function NativeIntegrationSettings(): React.JSX.Element {
   )
   const state = status?.state
   const isEnabled = useAtomValueRawSync(nativeIntegrationEnabledAtom)
+  const logsEnabled = useAtomValueRawSync(logsEnabledAtom)
+  const setLogsEnabled = useSetAtom(logsEnabledAtom)
   const hasConnectionGuidance = state !== undefined
     && ["workerConflict", "hostNotInstalled", "protocolIncompatible", "daemonOutdated", "serviceNotRunning"].includes(state)
   const presentation = state ? STATUS_PRESENTATION[state] : CHECKING_PRESENTATION
@@ -79,10 +101,30 @@ export function NativeIntegrationSettings(): React.JSX.Element {
     }
   }, [])
 
+  const appendLogs = useCallback((entries: NativeLogEntry[]): void => {
+    if (entries.length === 0) return
+    setLogs((previous) => {
+      const seen = new Set(previous.map(entry => entry.id))
+      const fresh = entries.filter(entry => !seen.has(entry.id))
+      if (fresh.length === 0) return previous
+      return [...previous.slice(Math.max(0, previous.length + fresh.length - 500)), ...fresh]
+    })
+  }, [])
+
+  useBackgroundEvent("nativeIntegration.logsChanged", payload => appendLogs(payload.entries), state === "connected" && logsEnabled)
+
   useEffect(() => {
     void refreshStatus()
-    void refreshLogs()
-  }, [refreshLogs, refreshStatus])
+    if (logsEnabled) void refreshLogs()
+  }, [logsEnabled, refreshLogs, refreshStatus])
+
+  useEffect(() => {
+    if (state !== "connected" || !logsEnabled) return
+    // Lifetime-based subscription: disconnecting releases the daemon push
+    // even if this page crashes, mirroring the diagnostics port.
+    const subscription = browser.runtime.connect({ name: BACKGROUND_LOGS_PORT })
+    return () => subscription.disconnect()
+  }, [logsEnabled, state])
 
   useEffect(() => {
     if (!isEnabled) {
@@ -90,14 +132,13 @@ export function NativeIntegrationSettings(): React.JSX.Element {
     }
     const timer = setInterval(() => {
       void refreshStatus()
-      void refreshLogs()
     }, 1_000)
     return () => clearInterval(timer)
-  }, [isEnabled, refreshLogs, refreshStatus])
+  }, [isEnabled, refreshStatus])
 
   const filteredLogs = useMemo(() => (
-    logs.filter(entry => logLevel === "all" || entry.level === logLevel).toReversed()
-  ), [logLevel, logs])
+    logs.filter(entry => !issuesOnly || entry.level !== "info").toReversed()
+  ), [issuesOnly, logs])
 
   const handleEnabledChange = useCallback(async (enabled: boolean): Promise<void> => {
     const succeeded = await runToggle(async () => {
@@ -310,42 +351,39 @@ export function NativeIntegrationSettings(): React.JSX.Element {
       {state === "connected" && (
         <ConfigSection
           title={t("appLogs")}
-          description={t("appLogsDescription")}
           surfaceClassName="gap-3 p-4"
         >
-          <div className="flex items-center justify-between gap-3">
-            <Select value={logLevel} onValueChange={value => value && setLogLevel(value)}>
-              <SelectTrigger size="sm" className="w-32" aria-label={t("filterLogs")}>
-                <SelectValue>{t(logLevel === "all" ? "all" : logLevel)}</SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {(["all", "info", "warn", "error"] as const).map(level => (
-                  <SelectItem key={level} value={level}>{t(level)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-xs text-muted-foreground">
-              {t("appLogCount", { count: filteredLogs.length })}
+          <div className="flex items-center justify-between gap-4">
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">
+              {t("enableAppLogs")}
             </span>
+            <Switch
+              checked={logsEnabled}
+              aria-label={t("enableAppLogs")}
+              onCheckedChange={enabled => setLogsEnabled(enabled)}
+            />
           </div>
-          <div ref={overlayScrollbarsRef} className="max-h-72 overflow-y-auto rounded-xl border bg-background/25">
-            {filteredLogs.length === 0
-              ? <p className="p-6 text-center text-xs text-muted-foreground">{t("noAppLogs")}</p>
-              : filteredLogs.map(entry => (
-                  <div key={entry.id} className="grid grid-cols-[4.5rem_3.5rem_minmax(0,1fr)] gap-2 border-b px-3 py-2 text-xs last:border-b-0">
-                    <time className="text-muted-foreground" dateTime={entry.timestamp}>
-                      {new Date(entry.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                    </time>
-                    <span className={entry.level === "error" ? "text-destructive" : "text-muted-foreground"}>
-                      {entry.level}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="mr-2 font-mono text-muted-foreground">{entry.target}</span>
-                      <span className="break-words">{entry.message}</span>
-                    </span>
-                  </div>
-                ))}
-          </div>
+          {logsEnabled && (
+            <>
+              <div className="flex items-center justify-between gap-4">
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                  {t("errorsWarningsOnly")}
+                </span>
+                <Switch
+                  checked={issuesOnly}
+                  aria-label={t("errorsWarningsOnly")}
+                  onCheckedChange={enabled => setIssuesOnly(enabled)}
+                />
+              </div>
+              <div ref={overlayScrollbarsRef} className="max-h-72 overflow-y-auto rounded-xl border bg-background/25">
+                {filteredLogs.length === 0
+                  ? <p className="p-6 text-center text-xs text-muted-foreground">{t("noAppLogs")}</p>
+                  : filteredLogs.map(entry => (
+                      <LogRow key={entry.id} entry={entry} />
+                    ))}
+              </div>
+            </>
+          )}
         </ConfigSection>
       )}
     </div>

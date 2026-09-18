@@ -226,6 +226,16 @@ const nativeIntegrationGetLogsAction = defineActionContract({
   result: Type.Array(AppLogEntryResult),
 })
 
+const nativeIntegrationSetLogLevelAction = defineActionContract({
+  name: "nativeIntegration.setLogLevel",
+  kind: "mutation",
+  description: "Set the NewsNext App service log level (off disables logging entirely).",
+  params: Type.Object({
+    level: stringEnum(["off", "error", "warn", "info"] as const),
+  }, { additionalProperties: false }),
+  result: EmptyObject,
+})
+
 const liveCardLoadAction = defineActionContract({
   name: "liveCard.load",
   kind: "query",
@@ -329,6 +339,7 @@ export const backgroundActionContracts = [
   nativeIntegrationGetStatusAction,
   nativeIntegrationGetWidgetsAction,
   nativeIntegrationGetLogsAction,
+  nativeIntegrationSetLogLevelAction,
   liveCardLoadAction,
   liveCardReadSnapshotAction,
   nativeIntegrationSetEnabledAction,

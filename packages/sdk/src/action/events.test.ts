@@ -25,6 +25,7 @@ describe("event catalog", () => {
   it("publishes the background events both directions share", () => {
     expect(Object.keys(eventContracts).sort()).toEqual([
       "diagnostics.changed",
+      "nativeIntegration.logsChanged",
       "nativeIntegration.statusChanged",
     ])
   })

@@ -227,6 +227,15 @@ await client.actions.nativeIntegration.getLogs()
 // => { id: number; timestamp: string; level: "error" | "warn" | "info"; target: string; message: string }[]
 ```
 
+### nativeIntegration.setLogLevel
+
+*mutation* — Set the NewsNext App service log level (off disables logging entirely).
+
+```ts
+await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "error" | "warn" | "info" })
+// => {}
+```
+
 ### nativeIntegration.getStatus
 
 *query* — Get the local NewsNext App connection status.
@@ -441,4 +450,12 @@ Native worker routing, Widget catalog, or connection state changed; re-read nati
 
 ```ts
 // payload: {}
+```
+
+### nativeIntegration.logsChanged
+
+New NewsNext App service log entries; append them to the getLogs snapshot, deduping by id.
+
+```ts
+// payload: { entries: { id: number; timestamp: string; level: "error" | "warn" | "info"; target: string; message: string }[] }
 ```

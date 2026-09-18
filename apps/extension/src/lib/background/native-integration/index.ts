@@ -83,6 +83,14 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
   },
   nativeIntegration: {
     getLogs: async () => nativeRpc(await requireNativeConnection()).request("logsGet", {}),
+    setLogLevel: async ({ level }) => {
+      const connection = await requireNativeConnection()
+      if (!runtime.capabilities.includes("logsPush")) return
+      // Best-effort: a level mismatch must never drop the connection.
+      await nativeRpc(connection).request("logsSetLevel", { level }).catch((error) => {
+        console.error("Failed to set the NewsNext App log level", error)
+      })
+    },
     getCollectionStatus: async () => {
       if (!runtime.capabilities.includes("collectionStatusPush")) throw new Error("This NewsNext App does not support live stream diagnostics. Update and restart the daemon.")
       const cached = runtime.collectionStatus
@@ -101,6 +109,8 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
     resolveWorkspace: async ({ resolution, expectedRevision }) => {
       await resolveWorkspace(resolution, expectedRevision)
       sendCollectionSubscription()
+      sendLogsSubscription()
+      void sendLogLevel()
       notifyDiagnostics()
       return getNativeIntegrationStatus()
     },
@@ -121,6 +131,56 @@ function sendCollectionSubscription(): void {
       failConnection(connection, error instanceof Error ? error.message : "Failed to subscribe to collection status")
     })
   }
+}
+
+function sendLogsSubscription(): void {
+  if (runtime.connectionState === "connected" && runtime.port && runtime.capabilities.includes("logsPush")) {
+    const connection = runtime.port
+    void nativeRpc(connection).request("logsSubscribe", { enabled: runtime.logsSubscribed }).catch((error) => {
+      failConnection(connection, error instanceof Error ? error.message : "Failed to subscribe to App logs")
+    })
+  }
+}
+
+export const BACKGROUND_LOGS_PORT = "newsnext.background-logs.subscription"
+
+// Pushes the persisted log switch/level to the daemon. Best-effort like the
+// action above: older daemons without `logsSetLevel` just keep their default.
+async function sendLogLevel(): Promise<void> {
+  if (runtime.connectionState !== "connected" || !runtime.port || !runtime.capabilities.includes("logsPush")) return
+  const connection = runtime.port
+  try {
+    const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.settings.key)
+    const settings = normalizePersistedSettings(stored[PERSISTED_DATA_SLICES.settings.key])
+    const level = !settings.general.logsEnabled
+      ? "off"
+      : settings.general.logsIssuesOnly ? "warn" : "info"
+    await nativeRpc(connection).request("logsSetLevel", { level })
+  } catch (error) {
+    console.error("Failed to synchronize the NewsNext App log level", error)
+  }
+}
+
+function setLogsSubscribed(enabled: boolean): void {
+  if (runtime.logsSubscribed === enabled) return
+  runtime.logsSubscribed = enabled
+  sendLogsSubscription()
+}
+
+// Subscription lifetime follows the viewing pages, like the diagnostics port:
+// the first open Settings page subscribes the daemon, the last closed page
+// unsubscribes it. Crashed pages drop their port and release automatically.
+function startLogSubscriptionEvents(): void {
+  const subscriptions = new Set<unknown>()
+  browser.runtime.onConnect.addListener((port) => {
+    if (port.name !== BACKGROUND_LOGS_PORT) return
+    subscriptions.add(port)
+    if (subscriptions.size === 1) setLogsSubscribed(true)
+    port.onDisconnect.addListener(() => {
+      subscriptions.delete(port)
+      if (subscriptions.size === 0) setLogsSubscribed(false)
+    })
+  })
 }
 
 function notifyDiagnostics(): void {
@@ -387,6 +447,8 @@ function handleMessage(connection: NativePort, value: unknown): void {
         if (runtime.connectionState === "connected") {
           resolveNativeConnection(connection)
           sendCollectionSubscription()
+          sendLogsSubscription()
+          void sendLogLevel()
         } else {
           rejectNativeConnection(new Error("Resolve the Workspace in Settings to finish connecting"))
         }
@@ -438,6 +500,7 @@ async function synchronizeSettingsChange(settings: PersistedSettings): Promise<v
   try {
     await commitNativeIntegrationSettings(settings)
     await applySynchronizedNativeIntegrationEnabled(settings.general.nativeIntegrationEnabled)
+    await sendLogLevel()
   } catch (error) {
     console.error("Failed to synchronize Settings", error)
   }
@@ -452,6 +515,7 @@ async function hasNativeIntegrationPermission(): Promise<boolean> {
 export async function registerNativeIntegration(): Promise<void> {
   registerSdkBridge(requireNativeConnection)
   registerApplicationDataSync(requireNativeConnection)
+  startLogSubscriptionEvents()
   browser.alarms.onAlarm.addListener((alarm) => {
     if (runtime.enabled
       && alarm.name === NATIVE_INTEGRATION_RECONNECT_ALARM
@@ -523,6 +587,11 @@ function handleNotification(connection: NativePort, method: string, params: unkn
       if (runtime.collectionSubscribed) {
         runtime.collectionStatus = notification.params.status
         notifyDiagnostics()
+      }
+      break
+    case "logsChanged":
+      if (runtime.logsSubscribed) {
+        emitBackgroundEvent("nativeIntegration.logsChanged", { entries: notification.params.entries })
       }
       break
     case "widgetCatalogChanged":

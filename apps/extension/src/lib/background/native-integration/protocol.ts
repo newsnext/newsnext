@@ -7,7 +7,7 @@ import { normalizeApplicationData } from "../../settings/persisted-data"
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
 import { parseWorkspacePatch } from "../workspace-patch"
 import { parseCollectionStatus } from "./collection-status"
-import { parseLocalCardIds, parseRevision, parseWidgetCatalog } from "./message-values"
+import { parseLocalCardIds, parseLogs, parseRevision, parseWidgetCatalog } from "./message-values"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 
 type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & {
@@ -162,6 +162,8 @@ export function parseNativeNotification(method: string, params: unknown): Native
       return { method, params: { patch: parseWorkspacePatch(params.patch), localCardIds: parseLocalCardIds(params.localCardIds) } }
     case "collectionStatusChanged":
       return { method, params: { status: parseCollectionStatus(params.status) } }
+    case "logsChanged":
+      return { method, params: { entries: parseLogs(params.entries) } }
     case "widgetCatalogChanged":
       return { method, params: { widgets: parseWidgetCatalog(params.widgets) } }
     case "localSourcesChanged":

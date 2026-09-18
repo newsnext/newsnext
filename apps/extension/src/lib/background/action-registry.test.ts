@@ -37,6 +37,7 @@ function createContext(): BackgroundActionContext {
     nativeIntegration: {
       setCollectionSubscribed: vi.fn(),
       getLogs: vi.fn(async () => []),
+      setLogLevel: vi.fn(async () => undefined),
       getCollectionStatus: vi.fn(async () => ({ initialized: false, sampledAt: 0, persistenceError: null, pendingWrites: 0, streams: [] })),
       getStatus: vi.fn(async () => ({
         capabilities: [],
@@ -74,8 +75,8 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(46)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(23)
+    expect(actions).toHaveLength(47)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(24)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(19)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({

@@ -6,6 +6,8 @@ import type { ExtensionCommand } from "@/lib/native-protocol/ExtensionCommand"
 import type { LiveCardObservedParams } from "@/lib/native-protocol/LiveCardObservedParams"
 import type { LiveCardSnapshotGetParams } from "@/lib/native-protocol/LiveCardSnapshotGetParams"
 import type { LogEntry } from "@/lib/native-protocol/LogEntry"
+import type { LogsSetLevelParams } from "@/lib/native-protocol/LogsSetLevelParams"
+import type { LogsSubscribeParams } from "@/lib/native-protocol/LogsSubscribeParams"
 import type { SdkOpenParams } from "@/lib/native-protocol/SdkOpenParams"
 import type { SdkStreamParams } from "@/lib/native-protocol/SdkStreamParams"
 import type { WorkerTakeoverParams } from "@/lib/native-protocol/WorkerTakeoverParams"
@@ -25,6 +27,8 @@ interface NativeMethods {
   "sdk.next": { params: SdkStreamParams, result: unknown }
   "sdk.cancel": { params: SdkStreamParams, result: null }
   "logsGet": { params: Record<string, never>, result: LogEntry[] }
+  "logsSetLevel": { params: LogsSetLevelParams, result: null }
+  "logsSubscribe": { params: LogsSubscribeParams, result: null }
   "collectionStatusGet": { params: Record<string, never>, result: CollectionStatus }
   "liveCardSnapshotGet": { params: LiveCardSnapshotGetParams, result: SourceLoadResponse | null }
   "liveCardObserved": { params: LiveCardObservedParams, result: null }
@@ -38,6 +42,8 @@ const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMeth
   "sdk.next": value => value,
   "sdk.cancel": parseEmptyResult,
   "logsGet": parseLogs,
+  "logsSetLevel": parseEmptyResult,
+  "logsSubscribe": parseEmptyResult,
   "collectionStatusGet": parseCollectionStatus,
   "liveCardSnapshotGet": (value) => {
     if (value === null || isSourceLoadResponse(value)) return value

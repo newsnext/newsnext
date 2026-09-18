@@ -56,6 +56,17 @@ describe("persisted settings", () => {
     expect(normalizePersistedDeviceState({ settingsTab: "cli", version: 1 }).settingsTab).toBe("cli")
   })
 
+  it("normalizes the daemon log switch", () => {
+    expect(normalizePersistedSettings({
+      general: { logsEnabled: false, logsIssuesOnly: true },
+      version: 1,
+    }).general).toMatchObject({ logsEnabled: false, logsIssuesOnly: true })
+    expect(normalizePersistedSettings({
+      general: { logsEnabled: "yes", logsIssuesOnly: 1 },
+      version: 1,
+    }).general).toMatchObject({ logsEnabled: true, logsIssuesOnly: false })
+  })
+
   it("normalizes the synchronized locale preference", () => {
     expect(normalizePersistedSettings({
       appearance: { localePreference: "zh-TW" },
