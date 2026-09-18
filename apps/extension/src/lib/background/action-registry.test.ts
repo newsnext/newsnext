@@ -53,6 +53,7 @@ function createContext(): BackgroundActionContext {
         state: "disabled" as const,
         workerId: "worker",
       })),
+      restart: vi.fn(async () => undefined),
     },
     workerManagement: {
       regenerateIdentity: vi.fn(async () => ({
@@ -75,8 +76,8 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(47)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(24)
+    expect(actions).toHaveLength(48)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(25)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(19)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({

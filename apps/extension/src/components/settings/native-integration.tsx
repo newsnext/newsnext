@@ -74,6 +74,9 @@ export function NativeIntegrationSettings(): React.JSX.Element {
   const { error: updateError, isPending: updating, run: runUpdate } = useAsyncAction(
     t("updateNativeIntegrationFailed"),
   )
+  const { error: restartError, isPending: restarting, run: runRestart } = useAsyncAction(
+    t("restartFailed"),
+  )
   const { error: toggleError, isPending: toggling, run: runToggle } = useAsyncAction(
     t("updateNativeIntegrationFailed"),
   )
@@ -187,6 +190,13 @@ export function NativeIntegrationSettings(): React.JSX.Element {
     }
   }, [refreshStatus, runUpdate])
 
+  const handleRestart = useCallback(async (): Promise<void> => {
+    await runRestart(async () => {
+      await actions.nativeIntegration.restart({})
+    })
+    await refreshStatus()
+  }, [refreshStatus, runRestart])
+
   return (
     <div className="space-y-6">
       <ConfigSection
@@ -271,6 +281,17 @@ export function NativeIntegrationSettings(): React.JSX.Element {
                 {status.workerId}
               </p>
             </div>
+            {state === "connected" && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={restarting || updating}
+                onClick={() => void handleRestart()}
+              >
+                {restarting ? t("restarting") : t("restart")}
+              </Button>
+            )}
           </div>
         )}
 
@@ -321,14 +342,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
                     ? t("protocolIncompatibleDescription")
                     : state === "daemonOutdated"
                       ? t("daemonOutdatedDescription")
-                      : (
-                          <>
-                            {t("startLocalServer")}
-                            {" "}
-                            <code>newsnext start</code>
-                            .
-                          </>
-                        )}
+                      : t("serviceNotRunningDescription")}
             </p>
             {state === "workerConflict" && (
               <Button
@@ -342,9 +356,9 @@ export function NativeIntegrationSettings(): React.JSX.Element {
             )}
           </div>
         )}
-        {(toggleError || updateError) && (
+        {(toggleError || updateError || restartError) && (
           <p role="alert" className="text-xs text-destructive">
-            {toggleError || updateError}
+            {toggleError || updateError || restartError}
           </p>
         )}
       </ConfigSection>

@@ -115,6 +115,13 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
       return getNativeIntegrationStatus()
     },
     setEnabled: ({ enabled }) => setNativeIntegrationEnabled(enabled),
+    restart: async () => {
+      const connection = await requireNativeConnection()
+      if (!runtime.capabilities.includes("restart")) {
+        throw new Error("This NewsNext CLI does not support restart. Update NewsNext CLI.")
+      }
+      await nativeRpc(connection).request("restart", {})
+    },
   },
   workerManagement: {
     regenerateIdentity: () => regenerateWorker(workerConnectionControls),
@@ -452,6 +459,10 @@ function handleMessage(connection: NativePort, value: unknown): void {
         } else {
           rejectNativeConnection(new Error("Resolve the Workspace in Settings to finish connecting"))
         }
+        // The state settled to connected (or workspaceConflict): catalog, server
+        // origin, and routing are fresh, so views must refetch even though no
+        // push notification will follow.
+        emitBackgroundEvent("nativeIntegration.statusChanged", {})
         notifyDiagnostics()
       }).catch(error => failConnection(connection, error instanceof Error ? error.message : "Failed to initialize Workspace"))
     } else if (message.type === "rpc") {

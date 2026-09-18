@@ -254,6 +254,15 @@ await client.actions.nativeIntegration.resolveWorkspace(input: { resolution: "ov
 // => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; widgetServerOrigin?: string }
 ```
 
+### nativeIntegration.restart
+
+*mutation* — Restart the local NewsNext CLI service. The connection drops and reconnects automatically.
+
+```ts
+await client.actions.nativeIntegration.restart()
+// => {}
+```
+
 ### nativeIntegration.setEnabled
 
 *mutation* — Enable or disable the local NewsNext CLI connection on this device.

@@ -34,6 +34,7 @@ interface NativeMethods {
   "liveCardObserved": { params: LiveCardObservedParams, result: null }
   "workspaceCommit": { params: WorkspaceCommitParams, result: WorkspaceCommitResult }
   "workerTakeover": { params: WorkerTakeoverParams, result: null }
+  "restart": { params: Record<string, never>, result: null }
 }
 
 const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMethods[Method]["result"] } = {
@@ -59,6 +60,7 @@ const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMeth
     return { revision, localCardIds: parseLocalCardIds(value.localCardIds) }
   },
   "workerTakeover": parseEmptyResult,
+  "restart": parseEmptyResult,
 }
 
 function parseEmptyResult(value: unknown): null {

@@ -48,6 +48,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
     getWidgets: () => Promise<WidgetCatalogEntry[]>
     resolveWorkspace: (input: { resolution: WorkspaceResolution, expectedRevision: number }) => Promise<NativeIntegrationStatus>
     setEnabled: (input: { enabled: boolean }) => Promise<NativeIntegrationStatus>
+    restart: () => Promise<void>
   }
   liveCardRouter: {
     load: (input: { cardId: string }) => Promise<SourceLoadResponse>
@@ -128,6 +129,11 @@ const nativeIntegrationSetEnabledAction = defineAction(actionContracts["nativeIn
 
 const nativeIntegrationResolveWorkspaceAction = defineAction(actionContracts["nativeIntegration.resolveWorkspace"], async (input, context: BackgroundActionContext) => await context.nativeIntegration.resolveWorkspace(input))
 
+const nativeIntegrationRestartAction = defineAction(actionContracts["nativeIntegration.restart"], async (_input, context: BackgroundActionContext) => {
+  await context.nativeIntegration.restart()
+  return {}
+})
+
 const workerRegenerateIdentityAction = defineAction(actionContracts["worker.regenerateIdentity"], async (_input, context: BackgroundActionContext) => (
   await context.workerManagement.regenerateIdentity()
 ))
@@ -150,6 +156,7 @@ export const backgroundActionDefinitions = [
   nativeIntegrationGetWidgetsAction,
   nativeIntegrationSetEnabledAction,
   nativeIntegrationResolveWorkspaceAction,
+  nativeIntegrationRestartAction,
   workerRegenerateIdentityAction,
   workerTakeOverAction,
 ] as const

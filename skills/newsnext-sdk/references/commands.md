@@ -8,9 +8,9 @@ repository-specific override, use `NEWSNEXT_ENV=production`.
 
 ## Available commands
 
-- `start` / `stop` / `restart`: manage the background daemon.
 - `status`: show the daemon PID, widget server URL and file directory, and
-  connected browser Workers.
+  connected browser Workers. The daemon starts automatically when the browser
+  connects; restart it from Settings > Integration when needed.
 - `doctor`: check the executable, environment, Native Messaging registration,
   database, widget manifests, daemon, and extension connectivity.
 - `fetch`: fetch an HTTP(S) URL inside a connected extension.
@@ -24,7 +24,7 @@ repository-specific override, use `NEWSNEXT_ENV=production`.
 - `install-skill`: install the NewsNext SDK skill for AI coding agents.
 
 `native-host`, `__daemon`, and `__sdk` are hidden implementation entry points;
-use `install-native-host` and `start` instead.
+use `install-native-host` instead.
 
 ## Conventions `--help` does not cover
 

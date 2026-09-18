@@ -47,4 +47,4 @@ to verify the result.
 
 Read [references/source-authoring.md](references/source-authoring.md) before investigating, creating, changing, or testing a Source. It defines the required browser-led discovery order, JSON-first implementation policy, existing-source references, and `fetch`/`run` verification loop.
 
-Keep authorization boundaries intact. Commands such as `stop` and `install-native-host` mutate state; explaining them does not authorize running them.
+Keep authorization boundaries intact. Commands such as `install-native-host` and `widget create` mutate state; explaining them does not authorize running them.

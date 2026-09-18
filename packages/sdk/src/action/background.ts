@@ -273,6 +273,14 @@ const nativeIntegrationResolveWorkspaceAction = defineActionContract({
   result: NativeIntegrationStatusResult,
 })
 
+const nativeIntegrationRestartAction = defineActionContract({
+  name: "nativeIntegration.restart",
+  kind: "mutation",
+  description: "Restart the local NewsNext CLI service. The connection drops and reconnects automatically.",
+  params: EmptyObject,
+  result: EmptyObject,
+})
+
 const workerRegenerateIdentityAction = defineActionContract({
   name: "worker.regenerateIdentity",
   kind: "mutation",
@@ -344,6 +352,7 @@ export const backgroundActionContracts = [
   liveCardReadSnapshotAction,
   nativeIntegrationSetEnabledAction,
   nativeIntegrationResolveWorkspaceAction,
+  nativeIntegrationRestartAction,
   workerRegenerateIdentityAction,
   workerTakeOverAction,
 ] as const
