@@ -10,7 +10,10 @@ import { parseCollectionStatus } from "./collection-status"
 import { parseLocalCardIds, parseRevision, parseWidgetCatalog } from "./message-values"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 
-type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & { capabilities: string[] }
+type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & {
+  capabilities: string[]
+  localSources: Record<string, unknown>
+}
 
 type ParsedHostMessage
   = | Exclude<HostToExtension, { type: "chunk" | "ready" }>
@@ -50,6 +53,7 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       localCardIds: parseLocalCardIds(value.localCardIds),
       workerRoutingRevision: parseRevision(value.workerRoutingRevision, "Worker routing"),
       offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
+      localSources: parseLocalProviders(value.localSources),
     }
   }
   if (value.type === "rpc" && "message" in value) return { type: "rpc", message: value.message }
@@ -137,6 +141,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value)
 }
 
+function parseLocalProviders(value: unknown): Record<string, unknown> {
+  if (value === undefined) return {}
+  if (!isRecord(value) || Object.values(value).some(provider => !isRecord(provider))) {
+    throw new Error("The native host returned invalid local Sources")
+  }
+  return value
+}
+
 export function parseNativeNotification(method: string, params: unknown): NativeNotification {
   if (!isRecord(params)) throw new Error("The native host returned invalid notification parameters")
   switch (method) {
@@ -152,6 +164,8 @@ export function parseNativeNotification(method: string, params: unknown): Native
       return { method, params: { status: parseCollectionStatus(params.status) } }
     case "widgetCatalogChanged":
       return { method, params: { widgets: parseWidgetCatalog(params.widgets) } }
+    case "localSourcesChanged":
+      return { method, params: { providers: parseLocalProviders(params.providers) } }
     default:
       throw new Error(`Unsupported native notification '${method}'`)
   }

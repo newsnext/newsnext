@@ -13,6 +13,7 @@ import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { emitBackgroundEvent } from "../background-events"
+import { setLocalSourceProviders } from "../bundled-sources"
 import { initializeWorkerIdentity } from "../worker-identity"
 import { summarizeWorkspace } from "../workspace-resolution"
 import {
@@ -379,6 +380,7 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.offlineWorkers = message.offlineWorkers
       runtime.widgetCatalog = message.widgets
       runtime.widgetServerOrigin = message.widgetServerUrl
+      setLocalSourceProviders(message.localSources)
       runtime.connectionError = undefined
       void initializeSharedWorkspace(connection, message.workspace, message.localCardIds).then(() => {
         if (runtime.port !== connection) return
@@ -526,6 +528,9 @@ function handleNotification(connection: NativePort, method: string, params: unkn
     case "widgetCatalogChanged":
       runtime.widgetCatalog = notification.params.widgets
       emitBackgroundEvent("nativeIntegration.statusChanged", {})
+      break
+    case "localSourcesChanged":
+      setLocalSourceProviders(notification.params.providers)
       break
   }
 }

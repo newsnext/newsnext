@@ -115,6 +115,23 @@ differ. A TypeScript provider may produce both generated formats because the
 build partitions its expanded Sources by JSON serializability. Generated files
 are rewritten only when their content changes.
 
+## Local sources
+
+Beyond the bundled registry, the daemon serves local Source providers from its
+config `sources` directory (`NEWSNEXT_SOURCES_PATH` override or
+`<config>/sources`). Each `*.json` file is one JSON provider keyed by its file
+stem. The daemon loads the directory at startup, watches it for changes, and
+delivers the raw provider map to the extension in the native `Ready` payload and
+in `LocalSourcesChanged` notifications (daemon capability `localSources`).
+
+The extension merges them in `apps/extension/src/lib/background/bundled-sources.ts`:
+each provider is expanded with `flattenProviderConfig` and resolved with
+`resolveSourceRegistry`, invalid providers are skipped with a warning, and the
+result is combined with the bundled sources with bundled IDs winning. Updating
+the provider map reconfigures the `ExternalSourcesLoader` and re-synchronizes
+source request rules, so local Sources are directly usable. For the authoring
+contract, see the [local sources guide](SOURCE_GUIDELINE.md#local-sources).
+
 ## Defaults and provider expansion
 
 `flattenProviderConfig` and `resolveProvider` share the same provider expansion

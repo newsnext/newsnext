@@ -4,4 +4,4 @@ import type { OfflineWorker } from "@newsnext/sdk/models";
 import type { WidgetCatalogEntry } from "@newsnext/sdk/models";
 import type { WorkspacePatch } from "./WorkspacePatch.js";
 
-export type NativeNotification = { "method": "workerRoutingChanged", "params": { revision: number, localCardIds: Array<string>, offlineWorkers: Array<OfflineWorker>, } } | { "method": "workspaceChanged", "params": { patch: WorkspacePatch, localCardIds: Array<string>, } } | { "method": "collectionStatusChanged", "params": { status: CollectionStatus, } } | { "method": "widgetCatalogChanged", "params": { widgets: Array<WidgetCatalogEntry>, } };
+export type NativeNotification = { "method": "workerRoutingChanged", "params": { revision: number, localCardIds: Array<string>, offlineWorkers: Array<OfflineWorker>, } } | { "method": "workspaceChanged", "params": { patch: WorkspacePatch, localCardIds: Array<string>, } } | { "method": "collectionStatusChanged", "params": { status: CollectionStatus, } } | { "method": "widgetCatalogChanged", "params": { widgets: Array<WidgetCatalogEntry>, } } | { "method": "localSourcesChanged", "params": { providers: Record<string, unknown>, } };

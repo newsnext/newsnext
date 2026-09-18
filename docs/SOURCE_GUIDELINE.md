@@ -64,6 +64,23 @@ Build generated registry artifacts after a change:
 bun --filter=@newsnext/registry run build
 ```
 
+## Local sources
+
+Drop a provider JSON file into the daemon config `sources` directory to use a
+Source without touching the registry:
+
+- Development: `~/.config/newsnext.dev/sources/<provider>.json`
+- Production: `~/.config/newsnext/sources/<provider>.json`
+
+The file uses the same shape as `registry/src/<provider>.json`, and the filename
+becomes the provider ID, so `hackernews.json` provides `hackernews:*` sources.
+Only JSON providers are supported; TypeScript providers with custom loaders
+cannot be loaded this way. The daemon watches the directory and pushes changes
+to the extension, so new files take effect without restarting. A file that fails
+to parse, lacks a non-empty `sources` object, or uses an invalid filename is
+skipped with a warning and never hides the remaining providers. When a local
+Source ID duplicates a bundled Source ID, the bundled Source wins.
+
 ## Provider and source configuration
 
 A provider has `title`, `color`, optional `icon` and `category`, `defaults`, and
