@@ -5,6 +5,7 @@ export interface FetchResponse {
   statusText: string
   headers: [string, string][]
   body: string
+  url: string
 }
 export interface BackgroundSourceFetchResult {
   durationMs: number
@@ -55,4 +56,10 @@ export interface ConnectedFetchInput {
   method: string
   timeoutMs: number
   url: string
+  searchParams?: Record<string, string | number | boolean> | [string, string][]
+  json?: unknown
+  retry?: number
+  throwHttpErrors?: boolean
+  redirect?: "follow" | "manual" | "error"
+  credentials?: "include" | "omit" | "same-origin"
 }

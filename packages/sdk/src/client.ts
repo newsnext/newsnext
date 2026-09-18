@@ -4,6 +4,9 @@ import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, Dat
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
 
+/** Per-attempt HTTP timeout for client.fetch, mirroring SOURCE_REQUEST_TIMEOUT_MS. */
+const SOURCE_FETCH_TIMEOUT_MS = 10_000
+
 export type SdkTransport = (request: object, options: CallOptions) => AsyncGenerator<unknown>
 
 export class NewsNextClient {
@@ -57,12 +60,20 @@ export class NewsNextClient {
   }
 
   fetch(input: FetchInput, options: ActionOptions = {}): Promise<FetchResult> {
+    // HTTP defaults mirror the Source runtime (see source-kit request config):
+    // 10s per-attempt timeout, shared retry policy, HTTP errors reject.
+    // The RPC timeout stays at the SDK default so retries/backoff can complete.
+    const timeoutOverride = options.timeoutMs ?? this.options.timeoutMs
+    const timeoutMs = timeoutOverride ?? SOURCE_FETCH_TIMEOUT_MS
+    const rpcTimeoutMs = timeoutOverride ?? DEFAULT_TIMEOUT_MS
     return this.executeAction("developer.fetch", {
       ...input,
-      method: input.method ?? (input.body === undefined ? "GET" : "POST"),
+      method: input.method ?? (input.body === undefined && input.json === undefined ? "GET" : "POST"),
       headers: input.headers ?? [],
-      timeoutMs: options.timeoutMs ?? this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
-    }, options)
+      throwHttpErrors: input.throwHttpErrors ?? true,
+      credentials: input.credentials ?? "include",
+      timeoutMs,
+    }, { ...options, timeoutMs: rpcTimeoutMs })
   }
 
   readonly liveCards = {

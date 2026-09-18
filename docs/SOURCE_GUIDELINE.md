@@ -1234,8 +1234,11 @@ newsnext fetch https://example.com/api \
   -H 'Accept: application/json' -i
 ```
 
-The request runs in the extension background and uses the browser's cookie jar.
-When the target does not already have host permission, NewsNext opens a scoped
+The request runs in the extension background through the shared Source HTTP
+client, so it uses the browser's cookie jar with the same per-attempt timeout,
+GET retry policy, hostname queue, and declared-network checks as
+`context.fetch`. Non-success HTTP responses reject after the retry policy is
+exhausted. When the target does not already have host permission, NewsNext opens a scoped
 extension window where the user can review and authorize the exact site before
 the request continues.
 

@@ -97,8 +97,8 @@ await client.actions.board.update(input: { color?: "red" | "pink" | "fuchsia" | 
 *command* — Fetch an HTTP(S) URL through the connected browser for Source development.
 
 ```ts
-await client.actions.developer.fetch(input: { body?: string; headers: unknown[][]; method: string; timeoutMs: number; url: string })
-// => { body: string; headers: unknown[][]; status: number; statusText: string }
+await client.actions.developer.fetch(input: { body?: string; headers: unknown[][]; method: string; timeoutMs: number; url: string; searchParams?: Record<string, string | number | boolean> | unknown[][]; json?: unknown; retry?: integer ≥ 0 ≤ 10; throwHttpErrors?: boolean; redirect?: "follow" | "manual" | "error"; credentials?: "include" | "omit" | "same-origin" })
+// => { body: string; headers: unknown[][]; status: number; statusText: string; url: string }
 ```
 
 ### developer.runSource

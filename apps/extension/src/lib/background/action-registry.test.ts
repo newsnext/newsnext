@@ -18,6 +18,7 @@ function createContext(): BackgroundActionContext {
         headers: [],
         status: 200,
         statusText: input.method,
+        url: "https://example.com/api",
       })),
       runSource: vi.fn(async () => ({}) as never),
     },

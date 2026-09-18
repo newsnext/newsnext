@@ -143,8 +143,11 @@ Use the full Worker ID returned by status. With no Worker ID the daemon selects
 only when there is exactly one connected Worker; it never prompts. `run` accepts
 a registered Source, or `{ providerId, provider, sourceId, params?, debug?,
 useProviderSecrets? }` for an in-memory provider. Provider JSON is not read from a
-path by the SDK. `fetch` accepts URL, method, header pairs and a string body; the
-Worker validates requests and owns cookies.
+path by the SDK. `fetch` accepts the Source `context.fetch` request shape (URL,
+method, header pairs, string body or JSON, search params, retry limit, redirect,
+credentials, and per-attempt timeout) and shares its timeout, GET retry policy,
+hostname queue, and cookie behavior; HTTP errors reject and the response carries
+the final URL. The Worker validates requests and owns cookies.
 
 All Action contracts live in `@newsnext/sdk/actions`; the extension binds its
 handlers to these same schemas. Use `client.actions.<domain>.<method>(input, options)`

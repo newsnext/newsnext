@@ -13,19 +13,24 @@ export async function executeConnectedFetch(
   if (!await requestCliPermission(permissionRequest, "Required to complete this fetch.")) {
     throw new Error(`Site access was not granted for ${url.origin}`)
   }
-  const response = await createSourceFetch(AbortSignal.timeout(input.timeoutMs))(input.url, {
+  const response = await createSourceFetch()(input.url, {
     method: input.method,
     headers: input.headers,
     body: input.body,
-    retry: 0,
-    throwHttpErrors: false,
-    timeout: false,
+    searchParams: input.searchParams,
+    json: input.json,
+    retry: input.retry,
+    throwHttpErrors: input.throwHttpErrors ?? true,
+    redirect: input.redirect ?? "follow",
+    credentials: input.credentials ?? "include",
+    timeout: input.timeoutMs,
   })
   return {
     status: response.status,
     statusText: response.statusText,
     headers: [...response.headers.entries()],
     body: await response.text(),
+    url: response.url,
   }
 }
 

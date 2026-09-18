@@ -864,8 +864,10 @@ captures cloned request/response diagnostics. Local JSON providers use an isolat
 `cli:<provider-id>` secret namespace unless `--use-provider-secrets` is supplied;
 they do not install or modify the registry.
 
-`fetch` makes one browser-owned HTTP(S) request without source retries or HTTP
-status exceptions. Browser forbidden-header rules still apply. Missing host
+`fetch` makes one browser-owned HTTP(S) request through the shared Source HTTP
+client, so it inherits the per-attempt timeout, GET retry policy, hostname
+queue, and credentials behavior of `context.fetch`; HTTP status exceptions
+reject after retries. Browser forbidden-header rules still apply. Missing host
 access opens a scoped permission window; `developer.runSource` uses the same
 approval flow for its resolved Source. Execution timeout aborts browser work.
 Direct fetching does not verify the complete Source contract.

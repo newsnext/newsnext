@@ -91,6 +91,19 @@ const FetchParams = Type.Unsafe<ConnectedFetchInput>(Type.Object({
   method: Identifier,
   timeoutMs: Type.Number({ exclusiveMinimum: 0 }),
   url: Identifier,
+  searchParams: Type.Optional(Type.Union([
+    Type.Record(Type.String(), Type.Union([
+      Type.String(),
+      Type.Number(),
+      Type.Boolean(),
+    ])),
+    Type.Array(Type.Tuple([Type.String(), Type.String()])),
+  ])),
+  json: Type.Optional(Type.Unknown()),
+  retry: Type.Optional(Type.Integer({ minimum: 0, maximum: 10 })),
+  throwHttpErrors: Type.Optional(Type.Boolean()),
+  redirect: Type.Optional(stringEnum(["follow", "manual", "error"] as const)),
+  credentials: Type.Optional(stringEnum(["include", "omit", "same-origin"] as const)),
 }, { additionalProperties: false }))
 
 const developerFetchAction = defineActionContract({
@@ -103,6 +116,7 @@ const developerFetchAction = defineActionContract({
     headers: Type.Array(Type.Tuple([Type.String(), Type.String()])),
     status: Type.Number(),
     statusText: Type.String(),
+    url: Type.String(),
   }, { additionalProperties: false })),
   validate(input) {
     validateFetch(input)
@@ -316,6 +330,23 @@ function validateFetch(input: ConnectedFetchInput): void {
   }
   if (input.body !== undefined && ["GET", "HEAD"].includes(method)) {
     throw new Error(`${method} requests cannot have a body`)
+  }
+  if (input.json !== undefined && ["GET", "HEAD"].includes(method)) {
+    throw new Error(`${method} requests cannot have a JSON body`)
+  }
+  if (input.body !== undefined && input.json !== undefined) {
+    throw new Error("'body' and 'json' are mutually exclusive")
+  }
+  if (input.searchParams !== undefined) {
+    const entries = Array.isArray(input.searchParams) ? input.searchParams : Object.entries(input.searchParams)
+    for (const [name, value] of entries) {
+      if (typeof name !== "string" || name.length === 0) {
+        throw new Error("'searchParams' contains an invalid parameter name")
+      }
+      if (typeof value !== "string" && typeof value !== "number" && typeof value !== "boolean") {
+        throw new TypeError("'searchParams' contains an invalid parameter value")
+      }
+    }
   }
 }
 
