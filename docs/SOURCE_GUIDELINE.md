@@ -1190,8 +1190,8 @@ Prototype-related source ID segments and JMESPath properties are rejected.
 Use the separately distributed CLI with **Settings → Integration** enabled.
 For installation, browser selection, command options, and automation, see the
 [CLI command reference](../skills/newsnext-sdk/references/commands.md).
-In this wrapper, run commands from `cli/` as `bun run dev <arguments>`;
-for example, `bun run dev run github:trending`. The examples below use the
+In this wrapper, run commands as `newsnext <arguments>`;
+for example, `newsnext run github:trending`. The examples below use the
 distributed command name; local provider paths are relative to the caller.
 
 Run a registered source:
