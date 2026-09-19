@@ -91,6 +91,7 @@ export function useSourceQuery({
     isFetching: query.isFetching,
     isManualRequesting,
     isLoading: query.isLoading && snapshotResult === undefined,
+    hasData,
     isError: query.isError && !hasData,
     errorMessage: !hasData && query.error instanceof Error ? query.error.message : undefined,
     loginUrl: hasData ? undefined : getLoginUrlFromError(query.error),

@@ -1,8 +1,11 @@
 import type { HeaderNotification } from "./notification"
 import { Button } from "@newsnext/ui/components/button"
+import { useIsFetching } from "@tanstack/react-query"
+import { useAtomValue } from "jotai"
 import { useCallback, useState } from "react"
-import { useManualRequest } from "@/hooks"
 import { useI18n } from "@/hooks/use-i18n"
+import { getWidgetManualRequestGroup, LIVE_WIDGET_QUERY_KEY, useIsManualRequestingGroup, useManualRequestLiveCards, useManualRequestWidgets } from "@/hooks/use-manual-request"
+import { currentBoardAtom } from "@/store/board"
 import { PhArrowCounterClockwise, PhCircleDashed } from "../icons/ph"
 import { SearchDialog } from "../search"
 import { BoardNav } from "./board-nav"
@@ -12,7 +15,32 @@ import { UserMenu } from "./user-menu"
 
 function ManualRequestButton() {
   const { t } = useI18n()
-  const { manualRequest, isFetching } = useManualRequest()
+  const board = useAtomValue(currentBoardAtom)
+  const requestLiveCards = useManualRequestLiveCards(board?.nowLayer.liveCards ?? [])
+  const requestWidgets = useManualRequestWidgets(board?.id)
+  const liveCardGroup = `live-cards:${[...(board?.nowLayer.liveCards ?? [])].sort().join(",")}`
+  const widgetGroup = getWidgetManualRequestGroup(board?.id ?? "")
+  const isLiveCardManuallyRequesting = useIsManualRequestingGroup(liveCardGroup)
+  const isWidgetManuallyRequesting = useIsManualRequestingGroup(widgetGroup)
+  const isLiveCardFetching = useIsFetching({
+    predicate: query => query.queryKey[0] === "card"
+      && (board?.nowLayer.liveCards ?? []).includes(query.queryKey[1] as string),
+  }) > 0
+  const isWidgetFetching = useIsFetching({
+    predicate: query => query.queryKey[0] === LIVE_WIDGET_QUERY_KEY[0]
+      && query.queryKey[1] === board?.id,
+  }) > 0
+  const isFetching = board?.layer === "next"
+    ? isWidgetFetching || isWidgetManuallyRequesting
+    : isLiveCardFetching || isLiveCardManuallyRequesting
+  const manualRequest = useCallback(async () => {
+    if (!board) return
+    if (board.layer === "next") {
+      await requestWidgets()
+    } else {
+      await requestLiveCards()
+    }
+  }, [board, requestLiveCards, requestWidgets])
   return (
     <Button
       type="button"

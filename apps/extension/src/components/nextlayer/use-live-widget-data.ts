@@ -1,11 +1,18 @@
 import type { LiveWidgetDataResult } from "@newsnext/sdk/extension"
 import { createClient } from "@newsnext/sdk/extension"
-import { useEffect, useRef, useState } from "react"
-import { waitForMinimumManualRequestFeedback } from "@/lib/manual-request-feedback"
+import { useQuery } from "@tanstack/react-query"
+import { useCallback, useState } from "react"
+import {
+  getWidgetManualRequestGroup,
+  LIVE_WIDGET_QUERY_KEY,
+  runManualRequest,
+  useIsManualRequestingGroup,
+} from "@/hooks/use-manual-request"
 
 const client = createClient()
 
 interface WidgetDataInput {
+  boardId: string
   params: Record<string, unknown>
   widgetId: string
   cardIds: string[]
@@ -13,80 +20,53 @@ interface WidgetDataInput {
   refreshIntervalMs: number
 }
 
-interface WidgetDataState {
-  key: string
-  data?: LiveWidgetDataResult
-  error?: Error
-  isFetching: boolean
-  isContentFetching: boolean
-}
-
 interface WidgetDataView {
   data?: LiveWidgetDataResult
   error?: Error
   isFetching: boolean
   isContentFetching: boolean
-  refetch: () => void
+  refetch: () => Promise<unknown>
 }
 
 export function useLiveWidgetData(input: WidgetDataInput, active: boolean): WidgetDataView {
-  const { widgetId, dataRevision, refreshIntervalMs } = input
-  const scope = JSON.stringify([...input.cardIds].sort())
-  const params = JSON.stringify(input.params)
-  const key = JSON.stringify([widgetId, scope, dataRevision, params])
-  const [state, setState] = useState<WidgetDataState>({ key, isFetching: false, isContentFetching: false })
-  const refreshRef = useRef<() => void>(() => {})
-
-  useEffect(() => {
-    if (!active) return
-    const controller = new AbortController()
-    let pending = false
-    async function read(manual = false): Promise<void> {
-      if (pending || controller.signal.aborted) return
-      const startedAt = Date.now()
-      pending = true
-      setState(previous => ({ ...(previous.key === key ? previous : { key }), isFetching: true, isContentFetching: manual || previous.key !== key || !previous.data }))
-      try {
-        const data = await client.liveWidgets.data({ widgetId, cardIds: JSON.parse(scope), params: JSON.parse(params) }, { signal: controller.signal })
-        if (!controller.signal.aborted) setState({ key, data, isFetching: manual, isContentFetching: manual })
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setState(previous => ({
-            ...(previous.key === key ? previous : { key }),
-            error: error instanceof Error ? error : new Error("Widget data request failed"),
-            isFetching: manual,
-            isContentFetching: manual,
-          }))
-        }
-      } finally {
-        if (manual) {
-          await waitForMinimumManualRequestFeedback(startedAt)
-          if (!controller.signal.aborted) {
-            setState(previous => previous.key === key ? { ...previous, isFetching: false, isContentFetching: false } : previous)
-          }
-        }
-        pending = false
-      }
+  const cardIds = [...input.cardIds].sort()
+  const query = useQuery({
+    queryKey: [
+      ...LIVE_WIDGET_QUERY_KEY,
+      input.boardId,
+      input.widgetId,
+      cardIds,
+      input.dataRevision,
+      input.params,
+    ],
+    queryFn: ({ signal }) => client.liveWidgets.data(
+      { widgetId: input.widgetId, cardIds, params: input.params },
+      { signal },
+    ),
+    enabled: active,
+    networkMode: "offlineFirst",
+    placeholderData: previous => previous,
+    refetchInterval: input.refreshIntervalMs,
+    refetchIntervalInBackground: false,
+    retry: false,
+  })
+  const { refetch: queryRefetch } = query
+  const [isManualRequesting, setIsManualRequesting] = useState(false)
+  const isBoardManuallyRequesting = useIsManualRequestingGroup(getWidgetManualRequestGroup(input.boardId))
+  const refetch = useCallback(async () => {
+    setIsManualRequesting(true)
+    try {
+      await runManualRequest(queryRefetch)
+    } finally {
+      setIsManualRequesting(false)
     }
-    refreshRef.current = () => {
-      void read(true)
-    }
-    void read()
-    const timer = setInterval(() => {
-      void read()
-    }, refreshIntervalMs)
-    return () => {
-      controller.abort()
-      clearInterval(timer)
-      refreshRef.current = () => {}
-    }
-  }, [active, key, widgetId, scope, params, refreshIntervalMs])
+  }, [queryRefetch])
 
   return {
-    data: state.key === key ? state.data : undefined,
-    error: state.key === key ? state.error : undefined,
-    isFetching: active && state.key === key && state.isFetching,
-    isContentFetching: active && (state.key !== key || state.isContentFetching || (!state.data && !state.error)),
-    refetch: () => refreshRef.current(),
+    data: query.data,
+    error: query.error instanceof Error ? query.error : undefined,
+    isFetching: active && (query.isFetching || isManualRequesting || isBoardManuallyRequesting),
+    isContentFetching: active && !query.data && (isManualRequesting || isBoardManuallyRequesting || query.isFetching),
+    refetch,
   }
 }
