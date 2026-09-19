@@ -12,7 +12,7 @@ function workspace(suffix = "a"): Workspace {
       name: suffix,
       createdAt: 1,
       color: "blue",
-      defaultLayer: "now",
+      layer: "now",
       nowLayer: { liveCards: [`card-${suffix}`] },
       nextLayer: { liveWidgets: [{
         liveWidgetId: `instance-${suffix}`,

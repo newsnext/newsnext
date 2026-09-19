@@ -14,7 +14,7 @@ function workspace(revision: number): NativeWorkspace {
       {
         color: "red",
         createdAt: 1,
-        defaultLayer: "now",
+        layer: "now",
         id: "board-a",
         nowLayer: { liveCards: ["card-a"] },
         name: "A",
@@ -23,7 +23,7 @@ function workspace(revision: number): NativeWorkspace {
       {
         color: "blue",
         createdAt: 2,
-        defaultLayer: "now",
+        layer: "now",
         id: "board-b",
         nowLayer: { liveCards: [] },
         name: "B",
@@ -48,7 +48,7 @@ describe("workspace patches", () => {
     candidate.boards = [{
       ...candidate.boards[1]!,
       color: "green",
-      defaultLayer: "next",
+      layer: "next",
       name: "Updated",
     }]
     candidate.liveCards = []

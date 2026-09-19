@@ -13,7 +13,7 @@ function createData(): ApplicationData {
       name: "Reading",
       createdAt: 1,
       nowLayer: { liveCards: ["rss:feed::one"] },
-      defaultLayer: "now",
+      layer: "now",
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [{
@@ -33,7 +33,7 @@ function createTargetBoard(liveCards: string[] = []): ApplicationData["boards"][
     name: "Target",
     createdAt: 2,
     nowLayer: { liveCards },
-    defaultLayer: "now",
+    layer: "now",
     nextLayer: { liveWidgets: [] },
   }
 }
@@ -122,7 +122,7 @@ describe("application mutations", () => {
     const execution = createBoardMutation(createData(), {
       name: "  AI  ",
       color: "purple",
-      defaultLayer: "next",
+      layer: "next",
     }, dependencies)
 
     expect(execution.data.boards.at(-1)).toEqual({
@@ -131,7 +131,7 @@ describe("application mutations", () => {
       name: "AI",
       createdAt: 100,
       nowLayer: { liveCards: [] },
-      defaultLayer: "next",
+      layer: "next",
       nextLayer: { liveWidgets: [] },
     })
   })

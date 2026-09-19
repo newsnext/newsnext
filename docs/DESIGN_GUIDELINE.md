@@ -512,11 +512,11 @@ Previous and next board commands wrap across the ordered board list. Keep their
 default arrow bindings active from the page and focused board tabs, while
 preserving directional-key behavior inside other interactive controls.
 Keep the Board ID in the route and read the active Layer from that Board's
-persisted `defaultLayer`. Now and Next share the root scroll container with
+persisted `layer`. Now and Next share the root scroll container with
 separate session scroll positions keyed by Board and Layer.
 Restore after the incoming view mounts, without scroll animation, and update
 the Dynamic Island progress outline from that container.
-Treat a Board's default layer as its persisted active layer. The layer shortcut
+Treat a Board's layer as its persisted active layer. The layer shortcut
 and Board settings update the same preference without creating navigation history
 entries. Opening a Board, including through Back or Forward, uses its latest
 persisted Layer rather than a Layer snapshot from navigation history.
@@ -654,7 +654,7 @@ Use subtle section Cards directly on that scroller, plus:
   form labels already make the task clear.
 
 The unified Board dialog is the canonical example. Create and edit modes use
-the same name, theme color, LiveCard order, and default layer fields;
+the same name, theme color, LiveCard order, and layer fields;
 only edit mode exposes board deletion, while the title and primary action
 reflect the current mode. Keep `Create board` and `Save changes` in the
 upper-right of the shared header. Disable deletion when it would remove the last Board;

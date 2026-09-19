@@ -20,7 +20,7 @@ function createData(): ApplicationData {
       name: "Reading",
       createdAt: 1,
       nowLayer: { liveCards: ["second", "first"] },
-      defaultLayer: "now",
+      layer: "now",
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [

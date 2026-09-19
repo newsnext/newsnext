@@ -32,7 +32,7 @@ interface RenderedView {
 }
 
 export function BoardView({ board }: { board: Board }) {
-  const layer = board.defaultLayer
+  const layer = board.layer
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const moveLiveCard = useSetAtom(moveLiveCardAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
@@ -100,9 +100,9 @@ export function BoardView({ board }: { board: Board }) {
   async function handleToggleLayer(): Promise<void> {
     const nextLayer = isNextLayer ? "now" : "next"
     try {
-      await updateBoard({ ...board, defaultLayer: nextLayer })
+      await updateBoard({ ...board, layer: nextLayer })
     } catch (error) {
-      console.error("Failed to update the default Board layer", error)
+      console.error("Failed to update the Board layer", error)
     }
   }
 

@@ -22,7 +22,7 @@ export function useHeaderProgress(): HeaderProgressState {
   const router = useRouter()
   const routeHref = useLocation({ select: location => location.href })
   const currentBoard = useAtomValueRawSync(currentBoardAtom)
-  const isNextLayer = currentBoard?.defaultLayer === "next"
+  const isNextLayer = currentBoard?.layer === "next"
   const [isAtTop, setIsAtTop] = useState(true)
   const isAtTopRef = useRef(true)
   const opacity = useMotionValue(0)

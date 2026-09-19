@@ -333,7 +333,7 @@ This bounds the number of mounted views to two. Use a unique visit revision in
 keys so returning to the same Board cannot reuse stale readiness or a departing
 Widget grid.
 Derive the active Layer directly from the rendered Board's persisted
-`defaultLayer`. Do not mirror it in history state or route context. Router location
+`layer`. Do not mirror it in history state or route context. Router location
 updates before route matches; combining route params with an independently
 subscribed history Layer can trigger an intermediate animation on the old Board.
 The route retains only the last Board whose LiveCard cache restoration finished;

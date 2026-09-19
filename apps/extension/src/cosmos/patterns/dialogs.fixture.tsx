@@ -16,7 +16,7 @@ const BOARD_DIALOG_BOARDS: Board[] = [
   {
     color: "slate",
     createdAt: 1,
-    defaultLayer: "now",
+    layer: "now",
     id: "V1StGXR8_Z5j",
     nowLayer: { liveCards: [] },
     name: "My Board",
@@ -25,7 +25,7 @@ const BOARD_DIALOG_BOARDS: Board[] = [
   {
     color: "purple",
     createdAt: 2,
-    defaultLayer: "next",
+    layer: "next",
     id: "board-design",
     nowLayer: { liveCards: [] },
     name: "Design signals",

@@ -14,7 +14,7 @@ function createContext(): BackgroundActionContext {
       name: "Reading",
       createdAt: 1,
       nowLayer: { liveCards: [] },
-      defaultLayer: "now",
+      layer: "now",
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [],

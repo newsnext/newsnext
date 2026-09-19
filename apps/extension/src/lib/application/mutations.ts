@@ -15,7 +15,7 @@ import { mergeLiveCardPatch } from "../source/live-cards"
 
 export interface BoardConfiguration {
   color?: Color
-  defaultLayer?: BoardLayer
+  layer?: BoardLayer
 }
 
 interface ApplicationLiveCardCreationInput {
@@ -77,7 +77,7 @@ export function updateBoardMutation(
   assertBoardExists(data, input.boardId)
   if (input.name === undefined
     && input.color === undefined
-    && input.defaultLayer === undefined) {
+    && input.layer === undefined) {
     throw new Error("Board update requires at least one change")
   }
   const name = input.name?.trim()
@@ -497,7 +497,7 @@ function configureBoard(
   return {
     ...board,
     ...(configuration.color !== undefined ? { color: configuration.color } : {}),
-    ...(configuration.defaultLayer !== undefined ? { defaultLayer: configuration.defaultLayer } : {}),
+    ...(configuration.layer !== undefined ? { layer: configuration.layer } : {}),
   }
 }
 

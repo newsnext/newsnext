@@ -20,7 +20,7 @@ function createData(): PersistedUserData {
       name: "Reading",
       createdAt: 1,
       nowLayer: { liveCards: ["rss:feed::one"] },
-      defaultLayer: "next",
+      layer: "next",
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [{
@@ -42,7 +42,7 @@ describe("persisted user data", () => {
         id: "reading",
         name: " Reading ",
         createdAt: 1,
-        defaultLayer: "now",
+        layer: "now",
         nowLayer: {
           liveCards: ["second", "first", "first", "missing"],
         },
@@ -85,7 +85,7 @@ describe("persisted user data", () => {
       name: "Duplicate",
       createdAt: 2,
       nowLayer: { liveCards: ["rss:feed::one"] },
-      defaultLayer: "now",
+      layer: "now",
       nextLayer: {
         liveWidgets: [{
           widgetId: "latest",

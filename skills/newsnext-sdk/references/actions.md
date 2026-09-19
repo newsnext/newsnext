@@ -79,8 +79,8 @@ documented in sdk.md.
 *mutation* — Replace all durable Application data after validating its integrity.
 
 ```ts
-await client.actions.application.replace(input: { boards: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: …[] }; nextLayer: { liveWidgets: …[] } }[]; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[]; version: number })
-// => { boards: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: …[] }; nextLayer: { liveWidgets: …[] } }[]; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[]; version: number }
+await client.actions.application.replace(input: { boards: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: …[] }; nextLayer: { liveWidgets: …[] } }[]; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[]; version: number })
+// => { boards: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: …[] }; nextLayer: { liveWidgets: …[] } }[]; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[]; version: number }
 ```
 
 ### board.create
@@ -88,8 +88,8 @@ await client.actions.application.replace(input: { boards: { color: "red" | "pink
 *mutation* — Create a Board and optional configured LiveCards. Returns the created Board so callers can verify without a follow-up query.
 
 ```ts
-await client.actions.board.create(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; defaultLayer?: "now" | "next"; liveCards?: { patch: { metadata?: Record<string, …>; params?: Record<string, …> }; sourceId: string }[]; name: string })
-// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }; boardId: string }
+await client.actions.board.create(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; layer?: "now" | "next"; liveCards?: { patch: { metadata?: Record<string, …>; params?: Record<string, …> }; sourceId: string }[]; name: string })
+// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }; boardId: string }
 ```
 
 ### board.delete
@@ -107,7 +107,7 @@ await client.actions.board.delete(input: { boardId: string; deleteLiveCards: boo
 
 ```ts
 await client.actions.board.get(input: { boardId: string })
-// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[] }
+// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[] }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -118,7 +118,7 @@ await client.actions.board.get(input: { boardId: string })
 
 ```ts
 await client.actions.board.list()
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }[]
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }[]
 ```
 
 ### board.listLiveCards
@@ -148,8 +148,8 @@ await client.actions.board.listLiveWidgets(input: { boardId: string })
 *mutation* — Atomically update a Board. Returns the updated Board so callers can verify without a follow-up query.
 
 ```ts
-await client.actions.board.update(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; defaultLayer?: "now" | "next"; boardId: string; name?: string })
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
+await client.actions.board.update(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; layer?: "now" | "next"; boardId: string; name?: string })
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: string[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.

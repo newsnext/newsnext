@@ -67,7 +67,7 @@ export const deleteLiveCardAtom = atom(null, (_get, _set, cardId: string) => (
 export const createBoardAtom = atom(null, (_get, _set, input: BoardCreateInput) => (
   actions.board.create({
     color: input.color,
-    defaultLayer: input.defaultLayer,
+    layer: input.layer,
     name: input.name,
   })
 ))
@@ -82,7 +82,7 @@ export const createBoardFromOpmlAtom = atom(null, (_get, _set, input: OpmlImport
       },
     })),
     color: "orange",
-    defaultLayer: DEFAULT_BOARD_LAYER,
+    layer: DEFAULT_BOARD_LAYER,
     name: input.title,
   })
 ))
@@ -91,7 +91,7 @@ export const updateBoardAtom = atom(null, async (_get, _set, board: Board) => {
   await actions.board.update({
     boardId: board.id,
     color: board.color,
-    defaultLayer: board.defaultLayer,
+    layer: board.layer,
     name: board.name,
   })
 })

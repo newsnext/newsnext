@@ -8,7 +8,7 @@ const IdentifierArray = Type.Array(Identifier, { uniqueItems: true })
 
 const BoardConfigurationParams = Type.Object({
   color: Type.Optional(stringEnum(COLORS)),
-  defaultLayer: Type.Optional(stringEnum(["now", "next"] as const)),
+  layer: Type.Optional(stringEnum(["now", "next"] as const)),
 }, { additionalProperties: false })
 
 const LiveCardPatchParams = Type.Unsafe<LiveCardPatch>(Type.Object({
@@ -94,7 +94,7 @@ const BoardLiveWidgetResult = Type.Unsafe<ApplicationNextLayerLiveWidget>(Type.O
 const BoardResult = Type.Unsafe<Board>(Type.Object({
   color: stringEnum(COLORS),
   createdAt: Type.Number(),
-  defaultLayer: stringEnum(["now", "next"] as const),
+  layer: stringEnum(["now", "next"] as const),
   id: Identifier,
   name: Identifier,
   nowLayer: Type.Object({
@@ -161,7 +161,7 @@ const boardUpdateAction = defineActionContract({
   validate(input) {
     if (input.name === undefined
       && input.color === undefined
-      && input.defaultLayer === undefined) {
+      && input.layer === undefined) {
       throw new Error("Board update requires at least one change")
     }
   },

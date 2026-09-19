@@ -103,7 +103,7 @@ export function normalizeBoards(
     return [{
       ...identity,
       color: isThemeColor(candidate.color) ? candidate.color : DEFAULT_BOARD_COLOR,
-      defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
+      layer: normalizeBoardLayer(candidate.layer),
       nowLayer: { liveCards: ids },
       nextLayer: {
         liveWidgets: normalizeLiveWidgets(nextLayer.liveWidgets, new Set(ids), assignedLiveWidgetIds),

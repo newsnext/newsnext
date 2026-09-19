@@ -41,7 +41,7 @@ export interface LiveWidget {
 export interface Board {
   color: Color
   createdAt: number
-  defaultLayer: BoardLayer
+  layer: BoardLayer
   id: string
   name: string
   nowLayer: {

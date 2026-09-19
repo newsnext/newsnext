@@ -140,7 +140,7 @@ interface Board {
     liveCards: string[]
   }
 
-  defaultLayer: "now" | "next"
+  layer: "now" | "next"
   nextLayer: {
     liveWidgets: LiveWidget[]
   }
@@ -231,7 +231,7 @@ fail through that existing router. `liveCard.readSnapshot` remains the explicit
 snapshot-only operation.
 
 
-NowLayer and NextLayer are views of one Board. `defaultLayer` persists the active
+NowLayer and NextLayer are views of one Board. `layer` persists the active
 preference; switching views does not change membership or trigger collection.
 Both share the root scroll container with restoration keyed by Board and Layer.
 
@@ -508,7 +508,7 @@ catalog with `action list`; definitions live in
 `apps/extension/src/lib/background/application-actions.ts`.
 
 `board.create` and `board.update` accept Board fields directly, including
-`color` and `defaultLayer`. Bulk creation may include configured
+`color` and `layer`. Bulk creation may include configured
 LiveCards and persists the Board, LiveCards, and ownership atomically.
 `liveCard.create` requires one scalar `boardId`.
 

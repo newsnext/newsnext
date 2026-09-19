@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardCreateInput, BoardLayer } from "@/lib/board"
+import type { Board, BoardCreateInput } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   ContentDialogContent,
@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Input } from "@newsnext/ui/components/input"
-import { RadioGroup, RadioGroupItem } from "@newsnext/ui/components/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newsnext/ui/components/select"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
@@ -21,11 +20,6 @@ import { ConfirmDestructiveButton } from "@/components/common/confirm-destructiv
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER } from "@/lib/board"
-
-const LAYER_OPTIONS: { labelKey: "now" | "next", value: BoardLayer }[] = [
-  { labelKey: "now", value: "now" },
-  { labelKey: "next", value: "next" },
-]
 
 export type BoardDialogTarget
   = | { mode: "create" }
@@ -68,10 +62,9 @@ function ConfigurableBoardDialog({
     : currentBoard
       ? currentBoard.color
       : DEFAULT_BOARD_COLOR
-  const initialDefaultLayer = board?.defaultLayer ?? DEFAULT_BOARD_LAYER
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
-  const [defaultLayer, setDefaultLayer] = useState<BoardLayer>(initialDefaultLayer)
+  const initialLayer = currentBoard?.layer ?? DEFAULT_BOARD_LAYER
   const transferBoards = boards.filter(candidate => candidate.id !== boardId)
   const [targetBoardId, setTargetBoardId] = useState(
     () => transferBoards[0]?.id ?? "",
@@ -97,7 +90,6 @@ function ConfigurableBoardDialog({
           ...board,
           color,
           name: normalizedName,
-          defaultLayer,
         }
         await onUpdate(nextBoard)
       })
@@ -109,7 +101,7 @@ function ConfigurableBoardDialog({
       await onCreate({
         name: normalizedName,
         color,
-        defaultLayer,
+        layer: initialLayer,
       })
     })
     if (succeeded) onClose()
@@ -181,24 +173,6 @@ function ConfigurableBoardDialog({
                   layoutId="board-dialog-theme-indicator"
                 />
               </div>
-            </ConfigSection>
-
-            <ConfigSection
-              variant="group"
-              title={t("defaultLayer")}
-            >
-              <RadioGroup
-                variant="segmented"
-                value={defaultLayer}
-                onValueChange={setDefaultLayer}
-                className="w-full"
-              >
-                {LAYER_OPTIONS.map(option => (
-                  <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
-                    {t(option.labelKey)}
-                  </RadioGroupItem>
-                ))}
-              </RadioGroup>
             </ConfigSection>
 
             {isEditing && (

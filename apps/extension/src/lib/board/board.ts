@@ -12,7 +12,7 @@ export type { Board, LiveWidget, LiveWidgetDataScope, LiveWidgetLayout } from "@
 
 export interface BoardCreateInput {
   color: Color
-  defaultLayer: BoardLayer
+  layer: BoardLayer
   name: string
 }
 
@@ -21,12 +21,12 @@ export function createBoard(
   name: string,
   createdAt: number,
   color: Color = DEFAULT_BOARD_COLOR,
-  defaultLayer: BoardLayer = DEFAULT_BOARD_LAYER,
+  layer: BoardLayer = DEFAULT_BOARD_LAYER,
 ): Board {
   return {
     color,
     createdAt,
-    defaultLayer,
+    layer,
     id,
     name,
     nowLayer: { liveCards: [] },
