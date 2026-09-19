@@ -13,8 +13,7 @@ function workspace(suffix = "a"): Workspace {
       createdAt: 1,
       color: "blue",
       defaultLayer: "now",
-      cardIds: [`card-${suffix}`],
-      nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [`card-${suffix}`] } },
+      nowLayer: { liveCards: [`card-${suffix}`] },
       nextLayer: { liveWidgets: [{
         liveWidgetId: `instance-${suffix}`,
         widgetId: "shared-template",
@@ -66,13 +65,12 @@ describe("workspace connection decisions", () => {
     local.boards[0]!.id = "board-a"
     local.settings = "{\"theme\":\"light\"}"
     local.liveCards.push({ ...shared.liveCards[0]!, workerId: "changed-owner" })
-    local.boards[0]!.cardIds.push("card-a")
+    local.boards[0]!.nowLayer.liveCards.push("card-a")
     local.boards[0]!.nextLayer.liveWidgets.push({ ...shared.boards[0]!.nextLayer.liveWidgets[0]!, patch: { params: { limit: 9 } } })
     const merged = mergeWorkspaces(shared, local)
     expect(merged.boards).toHaveLength(1)
     expect(merged.boards[0]!.name).toBe("a")
-    expect(merged.boards[0]!.cardIds).toEqual(["card-a", "card-b"])
-    expect(merged.boards[0]!.nowLayer.sort.manualOrder).toEqual(["card-a", "card-b"])
+    expect(merged.boards[0]!.nowLayer.liveCards).toEqual(["card-a", "card-b"])
     expect(merged.boards[0]!.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["instance-a", "instance-b"])
     expect(merged.liveCards[0]).toEqual(shared.liveCards[0])
     expect(merged.settings).toBe(shared.settings)
@@ -82,12 +80,12 @@ describe("workspace connection decisions", () => {
     const shared = workspace()
     const local = workspace("b")
     local.liveCards.push(shared.liveCards[0]!)
-    local.boards[0]!.cardIds.push("card-a")
+    local.boards[0]!.nowLayer.liveCards.push("card-a")
     local.boards[0]!.nextLayer.liveWidgets[0]!.dataScope = { type: "cards", cardIds: ["card-a", "card-b"] }
     local.boards[0]!.nextLayer.liveWidgets.push(shared.boards[0]!.nextLayer.liveWidgets[0]!)
     const merged = mergeWorkspaces(shared, local)
-    expect(merged.boards[0]!.cardIds).toEqual(["card-a"])
-    expect(merged.boards[1]!.cardIds).toEqual(["card-b"])
+    expect(merged.boards[0]!.nowLayer.liveCards).toEqual(["card-a"])
+    expect(merged.boards[1]!.nowLayer.liveCards).toEqual(["card-b"])
     expect(merged.boards[1]!.nextLayer.liveWidgets).toHaveLength(1)
     expect(merged.boards[1]!.nextLayer.liveWidgets[0]!.dataScope).toEqual({ type: "cards", cardIds: ["card-b"] })
   })

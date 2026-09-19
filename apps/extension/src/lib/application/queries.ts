@@ -1,10 +1,10 @@
-import type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
+import type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
 import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 
-export type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
+export type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
 
 export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDescriptor[] {
   return [...sources]
@@ -93,14 +93,6 @@ export function getBoardContextQuery(
   return resolveBoardContext(data, currentBoardId)
 }
 
-export function getBoardConfigurationQuery(
-  data: ApplicationData,
-  input: { boardId: string },
-): BoardConfigurationResult {
-  const { color, defaultLayer, nowLayer } = getBoard(data, input.boardId)
-  return { color, defaultLayer, nowLayer }
-}
-
 export function getNowLayerLiveCardsQuery(
   data: ApplicationData,
   currentBoardId?: string,
@@ -135,7 +127,7 @@ function resolveBoardLiveCards(
   board: Board,
 ): LiveCard[] {
   const liveCards = new Map(data.liveCards.map(card => [card.cardId, card]))
-  return board.cardIds.flatMap((cardId) => {
+  return board.nowLayer.liveCards.flatMap((cardId) => {
     const card = liveCards.get(cardId)
     return card ? [card] : []
   })

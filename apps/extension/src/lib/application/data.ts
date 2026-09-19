@@ -45,7 +45,7 @@ export function ensureApplicationDataIntegrity(
         ...createInitialApplicationData(options),
         liveCards: data.liveCards,
       }
-  const assignedCardIds = new Set(initialized.boards.flatMap(board => board.cardIds))
+  const assignedCardIds = new Set(initialized.boards.flatMap(board => board.nowLayer.liveCards))
   const unassignedCardIds = initialized.liveCards
     .filter(card => !assignedCardIds.has(card.cardId))
     .toSorted((left, right) => right.createdAt - left.createdAt || left.cardId.localeCompare(right.cardId))
@@ -53,19 +53,15 @@ export function ensureApplicationDataIntegrity(
   if (unassignedCardIds.length === 0) return initialized
 
   const fallbackBoard = initialized.boards[0]!
-  const cardIds = [...unassignedCardIds, ...fallbackBoard.cardIds]
+  const liveCards = [...unassignedCardIds, ...fallbackBoard.nowLayer.liveCards]
   return {
     ...initialized,
     boards: initialized.boards.map(board => board.id === fallbackBoard.id
       ? {
           ...board,
-          cardIds,
           nowLayer: {
             ...board.nowLayer,
-            sort: {
-              ...board.nowLayer.sort,
-              manualOrder: [...unassignedCardIds, ...board.nowLayer.sort.manualOrder],
-            },
+            liveCards,
           },
         }
       : board),

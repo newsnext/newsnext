@@ -1,6 +1,6 @@
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
-import { configureLiveWidgetMutation, createBoardMutation, createLiveCardMutation, createLiveWidgetMutation, deleteLiveCardMutation, deleteLiveWidgetMutation, moveLiveCardMutation, moveLiveWidgetMutation, resetLiveCardMetadataMutation, resetLiveWidgetParamsMutation, setLiveWidgetLayoutsMutation, setNowLayerManualOrderMutation } from "./mutations"
+import { configureLiveWidgetMutation, createBoardMutation, createLiveCardMutation, createLiveWidgetMutation, deleteLiveCardMutation, deleteLiveWidgetMutation, moveLiveCardMutation, moveLiveWidgetMutation, resetLiveCardMetadataMutation, resetLiveWidgetParamsMutation, setLiveWidgetLayoutsMutation, setNextLayerManualOrderMutation, setNowLayerManualOrderMutation } from "./mutations"
 
 const dependencies = { createId: () => "new", now: () => 100, workerId: "worker-a" }
 
@@ -12,11 +12,8 @@ function createData(): ApplicationData {
       id: "reading",
       name: "Reading",
       createdAt: 1,
-      cardIds: ["rss:feed::one"],
+      nowLayer: { liveCards: ["rss:feed::one"] },
       defaultLayer: "now",
-      nowLayer: {
-        sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: ["rss:feed::one"] },
-      },
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [{
@@ -29,17 +26,14 @@ function createData(): ApplicationData {
   }
 }
 
-function createTargetBoard(cardIds: string[] = []): ApplicationData["boards"][number] {
+function createTargetBoard(liveCards: string[] = []): ApplicationData["boards"][number] {
   return {
     color: "purple",
     id: "target",
     name: "Target",
     createdAt: 2,
-    cardIds,
+    nowLayer: { liveCards },
     defaultLayer: "now",
-    nowLayer: {
-      sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [...cardIds] },
-    },
     nextLayer: { liveWidgets: [] },
   }
 }
@@ -64,7 +58,7 @@ describe("application mutations", () => {
     })).toThrow("Widget layout is invalid")
   })
 
-  it("defaults omitted install size and appends after existing Widgets", () => {
+  it("defaults omitted install size and prepends before existing Widgets", () => {
     const first = createLiveWidgetMutation(createData(), {
       boardId: "reading",
       widgetId: "feed",
@@ -78,7 +72,8 @@ describe("application mutations", () => {
       dataScope: { type: "board" },
       size: { width: 4, height: 3 },
     }, { createId: () => "second" }).data
-    expect(second.boards[0]?.nextLayer.liveWidgets[1]?.layout).toEqual({ height: 3, width: 4 })
+    expect(second.boards[0]?.nextLayer.liveWidgets[0]?.layout).toEqual({ height: 3, width: 4 })
+    expect(second.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["second", "first"])
     expect(() => createLiveWidgetMutation(second, {
       boardId: "reading",
       widgetId: "feed",
@@ -112,7 +107,7 @@ describe("application mutations", () => {
     expect(moveLiveWidgetMutation(moved, { liveWidgetId: "feed", boardId: "target" }).data).toBe(moved)
     const duplicate = createLiveWidgetMutation(moved, { boardId: "reading", widgetId: "feed", dataScope: { type: "board" }, size: { width: 2, height: 1 } }, { createId: () => "second-feed" }).data
     const together = moveLiveWidgetMutation(duplicate, { liveWidgetId: "second-feed", boardId: "target" }).data
-    expect(together.boards[1]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["feed", "second-feed"])
+    expect(together.boards[1]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["second-feed", "feed"])
   })
 
   it("resets Card metadata without resetting its source parameters", () => {
@@ -123,12 +118,11 @@ describe("application mutations", () => {
     expect(data.liveCards[0]?.patch.metadata?.title).toBe("Custom")
   })
 
-  it("creates a Board with its NowLayer configuration", () => {
+  it("creates a Board with its layer configuration", () => {
     const execution = createBoardMutation(createData(), {
       name: "  AI  ",
       color: "purple",
       defaultLayer: "next",
-      sortMode: "provider",
     }, dependencies)
 
     expect(execution.data.boards.at(-1)).toEqual({
@@ -136,11 +130,8 @@ describe("application mutations", () => {
       id: "new",
       name: "AI",
       createdAt: 100,
-      cardIds: [],
+      nowLayer: { liveCards: [] },
       defaultLayer: "next",
-      nowLayer: {
-        sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
-      },
       nextLayer: { liveWidgets: [] },
     })
   })
@@ -152,11 +143,7 @@ describe("application mutations", () => {
       patch: {},
     }, dependencies)
 
-    expect(execution.data.boards[0]?.cardIds).toEqual([
-      "new",
-      "rss:feed::one",
-    ])
-    expect(execution.data.boards[0]?.nowLayer.sort.manualOrder).toEqual([
+    expect(execution.data.boards[0]?.nowLayer.liveCards).toEqual([
       "new",
       "rss:feed::one",
     ])
@@ -165,8 +152,7 @@ describe("application mutations", () => {
 
   it("does not reorder an LiveCard moved to its current Board", () => {
     const initial = createData()
-    initial.boards[0]!.cardIds.unshift("rss:feed::two")
-    initial.boards[0]!.nowLayer.sort.manualOrder.unshift("rss:feed::two")
+    initial.boards[0]!.nowLayer.liveCards.unshift("rss:feed::two")
     initial.liveCards.push({ cardId: "rss:feed::two", workerId: "worker-a", sourceId: "rss:feed", patch: {}, createdAt: 2 })
 
     const execution = moveLiveCardMutation(initial, {
@@ -186,32 +172,52 @@ describe("application mutations", () => {
       cardId: "rss:feed::one",
     })
 
-    expect(execution.data.boards[0]?.cardIds).toEqual([])
-    expect(execution.data.boards[1]?.cardIds).toEqual(["rss:feed::one"])
+    expect(execution.data.boards[0]?.nowLayer.liveCards).toEqual([])
+    expect(execution.data.boards[1]?.nowLayer.liveCards).toEqual(["rss:feed::one"])
   })
 
-  it("stores manual order only in the NowLayer", () => {
+  it("rewrites Board card order from the NowLayer manual order", () => {
     const initial = createData()
-    initial.boards[0]!.cardIds.unshift("rss:feed::two")
-    initial.boards[0]!.nowLayer.sort.manualOrder.unshift("rss:feed::two")
+    initial.boards[0]!.nowLayer.liveCards.unshift("rss:feed::two")
     initial.liveCards.push({ cardId: "rss:feed::two", workerId: "worker-a", sourceId: "rss:feed", patch: {}, createdAt: 2 })
 
     const execution = setNowLayerManualOrderMutation(initial, {
       boardId: "reading",
-      cardIds: ["rss:feed::one", "rss:feed::two"],
+      liveCards: ["rss:feed::one", "rss:feed::two"],
     })
 
-    expect(execution.data.boards[0]?.cardIds).toEqual(["rss:feed::two", "rss:feed::one"])
-    expect(execution.data.boards[0]?.nowLayer.sort).toMatchObject({
-      mode: "manual",
-      manualOrder: ["rss:feed::one", "rss:feed::two"],
+    expect(execution.data.boards[0]?.nowLayer.liveCards).toEqual(["rss:feed::one", "rss:feed::two"])
+  })
+
+  it("reorders Widgets from the NextLayer manual order", () => {
+    const first = createLiveWidgetMutation(createData(), {
+      boardId: "reading",
+      dataScope: { type: "board" },
+      size: { width: 2, height: 2 },
+      widgetId: "feed",
+    }, { createId: () => "first" }).data
+    const second = createLiveWidgetMutation(first, {
+      boardId: "reading",
+      dataScope: { type: "board" },
+      size: { width: 2, height: 2 },
+      widgetId: "feed",
+    }, { createId: () => "second" }).data
+    expect(second.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["second", "first"])
+    const execution = setNextLayerManualOrderMutation(second, {
+      boardId: "reading",
+      widgetIds: ["first", "second"],
     })
+    expect(execution.data.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["first", "second"])
+    expect(() => setNextLayerManualOrderMutation(second, {
+      boardId: "reading",
+      widgetIds: ["first"],
+    })).toThrow("every Board Widget")
   })
 
   it("rejects a manual order that omits members", () => {
     expect(() => setNowLayerManualOrderMutation(createData(), {
       boardId: "reading",
-      cardIds: [],
+      liveCards: [],
     })).toThrow("every Board LiveCard")
   })
 
@@ -219,8 +225,7 @@ describe("application mutations", () => {
     const execution = deleteLiveCardMutation(createData(), { cardId: "rss:feed::one" })
 
     expect(execution.data.liveCards).toEqual([])
-    expect(execution.data.boards[0]?.cardIds).toEqual([])
-    expect(execution.data.boards[0]?.nowLayer.sort.manualOrder).toEqual([])
+    expect(execution.data.boards[0]?.nowLayer.liveCards).toEqual([])
   })
 
   it("installs a Board-scoped Widget and persists layout changes", () => {
@@ -376,13 +381,13 @@ it("creates independent instances from one definition and targets edits by insta
   expect(first.result).toEqual({ liveWidgetId: "instance-a" })
   expect(second.result).toEqual({ liveWidgetId: "instance-b" })
   const edited = configureLiveWidgetMutation(second.data, { liveWidgetId: "instance-b", patch: { params: { limit: 5 }, metadata: { title: "Second" } } }).data
-  expect(edited.boards[0]?.nextLayer.liveWidgets[0]?.patch).toBeUndefined()
-  expect(edited.boards[0]?.nextLayer.liveWidgets[1]?.patch?.params).toEqual({ limit: 5 })
-  const resized = setLiveWidgetLayoutsMutation(edited, { boardId: "reading", liveWidgets: [{ liveWidgetId: "instance-a", width: 2, height: 2 }, { liveWidgetId: "instance-b", width: 4, height: 3 }] }).data
+  expect(edited.boards[0]?.nextLayer.liveWidgets[0]?.patch?.params).toEqual({ limit: 5 })
+  expect(edited.boards[0]?.nextLayer.liveWidgets[1]?.patch).toBeUndefined()
+  const resized = setLiveWidgetLayoutsMutation(edited, { boardId: "reading", liveWidgets: [{ liveWidgetId: "instance-b", width: 2, height: 2 }, { liveWidgetId: "instance-a", width: 4, height: 3 }] }).data
   expect(resized.boards[0]?.nextLayer.liveWidgets[0]?.layout).toEqual({ ...input.size })
   expect(resized.boards[0]?.nextLayer.liveWidgets[1]?.layout).toEqual({ width: 4, height: 3 })
-  const removed = deleteLiveWidgetMutation(resized, { liveWidgetId: "instance-a" }).data
-  expect(removed.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["instance-b"])
+  const removed = deleteLiveWidgetMutation(resized, { liveWidgetId: "instance-b" }).data
+  expect(removed.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["instance-a"])
   expect(() => deleteLiveWidgetMutation(removed, { liveWidgetId: "shared" })).toThrow()
-  expect(() => createLiveWidgetMutation(removed, input, { createId: () => "instance-b" })).toThrow("unique")
+  expect(() => createLiveWidgetMutation(removed, input, { createId: () => "instance-a" })).toThrow("unique")
 })

@@ -16,11 +16,8 @@ function workspace(revision: number): NativeWorkspace {
         createdAt: 1,
         defaultLayer: "now",
         id: "board-a",
-        cardIds: ["card-a"],
+        nowLayer: { liveCards: ["card-a"] },
         name: "A",
-        nowLayer: {
-          sort: { automaticMode: "addedAt", manualOrder: [], mode: "addedAt" },
-        },
         nextLayer: { liveWidgets: [] },
       },
       {
@@ -28,11 +25,8 @@ function workspace(revision: number): NativeWorkspace {
         createdAt: 2,
         defaultLayer: "now",
         id: "board-b",
-        cardIds: [],
+        nowLayer: { liveCards: [] },
         name: "B",
-        nowLayer: {
-          sort: { automaticMode: "addedAt", manualOrder: [], mode: "addedAt" },
-        },
         nextLayer: { liveWidgets: [] },
       },
     ],
@@ -70,10 +64,13 @@ describe("workspace patches", () => {
       liveCards: [],
       settings: candidate.settings,
     })
-    expect(applyWorkspacePatch(current, patch)).toEqual({
-      ...candidate,
-      revision: 5,
-    })
+    const result = applyWorkspacePatch(current, patch)
+    expect(result.revision).toBe(5)
+    expect(result.updatedAt).toBe(candidate.updatedAt)
+    expect(result.settings).toBe(candidate.settings)
+    expect(result.boards).toHaveLength(1)
+    expect(result.boards[0]?.id).toBe("board-b")
+    expect(result.liveCards).toEqual([])
   })
 
   it("rejects patches for stale revisions", () => {
@@ -110,14 +107,14 @@ describe("workspace patches", () => {
     })
     candidate.boards[0] = {
       ...candidate.boards[0]!,
-      cardIds: ["card-b", "card-a"],
+      nowLayer: { liveCards: ["card-b", "card-a"] },
     }
 
     const patch = parseWorkspacePatch(createWorkspacePatch(current, candidate))
 
     expect(patch.liveCards.map(card => card.cardId)).toEqual(["card-b"])
-    expect(patch.boards[0]?.cardIds).toEqual(["card-b", "card-a"])
-    expect(applyWorkspacePatch(current, patch).boards[0]?.cardIds).toEqual([
+    expect(patch.boards[0]?.nowLayer.liveCards).toEqual(["card-b", "card-a"])
+    expect(applyWorkspacePatch(current, patch).boards[0]?.nowLayer.liveCards).toEqual([
       "card-b",
       "card-a",
     ])

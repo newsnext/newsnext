@@ -8,13 +8,18 @@ import { getWorkerId } from "../worker-identity"
 export const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
+// Protocol 34 moves Board membership reads from top-level `cardIds` to
+// `nowLayer.liveCards`, and renames the `nowLayer.setManualOrder` input field
+// from `cardIds` to `liveCards`.
+// Protocol 33 drops Board sort state; card order is the cardIds array order and
+// Widget order is the Next Layer array order, with new entries prepended.
 // Protocol 32 drops Widget placement coordinates; order is the Next Layer array
 // order and placements carry only sizes.
 // Protocol 31 renames the LiveCard snapshot RPC and Source snapshot Actions,
 // replacing the source-cache terminology on the wire.
 // Protocol 30 carries the Widget catalog inside Ready and every catalog push
 // instead of serving it from the loopback Widget server.
-export const PROTOCOL_VERSION = 32
+export const PROTOCOL_VERSION = 34
 export const WORKSPACE_SYNCED_AT_KEY = "newsnext-workspace-synced-at"
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"

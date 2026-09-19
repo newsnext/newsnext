@@ -455,8 +455,8 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           active={viewReady}
           color={manifest.color}
           cardIds={placement.dataScope.type === "board"
-            ? board?.cardIds ?? []
-            : placement.dataScope.cardIds.filter(id => board?.cardIds.includes(id))}
+            ? board?.nowLayer.liveCards ?? []
+            : placement.dataScope.cardIds.filter(id => board?.nowLayer.liveCards.includes(id))}
           title={manifest.title}
           url={manifest.url}
           ui={manifest.view}

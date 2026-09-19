@@ -16,7 +16,7 @@ export function BoardIdComponent() {
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
   const [restoredBoardId, setRestoredBoardId] = useState<string>()
   const board = boards.find(board => board.id === boardId)
-  const boardCardIds = board?.cardIds
+  const boardCardIds = board?.nowLayer.liveCards
   const boardLiveCards = useMemo(() => {
     if (!boardCardIds) return []
     const cardIdSet = new Set(boardCardIds)

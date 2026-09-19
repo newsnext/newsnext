@@ -2,14 +2,13 @@ import type { ApplicationData, ApplicationNextLayerLiveWidget, ApplicationNowLay
 import Type from "typebox"
 import { COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
-import { BoardIdParam, CardIdArrayParam, CardIdParam, EmptyObject, Identifier, LiveWidgetIdParam, RecordValue, SourceIdParam, stringEnum, TargetBoardIdParam, WidgetIdParam } from "./schema.js"
+import { BoardIdParam, CardIdParam, EmptyObject, Identifier, LiveWidgetIdParam, RecordValue, SourceIdParam, stringEnum, TargetBoardIdParam, WidgetIdParam } from "./schema.js"
 
 const IdentifierArray = Type.Array(Identifier, { uniqueItems: true })
 
 const BoardConfigurationParams = Type.Object({
   color: Type.Optional(stringEnum(COLORS)),
   defaultLayer: Type.Optional(stringEnum(["now", "next"] as const)),
-  sortMode: Type.Optional(stringEnum(["addedAt", "provider", "manual"] as const)),
 }, { additionalProperties: false })
 
 const LiveCardPatchParams = Type.Unsafe<LiveCardPatch>(Type.Object({
@@ -92,24 +91,17 @@ const BoardLiveWidgetResult = Type.Unsafe<ApplicationNextLayerLiveWidget>(Type.O
   boardId: Identifier,
 }))
 
-const BoardSortResult = Type.Object({
-  automaticMode: stringEnum(["addedAt", "provider"] as const),
-  manualOrder: IdentifierArray,
-  mode: stringEnum(["addedAt", "provider", "manual"] as const),
-})
-
 const BoardResult = Type.Unsafe<Board>(Type.Object({
-  cardIds: IdentifierArray,
   color: stringEnum(COLORS),
   createdAt: Type.Number(),
   defaultLayer: stringEnum(["now", "next"] as const),
   id: Identifier,
   name: Identifier,
+  nowLayer: Type.Object({
+    liveCards: IdentifierArray,
+  }),
   nextLayer: Type.Object({
     liveWidgets: Type.Array(LiveWidgetResult),
-  }),
-  nowLayer: Type.Object({
-    sort: BoardSortResult,
   }),
 }))
 
@@ -122,6 +114,11 @@ const NowLayerLiveCardResult = Type.Unsafe<ApplicationNowLayerLiveCard>(Type.Obj
   boardId: Identifier,
   cardId: Identifier,
   sourceId: Identifier,
+}))
+
+const NextLayerLiveWidgetResult = Type.Unsafe<ApplicationNextLayerLiveWidget>(Type.Object({
+  ...LiveWidgetFields,
+  boardId: Identifier,
 }))
 
 const BoardCreatedResult = Type.Object({
@@ -164,8 +161,7 @@ const boardUpdateAction = defineActionContract({
   validate(input) {
     if (input.name === undefined
       && input.color === undefined
-      && input.defaultLayer === undefined
-      && input.sortMode === undefined) {
+      && input.defaultLayer === undefined) {
       throw new Error("Board update requires at least one change")
     }
   },
@@ -196,15 +192,26 @@ const nowLayerSetManualOrderAction = defineActionContract({
   description: "Set the complete manual LiveCard order for a Board's Now Layer. Returns the ordered cards so callers can verify without a follow-up query.",
   params: Type.Object({
     boardId: BoardIdParam,
-    cardIds: CardIdArrayParam,
+    liveCards: Type.Array(CardIdParam, { uniqueItems: true, description: "LiveCard identifiers in display order; rewrites the Now Layer order." }),
   }, { additionalProperties: false }),
   result: Type.Array(NowLayerLiveCardResult),
+})
+
+const nextLayerSetManualOrderAction = defineActionContract({
+  name: "nextLayer.setManualOrder",
+  kind: "mutation",
+  description: "Set the complete manual Widget order for a Board's Next Layer. Returns the ordered widgets so callers can verify without a follow-up query.",
+  params: Type.Object({
+    boardId: BoardIdParam,
+    widgetIds: IdentifierArray,
+  }, { additionalProperties: false }),
+  result: Type.Array(NextLayerLiveWidgetResult),
 })
 
 const liveWidgetCreateAction = defineActionContract({
   name: "liveWidget.create",
   kind: "mutation",
-  description: "Create a configured LiveWidget in one Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2. Returns the created LiveWidget so callers can verify without a follow-up query.",
+  description: "Create a configured LiveWidget in one Board's Next Layer. The placement prepends before existing Widgets; omitted size fields default to 2. Returns the created LiveWidget so callers can verify without a follow-up query.",
   params: Type.Object({
     boardId: BoardIdParam,
     dataScope: WidgetDataScopeParams,
@@ -217,7 +224,7 @@ const liveWidgetCreateAction = defineActionContract({
 const boardListLiveWidgetsAction = defineActionContract({
   name: "board.listLiveWidgets",
   kind: "query",
-  description: "List the Widget placements in a Board's Next Layer in installation order.",
+  description: "List the Widget placements in a Board's Next Layer in display order.",
   params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
   result: Type.Array(LiveWidgetResult),
 })
@@ -401,7 +408,7 @@ const boardGetAction = defineActionContract({
 const boardListLiveCardsAction = defineActionContract({
   name: "board.listLiveCards",
   kind: "query",
-  description: "List the LiveCards in a Board in membership order. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title.",
+  description: "List the LiveCards in a Board's Now Layer in display order. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title.",
   params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
   result: Type.Array(LiveCardResult),
 })
@@ -457,6 +464,7 @@ export const applicationActionContracts = [
   boardUpdateAction,
   boardDeleteAction,
   nowLayerSetManualOrderAction,
+  nextLayerSetManualOrderAction,
   liveWidgetCreateAction,
   boardListLiveWidgetsAction,
   liveWidgetDeleteAction,

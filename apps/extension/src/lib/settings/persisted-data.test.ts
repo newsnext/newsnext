@@ -19,11 +19,8 @@ function createData(): PersistedUserData {
       id: "reading",
       name: "Reading",
       createdAt: 1,
-      cardIds: ["rss:feed::one"],
+      nowLayer: { liveCards: ["rss:feed::one"] },
       defaultLayer: "next",
-      nowLayer: {
-        sort: { mode: "manual", automaticMode: "addedAt", manualOrder: ["rss:feed::one"] },
-      },
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [{
@@ -45,10 +42,9 @@ describe("persisted user data", () => {
         id: "reading",
         name: " Reading ",
         createdAt: 1,
-        cardIds: ["second", "first", "first", "missing"],
         defaultLayer: "now",
         nowLayer: {
-          sort: { mode: "manual", automaticMode: "provider", manualOrder: ["first"] },
+          liveCards: ["second", "first", "first", "missing"],
         },
         nextLayer: {
           liveWidgets: [{
@@ -68,14 +64,7 @@ describe("persisted user data", () => {
     expect(data.boards[0]).toMatchObject({
       color: "blue",
       name: "Reading",
-      cardIds: ["second", "first"],
-      nowLayer: {
-        sort: {
-          mode: "manual",
-          automaticMode: "provider",
-          manualOrder: ["first", "second"],
-        },
-      },
+      nowLayer: { liveCards: ["second", "first"] },
       nextLayer: {
         liveWidgets: [{
           widgetId: "latest",
@@ -95,11 +84,8 @@ describe("persisted user data", () => {
       id: "duplicate",
       name: "Duplicate",
       createdAt: 2,
-      cardIds: ["rss:feed::one"],
+      nowLayer: { liveCards: ["rss:feed::one"] },
       defaultLayer: "now",
-      nowLayer: {
-        sort: { mode: "manual", automaticMode: "addedAt", manualOrder: ["rss:feed::one"] },
-      },
       nextLayer: {
         liveWidgets: [{
           widgetId: "latest",
@@ -112,9 +98,8 @@ describe("persisted user data", () => {
 
     const normalized = normalizeApplicationData(data)
 
-    expect(normalized.boards[0]?.cardIds).toEqual(["rss:feed::one"])
-    expect(normalized.boards[1]?.cardIds).toEqual([])
-    expect(normalized.boards[1]?.nowLayer.sort.manualOrder).toEqual([])
+    expect(normalized.boards[0]?.nowLayer.liveCards).toEqual(["rss:feed::one"])
+    expect(normalized.boards[1]?.nowLayer.liveCards).toEqual([])
     expect(normalized.boards[1]?.nextLayer.liveWidgets[0]?.dataScope).toEqual({
       type: "cards",
       cardIds: [],
@@ -164,7 +149,7 @@ describe("persisted user data", () => {
       boards: [],
     })
     expect(merged.boards).toHaveLength(1)
-    expect(merged.boards[0]?.cardIds).toEqual(["rss:feed::one"])
+    expect(merged.boards[0]?.nowLayer.liveCards).toEqual(["rss:feed::one"])
     expect(merged.settings.general.defaultBoardId).toBe(merged.boards[0]?.id)
   })
 
@@ -235,7 +220,7 @@ describe("liveWidget instances", () => {
     const data = createData()
     const first = { widgetId: "shared", liveWidgetId: "legacy:reading:shared", dataScope: { type: "board" as const }, layout: { width: 2, height: 2 }, patch: { params: { count: 0 } } }
     data.boards[0]!.nextLayer.liveWidgets = [first, { ...first, liveWidgetId: "new-instance" }]
-    data.boards.push({ ...data.boards[0]!, id: "other", name: "Other", cardIds: [], nextLayer: { liveWidgets: [first] } })
+    data.boards.push({ ...data.boards[0]!, id: "other", name: "Other", nowLayer: { liveCards: [] }, nextLayer: { liveWidgets: [first] } })
     const result = normalizeApplicationData(data)
     expect(result.boards[0]?.nextLayer.liveWidgets).toEqual(data.boards[0]?.nextLayer.liveWidgets)
     expect(result.boards[1]?.nextLayer.liveWidgets).toEqual([])

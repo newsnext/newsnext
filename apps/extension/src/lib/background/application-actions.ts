@@ -34,6 +34,7 @@ import {
   resetLiveWidgetMetadataMutation,
   resetLiveWidgetParamsMutation,
   setLiveWidgetLayoutsMutation,
+  setNextLayerManualOrderMutation,
   setNowLayerManualOrderMutation,
   updateBoardMutation,
 } from "../application"
@@ -93,6 +94,12 @@ const boardDeleteAction = defineAction(actionContracts["board.delete"], async (i
 const nowLayerSetManualOrderAction = defineAction(actionContracts["nowLayer.setManualOrder"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => setNowLayerManualOrderMutation(data, input))
   return getNowLayerLiveCardsQuery(await context.data(), input.boardId)
+})
+
+const nextLayerSetManualOrderAction = defineAction(actionContracts["nextLayer.setManualOrder"], async (input, context: ApplicationActionContext) => {
+  await context.mutate(data => setNextLayerManualOrderMutation(data, input))
+  return listBoardLiveWidgetsQuery(await context.data(), { boardId: input.boardId })
+    .map(widget => ({ ...widget, boardId: input.boardId }))
 })
 
 const liveWidgetCreateAction = defineAction(actionContracts["liveWidget.create"], async (input, context: ApplicationActionContext) => {
@@ -203,6 +210,7 @@ export const applicationActionDefinitions = [
   boardUpdateAction,
   boardDeleteAction,
   nowLayerSetManualOrderAction,
+  nextLayerSetManualOrderAction,
   liveWidgetCreateAction,
   boardListLiveWidgetsAction,
   liveWidgetListAction,

@@ -77,7 +77,7 @@ export function BoardView({ board }: { board: Board }) {
     return dropTargetForElements({
       element: dropTarget,
       canDrop: ({ source }) => isSortableData(source.data)
-        && !board.cardIds.includes(source.data.id),
+        && !board.nowLayer.liveCards.includes(source.data.id),
       getDropEffect: () => "move",
       onDragEnter: () => setIsSearchTransferOver(true),
       onDragLeave: () => setIsSearchTransferOver(false),
@@ -87,7 +87,7 @@ export function BoardView({ board }: { board: Board }) {
         void moveSearchLiveCard(source.data.id)
       },
     })
-  }, [board.id, board.cardIds])
+  }, [board.id, board.nowLayer.liveCards])
 
   const handleContentReady = useCallback(() => {
     setLoadedViewKey(renderedViewKey)

@@ -28,13 +28,13 @@ export function mergeWorkspaces(shared: Workspace, local: Workspace): Workspace 
     let board = boardMap.get(localBoard.id)
     if (!board) {
       board = structuredClone(localBoard)
-      board.cardIds = []
+      board.nowLayer.liveCards = []
       board.nextLayer.liveWidgets = []
       result.boards.push(board)
       boardMap.set(board.id, board)
     }
-    board.cardIds.push(...localBoard.cardIds.filter(id => !cardIds.has(id)))
-    const ownedCards = new Set(board.cardIds)
+    board.nowLayer.liveCards.push(...localBoard.nowLayer.liveCards.filter(id => !cardIds.has(id)))
+    const ownedCards = new Set(board.nowLayer.liveCards)
     for (const widget of localBoard.nextLayer.liveWidgets) {
       if (widgetIds.has(widget.liveWidgetId)) continue
       const added = structuredClone(widget)
@@ -44,11 +44,7 @@ export function mergeWorkspaces(shared: Workspace, local: Workspace): Workspace 
       board.nextLayer.liveWidgets.push(added)
       widgetIds.add(added.liveWidgetId)
     }
-    board.nowLayer.sort.manualOrder = [...new Set([
-      ...board.nowLayer.sort.manualOrder,
-      ...localBoard.nowLayer.sort.manualOrder,
-    ])].filter(id => ownedCards.has(id))
-    for (const id of board.cardIds) cardIds.add(id)
+    for (const id of board.nowLayer.liveCards) cardIds.add(id)
   }
   return result
 }

@@ -2,7 +2,6 @@ import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
 import {
-  getBoardConfigurationQuery,
   getBoardLiveWidgetQuery,
   getLiveWidgetQuery,
   getNowLayerLiveCardsQuery,
@@ -20,9 +19,8 @@ function createData(): ApplicationData {
       id: "reading",
       name: "Reading",
       createdAt: 1,
-      cardIds: ["second", "first"],
+      nowLayer: { liveCards: ["second", "first"] },
       defaultLayer: "now",
-      nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] } },
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [
@@ -39,7 +37,7 @@ describe("application queries", () => {
       .toEqual([source])
   })
 
-  it("lists Board LiveCards in cardIds order", () => {
+  it("lists Board LiveCards in liveCards order", () => {
     const liveCards = listBoardLiveCardsQuery(createData(), { boardId: "reading" })
     expect(liveCards.map(card => card.cardId)).toEqual(["second", "first"])
   })
@@ -121,13 +119,5 @@ describe("application queries", () => {
       { boardId: "reading", cardId: "second", sourceId: "rss:second" },
       { boardId: "reading", cardId: "first", sourceId: "rss:first" },
     ])
-  })
-
-  it("returns nested Board configuration", () => {
-    expect(getBoardConfigurationQuery(createData(), { boardId: "reading" })).toEqual({
-      color: "blue",
-      defaultLayer: "now",
-      nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] } },
-    })
   })
 })

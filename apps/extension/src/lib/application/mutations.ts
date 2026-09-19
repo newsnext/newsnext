@@ -6,7 +6,6 @@ import type {
   LiveWidget,
   LiveWidgetDataScope,
   LiveWidgetLayout,
-  NowLayerSortMode,
 } from "../board"
 import type { LiveCardPatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
@@ -17,7 +16,6 @@ import { mergeLiveCardPatch } from "../source/live-cards"
 export interface BoardConfiguration {
   color?: Color
   defaultLayer?: BoardLayer
-  sortMode?: NowLayerSortMode
 }
 
 interface ApplicationLiveCardCreationInput {
@@ -79,8 +77,7 @@ export function updateBoardMutation(
   assertBoardExists(data, input.boardId)
   if (input.name === undefined
     && input.color === undefined
-    && input.defaultLayer === undefined
-    && input.sortMode === undefined) {
+    && input.defaultLayer === undefined) {
     throw new Error("Board update requires at least one change")
   }
   const name = input.name?.trim()
@@ -114,7 +111,7 @@ export function deleteBoardMutation(
     assertBoardExists(data, targetBoardId)
   }
   const liveCards = deleteLiveCards
-    ? data.liveCards.filter(card => !board.cardIds.includes(card.cardId))
+    ? data.liveCards.filter(card => !board.nowLayer.liveCards.includes(card.cardId))
     : data.liveCards
   return {
     data: {
@@ -122,7 +119,7 @@ export function deleteBoardMutation(
       boards: data.boards.flatMap((candidate) => {
         if (candidate.id === boardId) return []
         if (!deleteLiveCards && candidate.id === targetBoardId) {
-          return [board.cardIds.toReversed().reduce(addLiveCardToBoard, candidate)]
+          return [board.nowLayer.liveCards.toReversed().reduce(addLiveCardToBoard, candidate)]
         }
         return [candidate]
       }),
@@ -133,10 +130,10 @@ export function deleteBoardMutation(
 
 export function setNowLayerManualOrderMutation(
   data: ApplicationData,
-  input: { boardId: string, cardIds: string[] },
+  input: { boardId: string, liveCards: string[] },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertCompleteLiveCardOrder(board.cardIds, input.cardIds)
+  assertCompleteLiveCardOrder(board.nowLayer.liveCards, input.liveCards)
   return {
     data: {
       ...data,
@@ -145,7 +142,35 @@ export function setNowLayerManualOrderMutation(
             ...candidate,
             nowLayer: {
               ...candidate.nowLayer,
-              sort: { ...candidate.nowLayer.sort, mode: "manual", manualOrder: input.cardIds },
+              liveCards: [...input.liveCards],
+            },
+          }
+        : candidate),
+    },
+  }
+}
+
+export function setNextLayerManualOrderMutation(
+  data: ApplicationData,
+  input: { boardId: string, widgetIds: string[] },
+): ApplicationMutationExecution {
+  const board = getBoard(data, input.boardId)
+  assertCompleteWidgetOrder(board.nextLayer.liveWidgets.map(w => w.liveWidgetId), input.widgetIds)
+  const widgetsById = new Map(board.nextLayer.liveWidgets.map(widget => [widget.liveWidgetId, widget]))
+  const liveWidgets = input.widgetIds.map((liveWidgetId) => {
+    const widget = widgetsById.get(liveWidgetId)
+    if (!widget) throw new Error(`Widget '${liveWidgetId}' is not installed in Board '${board.id}'`)
+    return widget
+  })
+  return {
+    data: {
+      ...data,
+      boards: data.boards.map(candidate => candidate.id === input.boardId
+        ? {
+            ...candidate,
+            nextLayer: {
+              ...candidate.nextLayer,
+              liveWidgets,
             },
           }
         : candidate),
@@ -178,12 +203,13 @@ export function createLiveWidgetMutation(
   const execution = replaceBoard(data, {
     ...board,
     nextLayer: {
-      liveWidgets: [...board.nextLayer.liveWidgets, {
+      ...board.nextLayer,
+      liveWidgets: [{
         dataScope: input.dataScope,
         layout,
         widgetId: input.widgetId,
         liveWidgetId,
-      }],
+      }, ...board.nextLayer.liveWidgets],
     },
   })
   return { ...execution, result: { liveWidgetId } }
@@ -199,16 +225,16 @@ export function moveLiveWidgetMutation(
   const moved = {
     ...widget,
     dataScope: widget.dataScope.type === "cards"
-      ? { ...widget.dataScope, cardIds: widget.dataScope.cardIds.filter(id => target.cardIds.includes(id)) }
+      ? { ...widget.dataScope, cardIds: widget.dataScope.cardIds.filter(id => target.nowLayer.liveCards.includes(id)) }
       : widget.dataScope,
   }
   return {
     data: {
       ...data,
       boards: data.boards.map(board => board.id === source.id
-        ? { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.filter(item => item.liveWidgetId !== input.liveWidgetId) } }
+        ? { ...board, nextLayer: { ...board.nextLayer, liveWidgets: board.nextLayer.liveWidgets.filter(item => item.liveWidgetId !== input.liveWidgetId) } }
         : board.id === target.id
-          ? { ...board, nextLayer: { liveWidgets: [...board.nextLayer.liveWidgets, moved] } }
+          ? { ...board, nextLayer: { ...board.nextLayer, liveWidgets: [moved, ...board.nextLayer.liveWidgets] } }
           : board),
     },
   }
@@ -222,6 +248,7 @@ export function deleteLiveWidgetMutation(
   return replaceBoard(data, {
     ...board,
     nextLayer: {
+      ...board.nextLayer,
       liveWidgets: board.nextLayer.liveWidgets.filter(widget => widget.liveWidgetId !== input.liveWidgetId),
     },
   })
@@ -236,7 +263,7 @@ export function configureLiveWidgetMutation(
   if (input.patch.dataScope !== undefined && input.patch.dataScope !== null) {
     assertWidgetDataScope(board, input.patch.dataScope)
   }
-  return replaceBoard(data, { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.map((widget) => {
+  return replaceBoard(data, { ...board, nextLayer: { ...board.nextLayer, liveWidgets: board.nextLayer.liveWidgets.map((widget) => {
     if (widget.liveWidgetId !== input.liveWidgetId) return widget
     const patch = { ...widget.patch }
     for (const key of ["params", "metadata"] as const) {
@@ -288,7 +315,7 @@ export function setLiveWidgetLayoutsMutation(
   }
   return replaceBoard(data, {
     ...board,
-    nextLayer: { liveWidgets },
+    nextLayer: { ...board.nextLayer, liveWidgets },
   })
 }
 
@@ -300,6 +327,7 @@ export function resetLiveWidgetMetadataMutation(
   return replaceBoard(data, {
     ...board,
     nextLayer: {
+      ...board.nextLayer,
       liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
         ? { ...widget, patch: { ...widget.patch, metadata: {} } }
         : widget),
@@ -315,6 +343,7 @@ export function resetLiveWidgetParamsMutation(
   return replaceBoard(data, {
     ...board,
     nextLayer: {
+      ...board.nextLayer,
       liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
         ? { ...widget, patch: { ...widget.patch, params: {} } }
         : widget),
@@ -428,34 +457,26 @@ export function deleteLiveCardMutation(
 }
 
 function addLiveCardToBoard(board: Board, cardId: string): Board {
-  if (board.cardIds.includes(cardId)) return board
-  const manualOrder = [
-    cardId,
-    ...board.nowLayer.sort.manualOrder.filter(candidate => candidate !== cardId),
-  ]
+  if (board.nowLayer.liveCards.includes(cardId)) return board
   return {
     ...board,
-    cardIds: [cardId, ...board.cardIds],
     nowLayer: {
       ...board.nowLayer,
-      sort: { ...board.nowLayer.sort, manualOrder },
+      liveCards: [cardId, ...board.nowLayer.liveCards],
     },
   }
 }
 
 function removeLiveCardFromBoard(board: Board, cardId: string): Board {
-  if (!board.cardIds.includes(cardId)) return board
+  if (!board.nowLayer.liveCards.includes(cardId)) return board
   return {
     ...board,
-    cardIds: board.cardIds.filter(candidate => candidate !== cardId),
     nowLayer: {
       ...board.nowLayer,
-      sort: {
-        ...board.nowLayer.sort,
-        manualOrder: board.nowLayer.sort.manualOrder.filter(candidate => candidate !== cardId),
-      },
+      liveCards: board.nowLayer.liveCards.filter(candidate => candidate !== cardId),
     },
     nextLayer: {
+      ...board.nextLayer,
       liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.dataScope.type === "cards"
         ? {
             ...widget,
@@ -473,21 +494,10 @@ function configureBoard(
   board: Board,
   configuration: BoardConfiguration,
 ): Board {
-  const sortMode = configuration.sortMode ?? board.nowLayer.sort.mode
   return {
     ...board,
     ...(configuration.color !== undefined ? { color: configuration.color } : {}),
     ...(configuration.defaultLayer !== undefined ? { defaultLayer: configuration.defaultLayer } : {}),
-    nowLayer: {
-      ...board.nowLayer,
-      sort: {
-        ...board.nowLayer.sort,
-        mode: sortMode,
-        automaticMode: sortMode === "manual"
-          ? board.nowLayer.sort.automaticMode
-          : sortMode,
-      },
-    },
   }
 }
 
@@ -498,6 +508,16 @@ function assertCompleteLiveCardOrder(existingIds: string[], requestedIds: string
     || requested.size !== existing.size
     || requestedIds.some(cardId => !existing.has(cardId))) {
     throw new Error("Manual order must contain every Board LiveCard exactly once")
+  }
+}
+
+function assertCompleteWidgetOrder(existingIds: string[], requestedIds: string[]): void {
+  const existing = new Set(existingIds)
+  const requested = new Set(requestedIds)
+  if (requested.size !== requestedIds.length
+    || requested.size !== existing.size
+    || requestedIds.some(widgetId => !existing.has(widgetId))) {
+    throw new Error("Manual order must contain every Board Widget exactly once")
   }
 }
 
@@ -554,7 +574,7 @@ function assertWidgetDataScope(board: Board, dataScope: LiveWidgetDataScope): vo
   if (dataScope.type === "board") return
   const cardIds = new Set(dataScope.cardIds)
   if (cardIds.size !== dataScope.cardIds.length
-    || dataScope.cardIds.some(cardId => !board.cardIds.includes(cardId))) {
+    || dataScope.cardIds.some(cardId => !board.nowLayer.liveCards.includes(cardId))) {
     throw new Error("Widget data scope must contain unique LiveCards from its Board")
   }
 }

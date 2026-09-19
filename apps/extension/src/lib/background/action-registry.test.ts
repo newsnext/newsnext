@@ -13,9 +13,8 @@ function createContext(): BackgroundActionContext {
       id: "reading",
       name: "Reading",
       createdAt: 1,
-      cardIds: [],
+      nowLayer: { liveCards: [] },
       defaultLayer: "now",
-      nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] } },
       nextLayer: { liveWidgets: [] },
     }],
     liveCards: [],
@@ -96,8 +95,8 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(45)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(24)
+    expect(actions).toHaveLength(46)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(25)
     expect(actions.filter(action => action.kind === "query")).toHaveLength(17)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({

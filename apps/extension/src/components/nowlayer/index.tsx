@@ -21,7 +21,7 @@ export function NowLayer({
   const { currentBoard, liveCardsByCardId, cardIds } = useNowLayerLiveCards(boardId)
 
   const handleCardIdsChange = useCallback((newCardIds: string[]) => {
-    void setManualOrder({ boardId, cardIds: newCardIds }).catch((error) => {
+    void setManualOrder({ boardId, liveCards: newCardIds }).catch((error) => {
       console.error("Failed to save manual LiveCard order", error)
     })
   }, [boardId, setManualOrder])

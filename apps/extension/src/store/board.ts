@@ -7,7 +7,6 @@ import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
 import { actions } from "../lib/actions"
 import {
   DEFAULT_BOARD_LAYER,
-  DEFAULT_NOW_LAYER_SORT,
 } from "../lib/board"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../lib/settings"
 import { createExtensionStorage } from "./persisted-storage"
@@ -42,11 +41,11 @@ export const liveCardAtomsAtom = splitAtom(liveCardsAtom, card => card.cardId)
 
 export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {
   boardId: string
-  cardIds: string[]
+  liveCards: string[]
 }) => {
   await actions.nowLayer.setManualOrder({
     boardId: input.boardId,
-    cardIds: input.cardIds,
+    liveCards: input.liveCards,
   })
 })
 
@@ -70,7 +69,6 @@ export const createBoardAtom = atom(null, (_get, _set, input: BoardCreateInput) 
     color: input.color,
     defaultLayer: input.defaultLayer,
     name: input.name,
-    sortMode: input.sortMode,
   })
 ))
 
@@ -86,7 +84,6 @@ export const createBoardFromOpmlAtom = atom(null, (_get, _set, input: OpmlImport
     color: "orange",
     defaultLayer: DEFAULT_BOARD_LAYER,
     name: input.title,
-    sortMode: DEFAULT_NOW_LAYER_SORT.mode,
   })
 ))
 
@@ -96,7 +93,6 @@ export const updateBoardAtom = atom(null, async (_get, _set, board: Board) => {
     color: board.color,
     defaultLayer: board.defaultLayer,
     name: board.name,
-    sortMode: board.nowLayer.sort.mode,
   })
 })
 

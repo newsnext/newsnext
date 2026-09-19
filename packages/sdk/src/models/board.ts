@@ -2,14 +2,6 @@ import type { CardMetadata } from "./card.js"
 import type { Color } from "./color.js"
 
 export type BoardLayer = "now" | "next"
-export type NowLayerAutomaticSortMode = "addedAt" | "provider"
-export type NowLayerSortMode = NowLayerAutomaticSortMode | "manual"
-
-export interface NowLayerSort {
-  mode: NowLayerSortMode
-  automaticMode: NowLayerAutomaticSortMode
-  manualOrder: string[]
-}
 
 export type LiveWidgetDataScope
   = | { type: "board" }
@@ -24,8 +16,8 @@ export interface LiveWidgetLayout {
   width: number
 }
 
-// Sparse install size. Placements always append after the Board's existing
-// Widgets; position is the installation order, not coordinates.
+// Sparse install size. Placements prepend before the Board's existing
+// Widgets; position is the array order, not coordinates.
 export interface LiveWidgetInstallSize {
   height?: number
   width?: number
@@ -51,10 +43,9 @@ export interface Board {
   createdAt: number
   defaultLayer: BoardLayer
   id: string
-  cardIds: string[]
   name: string
   nowLayer: {
-    sort: NowLayerSort
+    liveCards: string[]
   }
   nextLayer: {
     liveWidgets: LiveWidget[]

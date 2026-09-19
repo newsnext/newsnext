@@ -18,11 +18,8 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     createdAt: 1,
     defaultLayer: "now",
     id: "V1StGXR8_Z5j",
-    cardIds: [],
+    nowLayer: { liveCards: [] },
     name: "My Board",
-    nowLayer: {
-      sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] },
-    },
     nextLayer: { liveWidgets: [] },
   },
   {
@@ -30,11 +27,8 @@ const BOARD_DIALOG_BOARDS: Board[] = [
     createdAt: 2,
     defaultLayer: "next",
     id: "board-design",
-    cardIds: [],
+    nowLayer: { liveCards: [] },
     name: "Design signals",
-    nowLayer: {
-      sort: { mode: "provider", automaticMode: "provider", manualOrder: [] },
-    },
     nextLayer: { liveWidgets: [] },
   },
 ]
@@ -126,11 +120,11 @@ function BoardDialogFixture({ target }: { target: BoardDialogTarget }) {
   const [lastAction, setLastAction] = useState<string>()
 
   function describeBoardAction(action: string, board: Board): void {
-    setLastAction(`${action} “${board.name}” · ${board.nowLayer.sort.mode}`)
+    setLastAction(`${action} “${board.name}”`)
   }
 
   function describeCreateAction(input: BoardCreateInput): void {
-    setLastAction(`Created “${input.name}” · ${input.sortMode}`)
+    setLastAction(`Created “${input.name}”`)
   }
 
   return (

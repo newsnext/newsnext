@@ -3,8 +3,6 @@ import type {
   Board,
   LiveWidget,
   LiveWidgetDataScope,
-  NowLayerAutomaticSortMode,
-  NowLayerSortMode,
 } from "../board"
 import type { LiveCard, LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
@@ -16,7 +14,6 @@ import {
 } from "../application/data"
 import {
   DEFAULT_BOARD_COLOR,
-  DEFAULT_NOW_LAYER_SORT,
   normalizeBoardLayer,
 } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
@@ -96,31 +93,18 @@ export function normalizeBoards(
     const identity = normalizeBoardIdentity(candidate, seenIds, seenNames)
     if (!identity || !isRecord(candidate)) return []
 
-    const ids = normalizeIdentifierArray(candidate.cardIds, cardIds).filter((cardId) => {
+    const nowLayer = isRecord(candidate.nowLayer) ? candidate.nowLayer : {}
+    const ids = normalizeIdentifierArray(nowLayer.liveCards, cardIds).filter((cardId) => {
       if (assignedCardIds.has(cardId)) return false
       assignedCardIds.add(cardId)
       return true
     })
-    const nowLayer = isRecord(candidate.nowLayer) ? candidate.nowLayer : {}
     const nextLayer = isRecord(candidate.nextLayer) ? candidate.nextLayer : {}
-    const sortValue = isRecord(nowLayer.sort) ? nowLayer.sort : {}
-    const mode = normalizeNowLayerSortMode(sortValue.mode)
-    const automaticMode = normalizeNowLayerAutomaticSortMode(sortValue.automaticMode)
     return [{
       ...identity,
       color: isThemeColor(candidate.color) ? candidate.color : DEFAULT_BOARD_COLOR,
       defaultLayer: normalizeBoardLayer(candidate.defaultLayer),
-      cardIds: ids,
-      nowLayer: {
-        sort: {
-          mode,
-          automaticMode: mode === "manual" ? automaticMode : mode,
-          manualOrder: reconcileOrder(
-            normalizeIdentifierArray(sortValue.manualOrder, cardIds),
-            ids,
-          ),
-        },
-      },
+      nowLayer: { liveCards: ids },
       nextLayer: {
         liveWidgets: normalizeLiveWidgets(nextLayer.liveWidgets, new Set(ids), assignedLiveWidgetIds),
       },
@@ -388,23 +372,6 @@ function normalizeIdentifierArray(
     seen.add(candidate)
     return [candidate]
   })
-}
-
-function reconcileOrder(order: string[], cardIds: string[]): string[] {
-  const cardIdSet = new Set(cardIds)
-  const ordered = order.filter(cardId => cardIdSet.has(cardId))
-  const orderedSet = new Set(ordered)
-  return [...ordered, ...cardIds.filter(cardId => !orderedSet.has(cardId))]
-}
-
-function normalizeNowLayerSortMode(value: unknown): NowLayerSortMode {
-  return value === "provider" || value === "manual"
-    ? value
-    : DEFAULT_NOW_LAYER_SORT.mode
-}
-
-function normalizeNowLayerAutomaticSortMode(value: unknown): NowLayerAutomaticSortMode {
-  return value === "provider" ? value : DEFAULT_NOW_LAYER_SORT.automaticMode
 }
 
 function isLiveCardPatch(value: unknown): value is LiveCardPatch {

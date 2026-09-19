@@ -1,6 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardCreateInput, BoardLayer, NowLayerSortMode } from "@/lib/board"
-import type { StaticMessageKey } from "@/lib/i18n"
+import type { Board, BoardCreateInput, BoardLayer } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   ContentDialogContent,
@@ -21,15 +20,9 @@ import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
-import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER, DEFAULT_NOW_LAYER_SORT, updateNowLayerSortMode } from "@/lib/board"
+import { DEFAULT_BOARD_COLOR, DEFAULT_BOARD_LAYER } from "@/lib/board"
 
-const SORT_OPTIONS: { labelKey: StaticMessageKey, value: NowLayerSortMode }[] = [
-  { labelKey: "manual", value: "manual" },
-  { labelKey: "dateAdded", value: "addedAt" },
-  { labelKey: "providerName", value: "provider" },
-]
-
-const LAYER_OPTIONS: { labelKey: StaticMessageKey, value: BoardLayer }[] = [
+const LAYER_OPTIONS: { labelKey: "now" | "next", value: BoardLayer }[] = [
   { labelKey: "now", value: "now" },
   { labelKey: "next", value: "next" },
 ]
@@ -75,11 +68,9 @@ function ConfigurableBoardDialog({
     : currentBoard
       ? currentBoard.color
       : DEFAULT_BOARD_COLOR
-  const initialSortMode = board?.nowLayer.sort.mode ?? DEFAULT_NOW_LAYER_SORT.mode
   const initialDefaultLayer = board?.defaultLayer ?? DEFAULT_BOARD_LAYER
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
-  const [sortMode, setSortMode] = useState<NowLayerSortMode>(initialSortMode)
   const [defaultLayer, setDefaultLayer] = useState<BoardLayer>(initialDefaultLayer)
   const transferBoards = boards.filter(candidate => candidate.id !== boardId)
   const [targetBoardId, setTargetBoardId] = useState(
@@ -107,10 +98,6 @@ function ConfigurableBoardDialog({
           color,
           name: normalizedName,
           defaultLayer,
-          nowLayer: {
-            ...board.nowLayer,
-            sort: updateNowLayerSortMode(board.nowLayer.sort, sortMode),
-          },
         }
         await onUpdate(nextBoard)
       })
@@ -123,7 +110,6 @@ function ConfigurableBoardDialog({
         name: normalizedName,
         color,
         defaultLayer,
-        sortMode,
       })
     })
     if (succeeded) onClose()
@@ -195,21 +181,6 @@ function ConfigurableBoardDialog({
                   layoutId="board-dialog-theme-indicator"
                 />
               </div>
-            </ConfigSection>
-
-            <ConfigSection variant="group" title={t("liveCardOrder")}>
-              <RadioGroup
-                variant="segmented"
-                value={sortMode}
-                onValueChange={setSortMode}
-                className="w-full"
-              >
-                {SORT_OPTIONS.map(option => (
-                  <RadioGroupItem key={option.value} value={option.value} className="min-w-0 flex-1 px-2">
-                    {t(option.labelKey)}
-                  </RadioGroupItem>
-                ))}
-              </RadioGroup>
             </ConfigSection>
 
             <ConfigSection

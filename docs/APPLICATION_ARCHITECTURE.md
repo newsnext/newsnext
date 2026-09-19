@@ -135,13 +135,12 @@ interface Board {
   id: string
   name: string
 
-  // Membership in recently-added-first order.
-  cardIds: string[]
+  // Membership in recently-added-first order. Array order is display order.
+  nowLayer: {
+    liveCards: string[]
+  }
 
   defaultLayer: "now" | "next"
-  nowLayer: {
-    sort: NowLayerSort
-  }
   nextLayer: {
     liveWidgets: LiveWidget[]
   }
@@ -151,10 +150,10 @@ interface Board {
 There is no separate entry or view table. Membership, membership order, color,
 and durable Layer settings belong directly to the Board.
 
-`cardIds` has two responsibilities:
+`nowLayer.liveCards` has two responsibilities:
 
 1. It identifies the LiveCards that belong to the Board.
-2. Its order is the canonical `addedAt` order, from most recently added to least
+2. Its order is the display order, from most recently added to least
    recently added.
 
 NewsNext does not persist an `addedAt` timestamp. Adding an unassigned LiveCard
@@ -166,31 +165,13 @@ Moving a LiveCard to its current Board is idempotent and does not reorder it.
 LiveCard into a new Board makes it recently added in that Board but
 does not change the LiveCard's creation time.
 
-### NowLayer ordering
+### Layer ordering
 
-Sorting is a NowLayer concern because NextLayer does not present the same
-interactive card order:
-
-```ts
-type NowLayerAutomaticSortMode = "addedAt" | "provider"
-type NowLayerSortMode = NowLayerAutomaticSortMode | "manual"
-
-interface NowLayerSort {
-  mode: NowLayerSortMode
-  automaticMode: NowLayerAutomaticSortMode
-  manualOrder: string[]
-}
-```
-
-`addedAt` is the default and reads `board.cardIds` directly. Provider
-sorting derives a presentation order without changing membership order.
-Dragging selects `manual` mode and writes the complete membership permutation
-to `manualOrder`; it does not rewrite `cardIds`.
-
-New memberships are also inserted at the front of `manualOrder`, so returning
-to manual mode never loses a newly added card. `automaticMode` remembers which
-automatic ordering manual mode should use to reconcile an incomplete manual
-order.
+There is no automatic sorting. `nowLayer.liveCards` order is the NowLayer display
+order and `nextLayer.liveWidgets` array order is the NextLayer display order.
+New LiveCards and LiveWidgets are inserted at the front. Dragging rewrites the
+corresponding array directly through `nowLayer.setManualOrder`,
+`nextLayer.setManualOrder`, or `liveWidget.setLayouts`.
 
 ## Source Results and Registry Independence
 
@@ -527,7 +508,7 @@ catalog with `action list`; definitions live in
 `apps/extension/src/lib/background/application-actions.ts`.
 
 `board.create` and `board.update` accept Board fields directly, including
-`color`, `defaultLayer`, and `sortMode`. Bulk creation may include configured
+`color` and `defaultLayer`. Bulk creation may include configured
 LiveCards and persists the Board, LiveCards, and ownership atomically.
 `liveCard.create` requires one scalar `boardId`.
 
@@ -539,7 +520,8 @@ Board requires exactly one policy: delete its LiveCards, or transfer them to
 another Board.
 
 `nowLayer.setManualOrder` requires every Board LiveCard exactly once and
-selects manual mode atomically. NextLayer mutations install/remove Widgets,
+rewrites `cardIds`. `nextLayer.setManualOrder` reorders `liveWidgets` the same
+way. NextLayer mutations install/remove Widgets,
 change their data scope, and save layouts through `liveWidget.create`,
 `liveWidget.delete`, `liveWidget.configure` (with `patch: { dataScope }`),
 and `liveWidget.setLayouts`, and `liveWidget.configure` (with `patch: { params }`).

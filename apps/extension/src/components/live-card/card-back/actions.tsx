@@ -11,7 +11,7 @@ import {
 export function LiveCardBoardSelect({ id }: { id: string }): React.JSX.Element {
   const boards = useAtomValue(boardsAtom)
   const moveLiveCard = useSetAtom(moveLiveCardAtom)
-  const boardId = boards.find(board => board.cardIds.includes(id))?.id
+  const boardId = boards.find(board => board.nowLayer.liveCards.includes(id))?.id
   return (
     <CardBoardSelect
       boardId={boardId}

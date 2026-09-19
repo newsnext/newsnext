@@ -16,15 +16,3 @@ export {
 } from "./board"
 export { revealLiveCard } from "./reveal-live-card"
 export { getSortableData, isSortableData } from "./sortable-data"
-export type {
-  NowLayerAutomaticSortMode,
-  NowLayerSort,
-  NowLayerSortMode,
-  SortableNowLayerLiveCard,
-} from "./sorting"
-export {
-  createNowLayerSort,
-  DEFAULT_NOW_LAYER_SORT,
-  orderNowLayerCardIds,
-  updateNowLayerSortMode,
-} from "./sorting"

@@ -24,12 +24,6 @@ export interface ApplicationNextLayerLiveWidget extends LiveWidget {
   boardId: string
 }
 
-export interface BoardConfigurationResult {
-  color: Board["color"]
-  defaultLayer: Board["defaultLayer"]
-  nowLayer: Board["nowLayer"]
-}
-
 export interface BoardDetail {
   board: Board
   liveCards: LiveCard[]

@@ -1,10 +1,9 @@
 import type { Atom } from "jotai"
-import type { Board, SortableNowLayerLiveCard } from "@/lib/board"
+import type { Board } from "@/lib/board"
 import type { LiveCard } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
-import { orderNowLayerCardIds } from "@/lib/board"
 import { boardsAtom, liveCardAtomsAtom, liveCardsAtom } from "@/store/board"
 import { useSourceDescriptors } from "./use-source-descriptors"
 
@@ -41,7 +40,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
   const currentBoard = boards.find(board => board.id === boardId)!
   const { sources } = useSourceDescriptors()
 
-  const { liveCardsByCardId, sortableLiveCardsByCardId } = useMemo(() => {
+  const { liveCardsByCardId } = useMemo(() => {
     const descriptorsById = new Map(sources.map(source => [source.id, source]))
     const liveCardsById = new Map<string, {
       card: LiveCard
@@ -53,9 +52,8 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
         : []
     }))
     const nextLiveCards: Record<string, NowLayerLiveCard> = {}
-    const nextSortableLiveCards: Record<string, SortableNowLayerLiveCard> = {}
 
-    for (const cardId of currentBoard.cardIds) {
+    for (const cardId of currentBoard.nowLayer.liveCards) {
       const entry = liveCardsById.get(cardId)
       if (!entry) continue
       const { card, liveCardAtom } = entry
@@ -68,26 +66,17 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
         descriptor,
         liveCardAtom,
       }
-      nextSortableLiveCards[cardId] = {
-        id: cardId,
-        provider: descriptor.provider,
-        metadata: {
-          title: card.patch.metadata?.title ?? descriptor.metadata.title,
-        },
-      }
     }
 
     return {
       liveCardsByCardId: nextLiveCards,
-      sortableLiveCardsByCardId: nextSortableLiveCards,
     }
-  }, [boardId, currentBoard.cardIds, liveCardAtoms, liveCards, sources])
+  }, [boardId, currentBoard.nowLayer.liveCards, liveCardAtoms, liveCards, sources])
 
-  const cardIds = useMemo(() => orderNowLayerCardIds({
-    cardIds: currentBoard.cardIds,
-    liveCardsByCardId: sortableLiveCardsByCardId,
-    sort: currentBoard.nowLayer.sort,
-  }), [currentBoard.cardIds, currentBoard.nowLayer.sort, sortableLiveCardsByCardId])
+  const cardIds = useMemo(
+    () => currentBoard.nowLayer.liveCards.filter(cardId => liveCardsByCardId[cardId] !== undefined),
+    [currentBoard.nowLayer.liveCards, liveCardsByCardId],
+  )
 
   return { currentBoard, liveCardsByCardId, cardIds }
 }
