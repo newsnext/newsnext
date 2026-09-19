@@ -1,4 +1,4 @@
-import type { Board } from "./board.js"
+import type { Board, LiveWidget } from "./board.js"
 import type { LiveCard } from "./live-card.js"
 
 export const APPLICATION_DATA_VERSION = 8 as const
@@ -18,6 +18,10 @@ export interface ApplicationNowLayerLiveCard {
   boardId: string
   cardId: string
   sourceId: string
+}
+
+export interface ApplicationNextLayerLiveWidget extends LiveWidget {
+  boardId: string
 }
 
 export interface BoardConfigurationResult {

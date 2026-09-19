@@ -15,11 +15,13 @@ import {
   deleteLiveCardMutation,
   getBoardConfigurationQuery,
   getBoardContextQuery,
+  getBoardLiveWidgetQuery,
   getBoardQuery,
   getLiveCardQuery,
   getNowLayerLiveCardsQuery,
   getSourceQuery,
   installLiveWidgetMutation,
+  listAllLiveWidgetsQuery,
   listBoardLiveCardsQuery,
   listBoardLiveWidgetsQuery,
   listBoardsQuery,
@@ -56,15 +58,25 @@ export interface ApplicationActionContext {
   sources: () => Promise<SourceDescriptor[]>
 }
 
+async function readLiveCard(context: ApplicationActionContext, cardId: string) {
+  return getLiveCardQuery(await context.data(), { cardId })
+}
+
+async function readBoardLiveWidget(context: ApplicationActionContext, boardId: string, liveWidgetId: string) {
+  return getBoardLiveWidgetQuery(await context.data(), { boardId, liveWidgetId })
+}
+
 const boardCreateAction = defineAction(actionContracts["board.create"], async (input, context: ApplicationActionContext) => {
   await context.requireSources((input.liveCards ?? []).map(card => card.sourceId))
   const result = await context.mutate((data, dependencies) => createBoardMutation(data, input, dependencies))
   if (!result.boardId) throw new Error("Board creation returned no Board ID")
-  return { boardId: result.boardId }
+  const { board } = getBoardQuery(await context.data(), { boardId: result.boardId })
+  return { boardId: result.boardId, board }
 })
-const boardUpdateAction = defineAction(actionContracts["board.update"], async (input, context: ApplicationActionContext) => (
+const boardUpdateAction = defineAction(actionContracts["board.update"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => updateBoardMutation(data, input))
-))
+  return getBoardQuery(await context.data(), { boardId: input.boardId }).board
+})
 
 const boardDeleteAction = defineAction(actionContracts["board.delete"], async (input, context: ApplicationActionContext) => (
   await context.mutate(
@@ -76,70 +88,88 @@ const boardDeleteAction = defineAction(actionContracts["board.delete"], async (i
   )
 ))
 
-const nowLayerSetManualOrderAction = defineAction(actionContracts["nowLayer.setManualOrder"], async (input, context: ApplicationActionContext) => (
+const nowLayerSetManualOrderAction = defineAction(actionContracts["nowLayer.setManualOrder"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => setNowLayerManualOrderMutation(data, input))
-))
+  return getNowLayerLiveCardsQuery(await context.data(), input.boardId)
+})
 
 const nextLayerInstallWidgetAction = defineAction(actionContracts["nextLayer.installLiveWidget"], async (input, context: ApplicationActionContext) => {
   const result = await context.mutate((data, dependencies) => installLiveWidgetMutation(data, input, dependencies))
   if (!result.liveWidgetId) throw new Error("Widget creation returned no instance ID")
-  return { liveWidgetId: result.liveWidgetId }
+  const liveWidget = await readBoardLiveWidget(context, input.boardId, result.liveWidgetId)
+  return { liveWidgetId: result.liveWidgetId, liveWidget }
 })
 
 const nextLayerListWidgetsAction = defineAction(actionContracts["nextLayer.listLiveWidgets"], async (input, context: ApplicationActionContext) => (
   listBoardLiveWidgetsQuery(await context.data(), input)
 ))
 
-const nextLayerMoveWidgetAction = defineAction(actionContracts["nextLayer.moveLiveWidget"], async (input, context: ApplicationActionContext) => (
-  await context.mutate(data => moveLiveWidgetMutation(data, input))
+const liveWidgetListAction = defineAction(actionContracts["liveWidget.list"], async (_input, context: ApplicationActionContext) => (
+  listAllLiveWidgetsQuery(await context.data())
 ))
+
+const nextLayerMoveWidgetAction = defineAction(actionContracts["nextLayer.moveLiveWidget"], async (input, context: ApplicationActionContext) => {
+  await context.mutate(data => moveLiveWidgetMutation(data, input))
+  return readBoardLiveWidget(context, input.targetBoardId, input.liveWidgetId)
+})
 
 const nextLayerRemoveWidgetAction = defineAction(actionContracts["nextLayer.removeLiveWidget"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => removeLiveWidgetMutation(data, input))
 ))
 
-const nextLayerSetWidgetDataScopeAction = defineAction(actionContracts["nextLayer.setLiveWidgetDataScope"], async (input, context: ApplicationActionContext) => (
+const nextLayerSetWidgetDataScopeAction = defineAction(actionContracts["nextLayer.setLiveWidgetDataScope"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => setLiveWidgetDataScopeMutation(data, input))
-))
+  return readBoardLiveWidget(context, input.boardId, input.liveWidgetId)
+})
 
-const nextLayerConfigureWidgetAction = defineAction(actionContracts["nextLayer.configureLiveWidget"], async (input, context: ApplicationActionContext) => (
+const nextLayerConfigureWidgetAction = defineAction(actionContracts["nextLayer.configureLiveWidget"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => configureLiveWidgetMutation(data, input))
-))
+  return readBoardLiveWidget(context, input.boardId, input.liveWidgetId)
+})
 
-const nextLayerSetWidgetMetadataAction = defineAction(actionContracts["nextLayer.setLiveWidgetMetadata"], async (input, context: ApplicationActionContext) => (
+const nextLayerSetWidgetMetadataAction = defineAction(actionContracts["nextLayer.setLiveWidgetMetadata"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => setLiveWidgetMetadataMutation(data, input))
-))
+  return readBoardLiveWidget(context, input.boardId, input.liveWidgetId)
+})
 
-const nextLayerSetWidgetParamsAction = defineAction(actionContracts["nextLayer.setLiveWidgetParams"], async (input, context: ApplicationActionContext) => (
+const nextLayerSetWidgetParamsAction = defineAction(actionContracts["nextLayer.setLiveWidgetParams"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => setLiveWidgetParamsMutation(data, input))
-))
+  return readBoardLiveWidget(context, input.boardId, input.liveWidgetId)
+})
 
-const nextLayerSetWidgetLayoutsAction = defineAction(actionContracts["nextLayer.setLiveWidgetLayouts"], async (input, context: ApplicationActionContext) => (
+const nextLayerSetWidgetLayoutsAction = defineAction(actionContracts["nextLayer.setLiveWidgetLayouts"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => setLiveWidgetLayoutsMutation(data, input))
-))
+  return listBoardLiveWidgetsQuery(await context.data(), { boardId: input.boardId })
+    .map(widget => ({ ...widget, boardId: input.boardId }))
+})
 
-const liveCardMoveAction = defineAction(actionContracts["liveCard.move"], async (input, context: ApplicationActionContext) => (
+const liveCardMoveAction = defineAction(actionContracts["liveCard.move"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => moveLiveCardMutation(data, input))
-))
+  return readLiveCard(context, input.cardId)
+})
 
 const liveCardCreateAction = defineAction(actionContracts["liveCard.create"], async (input, context: ApplicationActionContext) => {
   await context.requireSources([input.sourceId])
   const result = await context.mutate((data, dependencies) => createLiveCardMutation(data, input, dependencies))
   if (!result.cardId) throw new Error("LiveCard creation returned no LiveCard ID")
-  return { cardId: result.cardId }
+  const liveCard = await readLiveCard(context, result.cardId)
+  return { cardId: result.cardId, liveCard }
 })
 
-const liveCardConfigureAction = defineAction(actionContracts["liveCard.configure"], async (input, context: ApplicationActionContext) => (
+const liveCardConfigureAction = defineAction(actionContracts["liveCard.configure"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => configureLiveCardMutation(data, input))
-))
+  return readLiveCard(context, input.cardId)
+})
 
-const liveCardResetMetadataAction = defineAction(actionContracts["liveCard.resetMetadata"], async (input, context: ApplicationActionContext) => (
+const liveCardResetMetadataAction = defineAction(actionContracts["liveCard.resetMetadata"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => resetLiveCardMetadataMutation(data, input))
-))
+  return readLiveCard(context, input.cardId)
+})
 
-const liveCardResetParamsAction = defineAction(actionContracts["liveCard.resetParams"], async (input, context: ApplicationActionContext) => (
+const liveCardResetParamsAction = defineAction(actionContracts["liveCard.resetParams"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => resetLiveCardParamsMutation(data, input))
-))
+  return readLiveCard(context, input.cardId)
+})
 
 const liveCardDeleteAction = defineAction(actionContracts["liveCard.delete"], async (input, context: ApplicationActionContext) => (
   await context.mutate(data => deleteLiveCardMutation(data, input))
@@ -182,6 +212,7 @@ export const applicationActionDefinitions = [
   nowLayerSetManualOrderAction,
   nextLayerInstallWidgetAction,
   nextLayerListWidgetsAction,
+  liveWidgetListAction,
   nextLayerRemoveWidgetAction,
   nextLayerMoveWidgetAction,
   nextLayerSetWidgetDataScopeAction,

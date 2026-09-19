@@ -47,12 +47,13 @@ registration, and data commands:
 
 ```sh
 NEWSNEXT_ENV=production newsnext status
-NEWSNEXT_ENV=development newsnext status
 ```
 
-Valid `NEWSNEXT_ENV` values are exactly `production` and `development`. The
-environments use separate IPC endpoints, Native Messaging host names,
-databases, widget directories, and startup-error files.
+The default is production. Repository instructions (`AGENTS.md`) may select a
+different environment for development work; when they do, use that same
+environment for every related command. Environments use separate IPC
+endpoints, Native Messaging host names, databases, widget directories, and
+startup-error files.
 
 Advanced overrides:
 

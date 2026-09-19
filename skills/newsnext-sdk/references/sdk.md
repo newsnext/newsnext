@@ -53,10 +53,32 @@ already sent to the Worker.
 
 - Batch independent awaits in one `eval`: each invocation spawns a fresh
   runtime and CLI process, so one script with several awaits beats several
-  invocations.
-- Print compact JSON (`JSON.stringify` without indentation) last, so the full
-  result lands in one output. Once a read-back verifies a mutation, stop; do
-  not re-query the same state through another surface.
+  invocations. JavaScript variables do not persist between invocations; print
+  every ID the next round needs (Board IDs, card IDs, widget IDs).
+- Keep the action sequence and its verification in the same script: resolve
+  IDs, mutate, assert on the returned entity, then print the final state last
+  so the next round can act on it directly. Mutations return the affected
+  entity; a follow-up query for the same state is waste.
+- Collect only the cheapest state sufficient to choose the next action: one
+  `liveCard.get` beats `board.get`, and `liveWidget.list` beats one
+  `nextLayer.listLiveWidgets` per Board. Once the returned value verifies a
+  mutation, stop; do not re-query the same state through another surface.
+- If an Action fails, inspect the error (`NewsNextError.code`) before
+  deciding whether to retry. Do not blindly repeat the call or switch to an
+  unrelated surface to confirm the same state.
+- Quote `eval -e` scripts with single quotes and use double quotes inside
+  the JavaScript. Print results with `console.log(JSON.stringify(value))`
+  (no indentation) as the last statement. Prefer stdin (`newsnext eval <
+  script.js`) for long scripts.
+
+## Calling Actions
+
+- Call only Actions listed in [actions.md](actions.md), as
+  `client.actions.<domain>.<method>` with the documented input shape. Do not
+  invent Action names or parameters; the catalog is generated from the SDK
+  contracts. `actions.list()` is a runtime diagnostic, never a prerequisite.
+- The evaluated script receives a preconfigured `client` global: no imports,
+  no setup, no manually constructed clients.
 
 ## LiveCard and LiveWidget data
 
@@ -177,10 +199,10 @@ const board = matches.length === 1 ? matches[0] : undefined
 if (!board) throw new Error("Expected one AI Board; select a Board ID")
 const boardId = board.id
 
-// Round 2 (same script): update, then read back to verify.
-await client.actions.board.update({ boardId, color: "blue" })
-const updated = (await client.actions.board.list()).find(board => board.id === boardId)
-if (updated?.color !== "blue") throw new Error("Board color verification failed")
+// Round 2 (same script): update returns the updated Board; assert on it.
+// No follow-up query is needed: every mutation returns the affected entity.
+const updated = await client.actions.board.update({ boardId, color: "blue" })
+if (updated.color !== "blue") throw new Error("Board color verification failed")
 console.log({ boardId, name: updated.name, color: updated.color })
 ```
 

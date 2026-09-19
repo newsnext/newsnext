@@ -353,17 +353,16 @@ const named = (await client.actions.board.list()).filter(board => board.name ===
 const board = named.length === 1 ? named[0] : undefined
 if (!board) throw new Error("Expected one matching Board; select a Board ID")
 const boardId = board.id
-// Round 2: install, then read back to verify.
-const { liveWidgetId } = await client.actions.nextLayer.installLiveWidget({
+// Round 2: install returns the placement; assert on it. No follow-up query.
+const { liveWidgetId, liveWidget } = await client.actions.nextLayer.installLiveWidget({
   boardId,
   dataScope: { type: "board" },
   size: { height: 1, width: 3 },
   widgetId: "<widget-id>",
 })
-const placed = (await client.actions.nextLayer.listLiveWidgets({ boardId })).find(
-  widget => widget.liveWidgetId === liveWidgetId,
-)
-if (!placed) throw new Error("Widget placement missing after install")
+if (liveWidget.liveWidgetId !== liveWidgetId || liveWidget.boardId !== boardId) {
+  throw new Error("Widget placement missing after install")
+}
 ```
 
 `dataScope` is `{ type: "board" }` for the Board's complete LiveCard list or

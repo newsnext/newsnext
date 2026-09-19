@@ -33,8 +33,9 @@ The former `action` and `history` terminal commands no longer exist. Use
 per observation.
 
 When a user identifies a Board or LiveCard by name, resolve it to a unique ID
-before mutating it. Apply the requested change through its Action and read back
-the affected value to verify the result. Do not change unrelated fields.
+before mutating it. Apply the requested change through its Action: mutations
+return the affected entity, so assert on the returned value to verify the
+result instead of issuing a follow-up query. Do not change unrelated fields.
 
 When authoring a Widget, follow the widget template and preset contracts in
 references/widget-authoring.md. Validate with
@@ -42,8 +43,8 @@ references/widget-authoring.md. Validate with
 
 Installing a Widget mutates a Board. If the user did not name a target Board,
 list the Boards and ask which one to install into; do not pick a default.
-Resolve the chosen Board to a unique ID, install, then read back the placement
-to verify the result.
+Resolve the chosen Board to a unique ID, install, then assert on the returned
+placement to verify the result.
 
 Read [references/source-authoring.md](references/source-authoring.md) before investigating, creating, changing, or testing a Source. It defines the required browser-led discovery order, JSON-first implementation policy, existing-source references, and `fetch`/`run` verification loop.
 

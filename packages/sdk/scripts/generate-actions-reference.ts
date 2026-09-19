@@ -54,6 +54,20 @@ function describe(schema: Schema, depth: number): string {
   }
 }
 
+function paramNotes(schema: Schema, prefix: string): string[] {
+  const value = schema as Record<string, unknown>
+  if (value.type !== "object") return []
+  const properties = (value.properties ?? {}) as Record<string, Schema>
+  const notes: string[] = []
+  for (const [name, field] of Object.entries(properties)) {
+    const description = (field as Record<string, unknown>).description
+    if (typeof description === "string" && description.length > 0) {
+      notes.push(`- \`${prefix}${name}\`: ${description}`)
+    }
+  }
+  return notes
+}
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..")
 const names = Object.keys(actionContracts).sort()
 const lines = [
@@ -69,6 +83,27 @@ const lines = [
   "documented in sdk.md.",
   "`{…}` marks a TypeScript-only result shape: see the matching type in",
   "`@newsnext/sdk` models.",
+  "",
+  "## Conventions",
+  "",
+  "- Mutations return the affected entity (a Board, LiveCard, or Widget",
+  "  placement): assert on the returned value instead of issuing a follow-up",
+  "  query. Deletes and removals return `{}`.",
+  "- Identifiers are opaque strings. Board names are not unique: resolve a",
+  "  name to an ID with `board.list` before mutating. `widgetId` names a",
+  "  Widget definition; `liveWidgetId` names one installed instance.",
+  "- LiveCard entries carry only patch overrides. The display title resolves",
+  "  as `patch.metadata.title ?? source.metadata.title ?? provider.title`; use",
+  "  `source.get` for the fallback.",
+  "",
+  "## Index",
+  "",
+  "| Action | Kind | Purpose |",
+  "| --- | --- | --- |",
+  ...names.map((name) => {
+    const contract = actionContracts[name]!
+    return `| \`${name}\` | ${contract.kind} | ${contract.description} |`
+  }),
   "",
 ]
 for (const name of names) {
@@ -86,6 +121,8 @@ for (const name of names) {
     "```",
     "",
   )
+  const notes = paramNotes(contract.params as Schema, "input.")
+  if (notes.length > 0) lines.push(...notes, "")
 }
 const eventNames = Object.keys(eventContracts).sort()
 if (eventNames.length > 0) {

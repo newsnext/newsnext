@@ -1,8 +1,8 @@
-import type { ApplicationBoardContext, ApplicationData, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidget, LiveWidgetDataScope, LiveWidgetInstallSize, SourceDescriptor } from "../models/index.js"
+import type { ApplicationBoardContext, ApplicationData, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, Board, BoardConfigurationResult, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidget, LiveWidgetDataScope, LiveWidgetInstallSize, SourceDescriptor } from "../models/index.js"
 import Type from "typebox"
 import { COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
-import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
+import { BoardIdParam, CardIdArrayParam, CardIdParam, EmptyObject, Identifier, LiveWidgetIdParam, RecordValue, SourceIdParam, stringEnum, TargetBoardIdParam, WidgetIdParam } from "./schema.js"
 
 const IdentifierArray = Type.Array(Identifier, { uniqueItems: true })
 
@@ -19,15 +19,7 @@ const LiveCardPatchParams = Type.Unsafe<LiveCardPatch>(Type.Object({
 
 const LiveCardCreationParams = Type.Object({
   patch: LiveCardPatchParams,
-  sourceId: Identifier,
-}, { additionalProperties: false })
-
-const BoardCreatedResult = Type.Object({
-  boardId: Identifier,
-}, { additionalProperties: false })
-
-const LiveCardCreatedResult = Type.Object({
-  cardId: Identifier,
+  sourceId: SourceIdParam,
 }, { additionalProperties: false })
 
 const WidgetDataScopeParams = Type.Unsafe<LiveWidgetDataScope>(Type.Union([
@@ -43,10 +35,127 @@ const WidgetInstallSizeParams = Type.Unsafe<LiveWidgetInstallSize>(Type.Object({
   width: Type.Optional(Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 })),
 }, { additionalProperties: false }))
 
+// Result schemas stay open (no additionalProperties: false): stored entities may
+// carry legacy keys, and rejecting them would break query Actions. Input
+// schemas above stay closed so typos fail fast for agent callers.
+const LiveCardMetadataResult = Type.Object({
+  badge: Type.Optional(Type.String()),
+  desc: Type.Optional(Type.String()),
+  home: Type.Optional(Type.String()),
+  title: Type.Optional(Type.String()),
+  type: Type.Optional(stringEnum(["list", "ranking"] as const)),
+})
+
+const LiveCardPatchResult = Type.Object({
+  metadata: Type.Optional(LiveCardMetadataResult),
+  params: Type.Optional(RecordValue),
+})
+
+const LiveCardResult = Type.Unsafe<LiveCard>(Type.Object({
+  cardId: Identifier,
+  createdAt: Type.Number(),
+  patch: LiveCardPatchResult,
+  sourceId: Identifier,
+  workerId: Identifier,
+}))
+
+const LiveWidgetMetadataResult = Type.Object({
+  badge: Type.Optional(Type.String()),
+  color: Type.Optional(stringEnum(COLORS)),
+  desc: Type.Optional(Type.String()),
+  home: Type.Optional(Type.String()),
+  title: Type.Optional(Type.String()),
+})
+
+const LiveWidgetPatchResult = Type.Object({
+  metadata: Type.Optional(LiveWidgetMetadataResult),
+  params: Type.Optional(RecordValue),
+})
+
+const LiveWidgetLayoutResult = Type.Object({
+  height: Type.Integer({ minimum: 1, maximum: 100 }),
+  width: Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 }),
+})
+
+const LiveWidgetFields = {
+  dataScope: WidgetDataScopeParams,
+  layout: LiveWidgetLayoutResult,
+  liveWidgetId: Identifier,
+  patch: Type.Optional(LiveWidgetPatchResult),
+  widgetId: Identifier,
+}
+
+const LiveWidgetResult = Type.Unsafe<LiveWidget>(Type.Object({ ...LiveWidgetFields }))
+
+const BoardLiveWidgetResult = Type.Unsafe<ApplicationNextLayerLiveWidget>(Type.Object({
+  ...LiveWidgetFields,
+  boardId: Identifier,
+}))
+
+const BoardSortResult = Type.Object({
+  automaticMode: stringEnum(["addedAt", "provider"] as const),
+  manualOrder: IdentifierArray,
+  mode: stringEnum(["addedAt", "provider", "manual"] as const),
+})
+
+const BoardResult = Type.Unsafe<Board>(Type.Object({
+  cardIds: IdentifierArray,
+  color: stringEnum(COLORS),
+  createdAt: Type.Number(),
+  defaultLayer: stringEnum(["now", "next"] as const),
+  id: Identifier,
+  name: Identifier,
+  nextLayer: Type.Object({
+    liveWidgets: Type.Array(LiveWidgetResult),
+  }),
+  nowLayer: Type.Object({
+    sort: BoardSortResult,
+  }),
+}))
+
+const BoardDetailResult = Type.Unsafe<BoardDetail>(Type.Object({
+  board: BoardResult,
+  liveCards: Type.Array(LiveCardResult),
+}))
+
+const BoardContextResult = Type.Unsafe<ApplicationBoardContext>(Type.Object({
+  boardId: Identifier,
+  boardName: Identifier,
+}))
+
+const BoardConfigurationResultSchema = Type.Unsafe<BoardConfigurationResult>(Type.Object({
+  color: stringEnum(COLORS),
+  defaultLayer: stringEnum(["now", "next"] as const),
+  nowLayer: Type.Object({
+    sort: BoardSortResult,
+  }),
+}))
+
+const NowLayerLiveCardResult = Type.Unsafe<ApplicationNowLayerLiveCard>(Type.Object({
+  boardId: Identifier,
+  cardId: Identifier,
+  sourceId: Identifier,
+}))
+
+const BoardCreatedResult = Type.Object({
+  board: BoardResult,
+  boardId: Identifier,
+})
+
+const LiveCardCreatedResult = Type.Object({
+  cardId: Identifier,
+  liveCard: LiveCardResult,
+})
+
+const LiveWidgetCreatedResult = Type.Object({
+  liveWidget: BoardLiveWidgetResult,
+  liveWidgetId: Identifier,
+})
+
 const boardCreateAction = defineActionContract({
   name: "board.create",
   kind: "mutation",
-  description: "Create a Board and optional configured LiveCards.",
+  description: "Create a Board and optional configured LiveCards. Returns the created Board so callers can verify without a follow-up query.",
   params: Type.Object({
     ...BoardConfigurationParams.properties,
     liveCards: Type.Optional(Type.Array(LiveCardCreationParams)),
@@ -58,13 +167,13 @@ const boardCreateAction = defineActionContract({
 const boardUpdateAction = defineActionContract({
   name: "board.update",
   kind: "mutation",
-  description: "Atomically update a Board.",
+  description: "Atomically update a Board. Returns the updated Board so callers can verify without a follow-up query.",
   params: Type.Object({
     ...BoardConfigurationParams.properties,
-    boardId: Identifier,
+    boardId: BoardIdParam,
     name: Type.Optional(Identifier),
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: BoardResult,
   validate(input) {
     if (input.name === undefined
       && input.color === undefined
@@ -77,12 +186,12 @@ const boardUpdateAction = defineActionContract({
 
 const BoardDeleteParams = Type.Unsafe<BoardDeleteInput>(Type.Union([
   Type.Object({
-    boardId: Identifier,
+    boardId: BoardIdParam,
     deleteLiveCards: Type.Literal(true),
   }, { additionalProperties: false }),
   Type.Object({
-    boardId: Identifier,
-    targetBoardId: Identifier,
+    boardId: BoardIdParam,
+    targetBoardId: TargetBoardIdParam,
   }, { additionalProperties: false }),
 ]))
 
@@ -97,41 +206,49 @@ const boardDeleteAction = defineActionContract({
 const nowLayerSetManualOrderAction = defineActionContract({
   name: "nowLayer.setManualOrder",
   kind: "mutation",
-  description: "Set the complete manual LiveCard order for a Board's Now Layer.",
+  description: "Set the complete manual LiveCard order for a Board's Now Layer. Returns the ordered cards so callers can verify without a follow-up query.",
   params: Type.Object({
-    boardId: Identifier,
-    cardIds: IdentifierArray,
+    boardId: BoardIdParam,
+    cardIds: CardIdArrayParam,
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: Type.Array(NowLayerLiveCardResult),
 })
 
 const nextLayerInstallWidgetAction = defineActionContract({
   name: "nextLayer.installLiveWidget",
   kind: "mutation",
-  description: "Create an independent instance of a local Widget in a Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2.",
+  description: "Create an independent instance of a local Widget in a Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2. Returns the created placement so callers can verify without a follow-up query.",
   params: Type.Object({
-    boardId: Identifier,
+    boardId: BoardIdParam,
     dataScope: WidgetDataScopeParams,
     size: WidgetInstallSizeParams,
-    widgetId: Identifier,
+    widgetId: WidgetIdParam,
   }, { additionalProperties: false }),
-  result: Type.Object({ liveWidgetId: Identifier }, { additionalProperties: false }),
+  result: LiveWidgetCreatedResult,
 })
 
 const nextLayerListWidgetsAction = defineActionContract({
   name: "nextLayer.listLiveWidgets",
   kind: "query",
   description: "List the Widget placements in a Board's Next Layer in installation order.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedArrayResult<LiveWidget[]>(),
+  params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
+  result: Type.Array(LiveWidgetResult),
+})
+
+const liveWidgetListAction = defineActionContract({
+  name: "liveWidget.list",
+  kind: "query",
+  description: "List configured LiveWidgets across all Boards in Board order. Mirrors liveCard.list.",
+  params: EmptyObject,
+  result: Type.Array(BoardLiveWidgetResult),
 })
 
 const nextLayerMoveWidgetAction = defineActionContract({
   name: "nextLayer.moveLiveWidget",
   kind: "mutation",
-  description: "Move a Widget placement to another Board while preserving its settings and size.",
-  params: Type.Object({ boardId: Identifier, targetBoardId: Identifier, liveWidgetId: Identifier }, { additionalProperties: false }),
-  result: EmptyObject,
+  description: "Move a Widget placement to another Board while preserving its settings and size. Returns the moved placement (with its new Board ID).",
+  params: Type.Object({ boardId: BoardIdParam, targetBoardId: TargetBoardIdParam, liveWidgetId: LiveWidgetIdParam }, { additionalProperties: false }),
+  result: BoardLiveWidgetResult,
 })
 
 const nextLayerRemoveWidgetAction = defineActionContract({
@@ -139,8 +256,8 @@ const nextLayerRemoveWidgetAction = defineActionContract({
   kind: "mutation",
   description: "Remove a local Widget from a Board's Next Layer.",
   params: Type.Object({
-    boardId: Identifier,
-    liveWidgetId: Identifier,
+    boardId: BoardIdParam,
+    liveWidgetId: LiveWidgetIdParam,
   }, { additionalProperties: false }),
   result: EmptyObject,
 })
@@ -148,22 +265,22 @@ const nextLayerRemoveWidgetAction = defineActionContract({
 const nextLayerSetWidgetDataScopeAction = defineActionContract({
   name: "nextLayer.setLiveWidgetDataScope",
   kind: "mutation",
-  description: "Set the Board-scoped LiveCard access granted to a Next Layer Widget.",
+  description: "Set the Board-scoped LiveCard access granted to a Next Layer Widget. Returns the updated placement.",
   params: Type.Object({
-    boardId: Identifier,
+    boardId: BoardIdParam,
     dataScope: WidgetDataScopeParams,
-    liveWidgetId: Identifier,
+    liveWidgetId: LiveWidgetIdParam,
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: BoardLiveWidgetResult,
 })
 
 const nextLayerConfigureWidgetAction = defineActionContract({
   name: "nextLayer.configureLiveWidget",
   kind: "mutation",
-  description: "Merge sparse params and metadata overrides. Null resets a section to widget.json defaults.",
+  description: "Merge sparse params and metadata overrides. Null resets a section to widget.json defaults. Returns the updated placement.",
   params: Type.Object({
-    boardId: Identifier,
-    liveWidgetId: Identifier,
+    boardId: BoardIdParam,
+    liveWidgetId: LiveWidgetIdParam,
     patch: Type.Object({
       params: Type.Optional(Type.Union([Type.Null(), Type.Record(Type.String(), Type.Unknown())])),
       metadata: Type.Optional(Type.Union([Type.Null(), Type.Object({
@@ -175,16 +292,16 @@ const nextLayerConfigureWidgetAction = defineActionContract({
       }, { additionalProperties: false })])),
     }, { additionalProperties: false }),
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: BoardLiveWidgetResult,
 })
 
 const nextLayerSetWidgetMetadataAction = defineActionContract({
   name: "nextLayer.setLiveWidgetMetadata",
   kind: "mutation",
-  description: "Replace a Board Widget's display metadata overrides; an empty object restores its definition.",
+  description: "Replace a Board Widget's display metadata overrides; an empty object restores its definition. Returns the updated placement.",
   params: Type.Object({
-    boardId: Identifier,
-    liveWidgetId: Identifier,
+    boardId: BoardIdParam,
+    liveWidgetId: LiveWidgetIdParam,
     metadata: Type.Object({
       title: Type.Optional(Type.String()),
       badge: Type.Optional(Type.String()),
@@ -193,55 +310,55 @@ const nextLayerSetWidgetMetadataAction = defineActionContract({
       color: Type.Optional(stringEnum(COLORS)),
     }, { additionalProperties: false }),
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: BoardLiveWidgetResult,
 })
 
 const nextLayerSetWidgetParamsAction = defineActionContract({
   name: "nextLayer.setLiveWidgetParams",
   kind: "mutation",
-  description: "Replace a Board Widget's parameter overrides; pass an empty object to reset defaults.",
+  description: "Replace a Board Widget's parameter overrides; pass an empty object to reset defaults. Returns the updated placement.",
   params: Type.Object({
-    boardId: Identifier,
-    liveWidgetId: Identifier,
+    boardId: BoardIdParam,
+    liveWidgetId: LiveWidgetIdParam,
     params: Type.Record(Type.String(), Type.Unknown()),
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: BoardLiveWidgetResult,
 })
 
 const nextLayerSetWidgetLayoutsAction = defineActionContract({
   name: "nextLayer.setLiveWidgetLayouts",
   kind: "mutation",
-  description: "Persist Widget sizes and order for a Board's Next Layer in display order.",
+  description: "Persist Widget sizes and order for a Board's Next Layer in display order. Returns the placements in display order.",
   params: Type.Object({
-    boardId: Identifier,
+    boardId: BoardIdParam,
     liveWidgets: Type.Array(Type.Object({
-      liveWidgetId: Identifier,
+      liveWidgetId: LiveWidgetIdParam,
       width: Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 }),
       height: Type.Integer({ minimum: 1, maximum: 100 }),
     }, { additionalProperties: false }), { minItems: 1 }),
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: Type.Array(BoardLiveWidgetResult),
 })
 
 const liveCardMoveAction = defineActionContract({
   name: "liveCard.move",
   kind: "mutation",
-  description: "Move an existing LiveCard to a Board.",
+  description: "Move an existing LiveCard to a Board. Returns the moved LiveCard.",
   params: Type.Object({
-    boardId: Identifier,
-    cardId: Identifier,
+    boardId: BoardIdParam,
+    cardId: CardIdParam,
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: LiveCardResult,
 })
 
 const liveCardCreateAction = defineActionContract({
   name: "liveCard.create",
   kind: "mutation",
-  description: "Create a configured LiveCard in one Board.",
+  description: "Create a configured LiveCard in one Board. Returns the created LiveCard so callers can verify without a follow-up query.",
   params: Type.Object({
-    boardId: Identifier,
+    boardId: BoardIdParam,
     patch: LiveCardPatchParams,
-    sourceId: Identifier,
+    sourceId: SourceIdParam,
   }, { additionalProperties: false }),
   result: LiveCardCreatedResult,
 })
@@ -249,35 +366,35 @@ const liveCardCreateAction = defineActionContract({
 const liveCardConfigureAction = defineActionContract({
   name: "liveCard.configure",
   kind: "mutation",
-  description: "Merge configuration and presentation overrides into a LiveCard.",
+  description: "Merge configuration and presentation overrides into a LiveCard. Returns the updated LiveCard so callers can verify without a follow-up query.",
   params: Type.Object({
-    cardId: Identifier,
+    cardId: CardIdParam,
     patch: LiveCardPatchParams,
   }, { additionalProperties: false }),
-  result: EmptyObject,
+  result: LiveCardResult,
 })
 
 const liveCardResetMetadataAction = defineActionContract({
   name: "liveCard.resetMetadata",
   kind: "mutation",
-  description: "Reset a LiveCard's presentation overrides while preserving its parameters.",
-  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
-  result: EmptyObject,
+  description: "Reset a LiveCard's presentation overrides while preserving its parameters. Returns the updated LiveCard.",
+  params: Type.Object({ cardId: CardIdParam }, { additionalProperties: false }),
+  result: LiveCardResult,
 })
 
 const liveCardResetParamsAction = defineActionContract({
   name: "liveCard.resetParams",
   kind: "mutation",
-  description: "Reset a LiveCard's parameters while preserving presentation overrides.",
-  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
-  result: EmptyObject,
+  description: "Reset a LiveCard's parameters while preserving presentation overrides. Returns the updated LiveCard.",
+  params: Type.Object({ cardId: CardIdParam }, { additionalProperties: false }),
+  result: LiveCardResult,
 })
 
 const liveCardDeleteAction = defineActionContract({
   name: "liveCard.delete",
   kind: "mutation",
   description: "Delete a LiveCard from its Board.",
-  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
+  params: Type.Object({ cardId: CardIdParam }, { additionalProperties: false }),
   result: EmptyObject,
 })
 
@@ -293,7 +410,7 @@ const sourceGetAction = defineActionContract({
   name: "source.get",
   kind: "query",
   description: "Get one available Source descriptor.",
-  params: Type.Object({ sourceId: Identifier }, { additionalProperties: false }),
+  params: Type.Object({ sourceId: SourceIdParam }, { additionalProperties: false }),
   result: typedObjectResult<SourceDescriptor>(),
 })
 
@@ -302,68 +419,68 @@ const boardListAction = defineActionContract({
   kind: "query",
   description: "List Boards.",
   params: EmptyObject,
-  result: typedArrayResult<Board[]>(),
+  result: Type.Array(BoardResult),
 })
 
 const boardGetAction = defineActionContract({
   name: "board.get",
   kind: "query",
   description: "Get a Board with ordered entries and resolved LiveCards.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedObjectResult<BoardDetail>(),
+  params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
+  result: BoardDetailResult,
 })
 
 const boardListLiveCardsAction = defineActionContract({
   name: "board.listLiveCards",
   kind: "query",
-  description: "List the LiveCards in a Board in membership order.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedArrayResult<LiveCard[]>(),
+  description: "List the LiveCards in a Board in membership order. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title.",
+  params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
+  result: Type.Array(LiveCardResult),
 })
 
 const liveCardListAction = defineActionContract({
   name: "liveCard.list",
   kind: "query",
-  description: "List configured LiveCards.",
+  description: "List configured LiveCards. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title. Use source.get for the fallback.",
   params: EmptyObject,
-  result: typedArrayResult<LiveCard[]>(),
+  result: Type.Array(LiveCardResult),
 })
 
 const liveCardGetAction = defineActionContract({
   name: "liveCard.get",
   kind: "query",
-  description: "Get one configured LiveCard.",
-  params: Type.Object({ cardId: Identifier }, { additionalProperties: false }),
-  result: typedObjectResult<LiveCard>(),
+  description: "Get one configured LiveCard. The entry carries only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title.",
+  params: Type.Object({ cardId: CardIdParam }, { additionalProperties: false }),
+  result: LiveCardResult,
 })
 
 const boardGetContextAction = defineActionContract({
   name: "board.getContext",
   kind: "query",
   description: "Get one Board's presentation context and underlying identity.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedObjectResult<ApplicationBoardContext>(),
+  params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
+  result: BoardContextResult,
 })
 
 const boardGetConfigurationAction = defineActionContract({
   name: "board.getConfiguration",
   kind: "query",
   description: "Get the durable Board configuration for a Board.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedObjectResult<BoardConfigurationResult>(),
+  params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
+  result: BoardConfigurationResultSchema,
 })
 
 const nowLayerGetLiveCardsAction = defineActionContract({
   name: "nowLayer.getLiveCards",
   kind: "query",
   description: "List the LiveCards in one Board's Now Layer.",
-  params: Type.Object({ boardId: Identifier }, { additionalProperties: false }),
-  result: typedArrayResult<ApplicationNowLayerLiveCard[]>(),
+  params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
+  result: Type.Array(NowLayerLiveCardResult),
 })
 
 const ApplicationDataSchema = Type.Unsafe<ApplicationData>(Type.Object({
-  boards: Type.Array(Type.Unknown()),
-  liveCards: Type.Array(Type.Unknown()),
+  boards: Type.Array(BoardResult),
+  liveCards: Type.Array(LiveCardResult),
   version: Type.Number(),
 }, { additionalProperties: false }))
 
@@ -410,6 +527,7 @@ export const applicationActionContracts = [
   boardListLiveCardsAction,
   liveCardListAction,
   liveCardGetAction,
+  liveWidgetListAction,
   boardGetContextAction,
   boardGetConfigurationAction,
   nowLayerGetLiveCardsAction,

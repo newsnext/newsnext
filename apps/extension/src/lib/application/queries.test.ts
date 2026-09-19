@@ -3,7 +3,9 @@ import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
 import {
   getBoardConfigurationQuery,
+  getBoardLiveWidgetQuery,
   getNowLayerLiveCardsQuery,
+  listAllLiveWidgetsQuery,
   listBoardLiveCardsQuery,
   listBoardLiveWidgetsQuery,
   listSourcesQuery,
@@ -51,6 +53,42 @@ describe("application queries", () => {
     })
     const widgets = listBoardLiveWidgetsQuery(data, { boardId: "reading" })
     expect(widgets.map(widget => widget.liveWidgetId)).toEqual(["instance-a"])
+  })
+
+  it("lists all Widget placements with their Board IDs", () => {
+    const data = createData()
+    data.boards[0]!.nextLayer.liveWidgets.push({
+      dataScope: { type: "board" },
+      layout: { height: 2, width: 2 },
+      liveWidgetId: "instance-a",
+      widgetId: "snake",
+    })
+    expect(listAllLiveWidgetsQuery(data)).toEqual([{
+      boardId: "reading",
+      dataScope: { type: "board" },
+      layout: { height: 2, width: 2 },
+      liveWidgetId: "instance-a",
+      widgetId: "snake",
+    }])
+  })
+
+  it("returns one Widget placement with its Board ID", () => {
+    const data = createData()
+    data.boards[0]!.nextLayer.liveWidgets.push({
+      dataScope: { type: "board" },
+      layout: { height: 2, width: 2 },
+      liveWidgetId: "instance-a",
+      widgetId: "snake",
+    })
+    expect(getBoardLiveWidgetQuery(data, { boardId: "reading", liveWidgetId: "instance-a" })).toEqual({
+      boardId: "reading",
+      dataScope: { type: "board" },
+      layout: { height: 2, width: 2 },
+      liveWidgetId: "instance-a",
+      widgetId: "snake",
+    })
+    expect(() => getBoardLiveWidgetQuery(data, { boardId: "reading", liveWidgetId: "missing" }))
+      .toThrow("LiveWidget 'missing' not found")
   })
 
   it("throws for Widget placements of an unknown Board", () => {

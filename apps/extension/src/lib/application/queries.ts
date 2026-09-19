@@ -1,10 +1,10 @@
-import type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
+import type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
 import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 
-export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
+export type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardConfigurationResult, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
 
 export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDescriptor[] {
   return [...sources]
@@ -43,6 +43,23 @@ export function listBoardLiveWidgetsQuery(
   input: { boardId: string },
 ): LiveWidget[] {
   return getBoard(data, input.boardId).nextLayer.liveWidgets
+}
+
+export function listAllLiveWidgetsQuery(
+  data: ApplicationData,
+): ApplicationNextLayerLiveWidget[] {
+  return data.boards.flatMap(board =>
+    board.nextLayer.liveWidgets.map(widget => ({ ...widget, boardId: board.id })),
+  )
+}
+
+export function getBoardLiveWidgetQuery(
+  data: ApplicationData,
+  input: { boardId: string, liveWidgetId: string },
+): ApplicationNextLayerLiveWidget {
+  const widget = getBoard(data, input.boardId).nextLayer.liveWidgets.find(candidate => candidate.liveWidgetId === input.liveWidgetId)
+  if (!widget) throw new Error(`LiveWidget '${input.liveWidgetId}' not found in Board '${input.boardId}'`)
+  return { ...widget, boardId: input.boardId }
 }
 
 export function listLiveCardsQuery(data: ApplicationData): LiveCard[] {

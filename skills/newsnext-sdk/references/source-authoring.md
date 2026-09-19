@@ -99,9 +99,7 @@ newsnext run rss:feed --param url='https://example.com/feed.xml'
 
 ## Validate with `run`
 
-Run the local provider after every meaningful change. Select a source ID when the provider defines more than one and exercise representative non-default parameter values.
-
-From a normal NewsNext web checkout:
+Run the local provider after every meaningful change. Select a source ID when the provider defines more than one and exercise representative non-default parameter values. The commands below assume a repository checkout as scoped at the top of this document:
 
 ```sh
 newsnext run registry/src/example.json latest --debug
@@ -129,10 +127,10 @@ If Radar is present, revisit every matching page and meaningful URL or in-page s
 
 ## Finish repository verification
 
-After live behavior is correct:
+After live behavior is correct, hand off to the repository workflow that owns
+the registry: regenerate generated artifacts with the repository's own build
+(never hand-edit them), and run the repository-required typecheck, tests, and
+diff hygiene checks per that repository's `AGENTS.md`. Then:
 
-1. Build generated registry artifacts with `bun --filter=@newsnext/registry run build` from the web repository.
-2. Review generated changes; never hand-edit them.
-3. Run the repository-required typecheck and tests, plus `git diff --check`.
-4. Confirm no credentials, session identifiers, transient request headers, or debug response data entered the diff.
-5. Report the chosen transport, the higher-priority options considered, the existing Source used as a model, live `fetch`/`run` coverage, and any browser-only or authenticated behavior that could not be tested.
+1. Confirm no credentials, session identifiers, transient request headers, or debug response data entered the diff.
+2. Report the chosen transport, the higher-priority options considered, the existing Source used as a model, live `fetch`/`run` coverage, and any browser-only or authenticated behavior that could not be tested.

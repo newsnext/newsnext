@@ -11,22 +11,88 @@ documented in sdk.md.
 `{…}` marks a TypeScript-only result shape: see the matching type in
 `@newsnext/sdk` models.
 
+## Conventions
+
+- Mutations return the affected entity (a Board, LiveCard, or Widget
+  placement): assert on the returned value instead of issuing a follow-up
+  query. Deletes and removals return `{}`.
+- Identifiers are opaque strings. Board names are not unique: resolve a
+  name to an ID with `board.list` before mutating. `widgetId` names a
+  Widget definition; `liveWidgetId` names one installed instance.
+- LiveCard entries carry only patch overrides. The display title resolves
+  as `patch.metadata.title ?? source.metadata.title ?? provider.title`; use
+  `source.get` for the fallback.
+
+## Index
+
+| Action | Kind | Purpose |
+| --- | --- | --- |
+| `application.replace` | mutation | Replace all durable Application data after validating its integrity. |
+| `board.create` | mutation | Create a Board and optional configured LiveCards. Returns the created Board so callers can verify without a follow-up query. |
+| `board.delete` | mutation | Delete a Board and either delete or transfer its LiveCards. |
+| `board.get` | query | Get a Board with ordered entries and resolved LiveCards. |
+| `board.getConfiguration` | query | Get the durable Board configuration for a Board. |
+| `board.getContext` | query | Get one Board's presentation context and underlying identity. |
+| `board.list` | query | List Boards. |
+| `board.listLiveCards` | query | List the LiveCards in a Board in membership order. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title. |
+| `board.update` | mutation | Atomically update a Board. Returns the updated Board so callers can verify without a follow-up query. |
+| `developer.fetch` | command | Fetch an HTTP(S) URL through the connected browser for Source development. |
+| `developer.runSource` | command | Run a registered or supplied Source for development and debugging. |
+| `liveCard.configure` | mutation | Merge configuration and presentation overrides into a LiveCard. Returns the updated LiveCard so callers can verify without a follow-up query. |
+| `liveCard.create` | mutation | Create a configured LiveCard in one Board. Returns the created LiveCard so callers can verify without a follow-up query. |
+| `liveCard.delete` | mutation | Delete a LiveCard from its Board. |
+| `liveCard.get` | query | Get one configured LiveCard. The entry carries only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title. |
+| `liveCard.list` | query | List configured LiveCards. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title. Use source.get for the fallback. |
+| `liveCard.load` | query | Load a LiveCard through the Workspace router. |
+| `liveCard.move` | mutation | Move an existing LiveCard to a Board. Returns the moved LiveCard. |
+| `liveCard.readSnapshot` | query | Read a LiveCard's Source snapshot through the Workspace router. |
+| `liveCard.resetMetadata` | mutation | Reset a LiveCard's presentation overrides while preserving its parameters. Returns the updated LiveCard. |
+| `liveCard.resetParams` | mutation | Reset a LiveCard's parameters while preserving presentation overrides. Returns the updated LiveCard. |
+| `liveWidget.list` | query | List configured LiveWidgets across all Boards in Board order. Mirrors liveCard.list. |
+| `loader.loadLiveCard` | query | Load one routed Workspace LiveCard in its bound browser Loader. |
+| `loader.readLiveCardSnapshot` | query | Read one routed Workspace LiveCard's Source snapshot without executing its Source. |
+| `nativeIntegration.getLogs` | query | Get recent NewsNext CLI service logs. |
+| `nativeIntegration.getStatus` | query | Get the local NewsNext CLI connection status. |
+| `nativeIntegration.getWidgets` | query | List the renderable Widget definitions the daemon last published, including their entry URLs. |
+| `nativeIntegration.resolveWorkspace` | mutation | Resolve local and shared Workspace differences before synchronization. Overwrite replaces shared data, merge keeps shared conflicts, discard uses shared data. |
+| `nativeIntegration.restart` | mutation | Restart the local NewsNext CLI service. The connection drops and reconnects automatically. |
+| `nativeIntegration.setEnabled` | mutation | Enable or disable the local NewsNext CLI connection on this device. |
+| `nativeIntegration.setLogLevel` | mutation | Set the NewsNext CLI service log level (off disables logging entirely). |
+| `nextLayer.configureLiveWidget` | mutation | Merge sparse params and metadata overrides. Null resets a section to widget.json defaults. Returns the updated placement. |
+| `nextLayer.installLiveWidget` | mutation | Create an independent instance of a local Widget in a Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2. Returns the created placement so callers can verify without a follow-up query. |
+| `nextLayer.listLiveWidgets` | query | List the Widget placements in a Board's Next Layer in installation order. |
+| `nextLayer.moveLiveWidget` | mutation | Move a Widget placement to another Board while preserving its settings and size. Returns the moved placement (with its new Board ID). |
+| `nextLayer.removeLiveWidget` | mutation | Remove a local Widget from a Board's Next Layer. |
+| `nextLayer.setLiveWidgetDataScope` | mutation | Set the Board-scoped LiveCard access granted to a Next Layer Widget. Returns the updated placement. |
+| `nextLayer.setLiveWidgetLayouts` | mutation | Persist Widget sizes and order for a Board's Next Layer in display order. Returns the placements in display order. |
+| `nextLayer.setLiveWidgetMetadata` | mutation | Replace a Board Widget's display metadata overrides; an empty object restores its definition. Returns the updated placement. |
+| `nextLayer.setLiveWidgetParams` | mutation | Replace a Board Widget's parameter overrides; pass an empty object to reset defaults. Returns the updated placement. |
+| `nowLayer.getLiveCards` | query | List the LiveCards in one Board's Now Layer. |
+| `nowLayer.setManualOrder` | mutation | Set the complete manual LiveCard order for a Board's Now Layer. Returns the ordered cards so callers can verify without a follow-up query. |
+| `radar.resolveSuggestions` | query | Resolve Source suggestions for the current browser page. |
+| `source.cancel` | command | Cancel an active background Source load. |
+| `source.get` | query | Get one available Source descriptor. |
+| `source.list` | query | List Sources available for creating or resolving LiveCards. |
+| `source.load` | command | Load one configured Source through the background runtime. |
+| `worker.regenerateIdentity` | mutation | Generate a new Worker identity and reconnect this browser. |
+| `worker.takeOver` | mutation | Reassign selected LiveCards from an offline Worker to this Worker. |
+
 ### application.replace
 
 *mutation* — Replace all durable Application data after validating its integrity.
 
 ```ts
-await client.actions.application.replace(input: { boards: unknown[]; liveCards: unknown[]; version: number })
-// => { boards: unknown[]; liveCards: unknown[]; version: number }
+await client.actions.application.replace(input: { boards: { cardIds: string[]; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nextLayer: { liveWidgets: …[] }; nowLayer: { sort: { automaticMode: …; manualOrder: …; mode: … } } }[]; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[]; version: number })
+// => { boards: { cardIds: string[]; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nextLayer: { liveWidgets: …[] }; nowLayer: { sort: { automaticMode: …; manualOrder: …; mode: … } } }[]; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[]; version: number }
 ```
 
 ### board.create
 
-*mutation* — Create a Board and optional configured LiveCards.
+*mutation* — Create a Board and optional configured LiveCards. Returns the created Board so callers can verify without a follow-up query.
 
 ```ts
 await client.actions.board.create(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; defaultLayer?: "now" | "next"; sortMode?: "addedAt" | "provider" | "manual"; liveCards?: { patch: { metadata?: Record<string, …>; params?: Record<string, …> }; sourceId: string }[]; name: string })
-// => { boardId: string }
+// => { board: { cardIds: string[]; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] }; nowLayer: { sort: { automaticMode: "addedAt" | "provider"; manualOrder: …[]; mode: "addedAt" | "provider" | "manual" } } }; boardId: string }
 ```
 
 ### board.delete
@@ -44,8 +110,10 @@ await client.actions.board.delete(input: { boardId: string; deleteLiveCards: boo
 
 ```ts
 await client.actions.board.get(input: { boardId: string })
-// => {…}
+// => { board: { cardIds: string[]; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] }; nowLayer: { sort: { automaticMode: "addedAt" | "provider"; manualOrder: …[]; mode: "addedAt" | "provider" | "manual" } } }; liveCards: { cardId: string; createdAt: number; patch: { metadata?: { badge?: …; desc?: …; home?: …; title?: …; type?: … }; params?: Record<string, …> }; sourceId: string; workerId: string }[] }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### board.getConfiguration
 
@@ -53,8 +121,10 @@ await client.actions.board.get(input: { boardId: string })
 
 ```ts
 await client.actions.board.getConfiguration(input: { boardId: string })
-// => {…}
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; defaultLayer: "now" | "next"; nowLayer: { sort: { automaticMode: "addedAt" | "provider"; manualOrder: string[]; mode: "addedAt" | "provider" | "manual" } } }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### board.getContext
 
@@ -62,8 +132,10 @@ await client.actions.board.getConfiguration(input: { boardId: string })
 
 ```ts
 await client.actions.board.getContext(input: { boardId: string })
-// => {…}
+// => { boardId: string; boardName: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### board.list
 
@@ -71,26 +143,30 @@ await client.actions.board.getContext(input: { boardId: string })
 
 ```ts
 await client.actions.board.list()
-// => unknown[]
+// => { cardIds: string[]; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] }; nowLayer: { sort: { automaticMode: "addedAt" | "provider"; manualOrder: …[]; mode: "addedAt" | "provider" | "manual" } } }[]
 ```
 
 ### board.listLiveCards
 
-*query* — List the LiveCards in a Board in membership order.
+*query* — List the LiveCards in a Board in membership order. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title.
 
 ```ts
 await client.actions.board.listLiveCards(input: { boardId: string })
-// => unknown[]
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }[]
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### board.update
 
-*mutation* — Atomically update a Board.
+*mutation* — Atomically update a Board. Returns the updated Board so callers can verify without a follow-up query.
 
 ```ts
 await client.actions.board.update(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; defaultLayer?: "now" | "next"; sortMode?: "addedAt" | "provider" | "manual"; boardId: string; name?: string })
-// => {}
+// => { cardIds: string[]; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; defaultLayer: "now" | "next"; id: string; name: string; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] }; nowLayer: { sort: { automaticMode: "addedAt" | "provider"; manualOrder: string[]; mode: "addedAt" | "provider" | "manual" } } }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### developer.fetch
 
@@ -112,21 +188,26 @@ await client.actions.developer.runSource(input: { debug: boolean; params?: Recor
 
 ### liveCard.configure
 
-*mutation* — Merge configuration and presentation overrides into a LiveCard.
+*mutation* — Merge configuration and presentation overrides into a LiveCard. Returns the updated LiveCard so callers can verify without a follow-up query.
 
 ```ts
 await client.actions.liveCard.configure(input: { cardId: string; patch: { metadata?: Record<string, unknown>; params?: Record<string, unknown> } })
-// => {}
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
 ```
+
+- `input.cardId`: LiveCard identifier.
 
 ### liveCard.create
 
-*mutation* — Create a configured LiveCard in one Board.
+*mutation* — Create a configured LiveCard in one Board. Returns the created LiveCard so callers can verify without a follow-up query.
 
 ```ts
 await client.actions.liveCard.create(input: { boardId: string; patch: { metadata?: Record<string, unknown>; params?: Record<string, unknown> }; sourceId: string })
-// => { cardId: string }
+// => { cardId: string; liveCard: { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string } }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.sourceId`: Qualified Source ID (e.g. "x:list").
 
 ### liveCard.delete
 
@@ -137,22 +218,26 @@ await client.actions.liveCard.delete(input: { cardId: string })
 // => {}
 ```
 
+- `input.cardId`: LiveCard identifier.
+
 ### liveCard.get
 
-*query* — Get one configured LiveCard.
+*query* — Get one configured LiveCard. The entry carries only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title.
 
 ```ts
 await client.actions.liveCard.get(input: { cardId: string })
-// => {…}
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
 ```
+
+- `input.cardId`: LiveCard identifier.
 
 ### liveCard.list
 
-*query* — List configured LiveCards.
+*query* — List configured LiveCards. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title. Use source.get for the fallback.
 
 ```ts
 await client.actions.liveCard.list()
-// => unknown[]
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }[]
 ```
 
 ### liveCard.load
@@ -166,12 +251,15 @@ await client.actions.liveCard.load(input: { cardId: string })
 
 ### liveCard.move
 
-*mutation* — Move an existing LiveCard to a Board.
+*mutation* — Move an existing LiveCard to a Board. Returns the moved LiveCard.
 
 ```ts
 await client.actions.liveCard.move(input: { boardId: string; cardId: string })
-// => {}
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.cardId`: LiveCard identifier.
 
 ### liveCard.readSnapshot
 
@@ -184,20 +272,33 @@ await client.actions.liveCard.readSnapshot(input: { cardId: string })
 
 ### liveCard.resetMetadata
 
-*mutation* — Reset a LiveCard's presentation overrides while preserving its parameters.
+*mutation* — Reset a LiveCard's presentation overrides while preserving its parameters. Returns the updated LiveCard.
 
 ```ts
 await client.actions.liveCard.resetMetadata(input: { cardId: string })
-// => {}
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
 ```
+
+- `input.cardId`: LiveCard identifier.
 
 ### liveCard.resetParams
 
-*mutation* — Reset a LiveCard's parameters while preserving presentation overrides.
+*mutation* — Reset a LiveCard's parameters while preserving presentation overrides. Returns the updated LiveCard.
 
 ```ts
 await client.actions.liveCard.resetParams(input: { cardId: string })
-// => {}
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
+```
+
+- `input.cardId`: LiveCard identifier.
+
+### liveWidget.list
+
+*query* — List configured LiveWidgets across all Boards in Board order. Mirrors liveCard.list.
+
+```ts
+await client.actions.liveWidget.list()
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
 ```
 
 ### loader.loadLiveCard
@@ -283,21 +384,27 @@ await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "erro
 
 ### nextLayer.configureLiveWidget
 
-*mutation* — Merge sparse params and metadata overrides. Null resets a section to widget.json defaults.
+*mutation* — Merge sparse params and metadata overrides. Null resets a section to widget.json defaults. Returns the updated placement.
 
 ```ts
 await client.actions.nextLayer.configureLiveWidget(input: { boardId: string; liveWidgetId: string; patch: { params?: unknown | Record<string, unknown>; metadata?: unknown | { title?: string; badge?: string; desc?: string; home?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate" } } })
-// => {}
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
 
 ### nextLayer.installLiveWidget
 
-*mutation* — Create an independent instance of a local Widget in a Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2.
+*mutation* — Create an independent instance of a local Widget in a Board's Next Layer. The placement appends after existing Widgets; omitted size fields default to 2. Returns the created placement so callers can verify without a follow-up query.
 
 ```ts
 await client.actions.nextLayer.installLiveWidget(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; size: { height?: integer ≥ 1 ≤ 100; width?: integer ≥ 1 ≤ 12 }; widgetId: string })
-// => { liveWidgetId: string }
+// => { liveWidget: { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }; liveWidgetId: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.widgetId`: Widget definition ID (e.g. "snake"); the running instance ID is liveWidgetId.
 
 ### nextLayer.listLiveWidgets
 
@@ -305,17 +412,23 @@ await client.actions.nextLayer.installLiveWidget(input: { boardId: string; dataS
 
 ```ts
 await client.actions.nextLayer.listLiveWidgets(input: { boardId: string })
-// => unknown[]
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string }[]
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### nextLayer.moveLiveWidget
 
-*mutation* — Move a Widget placement to another Board while preserving its settings and size.
+*mutation* — Move a Widget placement to another Board while preserving its settings and size. Returns the moved placement (with its new Board ID).
 
 ```ts
 await client.actions.nextLayer.moveLiveWidget(input: { boardId: string; targetBoardId: string; liveWidgetId: string })
-// => {}
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.targetBoardId`: Destination Board identifier.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
 
 ### nextLayer.removeLiveWidget
 
@@ -326,41 +439,55 @@ await client.actions.nextLayer.removeLiveWidget(input: { boardId: string; liveWi
 // => {}
 ```
 
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
+
 ### nextLayer.setLiveWidgetDataScope
 
-*mutation* — Set the Board-scoped LiveCard access granted to a Next Layer Widget.
+*mutation* — Set the Board-scoped LiveCard access granted to a Next Layer Widget. Returns the updated placement.
 
 ```ts
 await client.actions.nextLayer.setLiveWidgetDataScope(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; liveWidgetId: string })
-// => {}
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
 
 ### nextLayer.setLiveWidgetLayouts
 
-*mutation* — Persist Widget sizes and order for a Board's Next Layer in display order.
+*mutation* — Persist Widget sizes and order for a Board's Next Layer in display order. Returns the placements in display order.
 
 ```ts
 await client.actions.nextLayer.setLiveWidgetLayouts(input: { boardId: string; liveWidgets: { liveWidgetId: string; width: integer ≥ 1 ≤ 12; height: integer ≥ 1 ≤ 100 }[] })
-// => {}
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### nextLayer.setLiveWidgetMetadata
 
-*mutation* — Replace a Board Widget's display metadata overrides; an empty object restores its definition.
+*mutation* — Replace a Board Widget's display metadata overrides; an empty object restores its definition. Returns the updated placement.
 
 ```ts
 await client.actions.nextLayer.setLiveWidgetMetadata(input: { boardId: string; liveWidgetId: string; metadata: { title?: string; badge?: string; desc?: string; home?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate" } })
-// => {}
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
 
 ### nextLayer.setLiveWidgetParams
 
-*mutation* — Replace a Board Widget's parameter overrides; pass an empty object to reset defaults.
+*mutation* — Replace a Board Widget's parameter overrides; pass an empty object to reset defaults. Returns the updated placement.
 
 ```ts
 await client.actions.nextLayer.setLiveWidgetParams(input: { boardId: string; liveWidgetId: string; params: Record<string, unknown> })
-// => {}
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
 
 ### nowLayer.getLiveCards
 
@@ -368,17 +495,22 @@ await client.actions.nextLayer.setLiveWidgetParams(input: { boardId: string; liv
 
 ```ts
 await client.actions.nowLayer.getLiveCards(input: { boardId: string })
-// => unknown[]
+// => { boardId: string; cardId: string; sourceId: string }[]
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
 
 ### nowLayer.setManualOrder
 
-*mutation* — Set the complete manual LiveCard order for a Board's Now Layer.
+*mutation* — Set the complete manual LiveCard order for a Board's Now Layer. Returns the ordered cards so callers can verify without a follow-up query.
 
 ```ts
 await client.actions.nowLayer.setManualOrder(input: { boardId: string; cardIds: string[] })
-// => {}
+// => { boardId: string; cardId: string; sourceId: string }[]
 ```
+
+- `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+- `input.cardIds`: LiveCard identifiers in order.
 
 ### radar.resolveSuggestions
 
@@ -406,6 +538,8 @@ await client.actions.source.cancel(input: { requestId: string })
 await client.actions.source.get(input: { sourceId: string })
 // => {…}
 ```
+
+- `input.sourceId`: Qualified Source ID (e.g. "x:list").
 
 ### source.list
 
