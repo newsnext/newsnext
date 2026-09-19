@@ -140,8 +140,9 @@ const board = await client.actions.board.create({ name: "Reading" }, { workerId 
 ```
 
 Use the full Worker ID returned by status when the call must run in a
-specific browser. With no Worker ID the daemon routes the Action to a
-deterministically selected connected Worker; it never prompts. Workspace
+specific browser. With no Worker ID the daemon routes the Action to the
+most recently active connected Worker (Worker ID breaks ties); it never
+prompts. Workspace
 data Actions (`board.*`, `liveCard.*` configuration, `*.list`) are
 worker-agnostic because every Worker commits through the shared Workspace.
 `run`, `fetch`, and `loader.*` execute inside a browser: `fetch` shares that
