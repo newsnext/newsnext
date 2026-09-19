@@ -139,8 +139,14 @@ const sources = await client.actions.source.list({}, { workerId })
 const board = await client.actions.board.create({ name: "Reading" }, { workerId })
 ```
 
-Use the full Worker ID returned by status. With no Worker ID the daemon selects
-only when there is exactly one connected Worker; it never prompts. `run` accepts
+Use the full Worker ID returned by status when the call must run in a
+specific browser. With no Worker ID the daemon routes the Action to a
+deterministically selected connected Worker; it never prompts. Workspace
+data Actions (`board.*`, `liveCard.*` configuration, `*.list`) are
+worker-agnostic because every Worker commits through the shared Workspace.
+`run`, `fetch`, and `loader.*` execute inside a browser: `fetch` shares that
+Worker's cookies and `loader.*` input carries its owning `workerId`, so pin
+`{ workerId }` when the browser or card owner matters. `run` accepts
 a registered Source, or `{ providerId, provider, sourceId, params?, debug?,
 useProviderSecrets? }` for an in-memory provider. Provider JSON is not read from a
 path by the SDK. `fetch` accepts the Source `context.fetch` request shape (URL,
