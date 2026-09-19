@@ -378,9 +378,9 @@ the same confirmation interaction as LiveCards and removes only the placement.
 Optional top-level `widget.json.params` uses the shared Source parameter schema.
 The manifest parser validates definitions with `validateSourceParamDefinitions`.
 The Widget back reuses `ParameterSettings`, `ParamField`, and `useSourceParams`
-with LiveCards. `nextLayer.setLiveWidgetParams` replaces one Board placement's
-persisted overrides; `{}` resets defaults. `nextLayer.setLiveWidgetMetadata` separately
-replaces the shared Title, Color, Badge, Description, and Home overrides. The shell resolves metadata over manifest defaults
+with LiveCards. `liveWidget.configure` replaces one Board placement's
+persisted overrides with a `patch: { params }` payload; `{}` resets defaults. `liveWidget.configure` separately
+replaces the shared Title, Color, Badge, Description, and Home overrides with a `patch: { metadata }` payload. The shell resolves metadata over manifest defaults
 without changing data cache identity; an empty title falls back to the definition. Import/export normalization preserves
 them. Parameters are sent to custom iframe `newsnext.widget.data` messages and
 `data.mjs` as `context.params`. The daemon resolves defaults and checks value
@@ -540,16 +540,16 @@ another Board.
 
 `nowLayer.setManualOrder` requires every Board LiveCard exactly once and
 selects manual mode atomically. NextLayer mutations install/remove Widgets,
-change their data scope, and save layouts through `nextLayer.installLiveWidget`,
-`nextLayer.removeLiveWidget`, `nextLayer.setLiveWidgetDataScope`, and
-`nextLayer.setLiveWidgetLayouts`, and `nextLayer.setLiveWidgetParams`.
+change their data scope, and save layouts through `liveWidget.create`,
+`liveWidget.delete`, `liveWidget.configure` (with `patch: { dataScope }`),
+and `liveWidget.setLayouts`, and `liveWidget.configure` (with `patch: { params }`).
 
 ### Queries
 
 Source discovery, Board context, and LiveCard queries include:
 
 `source.get/list`, `liveCard.get/list`, `board.get/list/listLiveCards`,
-`board.getContext`, `board.getConfiguration`, and `nextLayer.listLiveWidgets`.
+`board.get`, and `board.listLiveWidgets`.
 
 `nowLayer.getLiveCards` returns every logical card in the requested Board in
 Board membership order. It does not filter against the current registry
@@ -595,7 +595,7 @@ the wire contract to [Source Architecture](SOURCE_ARCHITECTURE.md#stream-collect
 and subscription performance to [Performance Guideline](PERFORMANCE_GUIDELINE.md#development-diagnostics-subscriptions).
 
 
-`nextLayer.moveLiveWidget` atomically transfers the placement to another Board,
+`liveWidget.move` atomically transfers the placement to another Board,
 preserving metadata, params, and dimensions and appending it to the destination
 layout. Other instances of the same definition may coexist there. Whole-Board
 scopes follow the destination Board; explicit LiveCard scopes retain only IDs

@@ -125,7 +125,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
   const customStatus = frame.ui.type === "custom" ? viewStatus : undefined
   const statusMessage = isContentLoading ? undefined : dataQuery.error?.message ?? contentStatus ?? customStatus
   async function saveParams(params: Record<string, unknown>): Promise<void> {
-    await actions.nextLayer.setLiveWidgetParams({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, params })
+    await actions.liveWidget.configure({ liveWidgetId: frame.liveWidgetId, patch: { params } })
     parameterState.commitParams(params)
   }
   const dataPayload = useMemo(() => dataQuery.error
@@ -246,7 +246,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
           back
           actions={(
             <>
-              <DeleteWidgetButton boardId={frame.boardId} liveWidgetId={frame.liveWidgetId} />
+              <DeleteWidgetButton liveWidgetId={frame.liveWidgetId} />
               <CardHeaderActionButton
                 type="button"
                 aria-label={t("widgetFront")}
@@ -262,10 +262,10 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
             metadata={{ ...frame.metadata, title, color }}
             onPreviewMetadataChange={setPreviewMetadata}
             onReset={async () => {
-              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, metadata: {} })
+              await actions.liveWidget.configure({ liveWidgetId: frame.liveWidgetId, patch: { metadata: null } })
             }}
             onSave={async (metadata) => {
-              await actions.nextLayer.setLiveWidgetMetadata({ boardId: frame.boardId, liveWidgetId: frame.liveWidgetId, metadata: { ...frame.metadata, ...metadata } })
+              await actions.liveWidget.configure({ liveWidgetId: frame.liveWidgetId, patch: { metadata: { ...frame.metadata, ...metadata } } })
             }}
           />
           <ParameterSettings
@@ -424,7 +424,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
   const saveLayout = useCallback(async (layout: SortableWidgetNode[]) => {
     if (!board || layout.length !== board.nextLayer.liveWidgets.length) return
     const updates = getChangedWidgetLayouts(layout, board.nextLayer.liveWidgets)
-    if (updates.length > 0) await actions.nextLayer.setLiveWidgetLayouts({ boardId, liveWidgets: updates })
+    if (updates.length > 0) await actions.liveWidget.setLayouts({ boardId, liveWidgets: updates })
   }, [board, boardId])
   useLayoutEffect(() => {
     if (!connection.isLoading && (widgets.length === 0 || connection.state !== "connected" || catalog.error)) onReady?.()

@@ -62,6 +62,17 @@ export function getBoardLiveWidgetQuery(
   return { ...widget, boardId: input.boardId }
 }
 
+export function getLiveWidgetQuery(
+  data: ApplicationData,
+  input: { liveWidgetId: string },
+): ApplicationNextLayerLiveWidget {
+  for (const board of data.boards) {
+    const widget = board.nextLayer.liveWidgets.find(w => w.liveWidgetId === input.liveWidgetId)
+    if (widget) return { ...widget, boardId: board.id }
+  }
+  throw new Error(`LiveWidget '${input.liveWidgetId}' not found`)
+}
+
 export function listLiveCardsQuery(data: ApplicationData): LiveCard[] {
   return data.liveCards
 }

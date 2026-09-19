@@ -171,7 +171,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
     const succeeded = await runUpdate(async () => {
       const offlineWorker = status?.offlineWorkers.find(worker => worker.id === workerId)
       if (!offlineWorker) return
-      setStatus(await actions.worker.takeOver({
+      setStatus(await actions.nativeIntegration.takeOver({
         cardIds: offlineWorker.cardIds,
         workerId,
       }))
@@ -183,7 +183,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
 
   const handleRegenerateWorker = useCallback(async (): Promise<void> => {
     const succeeded = await runUpdate(async () => {
-      setStatus(await actions.worker.regenerateIdentity())
+      setStatus(await actions.nativeIntegration.regenerateIdentity())
     })
     if (!succeeded) {
       await refreshStatus()

@@ -161,7 +161,7 @@ schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
 
 Placed Widgets show these settings on their back, with Edit, Save, Cancel, and
 Reset. Values belong to the Widget's Board placement. Reset clears overrides.
-Use `client.actions.nextLayer.setLiveWidgetParams({ boardId, liveWidgetId, params })` to
+Use `client.actions.liveWidget.configure({ liveWidgetId, patch: { params } })` to
 replace overrides programmatically. Pass `{}` to restore manifest defaults.
 
 `data.mjs` receives resolved values as `context.params`; custom HTML receives
@@ -192,13 +192,13 @@ using a string title and the same named color palette as Sources. The Widget bac
 exposes these separately from business parameters. Board placements may override
 them with `metadata: { title, color, badge, desc, home }`, the same identity fields
 as Cards. Use
-`client.actions.nextLayer.setLiveWidgetMetadata({ boardId, liveWidgetId, metadata })` to
+`client.actions.liveWidget.configure({ liveWidgetId, patch: { metadata } })` to
 replace those overrides; `{}` restores the definition. Blank titles also fall
 back to the definition. Metadata edits affect the shell and built-in view title,
 without reloading the data pipeline.
 
 
-Use `client.actions.nextLayer.moveLiveWidget({ boardId, targetBoardId, liveWidgetId })` to
+Use `client.actions.liveWidget.move({ liveWidgetId, boardId: targetBoardId })` to
 move an instance while keeping its ID, dimensions, metadata, and params. The target
 may contain other instances of the same definition. Board-wide data follows the new Board;
 explicit LiveCard selections are restricted to that Board's LiveCards.
@@ -265,19 +265,19 @@ pipeline. A placement stores Source-style sparse overrides in
 Only explicit `patch` sections are read; top-level placement settings are ignored.
 
 ```ts
-await client.actions.nextLayer.configureLiveWidget({
-  boardId, liveWidgetId,
+await client.actions.liveWidget.configure({
+  liveWidgetId,
   patch: { view: { chart: "bar", limit: 12 }, metadata: { title: "Top topics" } },
 })
 // Reset only presentation. Keep data parameters and metadata overrides.
-await client.actions.nextLayer.configureLiveWidget({
-  boardId, liveWidgetId, patch: { view: null },
+await client.actions.liveWidget.configure({
+  liveWidgetId, patch: { view: null },
 })
 ```
 
 Patch sections merge field by field; omitted fields are retained. Arrays replace
 as values. `null` resets an entire section; `{}` is an empty merge. Existing
-`setLiveWidgetParams` and `setLiveWidgetMetadata` replace their respective sections,
+`liveWidget.configure` replaces its respective sections,
 so `{}` with those Actions still resets them. Only resolved data parameters and
 scope affect the daemon's data identity; metadata and view patches do not.
 
@@ -334,7 +334,7 @@ arguments throw rather than silently changing observations.
 
 Widget definitions and instances have separate identities. `widget.json` remains
 in the directory named by `widgetId`; it is never copied into Workspace storage.
-`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, size })` creates an
+`liveWidget.create({ boardId, widgetId, dataScope, size })` creates an
 independent instance and returns `{ liveWidgetId }`. Repeated calls may use the
 same definition in the same Board. Use `liveWidgetId` for configuration, movement,
 removal, and layout updates; keep using `widgetId` for `client.liveWidgets.data`.
@@ -354,7 +354,7 @@ const board = named.length === 1 ? named[0] : undefined
 if (!board) throw new Error("Expected one matching Board; select a Board ID")
 const boardId = board.id
 // Round 2: install returns the placement; assert on it. No follow-up query.
-const { liveWidgetId, liveWidget } = await client.actions.nextLayer.installLiveWidget({
+const { liveWidgetId, liveWidget } = await client.actions.liveWidget.create({
   boardId,
   dataScope: { type: "board" },
   size: { height: 1, width: 3 },

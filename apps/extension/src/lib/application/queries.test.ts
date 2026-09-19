@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest"
 import {
   getBoardConfigurationQuery,
   getBoardLiveWidgetQuery,
+  getLiveWidgetQuery,
   getNowLayerLiveCardsQuery,
   listAllLiveWidgetsQuery,
   listBoardLiveCardsQuery,
@@ -88,6 +89,25 @@ describe("application queries", () => {
       widgetId: "snake",
     })
     expect(() => getBoardLiveWidgetQuery(data, { boardId: "reading", liveWidgetId: "missing" }))
+      .toThrow("LiveWidget 'missing' not found")
+  })
+
+  it("returns one Widget placement across all Boards", () => {
+    const data = createData()
+    data.boards[0]!.nextLayer.liveWidgets.push({
+      dataScope: { type: "board" },
+      layout: { height: 2, width: 2 },
+      liveWidgetId: "instance-a",
+      widgetId: "snake",
+    })
+    expect(getLiveWidgetQuery(data, { liveWidgetId: "instance-a" })).toEqual({
+      boardId: "reading",
+      dataScope: { type: "board" },
+      layout: { height: 2, width: 2 },
+      liveWidgetId: "instance-a",
+      widgetId: "snake",
+    })
+    expect(() => getLiveWidgetQuery(data, { liveWidgetId: "missing" }))
       .toThrow("LiveWidget 'missing' not found")
   })
 

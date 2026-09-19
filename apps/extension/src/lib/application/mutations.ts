@@ -1,8 +1,9 @@
-import type { BoardDeleteInput, LiveWidgetInstallSize, WidgetMetadata, WidgetPatch } from "@newsnext/sdk/models"
+import type { BoardDeleteInput, LiveWidgetInstallSize, WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type {
   Board,
   BoardLayer,
+  LiveWidget,
   LiveWidgetDataScope,
   LiveWidgetLayout,
   NowLayerSortMode,
@@ -152,7 +153,7 @@ export function setNowLayerManualOrderMutation(
   }
 }
 
-export function installLiveWidgetMutation(
+export function createLiveWidgetMutation(
   data: ApplicationData,
   input: {
     boardId: string
@@ -190,13 +191,11 @@ export function installLiveWidgetMutation(
 
 export function moveLiveWidgetMutation(
   data: ApplicationData,
-  input: { boardId: string, targetBoardId: string, liveWidgetId: string },
+  input: { boardId: string, liveWidgetId: string },
 ): ApplicationMutationExecution {
-  const source = getBoard(data, input.boardId)
-  const target = getBoard(data, input.targetBoardId)
-  assertWidgetInstalled(source, input.liveWidgetId)
+  const { board: source, widget } = findLiveWidget(data, input.liveWidgetId)
+  const target = getBoard(data, input.boardId)
   if (source.id === target.id) return { data }
-  const widget = source.nextLayer.liveWidgets.find(widget => widget.liveWidgetId === input.liveWidgetId)!
   const moved = {
     ...widget,
     dataScope: widget.dataScope.type === "cards"
@@ -215,12 +214,11 @@ export function moveLiveWidgetMutation(
   }
 }
 
-export function removeLiveWidgetMutation(
+export function deleteLiveWidgetMutation(
   data: ApplicationData,
-  input: { boardId: string, liveWidgetId: string },
+  input: { liveWidgetId: string },
 ): ApplicationMutationExecution {
-  const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.liveWidgetId)
+  const { board } = findLiveWidget(data, input.liveWidgetId)
   return replaceBoard(data, {
     ...board,
     nextLayer: {
@@ -229,73 +227,37 @@ export function removeLiveWidgetMutation(
   })
 }
 
-export function setLiveWidgetDataScopeMutation(
-  data: ApplicationData,
-  input: { boardId: string, dataScope: LiveWidgetDataScope, liveWidgetId: string },
-): ApplicationMutationExecution {
-  const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.liveWidgetId)
-  assertWidgetDataScope(board, input.dataScope)
-  return replaceBoard(data, {
-    ...board,
-    nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
-        ? { ...widget, dataScope: input.dataScope }
-        : widget),
-    },
-  })
-}
-
-export function setLiveWidgetMetadataMutation(
-  data: ApplicationData,
-  input: { boardId: string, liveWidgetId: string, metadata: WidgetMetadata },
-): ApplicationMutationExecution {
-  const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.liveWidgetId)
-  const metadata = { ...input.metadata }
-  const title = metadata.title?.trim()
-  if (title) metadata.title = title
-  else delete metadata.title
-  return replaceBoard(data, {
-    ...board,
-    nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
-        ? { ...widget, patch: { ...widget.patch, metadata } }
-        : widget),
-    },
-  })
-}
-
-export function setLiveWidgetParamsMutation(
-  data: ApplicationData,
-  input: { boardId: string, liveWidgetId: string, params: Record<string, unknown> },
-): ApplicationMutationExecution {
-  const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.liveWidgetId)
-  return replaceBoard(data, {
-    ...board,
-    nextLayer: {
-      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
-        ? { ...widget, patch: { ...widget.patch, params: input.params } }
-        : widget),
-    },
-  })
-}
-
 /** Sparse field merge; null resets a whole section, matching Source override semantics. */
 export function configureLiveWidgetMutation(
   data: ApplicationData,
-  input: { boardId: string, liveWidgetId: string, patch: { [K in keyof WidgetPatch]?: WidgetPatch[K] | null } },
+  input: { liveWidgetId: string, patch: { dataScope?: LiveWidgetDataScope | null, metadata?: WidgetMetadata | null, params?: Record<string, unknown> | null } },
 ): ApplicationMutationExecution {
-  const board = getBoard(data, input.boardId)
-  assertWidgetInstalled(board, input.liveWidgetId)
+  const { board } = findLiveWidget(data, input.liveWidgetId)
+  if (input.patch.dataScope !== undefined && input.patch.dataScope !== null) {
+    assertWidgetDataScope(board, input.patch.dataScope)
+  }
   return replaceBoard(data, { ...board, nextLayer: { liveWidgets: board.nextLayer.liveWidgets.map((widget) => {
     if (widget.liveWidgetId !== input.liveWidgetId) return widget
     const patch = { ...widget.patch }
     for (const key of ["params", "metadata"] as const) {
       const value = input.patch[key]
-      if (value === null) delete patch[key]
-      else if (value !== undefined) Object.assign(patch, { [key]: { ...patch[key], ...value } })
+      if (value === null) {
+        delete patch[key]
+      } else if (value !== undefined) {
+        const merged = { ...patch[key], ...value } as Record<string, unknown>
+        if (key === "metadata" && typeof merged.title === "string") {
+          const trimmed = merged.title.trim()
+          if (trimmed) merged.title = trimmed
+          else delete merged.title
+        }
+        Object.assign(patch, { [key]: merged })
+      }
+    }
+    if (input.patch.dataScope === null) {
+      return { ...widget, dataScope: { type: "board" as const }, patch }
+    }
+    if (input.patch.dataScope !== undefined) {
+      return { ...widget, dataScope: input.patch.dataScope, patch }
     }
     return { ...widget, patch }
   }) } })
@@ -327,6 +289,36 @@ export function setLiveWidgetLayoutsMutation(
   return replaceBoard(data, {
     ...board,
     nextLayer: { liveWidgets },
+  })
+}
+
+export function resetLiveWidgetMetadataMutation(
+  data: ApplicationData,
+  input: { liveWidgetId: string },
+): ApplicationMutationExecution {
+  const { board } = findLiveWidget(data, input.liveWidgetId)
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
+        ? { ...widget, patch: { ...widget.patch, metadata: {} } }
+        : widget),
+    },
+  })
+}
+
+export function resetLiveWidgetParamsMutation(
+  data: ApplicationData,
+  input: { liveWidgetId: string },
+): ApplicationMutationExecution {
+  const { board } = findLiveWidget(data, input.liveWidgetId)
+  return replaceBoard(data, {
+    ...board,
+    nextLayer: {
+      liveWidgets: board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId === input.liveWidgetId
+        ? { ...widget, patch: { ...widget.patch, params: {} } }
+        : widget),
+    },
   })
 }
 
@@ -548,6 +540,14 @@ function assertWidgetInstalled(board: Board, liveWidgetId: string): void {
   if (!board.nextLayer.liveWidgets.some(widget => widget.liveWidgetId === liveWidgetId)) {
     throw new Error(`Widget '${liveWidgetId}' is not installed in Board '${board.id}'`)
   }
+}
+
+function findLiveWidget(data: ApplicationData, liveWidgetId: string): { board: Board, widget: LiveWidget, widgetIndex: number } {
+  for (const board of data.boards) {
+    const widgetIndex = board.nextLayer.liveWidgets.findIndex(w => w.liveWidgetId === liveWidgetId)
+    if (widgetIndex !== -1) return { board, widget: board.nextLayer.liveWidgets[widgetIndex]!, widgetIndex }
+  }
+  throw new Error(`LiveWidget '${liveWidgetId}' not found`)
 }
 
 function assertWidgetDataScope(board: Board, dataScope: LiveWidgetDataScope): void {

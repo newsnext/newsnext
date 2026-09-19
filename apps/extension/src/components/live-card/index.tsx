@@ -124,7 +124,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   const handleTakeOver = useCallback(async (): Promise<void> => {
     if (!offlineWorker || !cardId || !liveCardQueryKey) return
     await runTakeover(async () => {
-      const status = await actions.worker.takeOver({
+      const status = await actions.nativeIntegration.takeOver({
         cardIds: [cardId],
         workerId: offlineWorker.id,
       })

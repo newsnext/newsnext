@@ -1,9 +1,8 @@
+import type { LiveCard } from "../../source/live-cards"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { BackgroundActionContext } from "../background-actions"
 import type { RequireNativeConnection } from "./types"
-import { createId } from "@/lib/id"
 import { isSourceLoadResponse } from "../../source/load-result"
-import { executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { nativeRpc } from "./rpc"
 import { runtime } from "./state"
@@ -77,13 +76,9 @@ async function executeLocal(
   if (card.workerId !== runtime.workerId) {
     throw new Error("The LiveCard's NewsNext Worker is not connected")
   }
-  const result = await executeRegisteredAction(
-    snapshotOnly ? "loader.readLiveCardSnapshot" : "loader.loadLiveCard",
-    { card },
-    "connected",
-    actionContext,
-    createId(),
-  )
+  const result = snapshotOnly
+    ? await actionContext.loader.readLiveCardSnapshot({ card: card as LiveCard })
+    : await actionContext.loader.loadLiveCard({ card: card as LiveCard })
   if (result === null && snapshotOnly) return null
   if (!isSourceLoadResponse(result)) {
     throw new Error("The current browser returned an invalid Source result")

@@ -43,7 +43,7 @@ using a string title and the same named color palette as Sources (`blue`,
 `teal`, and so on; `slate` when omitted). Board placements may override them with
 `metadata: { title, color, badge, desc, home }`, the same identity fields as
 Cards. Use
-`client.actions.nextLayer.setLiveWidgetMetadata({ boardId, liveWidgetId, metadata })`
+`client.actions.liveWidget.configure({ liveWidgetId, patch: { metadata } })`
 to replace those overrides; `{}` restores the definition, and a blank title also
 falls back to it. Metadata edits affect the shell and built-in view title without
 reloading the data pipeline.
@@ -63,7 +63,7 @@ schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
 
 Placed Widgets show these settings on their back, with Edit, Save, Cancel, and
 Reset. Values belong to the Widget's Board placement. Reset clears overrides.
-Use `client.actions.nextLayer.setLiveWidgetParams({ boardId, liveWidgetId, params })`
+Use `client.actions.liveWidget.configure({ liveWidgetId, patch: { params } })`
 to replace overrides programmatically. Pass `{}` to restore manifest defaults.
 
 `data.mjs` receives resolved values as `context.params`; custom HTML receives
@@ -294,19 +294,19 @@ placement stores Source-style sparse overrides in
 Only explicit `patch` sections are read; top-level placement settings are ignored.
 
 ```ts
-await client.actions.nextLayer.configureLiveWidget({
-  boardId, liveWidgetId,
+await client.actions.liveWidget.configure({
+  liveWidgetId,
   patch: { metadata: { title: "Top topics" } },
 })
 // Reset metadata. Keep data parameters.
-await client.actions.nextLayer.configureLiveWidget({
-  boardId, liveWidgetId, patch: { metadata: null },
+await client.actions.liveWidget.configure({
+  liveWidgetId, patch: { metadata: null },
 })
 ```
 
 Patch sections merge field by field; omitted fields are retained. Arrays replace
 as values. `null` resets an entire section; `{}` is an empty merge. Existing
-`setLiveWidgetParams` and `setLiveWidgetMetadata` replace their respective sections,
+`liveWidget.configure` replaces its respective sections,
 so `{}` with those Actions still resets them. Only resolved data parameters and
 scope affect the daemon's data identity; metadata patches do not.
 
@@ -418,7 +418,7 @@ Card and Widget backs share the same metadata editor, parameter editor, and Boar
 selection controls. Metadata drafts preview locally; saving changes presentation
 without changing source parameters. `liveCard.resetMetadata` clears saved display
 overrides independently of `liveCard.resetParams`. Widget metadata uses the same
-fields through `nextLayer.setLiveWidgetMetadata`; its data inputs remain separate.
+fields through `liveWidget.configure`; its data inputs remain separate.
 
 ### Preset presentation
 
@@ -441,7 +441,7 @@ bands, and target markers. Missing comparison baselines display explicit text.
 
 Widget definitions and instances have separate identities. `widget.json` remains
 in the directory named by `widgetId`; it is never copied into Workspace storage.
-`nextLayer.installLiveWidget({ boardId, widgetId, dataScope, size })` creates an
+`liveWidget.create({ boardId, widgetId, dataScope, size })` creates an
 independent instance and returns `{ liveWidgetId }`; repeated calls may use the
 same definition in the same Board. Each instance stores its own sparse `patch`,
 `dataScope`, and `layout`, so editing, dragging, resizing, moving, and removal
@@ -464,7 +464,7 @@ Boards and ask which one to install into instead of picking a default.
 Runnable examples live in `examples/widgets`. Copy its
 contents to the Widget directory reported
 by `newsnext status`, then install the `demo-*` directories on a Board through
-`nextLayer.installLiveWidget`. In development the daemon does the copying
+`liveWidget.create`. In development the daemon does the copying
 itself: it mirrors `examples/widgets` into the development Widget directory at
 startup and on every change, replacing same-named Widgets so the examples
 always win (`NEWSNEXT_EXAMPLE_WIDGETS_PATH` overrides the source). Use the extension's Cosmos

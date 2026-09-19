@@ -98,14 +98,6 @@ const sourceCancelAction = defineAction(actionContracts["source.cancel"], async 
   return {}
 })
 
-const loaderLoadLiveCardAction = defineAction(actionContracts["loader.loadLiveCard"], async (input, context: BackgroundActionContext) => (
-  await context.loader.loadLiveCard(input)
-))
-
-const loaderReadLiveCardSnapshotAction = defineAction(actionContracts["loader.readLiveCardSnapshot"], async (input, context: BackgroundActionContext) => (
-  await context.loader.readLiveCardSnapshot(input)
-))
-
 const nativeIntegrationGetStatusAction = defineAction(actionContracts["nativeIntegration.getStatus"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getStatus())
 
 const nativeIntegrationGetWidgetsAction = defineAction(actionContracts["nativeIntegration.getWidgets"], async (_input, context: BackgroundActionContext) => await context.nativeIntegration.getWidgets())
@@ -134,17 +126,15 @@ const nativeIntegrationRestartAction = defineAction(actionContracts["nativeInteg
   return {}
 })
 
-const workerRegenerateIdentityAction = defineAction(actionContracts["worker.regenerateIdentity"], async (_input, context: BackgroundActionContext) => (
+const nativeIntegrationRegenerateIdentityAction = defineAction(actionContracts["nativeIntegration.regenerateIdentity"], async (_input, context: BackgroundActionContext) => (
   await context.workerManagement.regenerateIdentity()
 ))
 
-const workerTakeOverAction = defineAction(actionContracts["worker.takeOver"], async (input, context: BackgroundActionContext) => await context.workerManagement.takeOver(input))
+const nativeIntegrationTakeOverAction = defineAction(actionContracts["nativeIntegration.takeOver"], async (input, context: BackgroundActionContext) => await context.workerManagement.takeOver(input))
 
 export const backgroundActionDefinitions = [
   developerFetchAction,
   developerRunSourceAction,
-  loaderLoadLiveCardAction,
-  loaderReadLiveCardSnapshotAction,
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
@@ -157,6 +147,6 @@ export const backgroundActionDefinitions = [
   nativeIntegrationSetEnabledAction,
   nativeIntegrationResolveWorkspaceAction,
   nativeIntegrationRestartAction,
-  workerRegenerateIdentityAction,
-  workerTakeOverAction,
+  nativeIntegrationRegenerateIdentityAction,
+  nativeIntegrationTakeOverAction,
 ] as const

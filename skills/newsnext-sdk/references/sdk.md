@@ -61,7 +61,7 @@ already sent to the Worker.
   entity; a follow-up query for the same state is waste.
 - Collect only the cheapest state sufficient to choose the next action: one
   `liveCard.get` beats `board.get`, and `liveWidget.list` beats one
-  `nextLayer.listLiveWidgets` per Board. Once the returned value verifies a
+  `board.listLiveWidgets` per Board. Once the returned value verifies a
   mutation, stop; do not re-query the same state through another surface.
 - If an Action fails, inspect the error (`NewsNextError.code`) before
   deciding whether to retry. Do not blindly repeat the call or switch to an

@@ -1,4 +1,4 @@
-import type { ConnectedFetchInput, FetchResponse, LiveCard, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse, WidgetCatalogEntry } from "../models/index.js"
+import type { ConnectedFetchInput, FetchResponse, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse, WidgetCatalogEntry } from "../models/index.js"
 import Type from "typebox"
 import { defineActionContract } from "./definition.js"
 import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
@@ -74,16 +74,6 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
   workerId: Identifier,
   widgetServerOrigin: Type.Optional(Type.String()),
 }, { additionalProperties: false }))
-
-const LiveCardParams = Type.Unsafe<LiveCard>(Type.Object({
-  createdAt: Type.Number(),
-  cardId: Identifier,
-  workerId: Identifier,
-  patch: Type.Object({}, { additionalProperties: true }),
-  sourceId: Identifier,
-}, { additionalProperties: false }))
-
-const RoutedLiveCardParams = Type.Object({ card: LiveCardParams }, { additionalProperties: false })
 
 const FetchParams = Type.Unsafe<ConnectedFetchInput>(Type.Object({
   body: Type.Optional(Type.String()),
@@ -200,22 +190,6 @@ const sourceCancelAction = defineActionContract({
   result: EmptyObject,
 })
 
-const loaderLoadLiveCardAction = defineActionContract({
-  name: "loader.loadLiveCard",
-  kind: "query",
-  description: "Load one routed Workspace LiveCard in its bound browser Loader.",
-  params: RoutedLiveCardParams,
-  result: SourceLoadResponseResult,
-})
-
-const loaderReadLiveCardSnapshotAction = defineActionContract({
-  name: "loader.readLiveCardSnapshot",
-  kind: "query",
-  description: "Read one routed Workspace LiveCard's Source snapshot without executing its Source.",
-  params: RoutedLiveCardParams,
-  result: SourceSnapshotResult,
-})
-
 const nativeIntegrationGetStatusAction = defineActionContract({
   name: "nativeIntegration.getStatus",
   kind: "query",
@@ -295,16 +269,16 @@ const nativeIntegrationRestartAction = defineActionContract({
   result: EmptyObject,
 })
 
-const workerRegenerateIdentityAction = defineActionContract({
-  name: "worker.regenerateIdentity",
+const nativeIntegrationRegenerateIdentityAction = defineActionContract({
+  name: "nativeIntegration.regenerateIdentity",
   kind: "mutation",
   description: "Generate a new Worker identity and reconnect this browser.",
   params: EmptyObject,
   result: NativeIntegrationStatusResult,
 })
 
-const workerTakeOverAction = defineActionContract({
-  name: "worker.takeOver",
+const nativeIntegrationTakeOverAction = defineActionContract({
+  name: "nativeIntegration.takeOver",
   kind: "mutation",
   description: "Reassign selected LiveCards from an offline Worker to this Worker.",
   params: Type.Object({
@@ -373,8 +347,6 @@ export const backgroundActionContracts = [
   radarResolveSuggestionsAction,
   sourceLoadAction,
   sourceCancelAction,
-  loaderLoadLiveCardAction,
-  loaderReadLiveCardSnapshotAction,
   nativeIntegrationGetStatusAction,
   nativeIntegrationGetWidgetsAction,
   nativeIntegrationGetLogsAction,
@@ -384,6 +356,6 @@ export const backgroundActionContracts = [
   nativeIntegrationSetEnabledAction,
   nativeIntegrationResolveWorkspaceAction,
   nativeIntegrationRestartAction,
-  workerRegenerateIdentityAction,
-  workerTakeOverAction,
+  nativeIntegrationRegenerateIdentityAction,
+  nativeIntegrationTakeOverAction,
 ] as const

@@ -290,8 +290,7 @@ retained by the daemon without blocking the response, while locally executed
 loads are reported back via a fire-and-forget `liveCardObserved` notification.
 Retaining an already-stored `fetchedAt` is a no-op because observations are
 unique per dataset and timestamp, so protected snapshot returns never duplicate
-history. Snapshot-only reads (`loader.readLiveCardSnapshot`,
-`liveCard.readSnapshot`) never execute a Source and never retain. No record is shared across Workers, even when that
+history. Snapshot-only reads (`liveCard.readSnapshot`) never execute a Source and never retain. No record is shared across Workers, even when that
 complete key matches. The same record supplies both API protection and startup
 placeholder data. LiveCard IDs are deliberately absent from this Loader snapshot
 because they do not affect Source execution. Page-side TanStack queries for saved
@@ -314,18 +313,18 @@ changes result identity immediately, while old versions age out independently.
 Snapshot persistence failures remain fail-open and never prevent Source execution.
 
 UI loads take a LiveCard ID and execute in the owning browser: the local fast
-path runs directly, otherwise `loader.loadLiveCard` is relayed through the
-daemon. Every `loader.loadLiveCard` is retained in History asynchronously
+path runs directly, otherwise `liveCard.load` is relayed through the
+daemon. Every `liveCard.load` is retained in History asynchronously
 without blocking the response: daemon-relayed loads are retained by the daemon,
 while locally executed loads are reported back via `liveCardObserved` in a
-fire-and-forget notification. `loader.readLiveCardSnapshot` never retains.
+fire-and-forget notification. `liveCard.readSnapshot` never retains.
 A disconnected owner
 suspends snapshot reads and execution but does not remove the LiveCard or make its
 configuration read-only.
 
 The daemon retains results from automatic LiveCard collection and every manual
 LiveCard load in Turso.
-Collection calls `loader.loadLiveCard`; it does not depend on a Job Action or table.
+Collection calls `liveCard.load`; it does not depend on a Job Action or table.
 Automatic collection can retain a protected snapshot at its original
 `fetchedAt` to fill a foreground-history gap; dataset/timestamp uniqueness
 prevents duplicates. Unchanged fresh fetches are separate observations. No retention path receives credentials

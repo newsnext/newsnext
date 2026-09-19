@@ -1,3 +1,4 @@
+import type { ApplicationData, ApplicationMutationDependencies, ApplicationMutationResult } from "../application"
 import type { BackgroundActionContext } from "./background-actions"
 import { describe, expect, it, vi } from "vitest"
 import {
@@ -6,9 +7,27 @@ import {
 } from "./action-registry"
 
 function createContext(): BackgroundActionContext {
+  let storedData: ApplicationData = {
+    boards: [{
+      color: "blue",
+      id: "reading",
+      name: "Reading",
+      createdAt: 1,
+      cardIds: [],
+      defaultLayer: "now",
+      nowLayer: { sort: { mode: "addedAt", automaticMode: "addedAt", manualOrder: [] } },
+      nextLayer: { liveWidgets: [] },
+    }],
+    liveCards: [],
+    version: 8,
+  }
   return {
-    data: vi.fn(async () => ({ boards: [], liveCards: [], version: 8 as const })),
-    mutate: vi.fn(async () => ({ cardId: "new" })),
+    data: vi.fn(async () => storedData),
+    mutate: vi.fn(async (operation: (data: ApplicationData, deps: ApplicationMutationDependencies) => { data: ApplicationData, result?: ApplicationMutationResult }) => {
+      const execution = operation(storedData, { createId: () => "new", now: () => 100, workerId: "worker" })
+      storedData = execution.data
+      return execution.result ?? {}
+    }),
     replace: vi.fn(async data => data),
     requireSources: vi.fn(async () => undefined),
     sources: vi.fn(async () => []),
@@ -77,9 +96,9 @@ describe("action Registry", () => {
   it("publishes the complete Action contract directly from definitions", () => {
     const actions = actionRegistry.list()
 
-    expect(actions).toHaveLength(48)
-    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(25)
-    expect(actions.filter(action => action.kind === "query")).toHaveLength(19)
+    expect(actions).toHaveLength(45)
+    expect(actions.filter(action => action.kind === "mutation")).toHaveLength(24)
+    expect(actions.filter(action => action.kind === "query")).toHaveLength(17)
     expect(actions.filter(action => action.kind === "command")).toHaveLength(4)
     expect(actions.find(action => action.name === "liveCard.create")).toMatchObject({
       inputSchema: { type: "object", additionalProperties: false },
@@ -96,7 +115,7 @@ describe("action Registry", () => {
       boardId: "reading",
       patch: {},
       sourceId: "github:trending",
-    }, "ui", ActionContext)).resolves.toEqual({ cardId: "new" })
+    }, "ui", ActionContext)).resolves.toEqual({ cardId: "new", liveCard: expect.objectContaining({ cardId: "new" }) })
     expect(ActionContext.requireSources).toHaveBeenCalledWith(["github:trending"])
     expect(ActionContext.mutate).toHaveBeenCalledOnce()
 
