@@ -125,7 +125,7 @@ export default {
           id: "folo-feed",
           match: {
             hosts: ["app.folo.is"],
-            paths: ["/timeline/articles/:feedId/*rest"],
+            paths: ["/timeline/articles/:feedId/*rest", "/timeline/all/:feedId/*rest"],
           },
           patch: {
             params: {
@@ -133,7 +133,7 @@ export default {
             },
             metadata: {
               title: "{{ scope.page.title | replace: ' | Folo', '' }}",
-              home: "https://app.folo.is/timeline/articles/{{ scope.params.feedId }}/pending",
+              home: "https://app.folo.is/timeline/all/{{ scope.params.feedId }}/pending",
             },
           },
         },
@@ -161,7 +161,7 @@ export default {
           id: "folo-list",
           match: {
             hosts: ["app.folo.is"],
-            paths: ["/timeline/articles/list-:listId/*rest"],
+            paths: ["/timeline/articles/list-:listId/*rest", "/timeline/all/list-:listId/*rest"],
           },
           patch: {
             params: {
@@ -169,7 +169,7 @@ export default {
             },
             metadata: {
               title: "{{ scope.page.title | replace: ' | Folo', '' }}",
-              home: "https://app.folo.is/timeline/articles/list-{{ scope.params.listId }}/pending",
+              home: "https://app.folo.is/timeline/all/list-{{ scope.params.listId }}/pending",
             },
           },
         },

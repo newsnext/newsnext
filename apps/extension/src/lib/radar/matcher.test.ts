@@ -549,7 +549,7 @@ describe("getRadarSuggestions", () => {
 
   it("suggests Folo feed and list LiveCards from timeline URLs", () => {
     expect(getSuggestions({
-      url: "https://app.folo.is/timeline/articles/70006270320504832/pending",
+      url: "https://app.folo.is/timeline/all/70006270320504832/pending",
       title: "AI News | Folo",
     })).toMatchObject([
       {
@@ -560,14 +560,14 @@ describe("getRadarSuggestions", () => {
           },
           metadata: {
             title: "AI News",
-            home: "https://app.folo.is/timeline/articles/70006270320504832/pending",
+            home: "https://app.folo.is/timeline/all/70006270320504832/pending",
           },
         },
       },
     ])
 
     expect(getSuggestions({
-      url: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+      url: "https://app.folo.is/timeline/all/list-178752152055448576/pending",
       title: "Developer Reading | Folo",
     })).toMatchObject([
       {
@@ -578,14 +578,32 @@ describe("getRadarSuggestions", () => {
           },
           metadata: {
             title: "Developer Reading",
-            home: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+            home: "https://app.folo.is/timeline/all/list-178752152055448576/pending",
           },
         },
       },
     ])
 
     expect(getSuggestions({
-      url: "https://app.folo.is/timeline/articles/70006270320504832/1223093117926813696",
+      url: "https://app.folo.is/timeline/all/list-69107368310609920/pending",
+      title: "AI资讯 | Folo",
+    })).toMatchObject([
+      {
+        sourceId: "folo:list",
+        patch: {
+          params: {
+            listId: "69107368310609920",
+          },
+          metadata: {
+            title: "AI资讯",
+            home: "https://app.folo.is/timeline/all/list-69107368310609920/pending",
+          },
+        },
+      },
+    ])
+
+    expect(getSuggestions({
+      url: "https://app.folo.is/timeline/all/70006270320504832/1223093117926813696",
       title: "AI News | Folo",
     })).toMatchObject([
       {
@@ -596,14 +614,14 @@ describe("getRadarSuggestions", () => {
           },
           metadata: {
             title: "AI News",
-            home: "https://app.folo.is/timeline/articles/70006270320504832/pending",
+            home: "https://app.folo.is/timeline/all/70006270320504832/pending",
           },
         },
       },
     ])
 
     expect(getSuggestions({
-      url: "https://app.folo.is/timeline/articles/list-68649150114432000/1223093117926813696",
+      url: "https://app.folo.is/timeline/all/list-68649150114432000/1223093117926813696",
       title: "Developer Reading | Folo",
     })).toMatchObject([
       {
@@ -614,7 +632,7 @@ describe("getRadarSuggestions", () => {
           },
           metadata: {
             title: "Developer Reading",
-            home: "https://app.folo.is/timeline/articles/list-68649150114432000/pending",
+            home: "https://app.folo.is/timeline/all/list-68649150114432000/pending",
           },
         },
       },
@@ -625,10 +643,10 @@ describe("getRadarSuggestions", () => {
     const sources = sourceDescriptors.filter(source => source.id === "folo:feed")
 
     expect(getRadarSuggestions({
-      url: "https://app.folo.is/timeline/articles/all/pending",
+      url: "https://app.folo.is/timeline/all/pending",
     }, sources)).toEqual([])
     expect(getRadarSuggestions({
-      url: "https://app.folo.is/timeline/articles/list-178752152055448576/pending",
+      url: "https://app.folo.is/timeline/all/list-178752152055448576/pending",
     }, sources)).toEqual([])
   })
 
