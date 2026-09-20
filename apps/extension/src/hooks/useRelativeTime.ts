@@ -74,7 +74,12 @@ export function formatRelativeTime(
 
   const [milliseconds, name] = unit
   const value = Math.round(magnitude / milliseconds) * Math.sign(difference)
-  return relativeTimeFormatter.format(value, name)
+  const formatted = relativeTimeFormatter.format(value, name)
+  // CLDR spacing differs by locale and ICU version (zh-CN omits the space,
+  // zh-TW includes it in some runtimes): normalize Chinese output to always
+  // use a single space between the number and the unit.
+  if (locale.startsWith("zh")) return formatted.replace(/^(\d+)\s*/, "$1 ")
+  return formatted
 }
 
 export function useMinuteDate(): Date {

@@ -19,7 +19,7 @@ describe("formatRelativeTime", () => {
   })
 
   it.each([
-    ["zh-CN", "5分钟前"],
+    ["zh-CN", "5 分钟前"],
     ["zh-TW", "5 分鐘前"],
   ])("formats relative time in %s", (locale, expected) => {
     expect(formatRelativeTime(now.getTime() - 5 * 60_000, now, locale)).toBe(expected)
