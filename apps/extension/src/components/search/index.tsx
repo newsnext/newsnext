@@ -192,10 +192,13 @@ export function SearchModalContent({
   return (
     <ContentDialogContent
       className={cn(
-        "h-129 sm:max-w-[51rem]",
+        "h-129 data-open:animate-none data-closed:animate-none sm:max-w-[51rem]",
         isDragging && "pointer-events-none opacity-0",
       )}
-      overlayClassName={isDragging ? "pointer-events-none opacity-0" : undefined}
+      overlayClassName={cn(
+        "transition-none data-open:animate-none data-closed:animate-none",
+        isDragging && "pointer-events-none opacity-0",
+      )}
       surfaceClassName="p-0"
     >
       <DialogTitle className="sr-only">{t("searchLiveCards")}</DialogTitle>
