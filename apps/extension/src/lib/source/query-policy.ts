@@ -1,6 +1,7 @@
 export const SOURCE_REQUEST_PROTECTION_MS = 60_000
 export const MANUAL_REQUEST_MINIMUM_FEEDBACK_MS = 500
-export const SOURCE_QUERY_STALE_TIME_MS = 2 * 60_000
+// Keep stale 10s beyond protection so revalidation still hits the window.
+export const SOURCE_QUERY_STALE_TIME_MS = SOURCE_REQUEST_PROTECTION_MS + 10_000
 export const SOURCE_QUERY_REFETCH_INTERVAL_MS = 5 * 60_000
 export const SOURCE_QUERY_OFFSCREEN_RETENTION_MS = 60_000
 export const SOURCE_QUERY_PRELOAD_MARGIN = "200px"

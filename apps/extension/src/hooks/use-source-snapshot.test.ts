@@ -14,7 +14,7 @@ import {
 vi.mock("@/lib/source", () => ({
   loadSource: vi.fn(),
   SOURCE_QUERY_REFETCH_INTERVAL_MS: 300_000,
-  SOURCE_QUERY_STALE_TIME_MS: 120_000,
+  SOURCE_QUERY_STALE_TIME_MS: 70_000,
 }))
 
 const source = {
