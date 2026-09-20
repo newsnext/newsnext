@@ -3,8 +3,9 @@ import type { Color } from "@newsnext/shared/types"
 import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { COLORS } from "@newsnext/shared/constants"
+import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { LiveCardBack } from "@/components/live-card/card-back"
 import { LiveCardFront } from "@/components/live-card/card-front"
 
@@ -231,6 +232,40 @@ function RankingCardFixture() {
   return <FrontFixture source={RANKING_SOURCE} />
 }
 
+function RankingNewItemsFixture() {
+  const [refreshCount, setRefreshCount] = useState(0)
+  const items = useMemo<NewsItem[]>(() => {
+    const fresh: NewsItem[] = Array.from({ length: refreshCount }, (_, index) => ({
+      title: `Fresh story ${refreshCount - index}`,
+      url: `https://example.com/fresh-story-${refreshCount - index}`,
+      content: { text: "Prepended by the simulated refresh; the marker shows NEW for a few seconds." },
+    }))
+    return [...fresh, ...RANKING_ITEMS]
+  }, [refreshCount])
+
+  return (
+    <main className="flex min-h-full flex-col items-center gap-4 p-6 sm:p-10">
+      <Button onClick={() => setRefreshCount(count => count + 1)}>
+        Simulate refresh
+      </Button>
+      <LiveCardFrame
+        className="h-125 w-full max-w-100"
+        color={SAMPLE_SOURCE.provider.color}
+      >
+        <LiveCardFront
+          source={RANKING_SOURCE}
+          items={items}
+          isFetching={false}
+          isContentFetching={false}
+          onRefresh={() => undefined}
+          onRequestPermission={async () => true}
+          onFlip={() => undefined}
+        />
+      </LiveCardFrame>
+    </main>
+  )
+}
+
 function ListCardFixture() {
   return <FrontFixture />
 }
@@ -285,6 +320,7 @@ export default {
   Overview: AllCardColorsFixture,
   List: ListCardFixture,
   Ranking: RankingCardFixture,
+  RankingNewItems: RankingNewItemsFixture,
   Timeline: TimelineCardFixture,
   Loading: LoadingCardFixture,
   Permission: PermissionCardFixture,
