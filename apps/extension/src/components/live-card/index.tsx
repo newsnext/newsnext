@@ -75,7 +75,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
       void queryClient.cancelQueries({ exact: true, queryKey: liveCardQueryKey })
     }
   }, [liveCardQueryKey, offlineWorker, queryClient])
-  const { items, inlinePresentation, metadata, sourceSnapshot, manualRequest, isFetching, isManualRequesting, isLoading, hasData, isError, errorMessage, loginUrl } = useSourceQuery({
+  const { items, inlinePresentation, metadata, sourceSnapshot, refetch, isLoading, hasData, isError, errorMessage, loginUrl } = useSourceQuery({
     source,
     sourceId: source.sourceId,
     cardId,
@@ -176,8 +176,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
         source={displaySource}
         items={items}
         inlinePresentation={inlinePresentation}
-        isFetching={isFetching || isManualRequesting}
-        isContentFetching={!hasData && (isManualRequesting || isLoading)}
+        isContentFetching={!hasData && isLoading}
         sourceErrorMessage={sourceErrorMessage}
         sourceLoginUrl={loginUrl}
         sourcePermissionRequest={missingPermission}
@@ -188,7 +187,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
               onTakeOver: () => void handleTakeOver(),
             }
           : undefined}
-        onRefresh={manualRequest}
+        onRefresh={() => void refetch()}
         onRequestPermission={requestPermission}
         onFlip={handleFlip}
         dragHandleRef={isFlipped ? undefined : dragHandleRef}

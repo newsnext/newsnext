@@ -1,16 +1,14 @@
 import type { LoadedSourceDescriptor } from "@/lib/source/load-result"
 import type { NewsItem } from "@/typings/source"
 import { hashKey, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useCallback, useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { getLoginUrlFromError } from "./source-login-error"
 import {
   createLiveCardQueryTarget,
   createSourceQueryTarget,
-  getSourceQueryHash,
   getSourceQueryKey,
   getSourceQueryOptions,
 } from "./source-query"
-import { useIsSourceManualRequesting, useManualRequestSources } from "./use-manual-request"
 import {
   findLiveCardSnapshot,
   findSourceSnapshot,
@@ -44,7 +42,6 @@ export function useSourceQuery({
       : createSourceQueryTarget(sourceId, source, params),
     [cardId, params, source, sourceId],
   )
-  const queryHash = useMemo(() => getSourceQueryHash(target), [target])
   const liveCardRequestHash = useMemo(() => cardId
     ? hashKey([sourceId, params ?? {}])
     : undefined, [cardId, params, sourceId])
@@ -66,8 +63,6 @@ export function useSourceQuery({
       })
     }
   }, [cardId, liveCardRequestHash, queryClient, target])
-  const manualRequestSources = useManualRequestSources()
-  const isManualRequesting = useIsSourceManualRequesting(queryHash)
   const query = useQuery({
     ...getSourceQueryOptions(target),
     enabled: enabled && (cardId !== undefined || source.version > 0),
@@ -77,20 +72,10 @@ export function useSourceQuery({
   const data = enabled ? query.data?.result ?? snapshotResult : undefined
   const hasData = data !== undefined
 
-  const handleManualRequest = useCallback(async () => {
-    if (!enabled) {
-      return
-    }
-
-    await manualRequestSources(target)
-  }, [enabled, manualRequestSources, target])
-
   return {
     items: data?.items ?? EMPTY_ITEMS,
     inlinePresentation: data?.inlinePresentation,
-    manualRequest: handleManualRequest,
-    isFetching: query.isFetching,
-    isManualRequesting,
+    refetch: query.refetch,
     isLoading: query.isLoading && snapshotResult === undefined,
     hasData,
     isError: query.isError && !hasData,

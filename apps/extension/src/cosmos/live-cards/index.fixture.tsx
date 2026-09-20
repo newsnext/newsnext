@@ -160,7 +160,6 @@ function LiveCardStage({ children }: React.PropsWithChildren) {
 interface FrontFixtureProps {
   items?: NewsItem[]
   source?: LiveCardViewModel
-  isFetching?: boolean
   isContentFetching?: boolean
   sourceErrorMessage?: string
   sourcePermissionRequest?: SourcePermissionRequest
@@ -169,7 +168,6 @@ interface FrontFixtureProps {
 function FrontFixture({
   items = RANKING_ITEMS,
   source = SAMPLE_SOURCE,
-  isFetching = false,
   isContentFetching = false,
   sourceErrorMessage,
   sourcePermissionRequest,
@@ -179,7 +177,6 @@ function FrontFixture({
       <LiveCardFront
         source={source}
         items={items}
-        isFetching={isFetching}
         isContentFetching={isContentFetching}
         sourceErrorMessage={sourceErrorMessage}
         sourcePermissionRequest={sourcePermissionRequest}
@@ -280,7 +277,6 @@ function RankingNewItemsFixture() {
         <LiveCardFront
           source={RANKING_SOURCE}
           items={items}
-          isFetching={false}
           isContentFetching={false}
           onRefresh={() => undefined}
           onRequestPermission={async () => true}
@@ -304,7 +300,6 @@ function AllCardColorsFixture() {
             <LiveCardFront
               source={createColorSource(color)}
               items={RANKING_ITEMS.slice(0, 4)}
-              isFetching={false}
               isContentFetching={false}
               onRefresh={() => undefined}
               onRequestPermission={async () => true}
@@ -322,7 +317,7 @@ function TimelineCardFixture() {
 }
 
 function LoadingCardFixture() {
-  return <FrontFixture items={TIMELINE_ITEMS} isFetching isContentFetching />
+  return <FrontFixture items={TIMELINE_ITEMS} isContentFetching />
 }
 
 function PermissionCardFixture() {

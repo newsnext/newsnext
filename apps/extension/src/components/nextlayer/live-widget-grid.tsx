@@ -10,7 +10,7 @@ import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { CardBackContent, CardShell } from "@/components/card-shell"
 import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
-import { CardContentBackground, CardContentTransition, CardRefreshButton } from "@/components/card-shell/card-refresh"
+import { CardContentBackground, CardContentTransition } from "@/components/card-shell/card-refresh"
 import { canDragCardHeader, generateCardDragPreview } from "@/components/card-shell/drag-preview"
 import { CardMetadataSettings } from "@/components/card-shell/settings/metadata-settings"
 import { ParameterSettings } from "@/components/card-shell/settings/parameter-settings"
@@ -52,8 +52,6 @@ interface LiveWidgetCardProps {
   viewRevision: string
   refreshIntervalMs: number
   dataFiles: string[]
-  /** False when the Widget declares no data; the shell hides refresh. */
-  hasData: boolean
   widgetId: string
   liveWidgetId: string
   /** Grid span in half-LiveCard units, forwarded to custom views. */
@@ -182,22 +180,13 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
           isFetching={isContentLoading}
           statusMessage={statusMessage}
           actions={(
-            <>
-              {frame.hasData && (
-                <CardRefreshButton
-                  isFetching={dataQuery.isFetching}
-                  label={t("refreshWidget", { title })}
-                  onRefresh={dataQuery.refetch}
-                />
-              )}
-              <CardHeaderActionButton
-                type="button"
-                aria-label={t("widgetDetails")}
-                onClick={() => setIsFlipped(true)}
-              >
-                <PhInfoDuotone />
-              </CardHeaderActionButton>
-            </>
+            <CardHeaderActionButton
+              type="button"
+              aria-label={t("widgetDetails")}
+              onClick={() => setIsFlipped(true)}
+            >
+              <PhInfoDuotone />
+            </CardHeaderActionButton>
           )}
         >
           {chartView
@@ -470,7 +459,6 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           viewRevision={manifest.viewRevision}
           refreshIntervalMs={manifest.refreshIntervalMs}
           dataFiles={manifest.dataFiles}
-          hasData={manifest.hasData}
           layout={layout}
         />
       ))}

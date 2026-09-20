@@ -1,60 +1,10 @@
 import type { HeaderNotification } from "./notification"
-import { Button } from "@newsnext/ui/components/button"
-import { useIsFetching } from "@tanstack/react-query"
-import { useAtomValue } from "jotai"
 import { useCallback, useState } from "react"
-import { useI18n } from "@/hooks/use-i18n"
-import { getWidgetManualRequestGroup, LIVE_WIDGET_QUERY_KEY, useIsManualRequestingGroup, useManualRequestLiveCards, useManualRequestWidgets } from "@/hooks/use-manual-request"
-import { currentBoardAtom } from "@/store/board"
-import { PhArrowCounterClockwise, PhCircleDashed } from "../icons/ph"
 import { SearchDialog } from "../search"
 import { BoardNav } from "./board-nav"
 import { DateTime } from "./date-time"
 import { TitleIsland } from "./title-island"
 import { UserMenu } from "./user-menu"
-
-function ManualRequestButton() {
-  const { t } = useI18n()
-  const board = useAtomValue(currentBoardAtom)
-  const requestLiveCards = useManualRequestLiveCards(board?.nowLayer.liveCards ?? [])
-  const requestWidgets = useManualRequestWidgets(board?.id)
-  const liveCardGroup = `live-cards:${[...(board?.nowLayer.liveCards ?? [])].sort().join(",")}`
-  const widgetGroup = getWidgetManualRequestGroup(board?.id ?? "")
-  const isLiveCardManuallyRequesting = useIsManualRequestingGroup(liveCardGroup)
-  const isWidgetManuallyRequesting = useIsManualRequestingGroup(widgetGroup)
-  const isLiveCardFetching = useIsFetching({
-    predicate: query => query.queryKey[0] === "card"
-      && (board?.nowLayer.liveCards ?? []).includes(query.queryKey[1] as string),
-  }) > 0
-  const isWidgetFetching = useIsFetching({
-    predicate: query => query.queryKey[0] === LIVE_WIDGET_QUERY_KEY[0]
-      && query.queryKey[1] === board?.id,
-  }) > 0
-  const isFetching = board?.layer === "next"
-    ? isWidgetFetching || isWidgetManuallyRequesting
-    : isLiveCardFetching || isLiveCardManuallyRequesting
-  const manualRequest = useCallback(async () => {
-    if (!board) return
-    if (board.layer === "next") {
-      await requestWidgets()
-    } else {
-      await requestLiveCards()
-    }
-  }, [board, requestLiveCards, requestWidgets])
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon-lg"
-      className="island-pill"
-      aria-label={t("manualRequest")}
-      title={t("manualRequest")}
-      onClick={manualRequest}
-    >
-      {isFetching ? <PhCircleDashed className="size-5 animate-spin" /> : <PhArrowCounterClockwise className="size-5" />}
-    </Button>
-  )
-}
 
 export function Header() {
   const [notification, setNotification] = useState<HeaderNotification | null>(null)
@@ -82,9 +32,8 @@ export function Header() {
           />
         </div>
 
-        {/* Right Section - DateTime, Manual Request, User */}
+        {/* Right Section - DateTime, User */}
         <div className="col-start-3 row-start-1 flex min-w-0 items-center justify-start gap-2">
-          <ManualRequestButton />
           <DateTime className="max-md:hidden" />
           <UserMenu />
         </div>

@@ -5,7 +5,7 @@ import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { useMemo, useState } from "react"
 import { CardShell } from "@/components/card-shell"
 import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
-import { CardContentBackground, CardContentTransition, CardRefreshButton } from "@/components/card-shell/card-refresh"
+import { CardContentBackground, CardContentTransition } from "@/components/card-shell/card-refresh"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceIcon } from "@/hooks/use-source-icon"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
@@ -29,7 +29,6 @@ interface LiveCardFrontProps {
   source: LiveCardViewModel
   items: NewsItem[]
   inlinePresentation?: string[]
-  isFetching: boolean
   isContentFetching: boolean
   sourceErrorMessage?: string
   sourceLoginUrl?: string
@@ -124,7 +123,6 @@ export function LiveCardFront({
   source,
   items,
   inlinePresentation,
-  isFetching,
   isContentFetching,
   sourceErrorMessage,
   sourceLoginUrl,
@@ -179,19 +177,16 @@ export function LiveCardFront({
         providerTitle={provider.title}
         title={title}
         dragHandleRef={dragHandleRef}
-        actions={actions ?? (
-          <>
-            <CardRefreshButton isFetching={isFetching} onRefresh={onRefresh} />
-            {onFlip && (
+        actions={actions ?? (onFlip
+          ? (
               <CardHeaderActionButton
                 onClick={onFlip}
                 aria-label={t("showLiveCardDetails")}
               >
                 <PhInfoDuotone />
               </CardHeaderActionButton>
-            )}
-          </>
-        )}
+            )
+          : undefined)}
       />
     )}
     >
