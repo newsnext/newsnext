@@ -4,24 +4,34 @@ import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import { isThemeColor, parseWidgetChartView } from "@newsnext/sdk/models"
 import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
 
+/** Widget view selector. `view` omitted means custom when `index.html` exists, else data-only. */
 export type WidgetUi
   = | WidgetChartView
     | { type: "custom" }
+    /** Built-in LiveCard UI; `query` names the manifest query holding NewsItems. Omit `presentation` for auto timeline/list. */
     | { type: "live-card", query: string, presentation?: "ranking" | "list" }
 
+/** Validated Widget definition from the daemon catalog. Directory name is the Widget ID. */
 export interface LocalWidgetManifest {
+  /** Optional placement-scoped settings; same param schema as Sources. */
   params?: SourceParamSchemaMap
+  /** Named palette color; `slate` when omitted. */
   color: Color
+  /** False when no queries and no `data.mjs`; the shell hides refresh. */
   hasData: boolean
+  /** Footprint in half-LiveCard grid units (width 1–4, defaults 2). */
   height: number
   id: string
   minHeight: number
   minWidth: number
   title: string
+  /** Entry document URL; only custom views declare one. */
   url?: string
   view: WidgetUi
+  /** Data-pipeline fingerprint; view fingerprint remounts the placed frame. */
   dataRevision: string
   viewRevision: string
+  /** Visible polling interval; default 300s, minimum 60s. No background schedule. */
   refreshIntervalMs: number
   dataFiles: string[]
   width: number

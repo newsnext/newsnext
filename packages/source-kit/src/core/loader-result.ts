@@ -13,6 +13,7 @@ export function validateSourceLoaderOutput(value: unknown): SourceLoaderResult {
   const normalized = normalizeSourceLoaderOutput(value)
   assertSourceLoaderOutput(normalized)
   if (normalized.items.length <= SOURCE_LOADER_RESULT_MAX_ITEMS) return normalized
+  // WHY: truncate instead of throwing; one oversized feed must not fail the whole load.
   return {
     ...normalized,
     items: normalized.items.slice(0, SOURCE_LOADER_RESULT_MAX_ITEMS),
@@ -92,6 +93,7 @@ function assertSourceLoaderOutput(value: unknown): asserts value is SourceLoader
     throwInvalidLoaderResult("expected an object containing an items array")
   }
   if (value.items.length === 0) {
+    // WHY: empty success would render a blank card; surface it as a load error so retry applies.
     throwInvalidLoaderResult("No source items. Refresh to try again.")
   }
   assertOnlyKeys(value, ["items", "metadata"], "source loader output")
@@ -127,6 +129,7 @@ function assertStats(value: unknown, location: string): void {
   if (Object.keys(value).length === 0) throwInvalidLoaderResult(`${location} must not be empty`)
   for (const [key, stat] of Object.entries(value)) {
     if (!Number.isFinite(stat)) throwInvalidLoaderResult(`${location}.${key} must be a finite number`)
+    // WHY: only score may go negative (downvotes/deltas); other stats are counts and must stay >= 0.
     if (key !== "score" && (stat as number) < 0) {
       throwInvalidLoaderResult(`${location}.${key} must not be negative`)
     }
@@ -137,6 +140,7 @@ function assertAttributes(value: unknown, location: string): void {
   if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
   if (Object.keys(value).length === 0) throwInvalidLoaderResult(`${location} must not be empty`)
   for (const [key, attribute] of Object.entries(value)) {
+    // WHY: reject prototype keys even though JSON input looks safe; assigning them later enables pollution.
     if (!key || ["__proto__", "constructor", "prototype"].includes(key)) {
       throwInvalidLoaderResult(`${location} contains an invalid key`)
     }
@@ -155,6 +159,7 @@ function assertContent(value: unknown, location: string): void {
   assertOptionalString(value.text, `${location}.text`)
   assertOptionalString(value.html, `${location}.html`)
   if (hasContent(value.text) && hasContent(value.html)) {
+    // WHY: renderers pick one body format; accepting both would silently drop one downstream.
     throwInvalidLoaderResult(`${location} cannot contain both text and html`)
   }
   if (value.pictures !== undefined) {

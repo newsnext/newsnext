@@ -1,22 +1,24 @@
 /** Protocol shared by the iframe host and extension background. */
+/** Host validates sender window/port; host helpers stay out of the SDK exports. */
 export const WIDGET_SDK_PORT = "newsnext.widget.sdk"
 export const WIDGET_STATUS_MESSAGE = "newsnext.widget.status"
 export const WIDGET_SIZE_MESSAGE = "newsnext.widget.size"
 
-/** Custom Widget views report their own empty or malformed status to the host. */
+/** Custom Widget views report their own empty or malformed status to the host. `message: null` clears it; the host renders it in the shared status layer. */
 export interface WidgetStatusMessage {
   type: typeof WIDGET_STATUS_MESSAGE
   version: 1
   message: string | null
 }
 
-/** Custom Widget views report their content height so the host can size the iframe. */
+/** Custom Widget views report their content height so the host can size the iframe. Document must not scroll; the content panel owns scrolling. */
 export interface WidgetSizeMessage {
   type: typeof WIDGET_SIZE_MESSAGE
   version: 1
   height: number
 }
 
+/** In-iframe SDK transport over the extension port. */
 export interface WidgetSdkRequest {
   type: typeof WIDGET_SDK_PORT
   version: 1

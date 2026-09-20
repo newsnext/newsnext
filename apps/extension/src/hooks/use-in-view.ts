@@ -39,6 +39,7 @@ export function useInView(
         return
       }
 
+      // Returning cleanup from onEnter registers the exit handler; calling setIsInView(false) here would never fire on leave.
       return () => {
         clearExitTimer()
 

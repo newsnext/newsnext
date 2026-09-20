@@ -46,6 +46,7 @@ async function renderApp(): Promise<void> {
     initializeSettingsStorage(),
   ])
 
+  // React Scan is dev-only and must load before the React root mounts.
   if (
     import.meta.env.DEV
       && import.meta.env.WXT_ENABLE_REACT_SCAN === "true"

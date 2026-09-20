@@ -30,6 +30,7 @@ export function useSortable({ canDrag, enabled = true, id, kind = "card", boardI
       return draggable({
         element: nodeRef,
         dragHandle: handleRef,
+        // Hit-test at pointer coords: the handle child under cursor differs from the drag element, so plain target checks misfire.
         canDrag: canDrag
           ? ({ input }) => canDrag(document.elementFromPoint(input.clientX, input.clientY))
           : undefined,

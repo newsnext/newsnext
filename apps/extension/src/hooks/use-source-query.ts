@@ -71,6 +71,7 @@ export function useSourceQuery({
   const query = useQuery({
     ...getSourceQueryOptions(target),
     enabled: enabled && (cardId !== undefined || source.version > 0),
+    // Keep previous items visible across param edits; dropping to empty would flash skeletons on every keystroke.
     placeholderData: prev => prev,
   })
   const data = enabled ? query.data?.result ?? snapshotResult : undefined

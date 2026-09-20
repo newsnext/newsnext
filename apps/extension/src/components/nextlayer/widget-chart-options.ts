@@ -20,6 +20,7 @@ export function createChartOption(input: ChartRow[], view: WidgetChartView, them
   const base: EChartsOption = {
     color: theme.colors,
     backgroundColor: "transparent",
+    // Animation stays off so polling refreshes and card flips never replay chart transitions.
     animation: false,
     textStyle: { fontFamily: theme.fontFamily, color: theme.foreground },
     aria: { enabled: true },

@@ -78,6 +78,7 @@ function assertSourceParamValue<TParam extends SourceParamSchema>(
 
   if (param.validate) {
     const stringValues: string[] = Array.isArray(value) ? value.map(String) : [String(value)]
+    // WHY: empty strings are "unset", not invalid; validating them would make optional params un-clearable.
     const valuesToValidate = stringValues.filter(item => item !== "")
     if ("format" in param.validate) {
       if (param.validate.format === "digits" && valuesToValidate.some(item => !/^\d+$/.test(item))) {
@@ -171,6 +172,7 @@ export function validateSourceParamPatch<TParams extends SourceParamSchemaMap>(
   const errors: Partial<Record<keyof TParams, string>> = {}
   const values: Partial<InferSourceParams<TParams>> = {}
   for (const [key, value] of Object.entries(rawValues)) {
+    // WHY: patches are partial overlays; unknown/null keys mean "not set", so ignoring them keeps old params intact.
     if (!Object.hasOwn(params, key) || value === undefined || value === null) continue
     const result = validateSourceParamValue(params[key] as SourceParamSchema, value)
     if (result.valid) {

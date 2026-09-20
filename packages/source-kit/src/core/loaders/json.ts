@@ -27,6 +27,7 @@ import {
 const MAX_EXPRESSION_LENGTH = 2_000
 const validatedExpressions = new Set<string>()
 const blockedExpressionNames = new Set(["__proto__", "constructor", "prototype"])
+// WHY: every number (including 0) is truthy in JMESPath; authors must compare numeric flags explicitly (e.g. `[?is_ad != `1`]`).
 const fieldTemplates = new WeakMap<JsonFieldConfig, ReturnType<typeof compileSourceTemplate>>()
 const jmespathCompiler = jmespath as typeof jmespath & {
   compile: (expression: string) => unknown
@@ -41,7 +42,9 @@ interface JsonFieldContext {
 }
 
 export interface JsonFieldConfig {
+  /** JMESPath against the item; omitted selects the whole item. */
   select?: string
+  /** Liquid template; scope exposes value/item/response/params/index/request. */
   template?: string
 }
 
@@ -56,8 +59,8 @@ interface JsonFieldEntry {
 interface JsonLoaderBaseOptions extends TimestampSortableLoaderOptions {
   url: string
   /**
-   * Path to the array of items in the response JSON (e.g. "data.items").
-   * If not provided, assumes the response itself is the array.
+   * JMESPath to the item array (e.g. "data.items"); omitted means the
+   * response itself is the array. Non-arrays yield empty items.
    */
   items?: string
   metadata?: LoaderMetadataFields<JsonField>
@@ -235,6 +238,7 @@ export async function loadJson(
   const selectedItems = itemsSelect ? selectJson(json, itemsSelect) : json
 
   if (!Array.isArray(selectedItems)) {
+    // WHY: a missing items path is a config mismatch, not a fetch error; return empty so metadata still resolves.
     return {
       items: [],
       metadata: metadata
@@ -254,6 +258,7 @@ export async function loadJson(
     const titleValue = resolveValue(item, fieldContext, fields.title)
     const itemUrlValue = resolveValue(item, fieldContext, fields.url)
 
+    // WHY: skip title-less/URL-less rows silently; one malformed record must not fail the whole response.
     if (!titleValue || !itemUrlValue) return null
 
     const newsItem: NewsItem = {

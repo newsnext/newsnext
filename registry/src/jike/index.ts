@@ -80,6 +80,7 @@ async function fetchJikeWithAuth(
   const jikeFetch = context.fetch.extend({
     hooks: {
       afterResponse: [async ({ request, response, retryCount }) => {
+        // WHY: guard on retryCount and return context.fetch.retry(); recursing the loader would bypass the shared retry budget.
         if (![401, 403].includes(response.status) || retryCount > 0) return
 
         const refreshedAccessToken = await refreshJikeAccessToken(refreshToken, context)

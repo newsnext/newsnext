@@ -29,6 +29,7 @@ export function FlipAnimate({
       style={{ transitionDuration: `${duration}ms` }}
     >
       <div
+        // Both are required: inert removes the hidden face from focus/tab order while aria-hidden removes it from screen readers.
         className={sideCSS}
         inert={flipped}
         aria-hidden={flipped}

@@ -29,6 +29,7 @@ export function getSourceQueryOptions(
     networkMode: "offlineFirst",
     refetchInterval: SOURCE_QUERY_REFETCH_INTERVAL_MS,
     refetchIntervalInBackground: false,
+    // Never retry source loads: retries would bypass request protection and hammer failing origins.
     retry: false,
     staleTime: SOURCE_QUERY_STALE_TIME_MS,
   })

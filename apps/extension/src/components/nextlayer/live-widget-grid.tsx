@@ -138,6 +138,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
       }
     : dataQuery.data ? { ...dataQuery.data, stale: false, status: "ready" } : { queries: {}, stale: true, status: "loading" }, [dataQuery.data, dataQuery.error])
 
+  /** Host→content: send payload after `ready`, re-send on load/refresh. Status is loading|ready|error. */
   const postData = useCallback(() => {
     const contentWindow = iframeRef.current?.contentWindow
     if (!contentWindow) return
@@ -173,6 +174,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
     <article ref={setArticleRef} className={`relative h-full min-h-0 select-none ${isFlipped ? previewColor : color}`}>
       <FlipAnimate rotate="y" flipped={isFlipped}>
         <WidgetFace
+          // Seed by stable Widget ID (not title) so renames keep the same avatar on both faces.
           avatarSeed={frame.widgetId}
           title={title}
           metadata={frame.metadata}
@@ -427,6 +429,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
     if (updates.length > 0) await actions.liveWidget.setLayouts({ boardId, liveWidgets: updates })
   }, [board, boardId])
   useLayoutEffect(() => {
+    // Readiness comes from the manifest and grid mount only; widget data queries start after restoration and must not gate it.
     if (!connection.isLoading && (widgets.length === 0 || connection.state !== "connected" || catalog.error)) onReady?.()
   }, [catalog.error, connection.isLoading, connection.state, onReady, widgets.length])
 

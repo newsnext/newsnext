@@ -6,7 +6,8 @@ import type { NewsItem, NewsItemInput } from "./items.js"
 import type { SourceParamSchemaMap } from "./params.js"
 
 /**
- * Provider category identifiers
+ * Provider category: the provider's primary product experience, not an
+ * individual source, topic, country, or loader type.
  */
 export const CATEGORY_IDS = [
   "social",
@@ -20,7 +21,8 @@ export const CATEGORY_IDS = [
 export type CategoryId = typeof CATEGORY_IDS[number]
 
 /**
- * Loader function for a source
+ * Secret (cookie/localStorage): origin + itemKey locate it; custom loaders
+ * read it via ctx.secrets. Prefer declarative loaders over custom.
  */
 export interface SourceSecretBaseDefinition {
   key: string
@@ -71,6 +73,12 @@ export interface SourcePatch<TParams = SourceRadarParams, TMetadata = SourceRada
 
 export type SourceRadarPatch = SourcePatch
 
+/**
+ * Radar rule: matches a page (hosts + optional paths/query/location) and
+ * patches params/metadata. Higher `priority` wins. One page with several
+ * independent sources needs one rule per source, otherwise discovery is
+ * forced to pick a single stream.
+ */
 export interface SourceRadarRule {
   id: string
   match: SourceRadarMatch
@@ -78,6 +86,13 @@ export interface SourceRadarRule {
   priority?: number
 }
 
+/**
+ * Card-aware metadata: static values must stay correct for every param
+ * combination (no concrete user/channel/playlist identity; no `|` in title
+ * because ` | ` separates identity/variant in LiveCard titles).
+ * Concrete identity resolves via Radar or loader metadata. `type` selects
+ * list vs ranking presentation.
+ */
 export interface SourcePresentationMetadata extends Omit<CardMetadata, "color"> {
   type?: SourcePresentationType
 }
@@ -97,6 +112,11 @@ export interface SourceLoaderResult {
   metadata?: SourcePresentationMetadata
 }
 
+/**
+ * Loader output: items (max 50, order preserved) + optional metadata.
+ * Items need title + url; entries without both are dropped. Unparseable
+ * dates leave the time unset so one bad entry never fails the whole load.
+ */
 export interface SourceLoaderOutput {
   items: NewsItemInput[]
   metadata?: SourcePresentationMetadata
@@ -125,6 +145,11 @@ export interface SourceCapabilities {
   cookies: readonly string[]
 }
 
+/**
+ * Provider identity: title/icon/color/category describe the provider and are
+ * inherited by every source. `color` never belongs in source, card, or Radar
+ * metadata — a card's palette always comes from its provider.
+ */
 export interface SourceProvider {
   title: string
   category?: CategoryId

@@ -40,6 +40,7 @@ import {
 } from "../application"
 import { defineAction } from "./action-definition"
 
+// Action service takes integrations via factory args; never import Native Messaging here (cycle).
 export interface ApplicationActionContext {
   data: () => Promise<ApplicationData>
   mutate: (

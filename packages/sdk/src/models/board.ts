@@ -3,6 +3,7 @@ import type { Color } from "./color.js"
 
 export type BoardLayer = "now" | "next"
 
+/** Snapshot query scope. `board` follows the Board's full LiveCard list; installed views use their placement's scope. */
 export type LiveWidgetDataScope
   = | { type: "board" }
     | { type: "cards", cardIds: string[] }
@@ -11,6 +12,7 @@ export type LiveWidgetDataScope
 // Placement order is the array order of the Board's Next Layer Widgets.
 export const MIN_WIDGET_WIDTH = 1
 
+/** Grid span in half-LiveCard grid units. */
 export interface LiveWidgetLayout {
   height: number
   width: number
@@ -26,10 +28,13 @@ export interface LiveWidgetInstallSize {
 export type WidgetMetadata = CardMetadata
 
 export interface WidgetPatch {
+  /** Display overrides; `null` resets the section, `{}` is an empty merge. Metadata never affects data identity. */
   metadata?: WidgetMetadata
+  /** Sparse data-param overrides; `{}` restores manifest defaults. Only resolved params affect data identity. */
   params?: Record<string, unknown>
 }
 
+/** Installed Widget instance. `widgetId` names the definition; edits target `liveWidgetId` only. */
 export interface LiveWidget {
   liveWidgetId: string
   patch?: WidgetPatch

@@ -21,6 +21,7 @@ function NotFoundComponent() {
 }
 
 function RootComponent() {
+  // Sync subscription at the navigation boundary: avoids missing hydration between render and subscribe.
   const boards = useAtomValueRawSync(boardsAtom)
   const currentBoardId = useAtomValueRawSync(currentBoardIdAtom)
   const navigate = useNavigate()

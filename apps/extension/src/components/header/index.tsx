@@ -61,6 +61,7 @@ export function Header() {
   const dismissNotification = useCallback(() => setNotification(null), [])
 
   return (
+    // Click-through shell: the full-width sticky bar must not block page gestures; interactive islands re-enable pointer events themselves.
     <header className="sticky top-0 inset-x-0 z-50 shrink-0 px-4 py-6 pointer-events-none sm:px-8">
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] grid-rows-[2.75rem_auto] items-center gap-2 md:h-11 md:grid-rows-1">
         {/* Left Section */}

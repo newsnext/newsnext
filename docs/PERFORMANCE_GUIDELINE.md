@@ -1,562 +1,98 @@
 # Performance Guideline
 
-This document is the canonical reference for React rendering performance in the
-NewsNext extension app. Keep it aligned with the implemented component
-boundaries, state ownership, and profiling workflow when performance-related
-behavior changes.
+Canonical reference for React rendering performance in the extension app.
+Per-component ownership and memo notes live as comments at the component;
+this file keeps only the measurement workflow and cross-cutting render
+invariants. See `AGENTS.md` (Performance Documentation, Jotai State
+Subscriptions) for documentation policy.
 
 ## Scope
 
-The primary performance target is the extension app at:
+Primary target: the extension app (`app.html`) showing many independently
+updating LiveCards inside an animated, sortable board.
 
-`chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`
+Cross-cutting invariants:
 
-The app displays many independently updating LiveCards inside an animated and
-sortable board. Performance work should keep an update local to the smallest
-subtree that owns the changed data. A board-level interaction must not cause
-LiveCard content to render unless that content or its visible state changed.
+- Keep an update local to the smallest subtree owning the changed data.
+- A board-level interaction must not render LiveCard content unless that
+  content or its visible state changed.
 
-This guideline covers React renders and related component work. Network latency,
-source execution, background service performance, and persisted cache policy
-remain separate concerns.
-
-### Overlay scrollbar initialization
-
-Keep native overlay detection independent of OverlayScrollbars. The shared ref
-callback measures one offscreen scroll container per document and caches the
-result. Native overlay environments do not import the library or its CSS, call
-its environment API, or install its observers and listeners. Only environments
-with space-consuming native scrollbars load the separate module. Initialize with
-the existing element as both target and viewport so popup keyboard navigation,
-scroll refs, and scroll restoration keep using the same DOM element. Ref cleanup
-cancels pending initialization and destroys an existing instance, including when
-a popup closes before its dynamic import completes. System scrollbar preference
-changes are detected on the next page load. Verify chunk separation in production
-builds; native behavior and popup unmount races still require browser verification
-under the repository's browser policy.
-
-### Initial theme path
-
-Resolve the appearance mode and theme color in the shared blocking head script
-before mounting React. Every HTML entry that mounts `AppProvider` must run this
-bootstrap so the provider stays theme-agnostic and has no module-level DOM or
-storage side effects. Keep later theme synchronization idempotent so an unchanged
-theme does not rewrite local storage or remove and re-add its document class.
-Synchronize the favicon once in the app entry before mounting React. Cache the
-canonical SVG source and each generated theme-color data URL, and remember the
-applied color so board resolution with the same color does not repeat network
-loading, SVG parsing, or serialization.
-
-### Persisted state during route mounting
-
-Route components, the locale provider, the Radar target-board initializer, and
-the shared board selector read synchronous persisted atoms with
-`useAtomValueRawSync`. The native integration switch also reads its persisted
-preference through a dedicated derived atom with this subscription, independently
-of daemon status polling. Its initial hydration and disconnected toggle behavior
-still require browser interaction verification; static checks do not cover them.
-Jotai 3 removed the unconditional post-mount render from `useAtomValue`, so an
-`atomWithStorage` hydration update between rendering and subscription can be
-missed. This left the index route holding an empty board list while the store
-and header already contained the saved boards, preventing initial navigation.
-Use the synchronous subscription at these initialization boundaries to recheck
-the snapshot after subscribing; keep ordinary card subscriptions concurrent.
-Awaiting storage initialization alone is insufficient: `atomWithStorage` captures
-its initial value when created and refreshes it on mount. Audit app and popup
-mounts separately. Pair synchronous reads with `useSetAtom` for writable settings;
-do not use the raw hook for async atoms that need Suspense.
-
-Verify a fresh app load without a hash, switching between populated boards,
-persisted locale restoration, and the Radar target-board selection, not just HMR
-or type checks. The minute-clock atom also writes on mount, but its consumers
-sample `Math.max(lastTickAt, Date.now())` and receive subsequent timer updates;
-it does not require synchronous subscriptions for initial clock accuracy.
+Network latency, source execution, background service performance, and
+persisted cache policy are separate concerns.
 
 ## Measurement Workflow
 
-Measure before and after a change with the same board, viewport, loaded LiveCard
-count, and interaction sequence. React Scan is opt-in through a dynamic import
-in `apps/extension/src/entrypoints/app/main.tsx`. Profiling requires the user-run development server to have
-`WXT_ENABLE_REACT_SCAN=true`; do not start a second server.
-
-- React Scan must load before the React root mounts.
-- React Scan must load only when `WXT_ENABLE_REACT_SCAN` is exactly `true` in a
-  development build. Production builds must not contain React Scan code or
-  strings.
-- Do not pass `enabled` during initialization. React Scan defaults to enabled
-  on first use and persists the toolbar power toggle in `react-scan-options`;
-  forcing the option during hot reload overrides the stored user preference.
-- Keep the toolbar enabled for interactive inspection and track unnecessary
-  renders during development.
-- Use temporary `onRender` sampling only while auditing. Remove sampling arrays,
-  globals, and debug callbacks before completing the change.
-- Use the app's existing development server. Do not start a second server.
-- Follow the browser-automation policy in `AGENTS.md` for repeatable browser
-  interactions and verify the resulting UI state after each interaction.
-
-Use component render events as a diagnostic signal, not an optimization target
-by itself. A render is valid when it updates visible data, animation state,
-loading state, or an interaction owned by that component. Investigate renders
-with unchanged inputs or renders that spread far beyond the state owner.
-
-### Required scenarios
-
-Profile at least the scenarios affected by a change:
-
-- Initial app load with visible and preloaded offscreen LiveCards.
-- Board navigation.
-- Now/Next layer transitions.
-- Root and LiveCard scrolling.
-- Search open, input, selection, and close.
-- Settings open, tab changes, setting changes, and close.
-- LiveCard front/back transitions.
-- Metadata and parameter editing, saving, cancelling, and resetting.
-- Single LiveCard refresh from request start through completion.
-- Global refresh with multiple active LiveCards.
-- Minute-boundary relative-time updates.
-- Application Actions that update LiveCards, Boards, membership, or Layer
-  settings through the background mutation runtime and its read-only
-  frontend Application Data subscription.
-- LiveCard reorder, cancelled drag, and a drop that changes order.
-
-Restore any LiveCard metadata, parameters, board membership, or order changed by an
-audit. Confirm that no temporary probe values remain in local storage.
-
-## Rendering Rules
-
-### Isolate frequently changing state
-
-Place state below stable application structure whenever possible. A provider
-that owns frequently changing state should receive stable `children`; this lets
-React update context consumers without rebuilding unrelated siblings.
-
-Separate context values by update frequency:
-
-- Stable refs and actions belong in a stable context value.
-- Dynamic state belongs in the context consumed by components that render it.
-- Components that only invoke an action must not subscribe to the dynamic value.
-
-The scroll progress contexts follow this rule. Layer activity changes update
-`HeaderProgress`, while stable scroll refs and the activity setter are available
-to `BoardView` without subscribing the board to header progress state.
-
-### Keep derivation ownership local
-
-`buildLiveCards` is a pure derivation without cross-call caches. Board
-membership is selected before projection; the LiveCard contains no Board
-identifier. Search and
-refresh call it for their own snapshots. The rendered board uses Jotai's
-`splitAtom` with `cardId` as its stable key so every LiveCard subscribes to its
-own `LiveCard`. `NowLayer` subscribes separately to a lightweight layout
-projection containing only Board IDs and sorting fields.
-
-Resolve board-only appearance settings at the `DraggableLiveCard` boundary and pass
-their result into the shared LiveCard shell. Do not make the base `LiveCard`
-subscribe to board appearance when specialized consumers such as Radar provide
-their own dimensions.
-
-Parameter and non-title metadata changes update the affected item atom without
-rebuilding the board. Membership, creation time, source identity, and title
-changes update the layout projection because they can change visibility or
-ordering. Keep dynamically created atom configs referentially stable, and use
-`selectAtom` only where an equality function is required to stabilize a
-structural projection.
-
-Gate Board rendering on LiveCard cache restoration only when entering a Board.
-Later LiveCard creation or configuration may restore or invalidate the affected
-query, but must keep the mounted Board visible so unrelated LiveCards, scroll
-position, and interaction state are preserved.
-
-Do not add module-global identity caches to make `memo` boundaries pass. Such
-caches make correctness depend on an implicit immutability contract and can
-return stale LiveCards after in-place changes. If LiveCard updates become a
-measured bottleneck, optimize them at the React or Jotai owner that has the
-complete input lifecycle.
-
-Next Layer must read CLI/daemon-backed persisted output without observing the
-Now Layer TanStack cache, force-mounting LiveCards, or rerunning Agent-owned
-refresh and processing in React. Layer presentation must not determine whether
-a Source executes.
-
-Mirrored storage must suppress equal-value echoes without suppressing real
-cross-document changes. Compare against each adapter's own snapshot, not shared
-`localStorage`: otherwise one document's cache write can hide another document's
-storage notification. Preserve references for equal normalized values.
-
-Application Data is a read-only frontend mirror. Background Actions serialize
-mutations and return compact receipts; storage subscriptions deliver the updated
-envelope. Do not add optimistic writes without measured need and a conflict
-reconciliation design. Persistence boundaries are defined in
-[Application Architecture](APPLICATION_ARCHITECTURE.md#adapter-rules).
-
-Name LiveCard-keyed projections `cardIds` and `liveCardsByCardId`; reserve
-`sourceId` for descriptor identity so selectors expose what actually invalidates.
-
-### Add memo boundaries at independent units
-
-Use `memo` when a component represents an independently updating unit, its props
-can remain stable, and React Compiler cannot protect the same boundary. Current
-manual boundaries include:
-
-- `DraggableLiveCard`, so board animation and layout work does not enter LiveCard data
-  and query subtrees during board renders.
-
-Compiler-generated caches isolate the LiveCard front, LiveCard back, board actions, and
-parameter rows. Do not reintroduce manual wrappers around those components
-without profiling evidence that the compiled boundary is insufficient.
-
-Do not add `memo` mechanically. Inline objects, elements, and callbacks can make
-it ineffective, and a comparator that ignores meaningful props can produce
-stale UI. Stabilize the data flow first, then add the narrow boundary.
-
-The extension build uses React Compiler in its default inference mode. Prefer
-letting the compiler memoize new components and hooks automatically. Existing
-manual `memo`, `useMemo`, and `useCallback` boundaries remain intentional and
-must not be removed without profiling because they may preserve identity for
-effects, imperative integrations, or third-party components. Compiler
-diagnostics are split according to the ESLint React migration preset:
-`@eslint-react/eslint-plugin` owns rules with equivalents, while
-`eslint-plugin-react-hooks` remains enabled for Compiler-specific rules such as
-configuration, gating, incompatible libraries, and preservation of manual
-memoization. An unsupported component may be skipped while the rest of the app
-is still compiled.
-
-Keep render functions free of ref reads and writes. `DndContext` uses an Effect
-Event so its long-lived drag monitor always invokes the latest callbacks without
-resubscribing. It also owns auto-scroll registrations, scoped to its drag kind
-and context ID, with per-Layer axes and speed. Ordinary UI callbacks such as `DynamicIsland` open and close
-handlers should instead depend directly on the values they use. `LiveCardContainer`
-keeps drag state close to the rendered cards, while `useWrappedSortable` snapshots
-the card order and layout only when dragging starts. Resolve live reorder previews
-against that immutable geometry and update state only when the destination index
-changes. Do not remeasure moving cards on every drag event.
-
-TanStack Virtual returns functions that React Compiler cannot memoize safely.
-Keep `VirtualList` virtualized, and apply the
-`react-hooks/incompatible-library` exception only at its `useVirtualizer` call
-with an explanatory comment. Do not disable the diagnostic globally or pass
-virtualizer functions through separately memoized boundaries.
-
-The scatter transition measures card bounds and starts native animations in a
-layout effect before paint. Batch resting geometry reads before animation writes;
-moving initialization to a passive effect or timer introduces a visible position
-flash. No Motion variants or React state updates are needed for these frames.
-
-### Keep refs and callbacks stable
-
-Callback refs are lifecycle callbacks. Replacing one during render can detach
-and reattach the DOM node, which may also recreate observers or drag-and-drop
-registrations.
-
-- Wrap composed callback refs in `useCallback`.
-- Depend on the specific forwarded ref callback, not an entire props object.
-- Keep callbacks passed through memoized boundaries stable with `useCallback`.
-- Use a small wrapper component when a list item needs to bind a stable parent
-  callback to an item key.
-
-### Own source-wide image analysis above item rows
-
-Semantic mark normalization is source-wide work. LiveCard content finds the
-first mark for each LiveCard, scans at most a 128px image once, and passes the cached, capped scale into item summaries. Keep pixel
-analysis effects, promises, and profile state out of virtualized item rows.
-Failed image requests must leave the source cache retryable on the next result
-update; a confirmed no-padding result may remain cached.
-
-### Localize time subscriptions
-
-The shared minute atom intentionally updates once per minute. Subscribe at the
-smallest component that renders time-dependent text.
-
-- `RelativeTime` owns LiveCard header subtitle updates.
-- `Timeline` owns grouped item time labels.
-- LiveCard front and back surfaces must not subscribe merely to pass a formatted
-  string through a large subtree.
-- Memoize time-independent news content below a time-labeling row.
-
-An invisible LiveCard side may stay mounted for flip animation, but its entire form
-must not render at every minute boundary.
-
-### Separate query state from hidden UI
-
-A LiveCard query may render at request start, when fetching-latest tracking changes,
-and when data completes. These renders are expected on the front side because
-the loading and content UI changes.
-
-The hidden LiveCard back should render only when one of its own props changes, such
-as loader metadata or `updatedAt`. Loading flags that are not LiveCard back props
-must not rebuild the editor.
-
-Use stable empty arrays and stable merged metadata objects. Expressions such as
-`data?.items ?? []` create a new fallback array on every render and defeat
-downstream memoization.
-
-### Keep SDK verification safe for the running dev server
-
-Run `bun run typecheck` for type checking and `bun run test` for tests. Neither
-command may trigger a build. Like `@newsnext/ui`, the local SDK's package exports
-point directly to `src` TypeScript files. Bun, WXT, TypeScript, and Vitest resolve
-those normal workspace exports without SDK-specific aliases, custom conditions,
-or runtime flags. The browser root entry selects the Widget client; other
-runtimes select the CLI client.
-
-Keep the extension's installation hook limited to `wxt prepare`. Explicit SDK
-builds use tsdown to bundle JavaScript and declarations into `dist`. They do not
-rewrite package exports or generate a release manifest.
-Enable `dts.eager` for the SDK's multiple entry points and bundled shared source
-so declaration generation loads the full TypeScript program for each config.
-Local development never imports that output, so SDK packaging cannot invalidate
-modules used by the dev server. Do not reintroduce automatic builds into checks.
-
-### Keep animation work above LiveCard content
-
-Board and Motion components may render multiple times while calculating scatter
-vectors or layout transitions. Keep that animation work in the board item and
-Motion layers. Stable `DraggableLiveCard` props prevent it from entering queries,
-virtual lists, and LiveCard editor controls.
-
-Keep entrances and navigation exits in `ScatterCardLayer`, using the same
-horizontal offset calculation on inner card wrappers. Each keyed Board/Layer
-visit gets an entrance, including Tab switches and route remounts. Retain
-entrance state across effect replays. Motion owns LiveCard slots and the Widget grid owns its outer CSS slot
-geometry; neither may compete with these inner navigation animations.
-`ScatterCardLayer` exposes its phase through `data-card-transition-state`. Widget
-slot transitions stay disabled until entrance completion, including initial
-ResizeObserver layout correction. Widget scrolling must not clip the scatter
-path during navigation. Measure resting rectangles and sort them in visual
-reading order before assigning stagger delays, since Widget DOM order is stable.
-
-Overlap one outgoing view with the active incoming view. Pin the outgoing root
-in a layout effect before the parent restores the incoming view's scroll, and
-make it inert. Rapid navigation replaces the older outgoing view only if the
-current view is ready; otherwise retain the existing exit without restarting it.
-This bounds the number of mounted views to two. Use a unique visit revision in
-keys so returning to the same Board cannot reuse stale readiness or a departing
-Widget grid.
-Derive the active Layer directly from the rendered Board's persisted
-`layer`. Do not mirror it in history state or route context. Router location
-updates before route matches; combining route params with an independently
-subscribed history Layer can trigger an intermediate animation on the old Board.
-The route retains only the last Board whose LiveCard cache restoration finished;
-`BoardView` owns the departing Board/Layer snapshot used by the animation.
-
-`useBoardScrollRestoration` owns scroll restoration and readiness by view visit,
-independently of Router navigation. Restore from a Board/Layer session key after
-content mounts, then capture scroll events after the settling frame. Save the last
-observed position on view cleanup and page hide; do not read departing geometry
-during cleanup because content replacement can already have clamped root scroll.
-Do not overwrite a saved position for an incoming view interrupted before it
-settles. Layer-only changes use this same path without creating history entries.
-Static checks do not validate fresh mounts, rapid switches, or session scroll
-restoration visually; exercise these in the extension when browser verification
-is authorized.
-Next Layer reports content readiness from a layout effect after its manifest
-query settles and its grid or fallback mounts. Gate root scroll restoration on
-that signal, then mark the incoming view ready on the following animation frame.
-Do not depend on Widget data queries for content readiness: those queries
-are enabled only after scroll restoration. A page-level frame alone can run
-before asynchronous manifests arrive and consume the entrance with zero cards. Measure visible cards against the root scroll viewport
-and apply entrance keyframes before revealing the Layer. Batch all resting rect
-and computed-style reads before pinning the outgoing root or starting any card
-animations. Apply the shared `10ms` stagger only to the filtered visible cards
-for both entrance and exit; skip delays when interrupting an entrance. Capture
-clipping bounds before removing the outgoing root from flow, so scroll clamping
-cannot change the measured viewport. Widget data queries
-use active view readiness together with viewport visibility.
-
-Widget slots keep a stable DOM order keyed by installation identity; visual
-positions and `aria-posinset` follow the current user order. Do not reorder or
-remount iframe elements during a drag or resize. DOM focus traversal remains in
-installation order; visual ordering does not change iframe browsing contexts.
-Keep transient layout state in `SortableWidgetGrid`, outside Widget data-query
-frames, and reuse the parent's React children while slots move. Precompute drag
-insertion candidates once per gesture/column count; update React state only when
-the selected insertion changes. Retain typed candidate layouts and reuse the
-selected result directly instead of packing it again on each switch. Compare persisted layout values, not manifest
-object identity, when retaining an optimistic layout across data refreshes.
-Resize previews use pointer capture and commit
-only on release. Pure layout, persistence, and resize checks cover these rules;
-the replacement drag UI has not yet been verified in a live browser session.
-
-When an exit interrupts an entrance, snapshot current animated styles before
-cancelling animations, then measure resting slot geometry and continue from
-those captured styles. Invalidate old completion handlers when replacing
-animations, cancel finished entrance animations to release their fill state,
-and cancel all animations on unmount. Match exit completion to its departing
-view so a stale completion cannot remove a newer outgoing view.
-
-Use native Web Animations for Now Layer sorting on plain outer list items.
-Measure resting offsets only when the visible order changes or the list resizes,
-with animation disabled until navigation entrance finishes. Batch geometry reads
-before animation writes. When another reorder interrupts movement, include the
-current animated translation so cards continue from their visible positions.
-Cancel owned animations on unmount and respect reduced motion. Next Layer uses
-CSS geometry transitions; neither Layer needs Motion layout projection for sorting.
-
-Do not remove renders that are required to update Motion props, measured scatter
-vectors, or drag state. Optimize the content boundary instead.
-
-Use the shared exit-then-reveal sequence for both Layers; its visual contract is
-in [Design Guideline](DESIGN_GUIDELINE.md#next-layer-surfaces). Keep
-transition work outside card content and never transform or blur the full page.
-
-### Observe against the real scroll container
-
-Intersection observers that preload LiveCard content must use the root app scroll
-container, not the browser viewport. An intermediate overflow container clips
-the target before a viewport-rooted observer applies its root margin, which
-makes the preload margin ineffective and defers the LiveCard's synchronous mount
-work until it is already visible.
-
-Use the stable scroll-container ref from the actions context so LiveCards can mount
-inside the configured preload margin without subscribing to header progress or
-layer activity. Keep the offscreen retention delay to avoid repeated mount work
-during short back-and-forth scrolls.
-
-LiveCard previews rendered through a dialog portal are not descendants of the
-app scroll container and must opt into eager content mounting. Keep this an
-explicit exception for the single active preview; do not disable viewport
-deferral for Board LiveCards or every Search result.
-
-### Connect virtualizers to committed scroll elements
-
-Pass the committed scroll DOM element to `VirtualList`, not a mutable ref whose
-`current` value changes without rendering. A virtualizer can mount while that
-ref is still null, calculate the correct total height from item count, and yet
-produce no virtual rows because it never subscribed to the scroll element.
-
-Own the scroll element with a callback ref backed by local state. The commit
-then schedules the render that connects TanStack Virtual to the actual element.
-When checking a blank list, compare its total spacer height with its rendered
-`data-index` rows: a non-zero height with zero rows indicates a virtualizer
-attachment or measurement problem rather than missing query data.
-
-Keep LiveCard scroll content out of a shared `preserve-3d` flip container with
-permanent `will-change: transform`. Rotate the two faces independently under a
-perspective container instead. If blank content recovers on hover, inspect row
-bounds and painting before resetting query data or virtualizer measurements.
-Changing virtual row positioning from transforms to `top` did not resolve the
-reported resize issue and was reverted. On 2026-09-09, the user confirmed that
-independent face rotation resolved the blank content with their native window
-resize sequence. Automated checks covered scrolling and flipping, but did not
-reproduce the original blank state or measure compositor performance.
-
-## 2026-08-03 Audit Results
-
-The audit used a 1080 by 1890 viewport and a Board containing 12 LiveCards,
-with eight LiveCard contents mounted by the viewport and preload margin.
-
-| Scenario | Before | After measured | Result |
-| --- | ---: | ---: | --- |
-| Two Now/Next layer toggles | 1,851 | 61 | Root, header, footer, and LiveCard content cascades removed; 96.7% fewer render events. |
-| One minute-boundary update | 1,149 | 266 | Whole LiveCard fronts and backs no longer update; 76.8% fewer render events. A subsequent timeline content boundary further isolates unchanged news content. |
-| Single LiveCard refresh | 389 | 252 | Hidden LiveCard back work reduced from three full renders to one data-completion render; 35.2% fewer render events. |
-
-Settings tab changes remained inside the settings subtree. Metadata and
-parameter drafts remained inside the edited LiveCard. Search open and close did not
-update LiveCard content.
-
-These numbers are comparison baselines, not permanent budgets. Data volume,
-viewport size, React, Motion, and component implementation can change the raw
-counts. Preserve the isolation properties described in the Result column.
+Measure before and after a change with the same board, viewport, loaded
+LiveCard count, and interaction sequence.
+
+- React Scan is opt-in via dynamic import; see
+  `apps/extension/src/entrypoints/app/main.tsx`.
+- Profiling requires the user-run dev server with
+  `WXT_ENABLE_REACT_SCAN=true`; do not start a second server.
+- Keep the toolbar enabled; use temporary `onRender` sampling only while
+  auditing and remove probes before completing the change.
+- Use render events as a diagnostic signal: valid when updating visible
+  data, animation, loading, or component-owned interaction; investigate
+  unchanged-input or far-spreading renders.
+
+Profile at least the scenarios affected by a change: initial load, board
+navigation, Now/Next transitions, scrolling, search, settings, card
+front/back flips, metadata/parameter editing, single and global refresh,
+minute-boundary updates, Application Actions, and reorder/drop.
+Restore any data mutated by an audit.
+
+## Cross-Cutting Render Invariants
+
+- Isolate frequently changing state below stable structure; split context
+  values by update frequency so action callers never subscribe to dynamic
+  values. See `ScrollProgressProvider` and `use-header-progress.ts`.
+- Each LiveCard subscribes to its own item atom; see `store/board.ts`
+  (`splitAtom` keyed by `cardId`). Board-only appearance resolves at the
+  `DraggableLiveCard` boundary; see
+  `components/live-card/draggable-live-card.tsx`.
+- `DraggableLiveCard` is the manual board/item memo boundary; other
+  components rely on React Compiler inference. See the component file.
+- Subscribe to the shared minute clock only in leaf text components
+  (`RelativeTime`, `Timeline`); see `hooks/useRelativeTime.ts`.
+- Pass the committed scroll element (not a bare ref) to `VirtualList`;
+  observe against the real scroll container with the preload margin. See
+  `packages/ui/src/components/virtual-list.tsx`.
+- Keep overlay-scrollbar detection independent of the library and cleanup
+  safe on unmount; see
+  `packages/ui/src/hooks/use-overlay-scrollbars.ts`.
+- Keep animation, drag preview, and scroll-restoration work above LiveCard
+  content; optimize the content boundary instead of removing renders that
+  update Motion props or measured vectors.
+- Keep the frontend Application Data mirror read-only with no optimistic
+  writes; suppress mirrored-storage echoes against each adapter's own
+  snapshot only. See `lib/application` storage subscription.
+- Do not add module-global identity caches to make `memo` pass; Next Layer
+  must not observe the Now Layer cache or trigger Source execution.
+
+## Initialization Boundary
+
+Use `useAtomValueRawSync` for synchronous persisted state that determines
+initial navigation, provider configuration, or selection defaults (e.g.
+`pages/__root.tsx`, `pages/index.tsx`, `components/common/board-select.tsx`,
+`components/i18n-provider.tsx`); keep `useAtomValue` for ordinary
+concurrent subscriptions. Jotai 3 details are in `AGENTS.md`.
 
 ## Regression Checklist
 
 Before completing React performance work:
 
-- Review every changed state owner and context provider.
-- Confirm unchanged item atoms and LiveCard boundary props preserve reference
-  identity.
-- Confirm memoized props do not contain avoidable new arrays, objects,
-  callbacks, refs, or React elements.
-- Check both visible and hidden sides of a flipped LiveCard.
-- Cross a real minute boundary; do not infer timer behavior from static code.
-- Let refresh operations reach completion before reading render counts.
-- Verify that editing one card does not render unrelated LiveCard content.
-- Test scroll and animation behavior visually after adding memo boundaries.
-- Switch repeatedly between boards and confirm every populated LiveCard renders
-  virtual rows after its scroll element is committed.
+- Review changed state owners and providers; confirm unchanged atoms and
+  memo-boundary props preserve reference identity.
+- Check both sides of a flipped LiveCard; cross a real minute boundary;
+  let refreshes complete; confirm editing one card skips unrelated cards.
 - Remove all temporary profiling globals and callbacks.
-- Confirm compiled components show the `Memo ✨` badge in React DevTools or
-  verify that production output contains Compiler memo-cache code such as
-  `react.memo_cache_sentinel`.
 - Run `bun run lint`, `bun run typecheck`, and `bun run test`.
 - Build the Chrome MV3 production extension and confirm React Scan is absent.
 
 ## Known Limitations
 
-The `splitAtom` LiveCard subscription migration received static checks and an
-ego-lite functional smoke test, but React Scan was not enabled on the existing
-development server. Re-baseline the single LiveCard metadata edit scenario before
-treating its render count as measured.
-
-The 2026-08-03 ego-lite audit could not reliably generate the browser's native
-HTML5 drag event chain. LiveCard reordering received code-path review and existing
-pure reorder coverage, but did not receive React Scan event sampling for a real
-drag. Repeat that scenario manually or with a browser harness that produces
-trusted native drag events before treating drag render behavior as measured.
-
-React Scan adds development overhead, especially when unnecessary-render
-tracking or per-render callbacks are enabled. Compare relative results under
-the same instrumentation and do not interpret instrumented duration as
-production duration.
-
-## Development diagnostics subscriptions
-
-The development-only NewsNext Devtool uses one native subscription shared by
-open panels. The last close unsubscribes; reconnection restores it. Bootstrap
-reads share a single-flight queue, and subsequent activity/storage events reuse
-the pushed cache. With no subscribers the daemon skips diagnostic count queries.
-Use absolute deadlines instead of polling or countdown timers.
-
-Diagnostics bypass Action dispatch to avoid activity-event feedback loops and
-must never trigger Source loads. The protocol and payload boundaries are in
-[Source Architecture](SOURCE_ARCHITECTURE.md#stream-collection-diagnostics).
-
-Stream summaries and sorting are pure projections of pushed diagnostics. Overview
-and Streams share presentation, sort preference, and selection without additional
-native requests. Default sorting uses stable identity fields, so timestamp, count,
-and activity updates do not move rows. Attention ordering requires explicit opt-in.
-
-### Widget request protection
-
-The daemon owns a fixed 60-second request protection window for `liveWidgets.data`,
-using the last successful result persisted in SQLite. Every request after that
-window recomputes data; there is no additional freshness cache or force option.
-Automatic and manual requests follow the same rule. Widget frames retain only
-their current display and request state; do not add a TanStack Query cache or a
-browser freshness window around this SDK method. On activation and at the refresh
-interval, read through the daemon. Abort requests on deactivation or input changes,
-and ignore late results so one data scope cannot overwrite another. The same
-protection applies to SDK callers and extension views.
-
-
-Widget refresh state separates `isFetching` (header activity) from
-`isContentFetching` (initial/manual content feedback), matching LiveCard behavior.
-Automatic reads with display data do not fade it. Manual reads keep feedback for
-at least 500ms using `waitForMinimumManualRequestFeedback`, including cache hits
-and failures. The helper controls presentation only; daemon request protection
-is unchanged. Metadata drafts stay local to their editor and only drive the back
-header/theme preview, not Widget data request identity. Both card kinds use the
-same face/header/settings components; `FlipAnimate` keeps faces mounted while
-marking the hidden face inert. Browser interaction checks were not run for this
-refactor; type checks do not establish drag, focus, or animation correctness.
-
-
-Widget preset charts load ECharts lazily. Keep each chart instance until its
-container unmounts; update options in place, observe container size rather than
-window size, and disconnect observers alongside disposal. Ancestor class/style
-observers cover theme changes without observing chart-generated descendants.
-View configuration is separate from producer parameters and must not enter the
-data query identity. Validate chart changes with resize, flip, theme, and fresh
-mount interactions as well as deterministic data/option tests.
-
-Advanced presets register calendar, treemap, boxplot, Sankey and custom interval
-renderers in the existing lazy chart chunk. Waterfall intervals support negative
-and zero-crossing totals without another chart dependency. Trend sparklines use
-the same lifecycle and theme observer as other charts; use one metric per compact
-card to avoid unnecessary canvas instances.
-
-With 25 presets, the production ECharts chunk is approximately 702 kB minified
-(total extension output 3.66 MB). Browser verification covered compact cards in
-dark/light themes and a view save/reload/reset cycle; changing only view fields
-left the daemon data cache timestamp unchanged.
+- `splitAtom` migration and reorder paths received static checks but no
+  React Scan sampling on a real drag; re-baseline before treating counts
+  as measured.
+- React Scan adds dev overhead; compare relative results under the same
+  instrumentation, never as production durations.

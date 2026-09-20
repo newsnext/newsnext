@@ -4,6 +4,7 @@ import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom, defaultBoardIdAtom } from "@/store/settings"
 
 export function IndexComponent() {
+  // RawSync avoids missing hydration between render and subscribe; useAtomValue can redirect to the wrong fallback board.
   const currentBoardId = useAtomValueRawSync(currentBoardIdAtom)
   const defaultBoardId = useAtomValueRawSync(defaultBoardIdAtom)
   const boards = useAtomValueRawSync(boardsAtom)

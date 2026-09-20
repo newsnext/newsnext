@@ -2,6 +2,7 @@ import { atom, useAtomValue } from "jotai"
 import { useMemo } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 
+// Ticks once per minute; subscribe only in leaf text components (RelativeTime/Timeline).
 const minuteClockAtom = atom(Date.now())
 const relativeTimeUnits = [
   [365 * 24 * 60 * 60 * 1000, "year"],
@@ -13,6 +14,7 @@ const relativeTimeUnits = [
 ] as const
 
 function sampleClock(lastTickAt: number): Date {
+  // Clamp to Date.now(): a sleeping laptop can deliver a stale tick newer than nothing but older than now.
   return new Date(Math.max(lastTickAt, Date.now()))
 }
 
@@ -23,6 +25,7 @@ minuteClockAtom.onMount = (setAtom) => {
   const scheduleNextMinute = () => {
     if (timer !== undefined) clearTimeout(timer)
     const now = new Date()
+    // +100ms pushes the timeout just past the minute edge; exact alignment risks firing in the previous minute.
     const msToNextMinute
       = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 100
 

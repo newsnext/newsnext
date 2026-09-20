@@ -66,4 +66,5 @@ function DraggableLiveCardComponent({ boardId, descriptor, dragging, liveCardAto
   )
 }
 
+// Board animation/layout renders stop here; LiveCard data subtrees stay untouched.
 export const DraggableLiveCard = memo(DraggableLiveCardComponent)

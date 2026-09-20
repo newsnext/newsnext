@@ -17,65 +17,52 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
   `chrome-extension://blkhpdbooolmhamhbpnfinmfghginnbh/app.html`
   directly. The user runs the development server; do not start another one.
 
+### Documentation Principle
+
+- Prefer short comments next to code (TSDoc / line comments) over separate
+  Markdown. Field semantics, pixel values, timings, and single-component
+  behavior belong in the type or component they describe.
+- `docs/*.md` keep only cross-cutting invariants that are invisible from one
+  file: package boundaries, data flow, layering, and global consistency rules.
+  Link to code instead of restating values. Keep each guideline short; delete
+  rather than duplicate what code already says. Exception: `DESIGN_GUIDELINE.md`
+  is the design spec and keeps exact values as the implementation authority.
+- Do not add Markdown files unless the task explicitly requires them.
+
 ### Source Documentation
 
-- `docs/SOURCE_GUIDELINE.md` is the canonical reference for source authors.
-  Update it in the same change when author-facing configuration or behavior
-  changes, including provider metadata, parameters, loaders, field selectors,
-  transforms, Liquid templates, JMESPath, Radar rules, capabilities, secrets,
-  caching, validation, and source security limits.
-- `docs/SOURCE_ARCHITECTURE.md` is the canonical reference for source-system
-  internals. Update it in the same change when registry generation, provider
-  expansion, runtime resolution, extension execution, caching, template
-  compilation, Radar execution, permission enforcement, or security boundaries
-  change.
-- Keep authoring syntax, field semantics, examples, and operational advice in
-  the guide. Keep package boundaries, data flow, implementation lifecycle, and
-  security design in the architecture document. Link between them instead of
-  duplicating explanations.
-- After source-related implementation or debugging work, capture durable
-  lessons, non-obvious constraints, and recurring pitfalls in the appropriate
-  document. Update both documents when a change affects both the public
-  authoring contract and its internal implementation.
-- Keep documentation and examples aligned with the current TypeScript APIs and
-  runtime behavior.
+- `docs/SOURCE_GUIDELINE.md` keeps only author-facing entry points and one
+  minimal end-to-end example. Field semantics, loader options, template filters,
+  and Radar matching belong as TSDoc on the corresponding types in
+  `packages/source-kit` / `packages/sdk`.
+- `docs/SOURCE_ARCHITECTURE.md` keeps only the cross-package pipeline and
+  security boundaries. Per-loader normalization and single-function behavior
+  belong as comments in the implementation.
+- Update code comments in the same change as behavior changes; update the
+  `docs` files only when a cross-cutting contract changes.
 
 ### Design Documentation
 
-- `docs/DESIGN_GUIDELINE.md` is the canonical reference for interface styling
-  and interaction-level visual decisions.
-- Update it in the same change when UI work creates, removes, or revises a
-  reusable design rule, including surface treatments, dialog patterns, spacing,
-  typography, theme usage, motion, or user-facing copy conventions.
-- Keep documented design requirements aligned with the implemented React
-  components and Tailwind utilities.
+- `docs/DESIGN_GUIDELINE.md` is the canonical design spec and keeps concrete
+  values (sizes, colors, timings). Code comments point back to it; do not
+  duplicate the numbers in both places — single-component details live in
+  code, cross-component rules and exact spec values live here.
+- Update it only when UI work creates or revises a reusable rule shared by
+  multiple surfaces.
 
 ### Widget Documentation
 
-- `docs/WIDGET_GUIDELINE.md` is the canonical reference for Widget definitions,
-  views, preset data contracts, and the custom HTML document contract.
-- Update it in the same change when Widget-facing behavior changes, including
-  manifest fields, views, parameters, metadata, data producers, host messages,
-  content design, surface treatment, or the Widget examples.
-- Keep grid layout and Layer navigation behavior in the Design Guideline, source
-  configuration in the Source Authoring Guide, and host internals in the
-  Application Architecture. Link between them instead of duplicating
-  explanations.
+- `docs/WIDGET_GUIDELINE.md` keeps only Widget contracts spanning host and
+  content. Manifest field semantics belong as TSDoc on the Widget types;
+  layout rules already covered by the Design Guideline are linked, not copied.
+- Update it only when Widget-facing cross-cutting behavior changes.
 
 ### Performance Documentation
 
-- `docs/PERFORMANCE_GUIDELINE.md` is the canonical reference for React
-  rendering performance, profiling workflows, and regression checks in the
-  extension app.
-- Update it in the same change when performance work creates, removes, or
-  revises a reusable rule involving state ownership, context boundaries,
-  referential identity, memoization, subscriptions, query rendering, Motion,
-  virtual lists, or React Scan instrumentation.
-- After React performance implementation or debugging work, capture durable
-  measurements, non-obvious constraints, recurring render pitfalls, and known
-  profiling gaps in the document.
-- Keep its baselines and recommended verification steps aligned with current
-  React components and runtime behavior.
+- `docs/PERFORMANCE_GUIDELINE.md` keeps only measurement workflow and
+  cross-cutting render invariants. Per-component ownership and memoization
+  notes belong as comments at the component.
+- Record durable, non-obvious pitfalls there; keep per-fix details in code.
 
 ### Jotai State Subscriptions
 

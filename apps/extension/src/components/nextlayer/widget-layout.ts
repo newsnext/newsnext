@@ -22,6 +22,8 @@ export interface WidgetGridNode {
   h?: number
   id?: string
   w?: number
+  // Packing recomputes x/y from array order (see getWidgetGridLayout);
+  // stored values are overwritten, never read.
   x?: number
   y?: number
 }

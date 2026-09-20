@@ -50,6 +50,7 @@ export function useWrappedSortable({
     orderedCardIds: cardIds,
   }))
   let orderedCardIds = cardOrderState.orderedCardIds
+  // Render-phase setState resyncs preview order when props change mid-drag; moving it to an effect would flash stale order.
   if (cardOrderState.cardIds !== cardIds) {
     orderedCardIds = cardIds
     setCardOrderState({
@@ -65,6 +66,7 @@ export function useWrappedSortable({
 
   const onDragStart = useCallback(() => {
     initialOrderedCardIdsRef.current = orderedCardIds
+    // Snapshot layout once at drag start; live measurements during drag would shift as the preview reorders.
     const list = listRef.current
     dragLayoutRef.current = list ? snapshotLayout(list) : null
     destinationIndexRef.current = null

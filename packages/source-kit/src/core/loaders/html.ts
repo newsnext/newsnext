@@ -29,7 +29,7 @@ import {
   sortLoaderItemsByTimestamp,
 } from "./shared"
 
-const MAX_SELECTED_ITEMS = 2_000
+const MAX_SELECTED_ITEMS = 2_000 // WHY: cap DOM selection before per-item work; truncating here avoids OOM on huge pages.
 const fieldTemplates = new WeakMap<HtmlFieldConfig, ReturnType<typeof compileSourceTemplate>>()
 
 interface HtmlFieldContext {
@@ -291,6 +291,7 @@ export async function loadHtml(
   }
 
   const $ = load(html)
+  // WHY: no items selector means "no rows", not an error; validateSourceLoaderOutput downstream decides if empty fails.
   const items = itemsSelect
     ? $(itemsSelect).toArray().slice(0, MAX_SELECTED_ITEMS)
     : []
@@ -377,6 +378,7 @@ function extractAndResolveFields(
   context: HtmlFieldContext,
 ): Record<string, unknown> {
   const extracted: Record<string, unknown> = {}
+  // WHY: extract every field before resolving any template, so scope.item is complete and output is independent of field order.
   for (const entry of entries) {
     setPath(extracted, entry.path, extractField($, root, entry.config))
   }

@@ -38,12 +38,14 @@ export function useBoardScrollRestoration({
 
     let position = readPosition(storageKey)
     let settled = false
+    // "instant" avoids smooth-scroll animation replaying the old offset; "auto" would visibly glide on restore.
     rootScrollContainer.scrollTo({ behavior: "instant", left: position[0], top: position[1] })
 
     const capturePosition = () => {
       position = [rootScrollContainer.scrollLeft, rootScrollContainer.scrollTop]
     }
     const savePosition = () => {
+      // An incoming view interrupted before settling must not overwrite the saved position.
       if (!settled) return
       try {
         sessionStorage.setItem(storageKey, JSON.stringify(position))
@@ -52,6 +54,7 @@ export function useBoardScrollRestoration({
       }
     }
     const frameId = window.requestAnimationFrame(() => {
+      // Gate scroll listening one frame after restore; subscribing immediately would save the pre-restore offset.
       settled = true
       capturePosition()
       rootScrollContainer.addEventListener("scroll", capturePosition, { passive: true })

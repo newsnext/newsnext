@@ -18,6 +18,7 @@ export function requestXueqiuJson({
   const xueqiuFetch = fetch.extend({
     hooks: {
       afterResponse: [async ({ request, response, retryCount }) => {
+        // WHY: guard on retryCount and return context.fetch.retry(); recursing the loader would bypass the shared retry budget.
         if (response.status !== 400 || retryCount > 0) return
 
         let error: unknown

@@ -64,6 +64,7 @@ export function findSourceSnapshot(
     const snapshot = readSourceSnapshotQuery(query.state.data, sourceId)
     if (!snapshot) continue
     const target = createSourceQueryTarget(sourceId, snapshot.data.source, params)
+    // Compare hashes, not keys: normalized targets with equal semantics can serialize to different key arrays.
     if (query.queryHash === getSourceQueryHash(target)) {
       return snapshot
     }

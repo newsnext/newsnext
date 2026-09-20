@@ -20,6 +20,7 @@ interface CardHeaderProps {
 type CardHeaderActionButtonProps = Omit<ComponentProps<typeof Button>, "size" | "variant">
 
 export function CardHeaderActionButton({ className, ...props }: CardHeaderActionButtonProps): React.JSX.Element {
+  // Opacity-only hover: a filled surface here would read as a button, not a header action.
   return (
     <Button
       variant="transparent"

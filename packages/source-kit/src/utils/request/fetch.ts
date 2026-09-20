@@ -28,6 +28,7 @@ function queuedFetch(input: Input, init?: RequestInit): Promise<Response> {
 }
 
 const baseSourceFetch: SourceFetch = ky.create({
+  // WHY: source execution represents the logged-in browser session; use credentials "omit" per-request only for explicitly anonymous calls.
   credentials: "include",
   fetch: queuedFetch,
   timeout: SOURCE_REQUEST_TIMEOUT_MS,

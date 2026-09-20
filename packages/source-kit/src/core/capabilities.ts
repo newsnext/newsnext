@@ -10,6 +10,7 @@ export function matchesCapabilityHost(hostname: string, declaredHost: string): b
 
   if (normalizedDeclaredHost.startsWith("*.")) {
     const parentHost = normalizedDeclaredHost.slice(2)
+    // WHY: "*.example.com" intentionally also matches the apex "example.com"; splitting them would force duplicate declarations.
     return normalizedHostname === parentHost || normalizedHostname.endsWith(`.${parentHost}`)
   }
 

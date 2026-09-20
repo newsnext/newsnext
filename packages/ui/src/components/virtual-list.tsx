@@ -3,6 +3,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 
 export interface VirtualListProps<T> {
   items: T[]
+  /** Committed scroll element (state-backed), never a bare mutable ref. */
   scrollElement: HTMLElement | null
   estimateSize?: number
   className?: string

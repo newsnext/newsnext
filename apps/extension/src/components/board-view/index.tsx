@@ -32,6 +32,7 @@ interface RenderedView {
 }
 
 export function BoardView({ board }: { board: Board }) {
+  // The active Layer comes from the persisted Board; never mirror it in route or history state.
   const layer = board.layer
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const moveLiveCard = useSetAtom(moveLiveCardAtom)
@@ -133,6 +134,7 @@ export function BoardView({ board }: { board: Board }) {
       {views.map((view) => {
         const key = `${view.boardId}:${view.layer}:${view.revision}`
         const outgoing = view !== renderedView
+        // Clear only the matching departed view; a stale exit must not remove a newer outgoing view.
         return (
           <ScatterCardLayer
             key={key}

@@ -52,12 +52,14 @@ export function NewsItemLink({
 
   const openPreviewDialog = (): void => {
     setActivePreviewIndex(previewIndex)
+    // Same reset as item navigation: never inherit another item's carousel position.
     setPictureIndex(0)
     setPopoverOpen(false)
     setPreviewDialogOpen(true)
   }
 
   const navigateToItem = (index: number): void => {
+    // Carousel position belongs to the previous item; carryover would show the wrong picture.
     setActivePreviewIndex(index)
     setPictureIndex(0)
   }
@@ -67,6 +69,7 @@ export function NewsItemLink({
       <Popover
         open={popoverOpen}
         onOpenChange={(open, eventDetails) => {
+          // The whole row is already a link, so a press would both preview and navigate.
           if (eventDetails.reason === "trigger-press") {
             eventDetails.cancel()
             return
@@ -79,9 +82,11 @@ export function NewsItemLink({
           href={item.url}
           target="_blank"
           rel="noreferrer"
+          // Rows stay non-selectable so drag/click gestures win; previews re-enable selection.
           className={cn("relative select-none visited:text-neutral-500 dark:visited:text-neutral-400", className)}
         >
           {children}
+          {/* Left-half hover trigger (300ms intent) so the pointer can reach the left-anchored preview without crossing a competing trigger. */}
           <PopoverTrigger
             nativeButton={false}
             openOnHover

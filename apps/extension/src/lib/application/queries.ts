@@ -4,6 +4,7 @@ import type { Board } from "../board"
 import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 
+// Queries never filter by registry availability; missing Sources degrade to generic cards.
 export type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
 
 export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDescriptor[] {

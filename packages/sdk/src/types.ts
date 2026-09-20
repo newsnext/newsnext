@@ -102,7 +102,9 @@ export interface ActionOptions extends CallOptions { workerId?: string }
 export interface LiveCardDataQuery { cardId: string }
 export type LiveCardDataResult = SourceLoadResponse
 
+/** Data-only execution against the definition. `cardIds` sets standalone scope; installed views use their placement's scope. */
 export interface LiveWidgetDataQuery { widgetId: string, cardIds?: string[], params?: Record<string, unknown> }
+/** Named query results plus completion `refreshedAt` and LiveCard `errors`. Empty `queries` means data-free. */
 export interface LiveWidgetDataResult {
   queries: Record<string, JsonValue>
   refreshedAt: number

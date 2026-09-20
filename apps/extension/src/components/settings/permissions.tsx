@@ -23,6 +23,7 @@ interface PermissionLiveCard {
   title: string
 }
 
+// Hidden until hover/focus so rows stay clean; focus-within keeps the action keyboard-reachable when opacity is 0.
 const PERMISSION_ACTION_CLASS = "pointer-events-none shrink-0 opacity-0 group-hover/permission:pointer-events-auto group-hover/permission:opacity-100 group-focus-within/permission:pointer-events-auto group-focus-within/permission:opacity-100"
 function grantedOriginIncludes(grantedOrigin: string, requestedOrigin: string): boolean {
   return grantedOrigin === requestedOrigin || grantedOrigin === "*://*/*"

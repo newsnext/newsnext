@@ -7,6 +7,7 @@ export { CATEGORY_IDS, isSourcePresentationMetadataKey, isSourcePresentationType
 export type SourceFetch = KyInstance
 
 export interface SourceLoaderContext {
+  // WHY: always use this bound client; ky.create()/global fetch would lose the abort signal, host queue, and capability checks.
   fetch: SourceFetch
   secrets?: SourceSecrets
   signal: AbortSignal

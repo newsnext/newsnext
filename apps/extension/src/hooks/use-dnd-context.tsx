@@ -34,6 +34,7 @@ export function DndContext({
   ...callbacks
 }: PropsWithChildren<ContextProps>) {
   const cardId = useId()
+  // useEffectEvent keeps monitor callbacks fresh without re-registering the global monitor on every render.
   const handleDragStart = useEffectEvent((args: MonitorCallbackArgs<"onDragStart">) => {
     callbacks.onDragStart?.(args)
   })
@@ -46,6 +47,7 @@ export function DndContext({
 
   useEffect(() => {
     const dropTarget = dropTargetRef?.current
+    // A context only monitors its own drags (kind + context ID); cross-layer drops and scroll stay isolated.
     const ownsDrag = ({ source }: Pick<ElementEventBasePayload, "source">) => isSortableData(source.data, kind)
       && source.data.cardId === cardId
     const monitorCleanup = monitorForElements({

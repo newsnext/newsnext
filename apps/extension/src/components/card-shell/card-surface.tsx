@@ -1,6 +1,8 @@
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { cn } from "@newsnext/ui/lib/utils"
 
+// Outer shell: 3xl squircle at theme-400/45 (no ring; layered translucency
+// is the boundary). Inner 2xl panel composed by callers.
 interface CardSurfaceProps {
   className?: string
 }

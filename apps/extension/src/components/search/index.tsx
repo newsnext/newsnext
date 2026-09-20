@@ -244,6 +244,7 @@ export function SearchModalContent({
                         liveCard.metadata.title ?? "",
                         group.name,
                       ]}
+                      // Hover must not select: keyboard owns the preview; pointer commits only on click.
                       onPointerMove={event => event.preventDefault()}
                     >
                       <SearchLiveCardIcon liveCard={liveCard} />

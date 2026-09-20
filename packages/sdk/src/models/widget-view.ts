@@ -4,21 +4,30 @@ export type WidgetChart = typeof WIDGET_CHARTS[number]
 /** Presentation only. Data producers return named results independently of this configuration. */
 export interface WidgetChartOptions {
   chart: WidgetChart
+  /** Literal row field names, not expressions; `label`/`value` keep their view mapping. */
   label?: string
   value?: string
+  /** Groups lines/bars; declare its row field explicitly. */
   series?: string
+  /** Coordinate fields default to `x`/`y`, falling back to `label`/`value`. */
   x?: string
   y?: string
+  /** Row cap 1–500, default 100; sorting applies before the limit. */
   limit?: number
   sort?: "none" | "asc" | "desc"
+  /** Fraction digits 0–6, default 1. */
   decimals?: number
   suffix?: string
+  /** Positive progress target, default 100. */
   target?: number
+  /** Histogram bins 1–50, default 10. */
   bins?: number
 }
 
+/** Built-in chart view. Rows are `{ label, value }`; malformed rows error visibly. */
 export interface WidgetChartView extends WidgetChartOptions {
   type: "chart"
+  /** Names the `data.mjs` result consumed by this view. */
   query: string
 }
 

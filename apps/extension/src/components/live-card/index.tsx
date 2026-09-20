@@ -37,6 +37,7 @@ export type LiveCardTarget
 export interface LiveCardProps {
   source: LiveCardViewModel
   target: LiveCardTarget
+  /** Bypass viewport deferral. Only the dialog-portal search preview may set this; board cards always defer. */
   eager?: boolean
   className?: string
   sizeClassName?: string

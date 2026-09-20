@@ -181,6 +181,7 @@ export function ScatterCardLayer({
   const inactive = state !== "active" || !viewReady
 
   return (
+    // Starts hidden until geometry is measured so cards never flash in their resting slots; JS flips visibility to visible on enter/exit.
     <div
       ref={rootRef}
       data-card-transition-state="pending"

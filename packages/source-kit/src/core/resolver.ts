@@ -418,6 +418,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
 }
 
 export const DEFAULT_SOURCE_VERSION = 2
+// WHY: version partitions snapshots/datasets; bump only on behavioral or result-shape change, never for copy edits.
 
 export function resolveSourceVersion(value: unknown, location: string): number {
   if (value === undefined) return DEFAULT_SOURCE_VERSION

@@ -64,6 +64,7 @@ export function createExtensionStorage<Value>(
       const canonical = stored[options.key]
       if (canonical !== undefined) {
         const normalized = update(canonical)
+        // Rewrite normalized value so legacy payloads converge; skipping this re-triggers migration on every mount.
         if (!options.readOnly && JSON.stringify(normalized) !== JSON.stringify(canonical)) {
           await browser.storage.local.set({ [options.key]: normalized })
         }

@@ -41,6 +41,7 @@ export const persistedSettingsAtom = atomWithStorage<PersistedSettings>(
   PERSISTED_DATA_SLICES.settings.key,
   createDefaultPersistedSettings(),
   settingsStorage,
+  // getOnInit reads storage synchronously on init; awaiting initialize() alone still misses updates before subscribe.
   { getOnInit: true },
 )
 

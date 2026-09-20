@@ -31,6 +31,7 @@ interface WidgetDataView {
 export function useLiveWidgetData(input: WidgetDataInput, active: boolean): WidgetDataView {
   const cardIds = [...input.cardIds].sort()
   const query = useQuery({
+    // Request identity is widget + scope + data fingerprint + params only; view configuration must not enter it. A key change aborts the obsolete request and drops its late result.
     queryKey: [
       ...LIVE_WIDGET_QUERY_KEY,
       input.boardId,
@@ -45,6 +46,7 @@ export function useLiveWidgetData(input: WidgetDataInput, active: boolean): Widg
     ),
     enabled: active,
     networkMode: "offlineFirst",
+    // A failed background refresh keeps the last successful data on screen.
     placeholderData: previous => previous,
     refetchInterval: input.refreshIntervalMs,
     refetchIntervalInBackground: false,

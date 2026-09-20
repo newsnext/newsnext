@@ -22,6 +22,10 @@ interface ParsedFeedItem {
   updatedAt?: number
 }
 
+/**
+ * RSS/Atom/JSON Feed loader (URL only). Linkless entries get stable `#guid`
+ * URLs; entries without title+URL are dropped.
+ */
 export async function loadRss(
   { url }: { url: string },
   loaderContext: LoaderContext = {},
@@ -40,6 +44,7 @@ export function parseRss(data: string): SourceLoaderResult | undefined {
       : parseXmlFeed(data)
     return result ? validateSourceLoaderOutput(result) : undefined
   } catch {
+    // WHY: a malformed feed must yield "no data", not throw; callers use undefined to try the next parser/fallback.
     return undefined
   }
 }
@@ -77,6 +82,7 @@ function parseXmlFeedItem(
   const title = readXmlText(item.title)
   const url = readXmlLink(item.link)
     || createFeedHomeItemUrl(feedHome, readXmlText(item.guid ?? item.id))
+  // WHY: drop title-less/linkless entries silently; one bad entry must not fail the whole feed.
   if (!title || !url) return
 
   const updatedAt = parseOptionalTimestamp(item.updated)
@@ -86,6 +92,7 @@ function parseXmlFeedItem(
       title,
       url,
       publishedAt: parseOptionalTimestamp(item.published ?? item.pubDate ?? item.created)
+        // WHY: fall back to the update time here; downstream sorting/inference sees only publishedAt, never a second time field.
         ?? updatedAt,
       author: parseXmlAuthor(item.author ?? item.creator ?? item["dc:creator"]),
       content: parseXmlContent(item),
@@ -196,6 +203,7 @@ function createParsedFeed(
   parsedItems: ParsedFeedItem[],
   metadata: Record<string, unknown>,
 ): SourceLoaderOutput {
+  // WHY: only re-sort when the feed is already update-ordered; blindly sorting by publishedAt would scramble curated feed order.
   const orderedByUpdateTime = parsedItems.every((entry, index) => (
     entry.updatedAt !== undefined
     && (index === 0 || entry.updatedAt <= (parsedItems[index - 1]?.updatedAt ?? Number.NEGATIVE_INFINITY))

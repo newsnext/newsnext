@@ -1,6 +1,8 @@
 import { cn } from "@newsnext/ui/lib/utils"
 import * as React from "react"
 
+// Shared modal foundation: bg-black/75 overlay (150ms fade, no blur); popup
+// owns centered motion. One zenith wash on the shell; scrollers transparent.
 function ModalOverlay({ className, ...props }: React.ComponentProps<"div">): React.JSX.Element {
   return (
     <div

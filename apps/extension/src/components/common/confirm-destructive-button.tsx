@@ -72,6 +72,7 @@ export function ConfirmDestructiveButton({
     <Button
       {...props}
       variant={isArmed || !isExpandingIcon ? "outline" : "transparent"}
+      // Idle stays neutral: red is the default board theme, so resting red reads as emphasis, not danger.
       className={cn(
         "transition-[opacity,color,background-color,border-color] duration-300 ease-out motion-reduce:transition-none",
         className,

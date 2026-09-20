@@ -5,6 +5,7 @@ export function revealLiveCard(id: string, attemptsRemaining = 20): void {
     return
   }
 
+  // Retry: the card may not be mounted yet when navigation triggers the reveal; giving up immediately would strand the user.
   if (attemptsRemaining > 0) {
     window.setTimeout(revealLiveCard, 50, id, attemptsRemaining - 1)
   }

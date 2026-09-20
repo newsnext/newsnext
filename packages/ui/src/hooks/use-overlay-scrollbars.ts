@@ -17,6 +17,7 @@ function hasNativeOverlayScrollbars(document: Document): boolean {
 }
 
 export function overlayScrollbarsRef(element: HTMLElement | null): (() => void) | undefined {
+  // Native overlay environments skip the library import entirely (cached per document).
   if (!element || hasNativeOverlayScrollbars(element.ownerDocument)) return
 
   let cancelled = false

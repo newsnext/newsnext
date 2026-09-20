@@ -6,6 +6,7 @@ import { createId } from "../id"
 export { APPLICATION_DATA_VERSION } from "@newsnext/sdk/models"
 export type { ApplicationData } from "@newsnext/sdk/models"
 
+// Workspace envelope: full Boards + LiveCards mirror; browser storage owns durability.
 export interface InitialApplicationDataOptions {
   boardId?: string
   boardName?: string

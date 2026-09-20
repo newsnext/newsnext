@@ -13,6 +13,7 @@ import { MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 import { createBoard } from "../board"
 import { mergeLiveCardPatch } from "../source/live-cards"
 
+// Mutations are atomic; one Board owns each LiveCard, array order is display order.
 export interface BoardConfiguration {
   color?: Color
   layer?: BoardLayer
@@ -222,6 +223,7 @@ export function moveLiveWidgetMutation(
   const { board: source, widget } = findLiveWidget(data, input.liveWidgetId)
   const target = getBoard(data, input.boardId)
   if (source.id === target.id) return { data }
+  // Whole-Board scopes follow the destination Board; explicit scopes keep only IDs present there.
   const moved = {
     ...widget,
     dataScope: widget.dataScope.type === "cards"
@@ -351,6 +353,7 @@ export function resetLiveWidgetParamsMutation(
   })
 }
 
+/** Transfer between Boards; re-adding to the same Board is idempotent and keeps order. */
 export function moveLiveCardMutation(
   data: ApplicationData,
   input: { boardId: string, cardId: string },
@@ -458,6 +461,7 @@ export function deleteLiveCardMutation(
 
 function addLiveCardToBoard(board: Board, cardId: string): Board {
   if (board.nowLayer.liveCards.includes(cardId)) return board
+  // Front-insert keeps newest-first display order; the LiveCard's creation time is untouched.
   return {
     ...board,
     nowLayer: {

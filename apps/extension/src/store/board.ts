@@ -23,6 +23,7 @@ const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
   PERSISTED_DATA_SLICES.application.key,
   normalizeApplicationData(undefined),
   applicationDataStorage,
+  // getOnInit reads storage synchronously on init; awaiting initialize() alone still misses updates before subscribe.
   { getOnInit: true },
 )
 export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
@@ -37,6 +38,7 @@ export const currentBoardAtom = atom((get) => {
   return get(boardsAtom).find(board => board.id === currentBoardId)
 })
 export const liveCardsAtom = selectAtom(applicationDataAtom, data => data.liveCards)
+// Each LiveCard subscribes to its own item atom keyed by cardId, so edits stay local.
 export const liveCardAtomsAtom = splitAtom(liveCardsAtom, card => card.cardId)
 
 export const setNowLayerManualOrderAtom = atom(null, async (_get, _set, input: {

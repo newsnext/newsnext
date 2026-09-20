@@ -111,11 +111,13 @@ export function sortLoaderItemsByTimestamp(
   items: NewsItem[],
   enabled: boolean | undefined,
 ): NewsItem[] {
+  // WHY: opt-in only; default preserves source order since many feeds are curated, not chronological.
   if (!enabled) return items
 
   return items.sort((left, right) => {
     const leftTime = left.publishedAt
     const rightTime = right.publishedAt
+    // WHY: timeless items sink to the end; treating undefined as 0 would float them to the top.
     if (leftTime === undefined) return rightTime === undefined ? 0 : 1
     if (rightTime === undefined) return -1
     return rightTime - leftTime

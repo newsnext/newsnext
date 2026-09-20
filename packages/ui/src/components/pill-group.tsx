@@ -36,6 +36,7 @@ export function pillGroupItemClassName({
 export function PillGroupIndicator({ layoutId }: PillGroupIndicatorProps): React.JSX.Element {
   return (
     <m.span
+      // Decorative sliding thumb: must stay click-through and hidden from AT, or it blocks the pill buttons beneath it.
       aria-hidden
       data-slot="pill-group-indicator"
       layoutId={layoutId}

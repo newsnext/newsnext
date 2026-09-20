@@ -9,6 +9,7 @@ export function compileSourceRegex(pattern: string, flags = ""): RegExp {
     throw new Error(`A regex pattern cannot exceed ${REGEX_PATTERN_LIMIT} characters`)
   }
   if (hasNestedQuantifiedGroup(pattern)) {
+    // WHY: reject nested quantified groups upfront; they are the classic catastrophic-backtracking (ReDoS) shape.
     throw new Error("Nested quantified groups are not allowed")
   }
 

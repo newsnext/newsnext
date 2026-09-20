@@ -11,6 +11,8 @@ function getHostQueue(hostname: string): PQueue {
   }
 
   const queue = new PQueue({
+    // WHY: serialize per-host with a spacing interval; parallel bursts trigger rate limits / IP bans on source sites.
+    // WHY: queues live for the runtime lifetime; dropping an idle queue would let the next request skip the spacing window.
     concurrency: 1,
     interval: SOURCE_HOST_REQUEST_INTERVAL_MS,
     intervalCap: 1,

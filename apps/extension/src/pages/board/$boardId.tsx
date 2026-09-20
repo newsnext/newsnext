@@ -10,6 +10,7 @@ import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardIdComponent() {
   const { boardId } = useParams({ from: "/board/$boardId" })
+  // RawSync avoids missing hydration between render and subscribe; useAtomValue can route to a stale default board.
   const boards = useAtomValueRawSync(boardsAtom)
   const liveCards = useAtomValueRawSync(liveCardsAtom)
   const queryClient = useQueryClient()
@@ -59,5 +60,6 @@ export function BoardIdComponent() {
   }
 
   const readyBoard = boards.find(candidate => candidate.id === restoredBoardId)
+  // Hold rendering until cached results restore; mounting live cards first would flash loading states over warm data.
   return readyBoard ? <BoardView board={readyBoard} /> : null
 }
