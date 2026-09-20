@@ -5,7 +5,7 @@ import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { COLORS } from "@newsnext/shared/constants"
 import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useMemo, useState } from "react"
+import { useRef, useState } from "react"
 import { LiveCardBack } from "@/components/live-card/card-back"
 import { LiveCardFront } from "@/components/live-card/card-front"
 
@@ -232,22 +232,47 @@ function RankingCardFixture() {
   return <FrontFixture source={RANKING_SOURCE} />
 }
 
+function createFreshStory(fresh: number): NewsItem {
+  return {
+    title: `Fresh story ${fresh}`,
+    url: `https://example.com/fresh-story-${fresh}`,
+    content: { text: "Prepended by the simulated refresh; it climbs in with a +N badge." },
+  }
+}
+
+// Rotate the third story to the top so rank-change badges appear alongside.
+function rotateTopStories(current: NewsItem[]): NewsItem[] {
+  return current.length < 3
+    ? current
+    : [current[2]!, current[0]!, current[1]!, ...current.slice(3)]
+}
+
 function RankingNewItemsFixture() {
-  const [refreshCount, setRefreshCount] = useState(0)
-  const items = useMemo<NewsItem[]>(() => {
-    const fresh: NewsItem[] = Array.from({ length: refreshCount }, (_, index) => ({
-      title: `Fresh story ${refreshCount - index}`,
-      url: `https://example.com/fresh-story-${refreshCount - index}`,
-      content: { text: "Prepended by the simulated refresh; the marker shows NEW for a few seconds." },
-    }))
-    return [...fresh, ...RANKING_ITEMS]
-  }, [refreshCount])
+  const [items, setItems] = useState<NewsItem[]>(RANKING_ITEMS)
+  const freshCountRef = useRef(0)
 
   return (
     <main className="flex min-h-full flex-col items-center gap-4 p-6 sm:p-10">
-      <Button onClick={() => setRefreshCount(count => count + 1)}>
-        Simulate refresh
-      </Button>
+      <div className="flex flex-wrap justify-center gap-2">
+        <Button
+          onClick={() => {
+            freshCountRef.current += 1
+            const fresh = createFreshStory(freshCountRef.current)
+            setItems(current => rotateTopStories([fresh, ...current]))
+          }}
+        >
+          Simulate refresh
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            freshCountRef.current = 0
+            setItems(RANKING_ITEMS)
+          }}
+        >
+          Reset
+        </Button>
+      </div>
       <LiveCardFrame
         className="h-125 w-full max-w-100"
         color={SAMPLE_SOURCE.provider.color}

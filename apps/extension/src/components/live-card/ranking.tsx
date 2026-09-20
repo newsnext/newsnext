@@ -4,7 +4,6 @@ import { cn } from "@newsnext/ui/lib/utils"
 import { AnimatePresence, m } from "motion/react"
 import { useEffect, useState } from "react"
 import { NewsItemLink, NewsItemSummary } from "./news-item-common"
-import { useNewItemUrls } from "./use-new-items"
 
 interface Props {
   items: NewsItem[]
@@ -28,11 +27,14 @@ function getRankChanges(previousItems: NewsItem[], items: NewsItem[]): Record<st
 
   const previousIndexByUrl = new Map(previousItems.map((item, index) => [item.url, index]))
   const rankChanges: Record<string, number> = {}
+  // Newcomers rank just past the last familiar item, so their arrival reads as a climb.
+  let freshSeen = 0
 
   items.forEach((item, index) => {
-    const previousIndex = previousIndexByUrl.get(item.url)
+    let previousIndex = previousIndexByUrl.get(item.url)
     if (previousIndex === undefined) {
-      return
+      previousIndex = previousItems.length + freshSeen
+      freshSeen += 1
     }
 
     const diff = previousIndex - index
@@ -77,14 +79,10 @@ function useRankChanges(items: NewsItem[]): Record<string, number> {
   return rankChangeState.changes
 }
 
-function MarkerBadge({ visible, className, children }: {
-  visible: boolean
-  className?: string
-  children: React.ReactNode
-}) {
+function RankChangeBadge({ diff }: { diff?: number }) {
   return (
     <AnimatePresence>
-      {visible && (
+      {!!diff && (
         <m.span
           aria-hidden="true"
           initial={{ opacity: 0, y: -12 }}
@@ -93,30 +91,18 @@ function MarkerBadge({ visible, className, children }: {
           transition={{ duration: 0.2 }}
           className={cn(
             "absolute left-1 top-0 text-xs font-medium leading-none",
-            className,
+            diff < 0 ? "text-green-500" : "text-red-500",
           )}
         >
-          {children}
+          {diff > 0 ? `+${diff}` : diff}
         </m.span>
       )}
     </AnimatePresence>
   )
 }
 
-function RankChangeBadge({ diff }: { diff?: number }) {
-  return (
-    <MarkerBadge
-      visible={diff !== undefined && diff !== 0}
-      className={diff !== undefined && diff < 0 ? "text-green-500" : "text-red-500"}
-    >
-      {diff !== undefined && diff > 0 ? `+${diff}` : diff}
-    </MarkerBadge>
-  )
-}
-
 export function Ranking({ items, inlinePresentation, markScale, scrollElement }: Props) {
   const rankChanges = useRankChanges(items)
-  const newItemUrls = useNewItemUrls(items)
 
   return (
     <VirtualList
@@ -134,7 +120,7 @@ export function Ranking({ items, inlinePresentation, markScale, scrollElement }:
           previewInlinePresentation={inlinePresentation}
           className="relative flex items-center gap-2 rounded-xl transition-colors hover:bg-muted"
         >
-          <span className={cn("flex min-h-6 w-6 shrink-0 self-stretch items-center justify-center rounded-full text-sm", newItemUrls.has(item.url) ? "animate-pulse bg-theme-500/50 font-semibold text-white" : "bg-muted opacity-80")}>
+          <span className="flex min-h-6 w-6 shrink-0 self-stretch items-center justify-center rounded-full bg-muted text-sm opacity-80">
             {index + 1}
           </span>
           <RankChangeBadge diff={rankChanges[item.url]} />
