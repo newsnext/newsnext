@@ -6,6 +6,7 @@ import { TanStackDevtools } from "@/components/common/devtools"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { Header } from "@/components/header"
 import { ExternalRssRadarDialog } from "@/components/radar/external-rss-radar-dialog"
+import { useI18n } from "@/hooks/use-i18n"
 import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
@@ -17,7 +18,8 @@ export const Route = createRootRouteWithContext<{
 })
 
 function NotFoundComponent() {
-  return <div>Not Found</div>
+  const { t } = useI18n()
+  return <div>{t("notFound")}</div>
 }
 
 function RootComponent() {

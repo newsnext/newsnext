@@ -2,6 +2,7 @@ import type { SourceParamSchema } from "@newsnext/source-kit/types"
 import type { SourceParamValues } from "@/lib/source"
 import { validateSourceParamPatch } from "@newsnext/source-kit/core"
 import { useCallback, useState } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 import { sanitizeSourceParamPatch } from "@/lib/source"
 
 export interface UseSourceParamsOptions {
@@ -30,6 +31,7 @@ function createSourceParamsState(
 }
 
 export function useSourceParams({ params, initialValues }: UseSourceParamsOptions) {
+  const { t } = useI18n()
   const [storedState, setStoredState] = useState<SourceParamsState>(() => (
     createSourceParamsState(params, initialValues)
   ))
@@ -54,10 +56,10 @@ export function useSourceParams({ params, initialValues }: UseSourceParamsOption
   const getDraftParams = useCallback(() => {
     const result = validateSourceParamPatch(params, state.draftParams)
     if (!result.valid) {
-      throw new Error(Object.values(result.errors)[0] ?? "Invalid source parameters")
+      throw new Error(Object.values(result.errors)[0] ?? t("invalidSourceParameters"))
     }
     return result.values
-  }, [params, state.draftParams])
+  }, [params, state.draftParams, t])
 
   const commitParams = useCallback((nextParams: SourceParamValues) => {
     setStoredState(prev => ({

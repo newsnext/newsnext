@@ -1,6 +1,7 @@
 import type { WidgetChartView } from "@newsnext/sdk/models"
 import type { ChartRow } from "./widget-chart-data"
 import { lazy, Suspense, useMemo } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 import { parseChartRows } from "./widget-chart-data"
 import { formatChartValue } from "./widget-chart-options"
 import { WidgetSummaryContent } from "./widget-summary-content"
@@ -10,13 +11,14 @@ const WidgetEchart = lazy(() => import("./widget-echart"))
 interface Props { view: WidgetChartView, queries: Record<string, unknown> }
 
 export function WidgetChartContent({ view, queries }: Props): React.JSX.Element {
+  const { t } = useI18n()
   const result = useMemo(() => {
     try {
       return { rows: parseChartRows(queries[view.query], view), error: undefined }
     } catch (error) {
-      return { rows: [], error: error instanceof Error ? error.message : "Invalid chart data." }
+      return { rows: [], error: error instanceof Error ? error.message : t("invalidChartData") }
     }
-  }, [queries, view])
+  }, [queries, view, t])
   const { rows } = result
 
   return (
@@ -47,17 +49,18 @@ export function WidgetChartContent({ view, queries }: Props): React.JSX.Element 
 }
 
 function DataTable({ rows, view }: { rows: ChartRow[], view: WidgetChartView }): React.JSX.Element {
+  const { t } = useI18n()
   const hasSeries = rows.some(row => row.series)
   const hasDetails = rows.some(row => row.destination || row.box || row.target !== undefined)
   return (
     <table className="w-full text-left text-xs">
-      <caption className="sr-only">Widget data</caption>
+      <caption className="sr-only">{t("widgetDataCaption")}</caption>
       <thead>
         <tr className="text-muted-foreground">
-          <th className="pb-2 font-medium">Label</th>
-          {hasSeries && <th className="pb-2 font-medium">Series</th>}
-          <th className="pb-2 text-right font-medium">Value</th>
-          {hasDetails && <th className="pb-2 font-medium">Details</th>}
+          <th className="pb-2 font-medium">{t("tableLabel")}</th>
+          {hasSeries && <th className="pb-2 font-medium">{t("tableSeries")}</th>}
+          <th className="pb-2 text-right font-medium">{t("tableValue")}</th>
+          {hasDetails && <th className="pb-2 font-medium">{t("tableDetails")}</th>}
         </tr>
       </thead>
       <tbody>
@@ -68,9 +71,9 @@ function DataTable({ rows, view }: { rows: ChartRow[], view: WidgetChartView }):
             <td className="py-2 text-right tabular-nums">{formatChartValue(row.value, view)}</td>
             {hasDetails && (
               <td className="py-2 pl-3">
-                {row.destination && `To ${row.destination}`}
-                {row.box && `Min, Q1, median, Q3, max: ${row.box.join(", ")}. Outliers: ${row.outliers?.join(", ") || "none"}`}
-                {row.target !== undefined && `Target: ${row.target}${row.range ? `; reference: ${row.range.join("–")}` : ""}`}
+                {row.destination && t("chartToDestination", { destination: row.destination })}
+                {row.box && t("chartBoxplot", { values: row.box.join(", "), outliers: row.outliers?.join(", ") || t("chartNoOutliers") })}
+                {row.target !== undefined && t("chartTarget", { target: row.target, reference: row.range ? t("chartTargetReference", { range: row.range.join("–") }) : "" })}
               </td>
             )}
           </tr>

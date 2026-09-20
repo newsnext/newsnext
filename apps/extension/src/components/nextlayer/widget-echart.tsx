@@ -6,6 +6,7 @@ import { AriaComponent, CalendarComponent, GridComponent, LegendComponent, Toolt
 import { getInstanceByDom, init, use as registerCharts } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
 import { useEffect, useRef } from "react"
+import { useI18n } from "@/hooks/use-i18n"
 import { createChartOption } from "./widget-chart-options"
 import "echarts-wordcloud"
 
@@ -35,6 +36,7 @@ function readTheme(element: HTMLElement): ChartTheme {
 }
 
 export default function WidgetEchart({ rows, view, compact = false }: { rows: ChartRow[], view: WidgetChartView, compact?: boolean }): React.JSX.Element {
+  const { t } = useI18n()
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const element = ref.current
@@ -68,5 +70,5 @@ export default function WidgetEchart({ rows, view, compact = false }: { rows: Ch
       theme.disconnect()
     }
   }, [rows, view, compact])
-  return <div ref={ref} className="min-h-0 w-full flex-1" aria-label={`${view.chart} chart`} />
+  return <div ref={ref} className="min-h-0 w-full flex-1" aria-label={t("chartAriaLabel", { chart: view.chart })} />
 }

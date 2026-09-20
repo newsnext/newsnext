@@ -106,7 +106,7 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
           overlayClassName={isCelebrating ? "pointer-events-none opacity-0" : undefined}
           surfaceClassName="min-h-0 overflow-visible"
         >
-          <DialogTitle className="sr-only">Radar</DialogTitle>
+          <DialogTitle className="sr-only">{t("radarTitle")}</DialogTitle>
           <DialogDescription className="sr-only">
             {t("radarRssDescription")}
           </DialogDescription>

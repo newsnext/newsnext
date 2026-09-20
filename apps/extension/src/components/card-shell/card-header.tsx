@@ -2,6 +2,7 @@ import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@newsnext/ui/lib/utils"
 import { SourceIcon } from "@/components/card-shell/source-icon"
+import { useI18n } from "@/hooks/use-i18n"
 
 export type CardDragHandleRef = (node: HTMLDivElement | null) => void
 
@@ -44,11 +45,12 @@ export function CardHeader({
 }: CardHeaderProps): React.JSX.Element {
   const displayTitle = title || providerTitle
   const isDraggable = dragHandleRef !== undefined
+  const { t } = useI18n()
   return (
     <div
       ref={dragHandleRef}
       data-card-header
-      aria-label={isDraggable ? `Drag to move ${displayTitle}` : undefined}
+      aria-label={isDraggable ? t("dragToMoveCard", { title: displayTitle }) : undefined}
       role={isDraggable ? "group" : undefined}
       className={cn("mx-1 mb-2 flex min-h-8 shrink-0 items-center justify-between gap-2", isDraggable && "cursor-grab active:cursor-grabbing")}
     >

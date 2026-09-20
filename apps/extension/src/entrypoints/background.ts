@@ -1,4 +1,5 @@
 import { registerService } from "@webext-core/proxy-service"
+import { i18n } from "#i18n"
 import { browser, defineBackground } from "#imports"
 import { openAppTab } from "@/lib/app-tab"
 import { registerBundledSourcesLoader } from "@/lib/background/bundled-sources"
@@ -17,7 +18,7 @@ const backgroundService = createBackgroundService(backgroundActionDependencies)
 function registerActionMenus(): void {
   browser.contextMenus.create({
     id: APP_MENU_ID,
-    title: "Open NewsNext",
+    title: i18n.t("openNewsNext") || "Open NewsNext",
     contexts: [ACTION_CONTEXT],
   })
 

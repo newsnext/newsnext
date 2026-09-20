@@ -422,6 +422,7 @@ function ItemNavigationButton({ direction, label, onClick }: {
 }
 
 function NewsItemPreviewIframe({ iframe, expanded = false }: { iframe: AdvancedIframe | string, expanded?: boolean }) {
+  const { t } = useI18n()
   const props: AdvancedIframe = typeof iframe === "string" ? { src: iframe } : { ...iframe }
   delete props.blocked
   delete props.selector
@@ -453,7 +454,7 @@ function NewsItemPreviewIframe({ iframe, expanded = false }: { iframe: AdvancedI
       className={cn("w-full", expanded && "max-h-full", className)}
       loading={loading ?? "lazy"}
       sandbox={sandbox ?? "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"}
-      title={title ?? "News item preview"}
+      title={title ?? t("newsItemPreviewTitle")}
     />
   )
 }

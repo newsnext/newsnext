@@ -42,6 +42,6 @@ describe("message catalogs", () => {
   })
 
   it("interpolates translated values through i18next", () => {
-    expect(i18next.getFixedT("zh-CN")("liveCardCount", { count: 3 })).toBe("3 个 LiveCard")
+    expect(i18next.getFixedT("zh-CN")("liveCardCount", { count: 3 })).toBe("3 个实时卡片")
   })
 })

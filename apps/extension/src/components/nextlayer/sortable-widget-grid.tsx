@@ -4,6 +4,7 @@ import type { ResizeAxis, WidgetDropTarget, WidgetSlotFrame } from "./widget-lay
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { DndContext } from "@/hooks/use-dnd-context"
+import { useI18n } from "@/hooks/use-i18n"
 import { isSortableData } from "@/lib/board"
 import { isDropWithin } from "@/lib/board/drop-target"
 import { getClosestWidgetDropTarget, getResizedWidgetFrame, getResizedWidgetSize, getWidgetColumns, getWidgetDropTargets, getWidgetGridHeight, getWidgetGridLayout, getWidgetSlotFrame, WIDGET_COLUMN_WIDTH, WIDGET_GAP, WIDGET_ROW_HEIGHT } from "./widget-layout"
@@ -58,6 +59,7 @@ function getResizeDelta(session: ResizeSession, event: { clientX: number, client
 }
 
 export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutChange, onReady }: SortableWidgetGridProps) {
+  const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement>(null)
   const gridRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragSession | null>(null)
@@ -107,9 +109,9 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
     setSaveError(null)
     void onLayoutChange(next).catch((error: unknown) => {
       setDraft(current => current === change ? null : current)
-      setSaveError(error instanceof Error ? error.message : "Failed to save widget layout")
+      setSaveError(error instanceof Error ? error.message : t("saveWidgetLayoutFailed"))
     })
-  }, [onLayoutChange, sourceVersion])
+  }, [onLayoutChange, sourceVersion, t])
 
   const onDragStart = useCallback(({ source, location }: ElementEventBasePayload) => {
     if (!enabled || !isSortableData(source.data, "widget")) return
@@ -267,7 +269,7 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
                       <button
                         key={axis}
                         type="button"
-                        aria-label={`Resize widget ${axis === "both" ? "width and height" : axis}`}
+                        aria-label={axis === "both" ? t("resizeWidgetBoth") : axis === "width" ? t("resizeWidgetWidth") : t("resizeWidgetHeight")}
                         className={`widget-resize-handle widget-resize-${axis}`}
                         onPointerDown={event => startResize(event, node, axis)}
                         onPointerMove={moveResize}
