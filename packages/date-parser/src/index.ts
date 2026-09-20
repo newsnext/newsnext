@@ -67,11 +67,6 @@ export function transformToUTC(date: string, formatString?: string, timezone: st
   return utcFromWall - offsetMinutes * MS_PER_MINUTE
 }
 
-/** @deprecated Use transformToUTC instead. */
-export function tranformToUTC(date: string, formatString?: string, timezone: string = DEFAULT_TIMEZONE): number {
-  return transformToUTC(date, formatString, timezone)
-}
-
 export function isValidTimeZone(timezone: string): boolean {
   try {
     new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format()

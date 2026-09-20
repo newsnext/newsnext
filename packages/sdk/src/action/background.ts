@@ -36,10 +36,8 @@ const WidgetCatalogEntryResult = Type.Unsafe<WidgetCatalogEntry>(Type.Object({
   params: Type.Unknown(),
   dataRevision: Type.String(),
   dataFiles: Type.Array(Type.String()),
-  // Older daemons omit this fingerprint; the renderer keeps the loaded view then.
-  viewRevision: Type.Optional(Type.String()),
-  // Older daemons omit this flag; the renderer assumes data exists then.
-  hasData: Type.Optional(Type.Boolean()),
+  viewRevision: Type.String(),
+  hasData: Type.Boolean(),
   refreshIntervalMs: Type.Number(),
 }, { additionalProperties: false }))
 

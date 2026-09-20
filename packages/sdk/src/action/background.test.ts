@@ -21,6 +21,7 @@ const entry = {
   color: "slate",
   dataFiles: [],
   dataRevision: "rev",
+  hasData: true,
   height: 2,
   id: "plain",
   minHeight: 1,
@@ -29,6 +30,7 @@ const entry = {
   refreshIntervalMs: 300_000,
   title: "Plain",
   view: { type: "custom" },
+  viewRevision: "rev",
   width: 2,
 }
 
@@ -44,7 +46,8 @@ describe("nativeIntegration.getWidgets result", () => {
     expect(() => Value.Parse(getWidgets.result, [{ ...entry, hasData: false }])).not.toThrow()
   })
 
-  it("accepts catalog entries from daemons without the hasData flag", () => {
-    expect(() => Value.Parse(getWidgets.result, [entry])).not.toThrow()
+  it("rejects catalog entries without the data flag and view revision", () => {
+    const { hasData: _hasData, viewRevision: _viewRevision, ...stripped } = entry
+    expect(() => Value.Parse(getWidgets.result, [stripped])).toThrow()
   })
 })

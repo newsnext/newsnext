@@ -167,9 +167,8 @@ most recently active connected Worker (Worker ID breaks ties); it never
 prompts. Workspace
 data Actions (`board.*`, `liveCard.*` configuration, `*.list`) are
 worker-agnostic because every Worker commits through the shared Workspace.
-`run`, `fetch`, and `loader.*` execute inside a browser: `fetch` shares that
-Worker's cookies and `loader.*` input carries its owning `workerId`, so pin
-`{ workerId }` when the browser or card owner matters. `run` accepts
+`run` and `fetch` execute inside a browser: `fetch` shares that
+Worker's cookies, so pin `{ workerId }` when the browser matters. `run` accepts
 a registered Source, or `{ providerId, provider, sourceId, params?, debug?,
 useProviderSecrets? }` for an in-memory provider. Provider JSON is not read from a
 path by the SDK. `fetch` accepts the Source `context.fetch` request shape (URL,

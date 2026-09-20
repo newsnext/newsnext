@@ -13,6 +13,10 @@ describe("parseWidgetCatalog", () => {
       minWidth: 1,
       view: { type: "live-card", query: "feed" },
       params: { limit: { type: "number", title: "Limit", default: 10, min: 1, max: 20 } },
+      dataFiles: [],
+      dataRevision: "rev",
+      hasData: true,
+      viewRevision: "rev",
     }
     expect(parseWidgetCatalog([widget], SERVER_URL)[0]?.params).toEqual(widget.params)
     expect(() => parseWidgetCatalog([{
@@ -30,6 +34,10 @@ describe("parseWidgetCatalog", () => {
       title: "Headlines",
       url: `${SERVER_URL}/widgets/headlines/index.html`,
       width: 6,
+      dataFiles: [],
+      dataRevision: "rev",
+      hasData: true,
+      viewRevision: "rev",
     }], SERVER_URL)).toHaveLength(1)
   })
 
@@ -42,6 +50,10 @@ describe("parseWidgetCatalog", () => {
       title: "Headlines",
       url: `${SERVER_URL}/widgets/headlines/index.html`,
       width: 6,
+      dataFiles: [],
+      dataRevision: "rev",
+      hasData: true,
+      viewRevision: "rev",
     }
     expect(parseWidgetCatalog([widget], SERVER_URL)[0]?.color).toBe("slate")
     expect(parseWidgetCatalog([{ ...widget, color: "teal" }], SERVER_URL)[0]?.color).toBe("teal")
@@ -57,6 +69,10 @@ describe("parseWidgetCatalog", () => {
       title: "Headlines",
       url: "https://example.com/widgets/headlines/index.html",
       width: 6,
+      dataFiles: [],
+      dataRevision: "rev",
+      hasData: true,
+      viewRevision: "rev",
     }], SERVER_URL)).toThrow("invalid entry URL")
   })
 
@@ -69,11 +85,15 @@ describe("parseWidgetCatalog", () => {
       title: "Headlines",
       url: `${SERVER_URL}/widgets/headlines/index.html`,
       width: 6,
+      dataFiles: [],
+      dataRevision: "rev",
+      hasData: true,
+      viewRevision: "rev",
     }
     expect(() => parseWidgetCatalog([widget, widget], SERVER_URL)).toThrow("Duplicate widget ID")
   })
 
-  it("parses the data flag and assumes data when older daemons omit it", () => {
+  it("parses the data flag and rejects invalid or missing data fields", () => {
     const widget = {
       height: 2,
       id: "plain",
@@ -82,15 +102,23 @@ describe("parseWidgetCatalog", () => {
       title: "Plain",
       url: `${SERVER_URL}/widgets/plain/index.html`,
       width: 2,
+      dataFiles: [],
+      dataRevision: "rev",
+      hasData: true,
+      viewRevision: "rev",
     }
     expect(parseWidgetCatalog([widget], SERVER_URL)[0]?.hasData).toBe(true)
     expect(parseWidgetCatalog([{ ...widget, hasData: false }], SERVER_URL)[0]?.hasData).toBe(false)
     expect(() => parseWidgetCatalog([{ ...widget, hasData: "yes" }], SERVER_URL)).toThrow("Invalid Widget data flag")
+    const { hasData: _hasData, ...missingFlag } = widget
+    expect(() => parseWidgetCatalog([missingFlag], SERVER_URL)).toThrow("Invalid Widget data flag")
+    const { viewRevision: _viewRevision, ...missingRevision } = widget
+    expect(() => parseWidgetCatalog([missingRevision], SERVER_URL)).toThrow("Invalid Widget view revision")
   })
 })
 
 describe("built-in Widget UI", () => {
-  const widget = { id: "feed", title: "Feed", height: 4, minHeight: 2, width: 4, minWidth: 2, view: { type: "live-card", query: "items" } }
+  const widget = { id: "feed", title: "Feed", height: 4, minHeight: 2, width: 4, minWidth: 2, view: { type: "live-card", query: "items" }, dataFiles: [], dataRevision: "rev", hasData: true, viewRevision: "rev" }
   it("accepts a data-only Widget without an HTML entry", () => {
     const [manifest] = parseWidgetCatalog([widget], SERVER_URL)
     expect(manifest?.view).toEqual({ type: "live-card", query: "items" })
@@ -104,7 +132,7 @@ describe("built-in Widget UI", () => {
 })
 
 describe("chart Widget manifests", () => {
-  const base = { id: "chart", title: "Chart", height: 2, minHeight: 1, width: 2, minWidth: 1 }
+  const base = { id: "chart", title: "Chart", height: 2, minHeight: 1, width: 2, minWidth: 1, dataFiles: [], dataRevision: "rev", hasData: true, viewRevision: "rev" }
   it("parses chart mappings and rejects unknown or out-of-range configuration", () => {
     const view = { type: "chart", chart: "line", query: "stats", label: "day", value: "count", limit: 30 }
     expect(parseWidgetCatalog([{ ...base, view }], SERVER_URL)[0]?.view).toEqual(view)

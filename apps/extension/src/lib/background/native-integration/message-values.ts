@@ -44,6 +44,8 @@ export function parseWidgetCatalog(value: unknown): WidgetCatalogEntry[] {
     || (entry.url !== undefined && typeof entry.url !== "string")
     || typeof entry.dataRevision !== "string"
     || !isStringArray(entry.dataFiles)
+    || typeof entry.viewRevision !== "string"
+    || typeof entry.hasData !== "boolean"
     || !Number.isSafeInteger(entry.refreshIntervalMs)
     || Number(entry.refreshIntervalMs) < 0
   ))) {

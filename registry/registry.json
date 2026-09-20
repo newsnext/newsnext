@@ -1638,7 +1638,7 @@
         }
       },
       {
-        "id": "zhihu-legacy-column",
+        "id": "zhihu-column-short",
         "match": {
           "hosts": [
             "zhuanlan.zhihu.com"
