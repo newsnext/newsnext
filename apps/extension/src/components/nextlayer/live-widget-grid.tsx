@@ -7,7 +7,6 @@ import type { WidgetAppearanceSnapshot } from "./widget-appearance"
 import type { WidgetCatalog, WidgetUi } from "./widget-manifest"
 import type { WidgetLayoutSpan } from "@/lib/widget-host"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
-import { useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { CardBackContent, CardShell } from "@/components/card-shell"
@@ -27,7 +26,7 @@ import { actions } from "@/lib/actions"
 import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
-import { findLastWidgetData, useLiveWidgetData } from "./use-live-widget-data"
+import { useLiveWidgetData } from "./use-live-widget-data"
 import { DeleteWidgetButton, WidgetBoardSelect } from "./widget-actions"
 import { readWidgetAppearanceSnapshots, rememberWidgetAppearances } from "./widget-appearance"
 import { WidgetChartContent } from "./widget-chart-content"
@@ -520,7 +519,6 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
 
 function MissingWidgetCard({ boardId, liveWidgetId, widgetId, snapshot }: { boardId: string, liveWidgetId: string, widgetId: string, snapshot: WidgetAppearanceSnapshot | undefined }): React.JSX.Element {
   const { t } = useI18n()
-  const queryClient = useQueryClient()
   const { setNodeRef, setHandleRef } = useSortable({
     id: getGridWidgetId(liveWidgetId),
     kind: "widget",
@@ -532,34 +530,19 @@ function MissingWidgetCard({ boardId, liveWidgetId, widgetId, snapshot }: { boar
   })
   const title = snapshot?.title ?? widgetId
   const color = snapshot?.color ?? "slate"
-  // Last successful data for this exact definition version; without a
-  // manifest no new fetches can update it, so this one-shot read is enough.
-  const queries = useMemo(() => (
-    snapshot
-      ? findLastWidgetData(queryClient, widgetId, snapshot.dataRevision)
-      : undefined
-  ), [queryClient, snapshot, widgetId])
-  const view = snapshot?.view
-  const cachedContent = view && queries && (view.type === "chart" || view.type === "live-card")
-    ? view.type === "chart"
-      ? <WidgetChartContent view={view} queries={queries} />
-      : <WidgetItemListContent ui={view} title={title} color={color} loading={false} queries={queries} onRefresh={() => {}} />
-    : undefined
+  // A removed definition is an error: snapshot data must never render.
   return (
     <article ref={setNodeRef} className={`relative h-full min-h-0 select-none ${color}`}>
       <WidgetFace
         avatarSeed={widgetId}
         title={title}
         headerRef={setHandleRef}
-        statusMessage={cachedContent ? t("widgetDefinitionMissing") : undefined}
         actions={<DeleteWidgetButton liveWidgetId={liveWidgetId} />}
       >
-        {cachedContent ?? (
-          <div className="relative flex size-full flex-col items-center justify-center gap-1 p-4 text-center">
-            <p className="text-sm font-medium">{title}</p>
-            <p className="text-xs text-muted-foreground">{t("widgetDefinitionMissing")}</p>
-          </div>
-        )}
+        <div className="relative flex size-full flex-col items-center justify-center gap-1 p-4 text-center">
+          <p className="text-sm font-medium">{title}</p>
+          <p className="text-xs text-muted-foreground">{t("widgetDefinitionMissing")}</p>
+        </div>
       </WidgetFace>
     </article>
   )

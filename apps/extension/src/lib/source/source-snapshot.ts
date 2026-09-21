@@ -119,39 +119,6 @@ export async function readSourceSnapshot(
   }
 }
 
-/**
- * Latest snapshot for a Source ID, regardless of version/params.
- * Used only as an appearance fallback when the Source definition was
- * removed: the stored `result.source` keeps provider/metadata (no loader),
- * so the card can still render name/icon/color with a reason instead of
- * disappearing. Never used to serve items.
- */
-export async function readLatestSourceSnapshotForSource(
-  sourceId: string,
-): Promise<SourceSnapshot | undefined> {
-  try {
-    const snapshots = await database.sourceSnapshots.toArray()
-    let latest: SourceSnapshot | undefined
-    for (const snapshot of snapshots) {
-      if (!isReadableSnapshot(snapshot, sourceId) || isExpired(snapshot)) continue
-      if (!latest || snapshot.fetchedAt > latest.fetchedAt) {
-        latest = snapshot
-      }
-    }
-    return latest
-  } catch (error) {
-    console.error("Failed to read latest Source snapshot", error)
-    return undefined
-  }
-}
-
-function isReadableSnapshot(value: unknown, sourceId: string): value is SourceSnapshot {
-  const snapshot = asReadableSnapshot(value)
-  return snapshot !== undefined
-    && snapshot.result.source.id === sourceId
-    && typeof snapshot.result.source.version === "number"
-}
-
 export async function writeSourceSnapshot(
   target: SourceSnapshotTarget,
   result: SourceLoadResult,

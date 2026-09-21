@@ -88,7 +88,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   // params schema, and capabilities (loader metadata still describes the
   // snapshot items and is applied later in displaySource).
   // Drafts already carry their descriptor; only persisted cards resolve on demand.
-  const { descriptor } = useSourceDescriptor(source.sourceId, { enabled: target.kind === "card" })
+  const { descriptor, descriptorError, isDescriptorPending } = useSourceDescriptor(source.sourceId, { enabled: target.kind === "card" })
   const resolvedSource = useMemo(() => {
     if (descriptor && sourceSnapshot) {
       return sourceSnapshot.version > descriptor.version
@@ -118,15 +118,21 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     params: resolvedSource.params,
     initialValues: resolvedSource.paramsValue,
   })
+  // A removed definition is an error: snapshot items must never render.
+  const isDefinitionMissing = target.kind === "card" && !isDescriptorPending && descriptorError !== undefined
+  const visibleItems = isDefinitionMissing ? [] : items
+  const visibleInlinePresentation = isDefinitionMissing ? undefined : inlinePresentation
   const {
     missingPermission,
     requestPermission,
   } = useSourcePermission(resolvedSource, savedParams)
-  const sourceErrorMessage = isError
-    ? errorMessage
-      ? t("loadSourceFailedWithError", { error: errorMessage })
-      : t("loadSourceFailed")
-    : undefined
+  const sourceErrorMessage = isDefinitionMissing
+    ? t("loadSourceFailedWithError", { error: descriptorError?.message ?? source.sourceId })
+    : isError
+      ? errorMessage
+        ? t("loadSourceFailedWithError", { error: errorMessage })
+        : t("loadSourceFailed")
+      : undefined
   const displaySource = useMemo(
     () => applySourceLoaderMetadata(resolvedSource, metadata),
     [metadata, resolvedSource],
@@ -187,12 +193,12 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     >
       <LiveCardFront
         source={displaySource}
-        items={items}
-        inlinePresentation={inlinePresentation}
-        isContentFetching={!hasData && isLoading}
+        items={visibleItems}
+        inlinePresentation={visibleInlinePresentation}
+        isContentFetching={!isDefinitionMissing && !hasData && isLoading}
         sourceErrorMessage={sourceErrorMessage}
-        sourceLoginUrl={loginUrl}
-        sourcePermissionRequest={missingPermission}
+        sourceLoginUrl={isDefinitionMissing ? undefined : loginUrl}
+        sourcePermissionRequest={isDefinitionMissing ? undefined : missingPermission}
         sourceWorkerTakeover={offlineWorker
           ? {
               isPending: isTakingOver,

@@ -14,8 +14,9 @@ function sourceDescriptorQueryOptions(sourceId: string) {
 
 /**
  * On-demand descriptor for one Source. Never blocks rendering: while loading
- * or when the definition was removed, `descriptor` is undefined and callers
- * render a placeholder/snapshot instead.
+ * `descriptor` is undefined and callers render a placeholder/snapshot
+ * instead. A resolved error means the definition was removed: callers must
+ * render an error and never serve snapshot items.
  */
 export function useSourceDescriptor(sourceId: string, options?: { enabled?: boolean }) {
   const query = useQuery({
@@ -25,6 +26,8 @@ export function useSourceDescriptor(sourceId: string, options?: { enabled?: bool
 
   return {
     descriptor: query.data,
+    descriptorError: query.error instanceof Error ? query.error : undefined,
+    isDescriptorPending: query.isPending,
   }
 }
 

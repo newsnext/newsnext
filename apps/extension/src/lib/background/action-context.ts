@@ -1,7 +1,7 @@
 import type { LiveCard } from "../source"
 import type { BackgroundActionContext } from "./background-actions"
 import { loadSourceDescriptors, prepareSourceRequest } from "@newsnext/source-kit/runtime"
-import { readLatestSourceSnapshotForSource, readSourceSnapshot } from "../source/source-snapshot"
+import { readSourceSnapshot } from "../source/source-snapshot"
 import {
   mutateApplicationData,
   readApplicationData,
@@ -49,17 +49,8 @@ async function readBoundLiveCardSnapshot({ card }: { card: LiveCard }) {
       result: snapshot.result,
     }
   } catch {
-    // Source definition removed: fall back to the latest appearance snapshot
-    // so the card still renders name/icon/color with a load error.
-    const latest = await readLatestSourceSnapshotForSource(card.sourceId)
-    if (!latest) return null
-    return {
-      fetchProtected: true,
-      fetchedAt: latest.fetchedAt,
-      loadedAt: Date.now(),
-      params: card.patch.params ?? {},
-      result: latest.result,
-    }
+    // A removed Source definition is an error: never serve snapshot items.
+    return null
   }
 }
 

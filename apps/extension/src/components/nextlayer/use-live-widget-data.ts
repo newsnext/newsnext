@@ -1,5 +1,4 @@
 import type { LiveWidgetDataResult } from "@newsnext/sdk/extension"
-import type { QueryClient } from "@tanstack/react-query"
 import { createClient } from "@newsnext/sdk/extension"
 import { useQuery } from "@tanstack/react-query"
 
@@ -43,18 +42,6 @@ export function buildWidgetDataQueryKey(input: WidgetDataQueryKey): readonly unk
   ]
 }
 
-function parseWidgetDataQueryKey(key: readonly unknown[]): WidgetDataQueryKey | undefined {
-  const [, widgetId, cardIds, dataRevision, params] = key
-  if (typeof widgetId !== "string"
-    || !Array.isArray(cardIds)
-    || !cardIds.every(cardId => typeof cardId === "string")
-    || typeof dataRevision !== "string"
-    || !isRecord(params)) {
-    return undefined
-  }
-  return { cardIds, dataRevision, params, widgetId }
-}
-
 export function useLiveWidgetData(input: WidgetDataInput, active: boolean): WidgetDataView {
   const cardIds = [...input.cardIds].sort()
   const query = useQuery({
@@ -77,37 +64,4 @@ export function useLiveWidgetData(input: WidgetDataInput, active: boolean): Widg
     isContentFetching: active && !query.data && query.isFetching,
     refetch: query.refetch,
   }
-}
-
-/**
- * Last successful data for a removed Widget definition, matched by exact
- * `dataRevision` (the definition version): foreign-version data never renders.
- * One-shot read; without a manifest no new fetches can update it.
- */
-export function findLastWidgetData(
-  queryClient: QueryClient,
-  widgetId: string,
-  dataRevision: string,
-): Record<string, unknown> | undefined {
-  const prefix = [...LIVE_WIDGET_QUERY_KEY, widgetId]
-  let latest: { queries: Record<string, unknown>, updatedAt: number } | undefined
-  for (const query of queryClient.getQueryCache().findAll({ queryKey: prefix, exact: false })) {
-    const parsed = parseWidgetDataQueryKey(query.queryKey)
-    if (!parsed || parsed.dataRevision !== dataRevision) continue
-    const data = query.state.data
-    if (!isWidgetDataResult(data)) continue
-    const updatedAt = query.state.dataUpdatedAt
-    if (!latest || updatedAt > latest.updatedAt) {
-      latest = { queries: data.queries, updatedAt }
-    }
-  }
-  return latest?.queries
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value)
-}
-
-function isWidgetDataResult(value: unknown): value is { queries: Record<string, unknown> } {
-  return isRecord(value) && isRecord(value.queries)
 }
