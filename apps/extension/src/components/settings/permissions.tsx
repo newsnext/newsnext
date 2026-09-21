@@ -1,15 +1,20 @@
 import type { LiveCard } from "@/lib/source"
-import type { SourceDescriptor } from "@/typings/source"
+import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
+import { useQueries, useQueryClient } from "@tanstack/react-query"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
+import { createLiveCardQueryTarget, getSourceQueryKey } from "@/hooks/source-query"
 import { useKeyedAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptorMap } from "@/hooks/use-source-descriptor"
+import { findLiveCardSnapshot } from "@/hooks/use-source-snapshot"
 import {
+  applySourceLoaderMetadata,
+  buildLiveCards,
   getGrantedHostPermissionOrigins,
   getPermissionOriginLabel,
   getPermissionRequestForSource,
@@ -33,8 +38,10 @@ function getLiveCardsUsingOrigin(
   origin: string,
   sources: SourceDescriptor[],
   liveCards: LiveCard[],
+  resolvedCards: LiveCardViewModel[],
 ): PermissionLiveCard[] {
   const sourcesById = new Map(sources.map(source => [source.id, source]))
+  const titleById = new Map(resolvedCards.map(card => [card.id, card.metadata.title || card.provider.title]))
 
   return liveCards.flatMap((card) => {
     const source = sourcesById.get(card.sourceId)
@@ -53,9 +60,8 @@ function getLiveCardsUsingOrigin(
 
     return [{
       id: card.cardId,
-      title: card.patch.metadata?.title
-        ?? source.metadata.title
-        ?? source.provider.title,
+      // Resolved card title (patch + descriptor + loader metadata).
+      title: titleById.get(card.cardId) ?? source.provider.title,
     }]
   })
 }
@@ -75,6 +81,8 @@ export function PermissionsSettings({
     [liveCards],
   )
   const { descriptors, isPending: areSourcesLoading } = useSourceDescriptorMap(sourceIds)
+  const sources = useMemo(() => [...descriptors.values()], [descriptors])
+  const queryClient = useQueryClient()
   const {
     error: revokeError,
     isPending: isRevoking,
@@ -82,10 +90,28 @@ export function PermissionsSettings({
     run: runRevoke,
   } = useKeyedAsyncAction<string>(t("revokeSiteAccessFailed"))
 
+  const baseCards = useMemo(() => buildLiveCards({
+    sources,
+    liveCards,
+    boardId: null,
+  }), [sources, liveCards])
+  // Cache-harvesting reads: same keys as the board's load queries, so titles
+  // upgrade when cached results arrive, but never trigger loads themselves.
+  const loaderMetadata = useQueries({
+    queries: baseCards.map(liveCard => ({
+      queryKey: getSourceQueryKey(createLiveCardQueryTarget(liveCard.id)),
+      queryFn: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data?.metadata,
+    })),
+    combine: results => results.map(result => result.data),
+  })
+  const resolvedCards = useMemo(
+    () => baseCards.map((liveCard, index) => applySourceLoaderMetadata(liveCard, loaderMetadata[index])),
+    [baseCards, loaderMetadata],
+  )
   const cardsByOrigin = useMemo(() => new Map(origins.map(origin => [
     origin,
-    getLiveCardsUsingOrigin(origin, [...descriptors.values()], liveCards),
-  ])), [descriptors, liveCards, origins])
+    getLiveCardsUsingOrigin(origin, sources, liveCards, resolvedCards),
+  ])), [sources, liveCards, origins, resolvedCards])
   const boardIdByCardId = useMemo(() => new Map(
     boards.flatMap(board => board.nowLayer.liveCards.map(cardId => [cardId, board.id] as const)),
   ), [boards])
