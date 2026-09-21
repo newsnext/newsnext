@@ -1,28 +1,18 @@
-import { useQueryClient } from "@tanstack/react-query"
 import { useParams } from "@tanstack/react-router"
 import { useAtomValueRawSync, useSetAtom } from "jotai"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect } from "react"
 import { BoardView } from "@/components/board-view"
-import { restoreLiveCardResults } from "@/lib/source/restore-live-card-results"
 import { handleThemeSwitch } from "@/lib/utils/swith-theme"
-import { boardsAtom, liveCardsAtom } from "@/store/board"
+import { boardsAtom } from "@/store/board"
 import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardIdComponent() {
   const { boardId } = useParams({ from: "/board/$boardId" })
   // RawSync avoids missing hydration between render and subscribe; useAtomValue can route to a stale default board.
   const boards = useAtomValueRawSync(boardsAtom)
-  const liveCards = useAtomValueRawSync(liveCardsAtom)
-  const queryClient = useQueryClient()
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
-  const [restoredBoardId, setRestoredBoardId] = useState<string>()
   const board = boards.find(board => board.id === boardId)
   const boardCardIds = board?.nowLayer.liveCards
-  const boardLiveCards = useMemo(() => {
-    if (!boardCardIds) return []
-    const cardIdSet = new Set(boardCardIds)
-    return liveCards.filter(card => cardIdSet.has(card.cardId))
-  }, [boardCardIds, liveCards])
   useEffect(() => {
     document.title = board ? `NewsNext | ${board.name}` : "NewsNext"
     if (board) {
@@ -40,17 +30,6 @@ export function BoardIdComponent() {
     }
   }, [boardId, boardCardIds, setCurrentBoardId])
 
-  useEffect(() => {
-    if (!boardCardIds) return
-    let active = true
-    void restoreLiveCardResults(queryClient, boardLiveCards).finally(() => {
-      if (active) setRestoredBoardId(boardId)
-    })
-    return () => {
-      active = false
-    }
-  }, [boardId, boardCardIds, boardLiveCards, queryClient])
-
   if (!board) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center text-sm text-muted-foreground">
@@ -59,7 +38,5 @@ export function BoardIdComponent() {
     )
   }
 
-  const readyBoard = boards.find(candidate => candidate.id === restoredBoardId)
-  // Hold rendering until cached results restore; mounting live cards first would flash loading states over warm data.
-  return readyBoard ? <BoardView board={readyBoard} /> : null
+  return <BoardView board={board} />
 }

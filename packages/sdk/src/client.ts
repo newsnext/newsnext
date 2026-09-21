@@ -1,6 +1,6 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
-import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
+import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
 import { SOURCE_REQUEST_TIMEOUT_MS } from "@newsnext/shared/constants"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
@@ -81,6 +81,11 @@ export class NewsNextClient {
   }
 
   readonly liveWidgets = {
+    /** Read the latest matching Widget snapshot without computing new data. */
+    readSnapshot: (query: LiveWidgetDataQuery, options?: CallOptions): Promise<LiveWidgetSnapshotResult> => this.call({
+      method: "liveWidgets.readSnapshot",
+      ...query,
+    }, options),
     /** Compute Widget data with a daemon-owned one-minute request protection window. */
     data: (query: LiveWidgetDataQuery, options?: CallOptions): Promise<LiveWidgetDataResult> => this.call({
       method: "liveWidgets.data",

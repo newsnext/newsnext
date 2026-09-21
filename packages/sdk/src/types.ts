@@ -110,3 +110,4 @@ export interface LiveWidgetDataResult {
   refreshedAt: number
   errors: JsonValue[]
 }
+export type LiveWidgetSnapshotResult = LiveWidgetDataResult | null

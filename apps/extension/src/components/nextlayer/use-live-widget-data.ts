@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 
 const client = createClient()
 export const LIVE_WIDGET_QUERY_KEY = ["live-widget"] as const
+export const LIVE_WIDGET_SNAPSHOT_QUERY_KEY = ["live-widget-snapshot"] as const
 
 interface WidgetDataInput {
   params: Record<string, unknown>
@@ -42,15 +43,42 @@ export function buildWidgetDataQueryKey(input: WidgetDataQueryKey): readonly unk
   ]
 }
 
+export function buildWidgetSnapshotQueryKey(input: WidgetDataQueryKey): readonly unknown[] {
+  return [
+    ...LIVE_WIDGET_SNAPSHOT_QUERY_KEY,
+    input.widgetId,
+    input.cardIds,
+    input.dataRevision,
+    input.params,
+  ]
+}
+
 export function useLiveWidgetData(input: WidgetDataInput, active: boolean): WidgetDataView {
   const cardIds = [...input.cardIds].sort()
-  const query = useQuery({
-    queryKey: buildWidgetDataQueryKey({ ...input, cardIds }),
-    queryFn: ({ signal }) => client.liveWidgets.data(
+  const identity: WidgetDataQueryKey = {
+    cardIds,
+    dataRevision: input.dataRevision,
+    params: input.params,
+    widgetId: input.widgetId,
+  }
+  const snapshotQuery = useQuery({
+    queryKey: buildWidgetSnapshotQueryKey(identity),
+    queryFn: ({ signal }) => client.liveWidgets.readSnapshot(
       { widgetId: input.widgetId, cardIds, params: input.params },
       { signal },
     ),
     enabled: active,
+    networkMode: "offlineFirst",
+    retry: false,
+    staleTime: Infinity,
+  })
+  const query = useQuery({
+    queryKey: buildWidgetDataQueryKey(identity),
+    queryFn: ({ signal }) => client.liveWidgets.data(
+      { widgetId: input.widgetId, cardIds, params: input.params },
+      { signal },
+    ),
+    enabled: active && snapshotQuery.isFetched,
     networkMode: "offlineFirst",
     // A failed background refresh keeps the last successful data on screen.
     placeholderData: previous => previous,
@@ -58,10 +86,13 @@ export function useLiveWidgetData(input: WidgetDataInput, active: boolean): Widg
     refetchIntervalInBackground: false,
     retry: false,
   })
+  const data = query.isPlaceholderData
+    ? snapshotQuery.data ?? query.data
+    : query.data ?? snapshotQuery.data ?? undefined
   return {
-    data: query.data,
+    data,
     error: query.error instanceof Error ? query.error : undefined,
-    isContentFetching: active && !query.data && query.isFetching,
+    isContentFetching: active && !data && (snapshotQuery.isFetching || query.isFetching),
     refetch: query.refetch,
   }
 }

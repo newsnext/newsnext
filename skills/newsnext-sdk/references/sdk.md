@@ -89,6 +89,11 @@ const widget = await client.liveWidgets.data({
   cardIds: ["saved-card-id"],
   params: { limit: 20 },
 })
+const cachedWidget = await client.liveWidgets.readSnapshot({
+  widgetId: "digest",
+  cardIds: ["saved-card-id"],
+  params: { limit: 20 },
+})
 ```
 
 LiveCard data loads the saved Source through its owning Worker and existing
@@ -98,6 +103,8 @@ Configuration is available separately through `client.actions.liveCard.get`.
 LiveWidget data returns `{ queries, refreshedAt, errors }`, supports arbitrary
 named JSON results, and needs neither a Board placement nor a view. `cardIds` is
 an explicit input scope; refreshing a LiveWidget does not refresh its Sources.
+`liveWidgets.readSnapshot` returns the latest matching result or `null` without
+running the Widget data pipeline.
 
 ## History
 
@@ -215,8 +222,9 @@ extension; the SDK does not execute browser Sources inside Node.
 ## Extension app client
 
 NewsNext's own extension app can import `createClient` from
-`@newsnext/sdk/extension` and call `client.liveWidgets.data({ widgetId, cardIds },
-{ signal })`. The `@newsnext/sdk/*` specifiers below resolve through the workspace
+`@newsnext/sdk/extension` and call `client.liveWidgets.data` or
+`client.liveWidgets.readSnapshot` with `{ widgetId, cardIds }` and `{ signal }`.
+The `@newsnext/sdk/*` specifiers below resolve through the workspace
 and the CLI's bundled SDK; the SDK is not installed from a registry.
 It uses the background's runtime-port SDK bridge and inherits the
 host environment. The background accepts this transport only from its own
