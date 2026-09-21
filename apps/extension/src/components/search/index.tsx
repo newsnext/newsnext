@@ -25,7 +25,7 @@ import { useMemo, useState } from "react"
 import { SourceIcon } from "@/components/card-shell/source-icon"
 import {
   createLiveCardQueryTarget,
-  getSourceQueryKey,
+  getSourceQueryOptions,
 } from "@/hooks/source-query"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { useI18n } from "@/hooks/use-i18n"
@@ -145,10 +145,14 @@ function SearchDialogContent(): ReactNode {
   // Cache-harvesting reads: same keys as the board's load queries, so rows
   // upgrade when cached results arrive, but never trigger loads themselves.
   const loaderMetadata = useQueries({
-    queries: liveCards.map(liveCard => ({
-      queryKey: getSourceQueryKey(createLiveCardQueryTarget(liveCard.id)),
-      queryFn: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data?.metadata,
-    })),
+    queries: liveCards.map((liveCard) => {
+      const target = createLiveCardQueryTarget(liveCard.id)
+      return {
+        ...getSourceQueryOptions(target),
+        enabled: false,
+        select: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data.metadata,
+      }
+    }),
     combine: results => results.map(result => result.data),
   })
 

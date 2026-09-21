@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
-import { createLiveCardQueryTarget, getSourceQueryKey } from "@/hooks/source-query"
+import { createLiveCardQueryTarget, getSourceQueryOptions } from "@/hooks/source-query"
 import { useKeyedAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptorMap } from "@/hooks/use-source-descriptor"
@@ -98,10 +98,14 @@ export function PermissionsSettings({
   // Cache-harvesting reads: same keys as the board's load queries, so titles
   // upgrade when cached results arrive, but never trigger loads themselves.
   const loaderMetadata = useQueries({
-    queries: baseCards.map(liveCard => ({
-      queryKey: getSourceQueryKey(createLiveCardQueryTarget(liveCard.id)),
-      queryFn: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data?.metadata,
-    })),
+    queries: baseCards.map((liveCard) => {
+      const target = createLiveCardQueryTarget(liveCard.id)
+      return {
+        ...getSourceQueryOptions(target),
+        enabled: false,
+        select: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data.metadata,
+      }
+    }),
     combine: results => results.map(result => result.data),
   })
   const resolvedCards = useMemo(
