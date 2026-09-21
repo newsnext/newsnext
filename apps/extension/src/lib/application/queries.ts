@@ -11,15 +11,6 @@ export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDe
   return [...sources]
 }
 
-export function getSourceQuery(
-  sources: readonly SourceDescriptor[],
-  input: { sourceId: string },
-): SourceDescriptor {
-  const source = sources.find(candidate => candidate.id === input.sourceId)
-  if (!source) throw new Error(`Source '${input.sourceId}' not found`)
-  return source
-}
-
 export function listBoardsQuery(data: ApplicationData): Board[] {
   return data.boards
 }

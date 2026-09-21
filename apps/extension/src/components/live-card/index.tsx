@@ -13,10 +13,11 @@ import { useAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { useInView } from "@/hooks/use-in-view"
 import { NATIVE_INTEGRATION_STATUS_QUERY_KEY, useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
+import { useSourceDescriptor } from "@/hooks/use-source-descriptor"
 import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { actions } from "@/lib/actions"
-import { applySourceLoaderMetadata, applySourceSnapshot, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
+import { applySourceDescriptor, applySourceLoaderMetadata, applySourceSnapshot, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
 import {
   resetLiveCardParamsAtom,
   setLiveCardPatchAtom,
@@ -82,10 +83,22 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     params: source.paramsValue,
     enabled: routingResolved && offlineWorker === undefined,
   })
-  const resolvedSource = useMemo(
-    () => sourceSnapshot ? applySourceSnapshot(source, sourceSnapshot) : source,
-    [source, sourceSnapshot],
-  )
+  // On-demand descriptor: placeholder/snapshot render first, the registry
+  // definition arrives separately and the newer version wins for appearance,
+  // params schema, and capabilities (loader metadata still describes the
+  // snapshot items and is applied later in displaySource).
+  // Drafts already carry their descriptor; only persisted cards resolve on demand.
+  const { descriptor } = useSourceDescriptor(source.sourceId, { enabled: target.kind === "card" })
+  const resolvedSource = useMemo(() => {
+    if (descriptor && sourceSnapshot) {
+      return sourceSnapshot.version > descriptor.version
+        ? applySourceSnapshot(source, sourceSnapshot)
+        : applySourceDescriptor(source, descriptor)
+    }
+    if (sourceSnapshot) return applySourceSnapshot(source, sourceSnapshot)
+    if (descriptor) return applySourceDescriptor(source, descriptor)
+    return source
+  }, [descriptor, source, sourceSnapshot])
   const {
     error: takeoverError,
     isPending: isTakingOver,

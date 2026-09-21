@@ -8,7 +8,7 @@ import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
 import { useKeyedAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
-import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
+import { useSourceDescriptorMap } from "@/hooks/use-source-descriptor"
 import {
   getGrantedHostPermissionOrigins,
   getPermissionOriginLabel,
@@ -70,7 +70,11 @@ export function PermissionsSettings({
   const liveCards = useAtomValue(liveCardsAtom)
   const boards = useAtomValue(boardsAtom)
   const deleteLiveCard = useSetAtom(deleteLiveCardAtom)
-  const { isLoading: areSourcesLoading, sources } = useSourceDescriptors()
+  const sourceIds = useMemo(
+    () => [...new Set(liveCards.map(card => card.sourceId))],
+    [liveCards],
+  )
+  const { descriptors, isPending: areSourcesLoading } = useSourceDescriptorMap(sourceIds)
   const {
     error: revokeError,
     isPending: isRevoking,
@@ -80,8 +84,8 @@ export function PermissionsSettings({
 
   const cardsByOrigin = useMemo(() => new Map(origins.map(origin => [
     origin,
-    getLiveCardsUsingOrigin(origin, sources, liveCards),
-  ])), [liveCards, origins, sources])
+    getLiveCardsUsingOrigin(origin, [...descriptors.values()], liveCards),
+  ])), [descriptors, liveCards, origins])
   const boardIdByCardId = useMemo(() => new Map(
     boards.flatMap(board => board.nowLayer.liveCards.map(cardId => [cardId, board.id] as const)),
   ), [boards])

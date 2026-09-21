@@ -54,8 +54,16 @@ export function applySourceSnapshot(
   liveCard: LiveCardViewModel,
   snapshot: SourceDescriptor,
 ): LiveCardViewModel {
+  return applySourceDescriptor(liveCard, snapshot)
+}
+
+/** Rebase a card view onto a registry descriptor, preserving patch overrides. */
+export function applySourceDescriptor(
+  liveCard: LiveCardViewModel,
+  descriptor: SourceDescriptor,
+): LiveCardViewModel {
   return {
-    ...snapshot,
+    ...descriptor,
     id: liveCard.id,
     sourceId: liveCard.sourceId,
     boardId: liveCard.boardId,
@@ -63,7 +71,7 @@ export function applySourceSnapshot(
     metadataValue: liveCard.metadataValue,
     paramsValue: liveCard.paramsValue,
     metadata: {
-      ...snapshot.metadata,
+      ...descriptor.metadata,
       ...liveCard.metadataValue,
     },
   }
@@ -80,6 +88,20 @@ export function createLiveCard(
     sourceId: card.sourceId,
     boardId,
   }, card)
+}
+
+export function createSourcePlaceholder(sourceId: string): SourceDescriptor {
+  const providerId = sourceId.split(":", 1)[0] || sourceId
+  return {
+    id: sourceId,
+    version: 0,
+    capabilities: { cookies: [], network: [] },
+    metadata: { title: sourceId },
+    provider: {
+      color: "slate",
+      title: providerId,
+    },
+  }
 }
 
 export function buildLiveCards({
@@ -106,11 +128,17 @@ export function buildLiveCards({
     liveCardGroups.set(card.sourceId, currentLiveCards)
   })
 
-  return sources.flatMap(source =>
-    (liveCardGroups.get(source.id) ?? [])
+  const descriptorsById = new Map(sources.map(source => [source.id, source]))
+  const ordered = [...liveCardGroups.entries()].sort(([a], [b]) => a.localeCompare(b))
+  return ordered.flatMap(([sourceId, cards]) => {
+    // Missing definition: keep the card with a generic placeholder so it
+    // explains itself instead of disappearing. Appearance snapshots upgrade
+    // this placeholder once the load result arrives (see applySourceSnapshot).
+    const source = descriptorsById.get(sourceId) ?? createSourcePlaceholder(sourceId)
+    return cards
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(card => createLiveCard(source, card, boardId)),
-  )
+      .map(card => createLiveCard(source, card, boardId))
+  })
 }
 
 export function applySourceLoaderMetadata(

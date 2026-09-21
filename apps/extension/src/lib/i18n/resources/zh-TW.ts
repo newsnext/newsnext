@@ -219,6 +219,7 @@ export const zhTW = {
   loadWidgetsFailed: "無法載入即時小工具：{{error}}",
   noLocalWidgets: "此看板未安裝即時小工具。",
   widgetFilesUnavailable: "已安裝的即時小工具檔案無法使用。",
+  widgetDefinitionMissing: "此小工具的定義檔案無法使用。",
   nextLayerWidgets: "Next Layer 即時小工具",
   releaseToDelete: "放開以刪除",
   dropToDelete: "拖放以刪除",

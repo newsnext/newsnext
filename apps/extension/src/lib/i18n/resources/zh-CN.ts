@@ -219,6 +219,7 @@ export const zhCN = {
   loadWidgetsFailed: "无法加载实时小组件：{{error}}",
   noLocalWidgets: "此看板未安装实时小组件。",
   widgetFilesUnavailable: "已安装的实时小组件文件不可用。",
+  widgetDefinitionMissing: "此小组件的定义文件不可用。",
   nextLayerWidgets: "Next Layer 实时小组件",
   releaseToDelete: "松开以删除",
   dropToDelete: "拖放以删除",

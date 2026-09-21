@@ -16,10 +16,12 @@ export type {
   LiveCardPatch,
 } from "./live-cards"
 export {
+  applySourceDescriptor,
   applySourceLoaderMetadata,
   applySourceSnapshot,
   buildLiveCards,
   createLiveCard,
+  createSourcePlaceholder,
   mergeLiveCardPatch,
 } from "./live-cards"
 export type { SourceLoadResponse, SourceLoadResult } from "./loader"
@@ -42,4 +44,4 @@ export {
   SOURCE_QUERY_REFETCH_INTERVAL_MS,
   SOURCE_QUERY_STALE_TIME_MS,
 } from "./query-policy"
-export { loadSourceDescriptors } from "./registry"
+export { loadSourceDescriptor } from "./registry"

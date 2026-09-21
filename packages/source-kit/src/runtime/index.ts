@@ -85,26 +85,33 @@ export async function loadSources(): Promise<Record<string, RuntimeSource>> {
 
 export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
   const sources = await loadSources()
-  return Object.entries(sources).map(([id, source]) => {
-    const { loader: _loader, ...descriptor } = source
-    return {
-      ...descriptor,
-      id,
-      radar: descriptor.radar?.map(rule => ({
-        ...rule,
-        patch: rule.patch
-          ? {
-              ...rule.patch,
-              params: Object.fromEntries(
-                Object.entries(rule.patch.params ?? {}).filter((entry): entry is [string, string] => (
-                  typeof entry[1] === "string"
-                )),
-              ),
-            }
-          : undefined,
-      })),
-    }
-  })
+  return Object.entries(sources).map(([id, source]) => toSourceDescriptor(id, source))
+}
+
+/** Resolve one Source without loading the whole registry into the caller. */
+export async function loadSourceDescriptor(sourceId: string): Promise<SourceDescriptor> {
+  return toSourceDescriptor(sourceId, await resolveSource(sourceId))
+}
+
+function toSourceDescriptor(id: string, source: RuntimeSource<any>): SourceDescriptor {
+  const { loader: _loader, ...descriptor } = source
+  return {
+    ...descriptor,
+    id,
+    radar: descriptor.radar?.map(rule => ({
+      ...rule,
+      patch: rule.patch
+        ? {
+            ...rule.patch,
+            params: Object.fromEntries(
+              Object.entries(rule.patch.params ?? {}).filter((entry): entry is [string, string] => (
+                typeof entry[1] === "string"
+              )),
+            ),
+          }
+        : undefined,
+    })),
+  }
 }
 
 export function parseSourceId(sourceId: string): ParsedSourceId {

@@ -215,6 +215,7 @@ export const en = {
   loadWidgetsFailed: "Could not load local LiveWidgets: {{error}}",
   noLocalWidgets: "No local LiveWidgets are installed on this board.",
   widgetFilesUnavailable: "The installed widget files are unavailable.",
+  widgetDefinitionMissing: "This widget's definition files are unavailable.",
   nextLayerWidgets: "Next Layer LiveWidgets",
   releaseToDelete: "Release to delete",
   dropToDelete: "Drop to delete",

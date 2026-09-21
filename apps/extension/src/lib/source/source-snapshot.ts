@@ -41,26 +41,54 @@ function isValidSourceSnapshot(
   target: SourceSnapshotTarget,
   key: string,
 ): value is SourceSnapshot {
-  if (!isRecord(value) || !isRecord(value.result)) {
-    return false
+  const snapshot = asReadableSnapshot(value)
+  return snapshot !== undefined
+    && snapshot.key === key
+    && snapshot.result.source.id === target.sourceId
+    && snapshot.result.source.version === target.version
+}
+
+interface ReadableSnapshot {
+  fetchedAt: number
+  key: string
+  result: {
+    inlinePresentation?: unknown
+    items: unknown[]
+    source: Record<string, unknown>
   }
-  const { fetchedAt, result } = value
+  schemaVersion: number
+}
+
+// Shape checks shared by keyed reads and latest-version scans: valid enough
+// to render from, without trusting any single field.
+function asReadableSnapshot(value: unknown): ReadableSnapshot | undefined {
+  if (!isRecord(value) || !isRecord(value.result)) {
+    return undefined
+  }
+  const { fetchedAt, key, result, schemaVersion } = value
   const source = result.source
   if (
     typeof fetchedAt !== "number"
     || !Number.isFinite(fetchedAt)
     || fetchedAt <= 0
-    || value.key !== key
-    || value.schemaVersion !== SOURCE_SNAPSHOT_SCHEMA_VERSION
+    || typeof key !== "string"
+    || schemaVersion !== SOURCE_SNAPSHOT_SCHEMA_VERSION
     || !Array.isArray(result.items)
     || !isValidInlinePresentation(result.inlinePresentation, result.items.length)
     || !isRecord(source)
-    || source.id !== target.sourceId
-    || source.version !== target.version
   ) {
-    return false
+    return undefined
   }
-  return true
+  return {
+    fetchedAt,
+    key,
+    result: {
+      inlinePresentation: result.inlinePresentation,
+      items: result.items,
+      source,
+    },
+    schemaVersion,
+  }
 }
 
 function isValidInlinePresentation(value: unknown, itemCount: number): boolean {
@@ -89,6 +117,39 @@ export async function readSourceSnapshot(
     console.error("Failed to read Source snapshot", error)
     return undefined
   }
+}
+
+/**
+ * Latest snapshot for a Source ID, regardless of version/params.
+ * Used only as an appearance fallback when the Source definition was
+ * removed: the stored `result.source` keeps provider/metadata (no loader),
+ * so the card can still render name/icon/color with a reason instead of
+ * disappearing. Never used to serve items.
+ */
+export async function readLatestSourceSnapshotForSource(
+  sourceId: string,
+): Promise<SourceSnapshot | undefined> {
+  try {
+    const snapshots = await database.sourceSnapshots.toArray()
+    let latest: SourceSnapshot | undefined
+    for (const snapshot of snapshots) {
+      if (!isReadableSnapshot(snapshot, sourceId) || isExpired(snapshot)) continue
+      if (!latest || snapshot.fetchedAt > latest.fetchedAt) {
+        latest = snapshot
+      }
+    }
+    return latest
+  } catch (error) {
+    console.error("Failed to read latest Source snapshot", error)
+    return undefined
+  }
+}
+
+function isReadableSnapshot(value: unknown, sourceId: string): value is SourceSnapshot {
+  const snapshot = asReadableSnapshot(value)
+  return snapshot !== undefined
+    && snapshot.result.source.id === sourceId
+    && typeof snapshot.result.source.version === "number"
 }
 
 export async function writeSourceSnapshot(

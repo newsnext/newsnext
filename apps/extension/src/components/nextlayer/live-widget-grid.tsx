@@ -3,9 +3,11 @@ import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
 import type { SortableWidgetNode } from "./sortable-widget-grid"
+import type { WidgetAppearanceSnapshot } from "./widget-appearance"
 import type { WidgetCatalog, WidgetUi } from "./widget-manifest"
 import type { WidgetLayoutSpan } from "@/lib/widget-host"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
+import { useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { CardBackContent, CardShell } from "@/components/card-shell"
@@ -25,8 +27,9 @@ import { actions } from "@/lib/actions"
 import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
 import { SortableWidgetGrid } from "./sortable-widget-grid"
-import { useLiveWidgetData } from "./use-live-widget-data"
+import { findLastWidgetData, useLiveWidgetData } from "./use-live-widget-data"
 import { DeleteWidgetButton, WidgetBoardSelect } from "./widget-actions"
+import { readWidgetAppearanceSnapshots, rememberWidgetAppearances } from "./widget-appearance"
 import { WidgetChartContent } from "./widget-chart-content"
 import { parseChartRows } from "./widget-chart-data"
 import { WidgetItemListContent } from "./widget-item-list-content"
@@ -392,26 +395,61 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
   }, [connection.entries, connection.serverOrigin])
   const boards = useAtomValue(boardsAtom)
   const board = boards.find(candidate => candidate.id === boardId)
-  const widgets = useMemo(() => {
+  // Read synchronously every render: tiny payload, and always current with
+  // removals that happen between catalog updates.
+  const appearanceSnapshots = readWidgetAppearanceSnapshots()
+  useEffect(() => {
+    // Snapshot appearance on every catalog update so a removed definition
+    // can still render name/color with a reason instead of disappearing.
+    if (catalog.widgets.length === 0) return
+    rememberWidgetAppearances(catalog.widgets)
+  }, [catalog.widgets])
+  // Board order is preserved: a removed definition renders its snapshot
+  // placeholder in place instead of disappearing or jumping to the end.
+  type GridItem
+    = | { kind: "widget", layout: WidgetLayoutSpan, manifest: (typeof catalog.widgets)[number], minW: number, placement: NonNullable<typeof board>["nextLayer"]["liveWidgets"][number] }
+      | { kind: "missing", layout: WidgetLayoutSpan, liveWidgetId: string, widgetId: string }
+  const items = useMemo<GridItem[]>(() => {
     const manifestsById = new Map(catalog.widgets.map(widget => [widget.id, widget]))
-    return board?.nextLayer.liveWidgets.flatMap((placement) => {
+    return (board?.nextLayer.liveWidgets ?? []).map((placement) => {
       const manifest = manifestsById.get(placement.widgetId)
-      if (!manifest) return []
+      if (!manifest) {
+        return {
+          kind: "missing",
+          layout: {
+            width: clampWidgetWidth(placement.layout.width),
+            height: placement.layout.height,
+          },
+          liveWidgetId: placement.liveWidgetId,
+          widgetId: placement.widgetId,
+        } as const
+      }
       const minW = clampWidgetWidth(manifest.minWidth)
       const layout: WidgetLayoutSpan = {
         width: Math.max(minW, clampWidgetWidth(placement.layout.width)),
         height: Math.max(manifest.minHeight, placement.layout.height),
       }
-      return [{ manifest, placement, layout, minW }]
-    }) ?? []
+      return { kind: "widget", layout, manifest, minW, placement } as const
+    })
   }, [board?.nextLayer.liveWidgets, catalog.widgets])
-  const nodes = useMemo<SortableWidgetNode[]>(() => widgets.map(({ manifest, placement, layout, minW }) => ({
-    id: getGridWidgetId(placement.liveWidgetId),
-    w: layout.width,
-    h: layout.height,
-    minW,
-    minH: manifest.minHeight,
-  })), [widgets])
+  const nodes = useMemo<SortableWidgetNode[]>(() => items.map((item) => {
+    if (item.kind === "widget") {
+      return {
+        id: getGridWidgetId(item.placement.liveWidgetId),
+        w: item.layout.width,
+        h: item.layout.height,
+        minW: item.minW,
+        minH: item.manifest.minHeight,
+      }
+    }
+    return {
+      id: getGridWidgetId(item.liveWidgetId),
+      w: item.layout.width,
+      h: item.layout.height,
+      minW: 1,
+      minH: 1,
+    }
+  }), [items])
   const saveLayout = useCallback(async (layout: SortableWidgetNode[]) => {
     if (!board || layout.length !== board.nextLayer.liveWidgets.length) return
     const updates = getChangedWidgetLayouts(layout, board.nextLayer.liveWidgets)
@@ -419,8 +457,8 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
   }, [board, boardId])
   useLayoutEffect(() => {
     // Readiness comes from the manifest and grid mount only; widget data queries start after restoration and must not gate it.
-    if (!connection.isLoading && (widgets.length === 0 || connection.state !== "connected" || catalog.error)) onReady?.()
-  }, [catalog.error, connection.isLoading, connection.state, onReady, widgets.length])
+    if (!connection.isLoading && (items.length === 0 || connection.state !== "connected" || catalog.error)) onReady?.()
+  }, [catalog.error, connection.isLoading, connection.state, onReady, items.length])
 
   if (connection.isLoading) return null
   if (connection.state !== "connected" || !connection.serverOrigin) {
@@ -434,35 +472,96 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
     )
   }
   if (board?.nextLayer.liveWidgets.length === 0) return <NextLayerMessage>{t("noLocalWidgets")}</NextLayerMessage>
-  if (widgets.length === 0) return <NextLayerMessage>{t("widgetFilesUnavailable")}</NextLayerMessage>
+  if (items.length === 0) return <NextLayerMessage>{t("widgetFilesUnavailable")}</NextLayerMessage>
 
   return (
     <SortableWidgetGrid key={boardId} onReady={onReady} nodes={nodes} enabled={viewReady} label={t("nextLayerWidgets")} onLayoutChange={saveLayout}>
-      {widgets.map(({ manifest, placement, layout }) => (
-        <LiveWidgetCard
-          key={placement.liveWidgetId}
-          boardId={boardId}
-          widgetId={placement.widgetId}
-          liveWidgetId={placement.liveWidgetId}
-          active={viewReady}
-          color={manifest.color}
-          cardIds={placement.dataScope.type === "board"
-            ? board?.nowLayer.liveCards ?? []
-            : placement.dataScope.cardIds.filter(id => board?.nowLayer.liveCards.includes(id))}
-          title={manifest.title}
-          url={manifest.url}
-          ui={manifest.view}
-          params={manifest.params}
-          paramsValue={placement.patch?.params}
-          metadata={placement.patch?.metadata}
-          dataRevision={manifest.dataRevision}
-          viewRevision={manifest.viewRevision}
-          refreshIntervalMs={manifest.refreshIntervalMs}
-          dataFiles={manifest.dataFiles}
-          layout={layout}
-        />
-      ))}
+      {items.map((item) => {
+        if (item.kind === "missing") {
+          return (
+            <MissingWidgetCard
+              key={item.liveWidgetId}
+              boardId={boardId}
+              liveWidgetId={item.liveWidgetId}
+              widgetId={item.widgetId}
+              snapshot={appearanceSnapshots[item.widgetId]}
+            />
+          )
+        }
+        const { manifest, placement, layout } = item
+        return (
+          <LiveWidgetCard
+            key={placement.liveWidgetId}
+            boardId={boardId}
+            widgetId={placement.widgetId}
+            liveWidgetId={placement.liveWidgetId}
+            active={viewReady}
+            color={manifest.color}
+            cardIds={placement.dataScope.type === "board"
+              ? board?.nowLayer.liveCards ?? []
+              : placement.dataScope.cardIds.filter(id => board?.nowLayer.liveCards.includes(id))}
+            title={manifest.title}
+            url={manifest.url}
+            ui={manifest.view}
+            params={manifest.params}
+            paramsValue={placement.patch?.params}
+            metadata={placement.patch?.metadata}
+            dataRevision={manifest.dataRevision}
+            viewRevision={manifest.viewRevision}
+            refreshIntervalMs={manifest.refreshIntervalMs}
+            dataFiles={manifest.dataFiles}
+            layout={layout}
+          />
+        )
+      })}
     </SortableWidgetGrid>
+  )
+}
+
+function MissingWidgetCard({ boardId, liveWidgetId, widgetId, snapshot }: { boardId: string, liveWidgetId: string, widgetId: string, snapshot: WidgetAppearanceSnapshot | undefined }): React.JSX.Element {
+  const { t } = useI18n()
+  const queryClient = useQueryClient()
+  const { setNodeRef, setHandleRef } = useSortable({
+    id: getGridWidgetId(liveWidgetId),
+    kind: "widget",
+    boardId,
+    liveWidgetId,
+    enabled: false,
+    canDrag: canDragCardHeader,
+    onGenerateDragPreview: generateCardDragPreview,
+  })
+  const title = snapshot?.title ?? widgetId
+  const color = snapshot?.color ?? "slate"
+  // Last successful data for this exact definition version; without a
+  // manifest no new fetches can update it, so this one-shot read is enough.
+  const queries = useMemo(() => (
+    snapshot
+      ? findLastWidgetData(queryClient, widgetId, snapshot.dataRevision)
+      : undefined
+  ), [queryClient, snapshot, widgetId])
+  const view = snapshot?.view
+  const cachedContent = view && queries && (view.type === "chart" || view.type === "live-card")
+    ? view.type === "chart"
+      ? <WidgetChartContent view={view} queries={queries} />
+      : <WidgetItemListContent ui={view} title={title} color={color} loading={false} queries={queries} onRefresh={() => {}} />
+    : undefined
+  return (
+    <article ref={setNodeRef} className={`relative h-full min-h-0 select-none ${color}`}>
+      <WidgetFace
+        avatarSeed={widgetId}
+        title={title}
+        headerRef={setHandleRef}
+        statusMessage={cachedContent ? t("widgetDefinitionMissing") : undefined}
+        actions={<DeleteWidgetButton liveWidgetId={liveWidgetId} />}
+      >
+        {cachedContent ?? (
+          <div className="relative flex size-full flex-col items-center justify-center gap-1 p-4 text-center">
+            <p className="text-sm font-medium">{title}</p>
+            <p className="text-xs text-muted-foreground">{t("widgetDefinitionMissing")}</p>
+          </div>
+        )}
+      </WidgetFace>
+    </article>
   )
 }
 

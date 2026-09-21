@@ -4,8 +4,8 @@ import type { LiveCard } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { useAtomValue } from "jotai"
 import { useMemo } from "react"
+import { createSourcePlaceholder } from "@/lib/source"
 import { boardsAtom, liveCardAtomsAtom, liveCardsAtom } from "@/store/board"
-import { useSourceDescriptors } from "./use-source-descriptors"
 
 export interface NowLayerLiveCard {
   boardId: string
@@ -19,29 +19,15 @@ interface NowLayerLiveCardsResult {
   cardIds: string[]
 }
 
-function createSourcePlaceholder(sourceId: string): SourceDescriptor {
-  const providerId = sourceId.split(":", 1)[0] || sourceId
-  return {
-    id: sourceId,
-    version: 0,
-    capabilities: { cookies: [], network: [] },
-    metadata: { title: sourceId },
-    provider: {
-      color: "slate",
-      title: providerId,
-    },
-  }
-}
-
 export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
   const boards = useAtomValue(boardsAtom)
   const liveCards = useAtomValue(liveCardsAtom)
   const liveCardAtoms = useAtomValue(liveCardAtomsAtom)
   const currentBoard = boards.find(board => board.id === boardId)!
-  const { sources } = useSourceDescriptors()
 
   const { liveCardsByCardId } = useMemo(() => {
-    const descriptorsById = new Map(sources.map(source => [source.id, source]))
+    // Render immediately with placeholders; each LiveCard resolves its own
+    // descriptor on demand and upgrades via snapshot when it arrives.
     const liveCardsById = new Map<string, {
       card: LiveCard
       liveCardAtom: Atom<LiveCard>
@@ -58,8 +44,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
       if (!entry) continue
       const { card, liveCardAtom } = entry
 
-      const descriptor = descriptorsById.get(card.sourceId)
-        ?? createSourcePlaceholder(card.sourceId)
+      const descriptor = createSourcePlaceholder(card.sourceId)
 
       nextLiveCards[cardId] = {
         boardId,
@@ -71,7 +56,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
     return {
       liveCardsByCardId: nextLiveCards,
     }
-  }, [boardId, currentBoard.nowLayer.liveCards, liveCardAtoms, liveCards, sources])
+  }, [boardId, currentBoard.nowLayer.liveCards, liveCardAtoms, liveCards])
 
   const cardIds = useMemo(
     () => currentBoard.nowLayer.liveCards.filter(cardId => liveCardsByCardId[cardId] !== undefined),

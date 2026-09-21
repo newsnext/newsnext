@@ -19,18 +19,19 @@ import {
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { cn } from "@newsnext/ui/lib/utils"
 import { formatForDisplay, useHotkey } from "@tanstack/react-hotkeys"
-import { useQueries } from "@tanstack/react-query"
+import { useQueries, useQueryClient } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useMemo, useState } from "react"
 import { SourceIcon } from "@/components/card-shell/source-icon"
 import {
   createLiveCardQueryTarget,
-  getSourceQueryOptions,
+  getSourceQueryKey,
 } from "@/hooks/source-query"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { useI18n } from "@/hooks/use-i18n"
-import { useSourceDescriptors } from "@/hooks/use-source-descriptors"
+import { useSourceDescriptorMap } from "@/hooks/use-source-descriptor"
 import { useSourceIcon } from "@/hooks/use-source-icon"
+import { findLiveCardSnapshot } from "@/hooks/use-source-snapshot"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   applySourceLoaderMetadata,
@@ -126,34 +127,29 @@ export function SearchDialog(): ReactNode {
 function SearchDialogContent(): ReactNode {
   const boards = useAtomValue(boardsAtom)
   const savedCards = useAtomValue(liveCardsAtom)
-  const { sources } = useSourceDescriptors()
+  const queryClient = useQueryClient()
+  const sourceIds = useMemo(
+    () => [...new Set(savedCards.map(card => card.sourceId))],
+    [savedCards],
+  )
+  const { descriptors } = useSourceDescriptorMap(sourceIds)
 
   const liveCards = useMemo<LiveCardViewModel[]>(() => {
-    if (!sources.length) {
-      return []
-    }
-
     return buildLiveCards({
-      sources,
+      sources: [...descriptors.values()],
       liveCards: savedCards,
       boardId: null,
     })
-  }, [sources, savedCards])
+  }, [descriptors, savedCards])
 
-  const liveCardQueryTargets = useMemo(
-    () => liveCards.map(liveCard => createLiveCardQueryTarget(liveCard.id)),
-    [liveCards],
-  )
-  const liveCardQueryOptions = useMemo(
-    () => liveCardQueryTargets.map(target => ({
-      ...getSourceQueryOptions(target),
-      enabled: false,
-    })),
-    [liveCardQueryTargets],
-  )
+  // Cache-harvesting reads: same keys as the board's load queries, so rows
+  // upgrade when cached results arrive, but never trigger loads themselves.
   const loaderMetadata = useQueries({
-    queries: liveCardQueryOptions,
-    combine: results => results.map(result => result.data?.result.metadata),
+    queries: liveCards.map(liveCard => ({
+      queryKey: getSourceQueryKey(createLiveCardQueryTarget(liveCard.id)),
+      queryFn: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data?.metadata,
+    })),
+    combine: results => results.map(result => result.data),
   })
 
   const resolvedLiveCards = useMemo(

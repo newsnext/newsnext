@@ -6,6 +6,7 @@ import type {
   ApplicationMutationResult,
 } from "../application"
 import { actionContracts } from "@newsnext/sdk/actions"
+import { loadSourceDescriptor } from "@newsnext/source-kit/runtime"
 import {
   configureLiveCardMutation,
   configureLiveWidgetMutation,
@@ -20,7 +21,6 @@ import {
   getLiveCardQuery,
   getLiveWidgetQuery,
   getNowLayerLiveCardsQuery,
-  getSourceQuery,
   listAllLiveWidgetsQuery,
   listBoardLiveCardsQuery,
   listBoardLiveWidgetsQuery,
@@ -186,7 +186,7 @@ const liveCardDeleteAction = defineAction(actionContracts["liveCard.delete"], as
 
 const sourceListAction = defineAction(actionContracts["source.list"], async (_input, context: ApplicationActionContext) => listSourcesQuery(await context.sources()))
 
-const sourceGetAction = defineAction(actionContracts["source.get"], async (input, context: ApplicationActionContext) => getSourceQuery(await context.sources(), input))
+const sourceGetAction = defineAction(actionContracts["source.get"], async input => loadSourceDescriptor(input.sourceId))
 
 const boardListAction = defineAction(actionContracts["board.list"], async (_input, context: ApplicationActionContext) => listBoardsQuery(await context.data()))
 

@@ -1,27 +1,6 @@
 import type { SourceDescriptor } from "@/typings/source"
 import { actions } from "../actions"
 
-function sortSourceDescriptors(sources: SourceDescriptor[]): SourceDescriptor[] {
-  return [...sources].sort((a, b) => {
-    const byCategory = (a.provider.category ?? "").localeCompare(b.provider.category ?? "")
-    if (byCategory !== 0) {
-      return byCategory
-    }
-
-    return a.id.localeCompare(b.id)
-  })
-}
-
-export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
-  return actions.source.list().then(sortSourceDescriptors)
-}
-
 export async function loadSourceDescriptor(sourceId: string): Promise<SourceDescriptor> {
-  const sources = await loadSourceDescriptors()
-  const source = sources.find(candidate => candidate.id === sourceId)
-  if (!source) {
-    throw new Error(`Source '${sourceId}' not found`)
-  }
-
-  return source
+  return actions.source.get({ sourceId })
 }
