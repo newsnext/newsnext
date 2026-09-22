@@ -4,11 +4,10 @@ import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { cn } from "@newsnext/ui/lib/utils"
 import { NewsItemStats } from "./news-item-stats"
 
-export function SemanticImage({ picture, className, scale, delay }: {
+export function SemanticImage({ picture, className, scale }: {
   picture: SemanticPicture
   className?: string
   scale?: number
-  delay?: number
 }): ReactNode {
   const { src, label } = picture
 
@@ -16,7 +15,7 @@ export function SemanticImage({ picture, className, scale, delay }: {
     <ProxiedImage
       src={src}
       alt={label ?? ""}
-      delay={delay}
+      fetchPriority="low"
       style={scale ? { transform: `scale(${scale})` } : undefined}
       className={cn("inline-block h-4 w-auto shrink-0 object-contain align-middle", className)}
     />

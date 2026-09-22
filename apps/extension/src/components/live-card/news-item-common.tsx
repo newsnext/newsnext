@@ -154,7 +154,6 @@ export function NewsItemSummary({ item, inlineText, className, inlineSuffix, mar
       {item.icon && (
         <SemanticImage
           picture={item.icon}
-          delay={500}
           className="mr-1 rounded"
         />
       )}

@@ -1,41 +1,33 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
+import { cn } from "../lib/utils"
 
 export interface ProxiedImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, "src"> {
   src: string
-  delay?: number
 }
 
-export function ProxiedImage({ src, onError, delay, ...props }: ProxiedImageProps): React.JSX.Element {
-  const [readySrc, setReadySrc] = useState(delay ? "" : src)
-  const shouldLoad = !delay || readySrc === src
-
-  useEffect(() => {
-    if (delay && !shouldLoad) {
-      const timer = setTimeout(() => {
-        setReadySrc(src)
-      }, delay)
-      return () => clearTimeout(timer)
-    }
-  }, [delay, shouldLoad, src])
-
-  if (!shouldLoad) {
-    return (
-      <img
-        referrerPolicy="no-referrer"
-        alt=""
-        src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMSIgaGVpZ2h0PSIxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjwvc3ZnPg=="
-        {...props}
-      />
-    )
-  }
+export function ProxiedImage({ src, className, onLoad, onError, ...props }: ProxiedImageProps): React.JSX.Element {
+  const [settledSrc, setSettledSrc] = useState("")
+  const settled = settledSrc === src
 
   return (
     <img
       referrerPolicy="no-referrer"
       alt=""
       src={src}
-      onError={onError}
       loading="lazy"
+      className={cn(
+        "transition-[opacity,background-color] duration-200",
+        settled ? "opacity-100" : "animate-pulse bg-muted opacity-60",
+        className,
+      )}
+      onLoad={(event) => {
+        setSettledSrc(src)
+        onLoad?.(event)
+      }}
+      onError={(event) => {
+        setSettledSrc(src)
+        onError?.(event)
+      }}
       {...props}
     />
   )
