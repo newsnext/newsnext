@@ -1,14 +1,11 @@
 import { QueryClient } from "@tanstack/react-query"
 import { describe, expect, it, vi } from "vitest"
 import {
-  createLiveCardQueryTarget,
   createSourceQueryTarget,
   getSourceQueryKey,
 } from "./source-query"
 import {
-  findLiveCardSnapshot,
   findSourceSnapshot,
-  findSourceSnapshotResult,
 } from "./use-source-snapshot"
 
 vi.mock("@/lib/source", () => ({
@@ -25,7 +22,7 @@ const source = {
   provider: { color: "blue", title: "Test" },
 } as const
 
-describe("findSourceSnapshotResult", () => {
+describe("findSourceSnapshot", () => {
   it("resolves the presentation snapshot for an unavailable Source", () => {
     const queryClient = new QueryClient()
     const target = createSourceQueryTarget(source.id, source, {})
@@ -44,12 +41,11 @@ describe("findSourceSnapshotResult", () => {
       }),
     )
 
-    expect(findSourceSnapshotResult(queryClient, source.id, {})).toBe(result)
     expect(findSourceSnapshot(queryClient, source.id, {})).toEqual({
       data: result,
       loadedAt: 100,
     })
-    expect(findSourceSnapshotResult(queryClient, "other:feed", {})).toBeUndefined()
+    expect(findSourceSnapshot(queryClient, "other:feed", {})).toBeUndefined()
   })
 
   it("ignores invalid snapshot results that have no Source snapshot", () => {
@@ -63,26 +59,6 @@ describe("findSourceSnapshotResult", () => {
       result: { items: [] },
     }, { updatedAt: 100 })
 
-    expect(findSourceSnapshotResult(queryClient, source.id, {})).toBeUndefined()
-  })
-
-  it("finds a persisted LiveCard by identity after its request configuration changes", () => {
-    const queryClient = new QueryClient()
-    const target = createLiveCardQueryTarget("card-a")
-    const result = { items: [], source }
-    queryClient.setQueryData(getSourceQueryKey(target), {
-      fetchProtected: true,
-      fetchedAt: 100,
-      loadedAt: 100,
-      params: { topic: "old" },
-      result,
-    })
-
-    expect(
-      findLiveCardSnapshot(queryClient, "card-a", source.id)?.data,
-    ).toBe(result)
-    expect(
-      findLiveCardSnapshot(queryClient, "card-b", source.id),
-    ).toBeUndefined()
+    expect(findSourceSnapshot(queryClient, source.id, {})).toBeUndefined()
   })
 })

@@ -1,9 +1,9 @@
-import type { SourceLoadResult } from "./load-result"
+import type { SourceLoaderResult } from "@newsnext/source-kit/types"
+import type { SourceLoadResponse, SourceLoadResult } from "./load-result"
 import Dexie from "dexie"
 import { getSourceQueryHash } from "./query-target"
 
 const SOURCE_SNAPSHOT_DATABASE_NAME = "newsnext-extension-source-snapshot"
-const SOURCE_SNAPSHOT_SCHEMA_VERSION = 2
 const SOURCE_SNAPSHOT_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
 export interface SourceSnapshotTarget {
@@ -12,20 +12,35 @@ export interface SourceSnapshotTarget {
   version: number
 }
 
-export interface SourceSnapshot {
+interface SourceResultSnapshot {
   fetchedAt: number
   key: string
-  result: SourceLoadResult
-  schemaVersion: number
+  result: SourceLoaderResult
+}
+
+interface LiveCardSnapshot {
+  cardId: string
+  fetchedAt: number
+  // Kept in the lightweight card record so presentation reads do not load items.
+  metadata: SourceLoaderResult["metadata"]
+  params: Record<string, unknown>
+  resultKey: string
+  source: SourceLoadResult["source"]
 }
 
 class SourceSnapshotDatabase extends Dexie {
-  sourceSnapshots!: Dexie.Table<SourceSnapshot, string>
+  liveCardSnapshots!: Dexie.Table<LiveCardSnapshot, string>
+  sourceResultSnapshots!: Dexie.Table<SourceResultSnapshot, string>
 
   constructor() {
     super(SOURCE_SNAPSHOT_DATABASE_NAME)
     this.version(8).stores({
       sourceSnapshots: "key, fetchedAt",
+    })
+    this.version(9).stores({
+      sourceSnapshots: null,
+      liveCardSnapshots: "cardId, fetchedAt, resultKey",
+      sourceResultSnapshots: "key, fetchedAt",
     })
   }
 }
@@ -36,61 +51,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function isValidSourceSnapshot(
-  value: unknown,
-  target: SourceSnapshotTarget,
-  key: string,
-): value is SourceSnapshot {
-  const snapshot = asReadableSnapshot(value)
-  return snapshot !== undefined
-    && snapshot.key === key
-    && snapshot.result.source.id === target.sourceId
-    && snapshot.result.source.version === target.version
-}
-
-interface ReadableSnapshot {
-  fetchedAt: number
-  key: string
-  result: {
-    inlinePresentation?: unknown
-    items: unknown[]
-    source: Record<string, unknown>
-  }
-  schemaVersion: number
-}
-
-// Shape checks shared by keyed reads and latest-version scans: valid enough
-// to render from, without trusting any single field.
-function asReadableSnapshot(value: unknown): ReadableSnapshot | undefined {
-  if (!isRecord(value) || !isRecord(value.result)) {
-    return undefined
-  }
-  const { fetchedAt, key, result, schemaVersion } = value
-  const source = result.source
-  if (
-    typeof fetchedAt !== "number"
-    || !Number.isFinite(fetchedAt)
-    || fetchedAt <= 0
-    || typeof key !== "string"
-    || schemaVersion !== SOURCE_SNAPSHOT_SCHEMA_VERSION
-    || !Array.isArray(result.items)
-    || !isValidInlinePresentation(result.inlinePresentation, result.items.length)
-    || !isRecord(source)
-  ) {
-    return undefined
-  }
-  return {
-    fetchedAt,
-    key,
-    result: {
-      inlinePresentation: result.inlinePresentation,
-      items: result.items,
-      source,
-    },
-    schemaVersion,
-  }
-}
-
 function isValidInlinePresentation(value: unknown, itemCount: number): boolean {
   if (value === undefined) return true
   return Array.isArray(value)
@@ -98,47 +58,166 @@ function isValidInlinePresentation(value: unknown, itemCount: number): boolean {
     && value.every(entry => typeof entry === "string")
 }
 
-function isExpired(snapshot: SourceSnapshot, now = Date.now()): boolean {
-  return now - snapshot.fetchedAt > SOURCE_SNAPSHOT_MAX_AGE_MS
+function isExpired(fetchedAt: number, now = Date.now()): boolean {
+  return now - fetchedAt > SOURCE_SNAPSHOT_MAX_AGE_MS
 }
 
-export async function readSourceSnapshot(
+function isValidSourceResultSnapshot(
+  value: unknown,
+  key: string,
+): value is SourceResultSnapshot {
+  if (!isRecord(value) || !isRecord(value.result)) return false
+  return value.key === key
+    && typeof value.fetchedAt === "number"
+    && Number.isFinite(value.fetchedAt)
+    && value.fetchedAt > 0
+    && Array.isArray(value.result.items)
+    && isValidInlinePresentation(value.result.inlinePresentation, value.result.items.length)
+}
+
+function isValidLiveCardSnapshot(
+  value: unknown,
+  cardId: string,
+): value is LiveCardSnapshot {
+  return isRecord(value)
+    && value.cardId === cardId
+    && typeof value.fetchedAt === "number"
+    && Number.isFinite(value.fetchedAt)
+    && value.fetchedAt > 0
+    && typeof value.resultKey === "string"
+    && isRecord(value.params)
+    && isRecord(value.source)
+    && typeof value.source.id === "string"
+    && typeof value.source.version === "number"
+}
+
+function getSourceResultKey(target: SourceSnapshotTarget): string {
+  return getSourceQueryHash(target)
+}
+
+export async function readSourceResultSnapshot(
   target: SourceSnapshotTarget,
-): Promise<SourceSnapshot | undefined> {
+): Promise<SourceResultSnapshot | undefined> {
+  return readSourceResultSnapshotByKey(getSourceResultKey(target))
+}
+
+async function readSourceResultSnapshotByKey(
+  key: string,
+): Promise<SourceResultSnapshot | undefined> {
   try {
-    const key = getSourceQueryHash(target)
-    const value: unknown = await database.sourceSnapshots.get(key)
-    if (!isValidSourceSnapshot(value, target, key) || isExpired(value)) {
-      if (value !== undefined) await database.sourceSnapshots.delete(key)
+    const value: unknown = await database.sourceResultSnapshots.get(key)
+    if (!isValidSourceResultSnapshot(value, key) || isExpired(value.fetchedAt)) {
+      if (value !== undefined) await database.sourceResultSnapshots.delete(key)
       return undefined
     }
     return value
   } catch (error) {
-    console.error("Failed to read Source snapshot", error)
+    console.error("Failed to read Source result snapshot", error)
     return undefined
   }
 }
 
-export async function writeSourceSnapshot(
+export async function writeSourceResultSnapshot(
   target: SourceSnapshotTarget,
-  result: SourceLoadResult,
+  result: SourceLoaderResult,
   fetchedAt: number,
 ): Promise<void> {
   try {
-    await database.sourceSnapshots.put({
+    await database.sourceResultSnapshots.put({
       fetchedAt,
-      key: getSourceQueryHash(target),
+      key: getSourceResultKey(target),
       result,
-      schemaVersion: SOURCE_SNAPSHOT_SCHEMA_VERSION,
     })
   } catch (error) {
-    console.error("Failed to persist Source snapshot", error)
+    console.error("Failed to persist Source result snapshot", error)
+  }
+}
+
+async function readLiveCardSnapshot(
+  cardId: string,
+): Promise<LiveCardSnapshot | undefined> {
+  try {
+    const value: unknown = await database.liveCardSnapshots.get(cardId)
+    if (!isValidLiveCardSnapshot(value, cardId) || isExpired(value.fetchedAt)) {
+      if (value !== undefined) await database.liveCardSnapshots.delete(cardId)
+      return undefined
+    }
+    return value
+  } catch (error) {
+    console.error("Failed to read LiveCard snapshot", error)
+    return undefined
+  }
+}
+
+export async function writeLiveCardSnapshot(
+  cardId: string,
+  response: SourceLoadResponse,
+): Promise<void> {
+  const resultKey = getSourceResultKey({
+    params: response.params,
+    sourceId: response.result.source.id,
+    version: response.result.source.version,
+  })
+  try {
+    await database.transaction(
+      "rw",
+      database.liveCardSnapshots,
+      database.sourceResultSnapshots,
+      async () => {
+        const hasResult = await database.sourceResultSnapshots
+          .where(":id")
+          .equals(resultKey)
+          .count()
+        if (hasResult === 0) return
+        await database.liveCardSnapshots.put({
+          cardId,
+          fetchedAt: response.fetchedAt,
+          metadata: response.result.metadata,
+          params: response.params,
+          resultKey,
+          source: response.result.source,
+        })
+      },
+    )
+  } catch (error) {
+    console.error("Failed to persist LiveCard snapshot", error)
+  }
+}
+
+export async function readLiveCardSnapshotResponse(
+  cardId: string,
+): Promise<SourceLoadResponse | undefined> {
+  const snapshot = await readLiveCardSnapshot(cardId)
+  if (!snapshot) return undefined
+  const result = await readSourceResultSnapshotByKey(snapshot.resultKey)
+  if (!result) {
+    await database.liveCardSnapshots.delete(cardId).catch(() => undefined)
+    return undefined
+  }
+  return {
+    fetchProtected: true,
+    fetchedAt: snapshot.fetchedAt,
+    loadedAt: Date.now(),
+    params: snapshot.params,
+    result: {
+      ...result.result,
+      metadata: snapshot.metadata,
+      source: snapshot.source,
+    },
   }
 }
 
 export async function clearSourceSnapshots(): Promise<void> {
   try {
-    await database.sourceSnapshots.clear()
+    await database.transaction(
+      "rw",
+      database.liveCardSnapshots,
+      database.sourceResultSnapshots,
+      async () => {
+        await database.liveCardSnapshots.clear()
+        await database.sourceResultSnapshots.clear()
+      },
+    )
   } catch {
     // Snapshot cleanup should not prevent the remaining user data from being cleared.
   }

@@ -6,11 +6,12 @@ import { getLoginUrlFromError } from "./source-login-error"
 import {
   createLiveCardQueryTarget,
   createSourceQueryTarget,
+  getLiveCardSnapshotQueryKey,
+  getLiveCardSnapshotQueryOptions,
   getSourceQueryKey,
   getSourceQueryOptions,
 } from "./source-query"
 import {
-  findLiveCardSnapshot,
   findSourceSnapshot,
 } from "./use-source-snapshot"
 
@@ -32,10 +33,14 @@ export function useSourceQuery({
   enabled = true,
 }: UseSourceQueryOptions) {
   const queryClient = useQueryClient()
-  const snapshotQuery = cardId
-    ? findLiveCardSnapshot(queryClient, cardId, sourceId)
+  const liveCardSnapshotQuery = useQuery({
+    ...getLiveCardSnapshotQueryOptions(cardId ?? ""),
+    enabled: enabled && cardId !== undefined,
+  })
+  const sourceSnapshot = cardId
+    ? undefined
     : findSourceSnapshot(queryClient, sourceId, params)
-  const snapshotResult = snapshotQuery?.data
+  const snapshotResult = liveCardSnapshotQuery.data?.result ?? sourceSnapshot?.data
   const target = useMemo(
     () => cardId
       ? createLiveCardQueryTarget(cardId)
@@ -65,10 +70,16 @@ export function useSourceQuery({
   }, [cardId, liveCardRequestHash, queryClient, target])
   const query = useQuery({
     ...getSourceQueryOptions(target),
-    enabled: enabled && (cardId !== undefined || source.version > 0),
+    enabled: enabled
+      && (cardId !== undefined || source.version > 0)
+      && (cardId === undefined || liveCardSnapshotQuery.isFetched),
     // Keep previous items visible across param edits; dropping to empty would flash skeletons on every keystroke.
     placeholderData: prev => prev,
   })
+  useEffect(() => {
+    if (!cardId || !query.data) return
+    queryClient.setQueryData(getLiveCardSnapshotQueryKey(cardId), query.data)
+  }, [cardId, query.data, queryClient])
   const data = enabled ? query.data?.result ?? snapshotResult : undefined
   const hasData = data !== undefined
 
@@ -76,7 +87,7 @@ export function useSourceQuery({
     items: data?.items ?? EMPTY_ITEMS,
     inlinePresentation: data?.inlinePresentation,
     refetch: query.refetch,
-    isLoading: query.isLoading && snapshotResult === undefined,
+    isLoading: (liveCardSnapshotQuery.isLoading || query.isLoading) && snapshotResult === undefined,
     hasData,
     isError: query.isError && !hasData,
     errorMessage: !hasData && query.error instanceof Error ? query.error.message : undefined,

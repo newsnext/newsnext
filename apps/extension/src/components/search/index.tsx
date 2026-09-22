@@ -19,19 +19,17 @@ import {
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { cn } from "@newsnext/ui/lib/utils"
 import { formatForDisplay, useHotkey } from "@tanstack/react-hotkeys"
-import { useQueries, useQueryClient } from "@tanstack/react-query"
+import { useQueries } from "@tanstack/react-query"
 import { useAtomValue } from "jotai"
 import { useMemo, useState } from "react"
 import { SourceIcon } from "@/components/card-shell/source-icon"
 import {
-  createLiveCardQueryTarget,
-  getSourceQueryOptions,
+  getLiveCardSnapshotMetadataQueryOptions,
 } from "@/hooks/source-query"
 import { DndContext } from "@/hooks/use-dnd-context"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptorMap } from "@/hooks/use-source-descriptor"
 import { useSourceIcon } from "@/hooks/use-source-icon"
-import { findLiveCardSnapshot } from "@/hooks/use-source-snapshot"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   applySourceLoaderMetadata,
@@ -127,7 +125,6 @@ export function SearchDialog(): ReactNode {
 function SearchDialogContent(): ReactNode {
   const boards = useAtomValue(boardsAtom)
   const savedCards = useAtomValue(liveCardsAtom)
-  const queryClient = useQueryClient()
   const sourceIds = useMemo(
     () => [...new Set(savedCards.map(card => card.sourceId))],
     [savedCards],
@@ -142,17 +139,9 @@ function SearchDialogContent(): ReactNode {
     })
   }, [descriptors, savedCards])
 
-  // Cache-harvesting reads: same keys as the board's load queries, so rows
-  // upgrade when cached results arrive, but never trigger loads themselves.
+  // Snapshot reads recover the last successful presentation without refreshing cards.
   const loaderMetadata = useQueries({
-    queries: liveCards.map((liveCard) => {
-      const target = createLiveCardQueryTarget(liveCard.id)
-      return {
-        ...getSourceQueryOptions(target),
-        enabled: false,
-        select: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data.metadata,
-      }
-    }),
+    queries: liveCards.map(liveCard => getLiveCardSnapshotMetadataQueryOptions(liveCard.id)),
     combine: results => results.map(result => result.data),
   })
 

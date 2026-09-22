@@ -9,7 +9,7 @@ import {
   resolveSourceRegistry,
 } from "@newsnext/source-kit/registry"
 import { normalizeSourceParams, parseSourceId, prepareSourceRequest } from "@newsnext/source-kit/runtime"
-import { toSourceLoadResult } from "../source/load-result"
+import { toLoadedSourceDescriptor, toSourceLoadResult } from "../source/load-result"
 import { executeSourceSnapshot } from "./protected-source-loader"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { createSourceLoaderInvoker } from "./source-loader-invoker"
@@ -95,6 +95,7 @@ export async function runDeveloperSource(
         sourceId: input.sourceId,
         version: request.source.version,
       },
+      toLoadedSourceDescriptor(request.source, input.sourceId),
       () => invoker.invoke({
         params: request.params,
         source: request.source,
@@ -137,6 +138,7 @@ export async function runDeveloperSource(
   const signal = new AbortController().signal
   const response = await executeSourceSnapshot(
     { params, sourceId, version: source.version },
+    toLoadedSourceDescriptor(source, sourceId),
     async () => {
       const result = await source.loader(params, {
         fetch: createBackgroundSourceFetch(

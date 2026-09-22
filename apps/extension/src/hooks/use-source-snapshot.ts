@@ -1,14 +1,12 @@
 import type { QueryClient } from "@tanstack/react-query"
 import type { SourceLoadResponse, SourceLoadResult } from "@/lib/source/load-result"
 import {
-  createLiveCardQueryTarget,
   createSourceQueryTarget,
   getSourceQueryHash,
-  getSourceQueryKey,
   SOURCE_QUERY_KEY,
 } from "@/hooks/source-query"
 
-export interface SourceSnapshotQuery {
+interface SourceSnapshotQuery {
   data: SourceLoadResult
   loadedAt: number
 }
@@ -36,19 +34,6 @@ function readSourceSnapshotQuery(
   return { data: result, loadedAt: response.loadedAt }
 }
 
-export function findLiveCardSnapshot(
-  queryClient: QueryClient,
-  cardId: string,
-  sourceId: string,
-): SourceSnapshotQuery | undefined {
-  return readSourceSnapshotQuery(
-    queryClient.getQueryData(
-      getSourceQueryKey(createLiveCardQueryTarget(cardId)),
-    ),
-    sourceId,
-  )
-}
-
 export function findSourceSnapshot(
   queryClient: QueryClient,
   sourceId: string,
@@ -67,12 +52,4 @@ export function findSourceSnapshot(
       return snapshot
     }
   }
-}
-
-export function findSourceSnapshotResult(
-  queryClient: QueryClient,
-  sourceId: string,
-  params: Record<string, unknown> | undefined,
-): SourceLoadResult | undefined {
-  return findSourceSnapshot(queryClient, sourceId, params)?.data
 }

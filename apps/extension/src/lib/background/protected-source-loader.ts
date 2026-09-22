@@ -2,9 +2,10 @@ import type { SourceLoadResponse, SourceLoadResult } from "../source/load-result
 import type { SourceSnapshotTarget } from "../source/source-snapshot"
 import type { SourceLoaderInvoker } from "./source-loader-invoker"
 import { prepareSourceRequest } from "@newsnext/source-kit/runtime"
+import { toLoadedSourceDescriptor } from "../source/load-result"
 import { isSourceRequestProtected } from "../source/query-policy"
 import { getSourceQueryHash } from "../source/query-target"
-import { readSourceSnapshot, writeSourceSnapshot } from "../source/source-snapshot"
+import { readSourceResultSnapshot, writeSourceResultSnapshot } from "../source/source-snapshot"
 
 export interface ProtectedSourceLoader {
   load: (input: {
@@ -27,17 +28,18 @@ const activeSnapshotLoads = new Map<string, Promise<SourceLoadResponse>>()
  */
 export async function executeSourceSnapshot(
   target: SourceSnapshotTarget,
+  source: SourceLoadResult["source"],
   execute: () => Promise<SourceLoadResult>,
 ): Promise<SourceLoadResponse> {
   const queryHash = getSourceQueryHash(target)
-  const snapshot = await readSourceSnapshot(target)
+  const snapshot = await readSourceResultSnapshot(target)
   if (snapshot && isSourceRequestProtected(snapshot.fetchedAt)) {
     return {
       fetchProtected: true,
       fetchedAt: snapshot.fetchedAt,
       loadedAt: Date.now(),
       params: target.params,
-      result: snapshot.result,
+      result: { ...snapshot.result, source },
     }
   }
 
@@ -50,7 +52,8 @@ export async function executeSourceSnapshot(
   const load = (async (): Promise<SourceLoadResponse> => {
     const result = await execute()
     const fetchedAt = Date.now()
-    await writeSourceSnapshot(target, result, fetchedAt)
+    const { source: _source, ...loaderResult } = result
+    await writeSourceResultSnapshot(target, loaderResult, fetchedAt)
     return {
       fetchProtected: false,
       fetchedAt,
@@ -79,6 +82,7 @@ export function createProtectedSourceLoader(
           sourceId: input.sourceId,
           version: request.source.version,
         },
+        toLoadedSourceDescriptor(request.source, input.sourceId),
         () => source.invoke({
           params: request.params,
           requestId: input.requestId,

@@ -18,6 +18,16 @@ export async function loadLiveCard(
   return response
 }
 
+export async function readLiveCardSnapshot(
+  cardId: string,
+  signal?: AbortSignal,
+): Promise<SourceLoadResponse | null> {
+  signal?.throwIfAborted()
+  const response = await actions.liveCard.readSnapshot({ cardId })
+  signal?.throwIfAborted()
+  return response
+}
+
 export async function loadSource(
   sourceId: string,
   queryParams: Record<string, unknown> = {},

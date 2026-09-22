@@ -41,7 +41,13 @@ beside the implementation — linked below).
    per-source/params protection interval reuses snapshots
    (`apps/extension/src/lib/source/query-policy.ts`); snapshots are
    Worker-local, schema-versioned, discarded after 30 days
-   (`lib/source/source-snapshot.ts`).
+   (`lib/source/source-snapshot.ts`). Storage separates lightweight per-card
+   snapshots from shared Source result snapshots: a LiveCard record owns its
+   last Source presentation and result reference, while cards with the same
+   Source identity reuse the items payload. `liveCard.readSnapshot` joins both
+   parts; UI query caches subscribe to this boundary but are not the repository. A
+   refresh starts only after the snapshot read settles, then replaces the
+   subscribed snapshot on success.
 7. Diagnostics: stream collection, waiting reasons, next/retry scheduling
    flow through the same result shape; extension surfaces observations.
 

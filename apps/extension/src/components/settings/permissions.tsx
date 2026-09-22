@@ -1,17 +1,16 @@
 import type { LiveCard } from "@/lib/source"
 import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
 import { Button } from "@newsnext/ui/components/button"
-import { useQueries, useQueryClient } from "@tanstack/react-query"
+import { useQueries } from "@tanstack/react-query"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { browser } from "#imports"
 import { ConfigSection } from "@/components/common/config-section"
 import { ConfirmDestructiveButton } from "@/components/common/confirm-destructive-button"
-import { createLiveCardQueryTarget, getSourceQueryOptions } from "@/hooks/source-query"
+import { getLiveCardSnapshotMetadataQueryOptions } from "@/hooks/source-query"
 import { useKeyedAsyncAction } from "@/hooks/use-async-action"
 import { useI18n } from "@/hooks/use-i18n"
 import { useSourceDescriptorMap } from "@/hooks/use-source-descriptor"
-import { findLiveCardSnapshot } from "@/hooks/use-source-snapshot"
 import {
   applySourceLoaderMetadata,
   buildLiveCards,
@@ -82,7 +81,6 @@ export function PermissionsSettings({
   )
   const { descriptors, isPending: areSourcesLoading } = useSourceDescriptorMap(sourceIds)
   const sources = useMemo(() => [...descriptors.values()], [descriptors])
-  const queryClient = useQueryClient()
   const {
     error: revokeError,
     isPending: isRevoking,
@@ -95,17 +93,9 @@ export function PermissionsSettings({
     liveCards,
     boardId: null,
   }), [sources, liveCards])
-  // Cache-harvesting reads: same keys as the board's load queries, so titles
-  // upgrade when cached results arrive, but never trigger loads themselves.
+  // Snapshot reads recover the last successful presentation without refreshing cards.
   const loaderMetadata = useQueries({
-    queries: baseCards.map((liveCard) => {
-      const target = createLiveCardQueryTarget(liveCard.id)
-      return {
-        ...getSourceQueryOptions(target),
-        enabled: false,
-        select: () => findLiveCardSnapshot(queryClient, liveCard.id, liveCard.sourceId)?.data.metadata,
-      }
-    }),
+    queries: baseCards.map(liveCard => getLiveCardSnapshotMetadataQueryOptions(liveCard.id)),
     combine: results => results.map(result => result.data),
   })
   const resolvedCards = useMemo(

@@ -18,7 +18,6 @@ import { useSourcePermission } from "@/hooks/use-source-permission"
 import { useSourceQuery } from "@/hooks/use-source-query"
 import { actions } from "@/lib/actions"
 import { applySourceDescriptor, applySourceLoaderMetadata, applySourceSnapshot, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
-import { restoreLiveCardResult } from "@/lib/source/restore-live-card-results"
 import {
   resetLiveCardParamsAtom,
   setLiveCardPatchAtom,
@@ -236,30 +235,6 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   )
 }
 
-function RestoredLiveCardContent(props: LiveCardProps): React.JSX.Element | null {
-  const queryClient = useQueryClient()
-  const [restoredCardId, setRestoredCardId] = useState<string>()
-  const cardId = props.target.kind === "card" ? props.target.cardId : undefined
-
-  useEffect(() => {
-    if (!cardId) return
-    let active = true
-    setRestoredCardId(undefined)
-    void restoreLiveCardResult(queryClient, {
-      cardId,
-      sourceId: props.source.sourceId,
-    }).catch(() => undefined).finally(() => {
-      if (active) setRestoredCardId(cardId)
-    })
-    return () => {
-      active = false
-    }
-  }, [cardId, props.source.sourceId, queryClient])
-
-  if (cardId && restoredCardId !== cardId) return null
-  return <LiveCardContent {...props} />
-}
-
 export function LiveCard(props: LiveCardProps): React.JSX.Element {
   const { eager = false, nodeRef } = props
   const { rootScrollContainerRef } = useScrollProgressContext()
@@ -285,7 +260,7 @@ export function LiveCard(props: LiveCardProps): React.JSX.Element {
       )}
     >
       {(eager || isInView) && (
-        <RestoredLiveCardContent {...props} />
+        <LiveCardContent {...props} />
       )}
     </div>
   )

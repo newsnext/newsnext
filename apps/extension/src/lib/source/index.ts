@@ -25,7 +25,7 @@ export {
   mergeLiveCardPatch,
 } from "./live-cards"
 export type { SourceLoadResponse, SourceLoadResult } from "./loader"
-export { loadLiveCard, loadSource } from "./loader"
+export { loadLiveCard, loadSource, readLiveCardSnapshot } from "./loader"
 export type { SourceParamValues } from "./params"
 export { mergeSourceParamValues, sanitizeSourceParamPatch } from "./params"
 export type { SourcePermissionRequest, SourcePermissionTarget } from "./permissions"
