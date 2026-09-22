@@ -45,7 +45,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
       if (!entry) continue
       const { card: resolvedCard, liveCardAtom } = entry
 
-      const descriptor = createSourcePlaceholder(resolvedCard.sourceId)
+      const descriptor = createSourcePlaceholder(resolvedCard.sourceId, resolvedCard.provider)
 
       nextLiveCards[cardId] = {
         boardId,

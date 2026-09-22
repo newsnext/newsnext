@@ -92,18 +92,14 @@ export function createLiveCard(
 
 export function createSourcePlaceholder(
   sourceId: string,
-  provider?: SourceDescriptor["provider"],
+  provider: SourceDescriptor["provider"],
 ): SourceDescriptor {
-  const providerId = sourceId.split(":", 1)[0] || sourceId
   return {
     id: sourceId,
     version: 0,
     capabilities: { cookies: [], network: [] },
     metadata: { title: sourceId },
-    provider: provider ?? {
-      color: "slate",
-      title: providerId,
-    },
+    provider,
   }
 }
 
