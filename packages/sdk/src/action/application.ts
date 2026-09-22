@@ -34,9 +34,8 @@ const WidgetInstallSizeParams = Type.Unsafe<LiveWidgetInstallSize>(Type.Object({
   width: Type.Optional(Type.Integer({ minimum: MIN_WIDGET_WIDTH, maximum: 12 })),
 }, { additionalProperties: false }))
 
-// Result schemas stay open (no additionalProperties: false): stored entities may
-// carry legacy keys, and rejecting them would break query Actions. Input
-// schemas above stay closed so typos fail fast for agent callers.
+// Result schemas stay open so additive response fields remain forward-compatible.
+// Input schemas stay closed so typos fail fast for agent callers.
 const LiveCardMetadataResult = Type.Object({
   badge: Type.Optional(Type.String()),
   desc: Type.Optional(Type.String()),
@@ -441,7 +440,10 @@ const nowLayerGetLiveCardsAction = defineActionContract({
 })
 
 const ApplicationDataSchema = Type.Unsafe<ApplicationData>(Type.Object({
-  boards: Type.Array(BoardResult),
+  boardOrder: Type.Array(Type.String(), { uniqueItems: true }),
+  boards: Type.Record(Type.String(), Type.Unknown()),
+  liveCards: Type.Record(Type.String(), Type.Unknown()),
+  liveWidgets: Type.Record(Type.String(), Type.Unknown()),
   version: Type.Number(),
 }, { additionalProperties: false }))
 

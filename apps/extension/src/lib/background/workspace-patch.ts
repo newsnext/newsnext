@@ -1,10 +1,5 @@
-import type { LiveCard } from "../source"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import type { WorkspacePatch as NativeWorkspacePatch } from "@/lib/native-protocol/WorkspacePatch"
-import {
-  normalizeBoards,
-  normalizeLiveCards,
-} from "../settings/persisted-data"
 import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./native-integration/workspace-data"
 
 export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
@@ -12,42 +7,73 @@ export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
     || !isNonNegativeSafeInteger(value.expectedRevision)
     || !isNonNegativeSafeInteger(value.updatedAt)
     || !isIdentifierArray(value.boardOrder)
-    || !Array.isArray(value.boards)
-    || !isIdentifierArray(value.cardOrder)
-    || !Array.isArray(value.liveCards)
+    || !isRecord(value.boards)
+    || !isRecord(value.liveCards)
+    || !isRecord(value.liveWidgets)
     || typeof value.settings !== "string") {
     throw new Error("The native host returned an invalid Workspace patch")
-  }
-  const referencedCardIds = value.boards.flatMap(candidate => isRecord(candidate) && isRecord(candidate.nowLayer) && Array.isArray(candidate.nowLayer.liveCards)
-    ? candidate.nowLayer.liveCards.filter((cardId): cardId is string => typeof cardId === "string")
-    : [])
-  const placeholderCards = new Map<string, LiveCard>(referencedCardIds.map(cardId => [cardId, {
-    cardId,
-    workerId: "validation",
-    sourceId: "validation",
-    provider: { color: "slate", title: "validation" },
-    patch: {},
-    createdAt: 0,
-  }]))
-  const normalizedBoards = normalizeBoards(value.boards, placeholderCards)
-  const boards = normalizedBoards.map(board => ({
-    ...board,
-    nowLayer: { liveCards: board.nowLayer.liveCards.map(card => card.cardId) },
-  }))
-  const liveCards = normalizeLiveCards(value.liveCards)
-  if (boards.length !== value.boards.length
-    || liveCards.length !== value.liveCards.length) {
-    throw new Error("The native host returned invalid Workspace patch entities")
   }
   return {
     expectedRevision: value.expectedRevision,
     updatedAt: value.updatedAt,
     boardOrder: [...value.boardOrder],
-    boards,
-    cardOrder: [...value.cardOrder],
-    liveCards,
+    boards: value.boards as NativeWorkspacePatch["boards"],
+    liveCards: value.liveCards as NativeWorkspacePatch["liveCards"],
+    liveWidgets: value.liveWidgets as NativeWorkspacePatch["liveWidgets"],
     settings: value.settings,
   }
+}
+
+export function createWorkspacePatch(current: NativeWorkspace, candidate: NativeWorkspace): NativeWorkspacePatch {
+  return {
+    expectedRevision: current.revision,
+    updatedAt: candidate.updatedAt,
+    boardOrder: candidate.boardOrder,
+    boards: changedValues(current.boards, candidate.boards),
+    liveCards: changedValues(current.liveCards, candidate.liveCards),
+    liveWidgets: changedValues(current.liveWidgets, candidate.liveWidgets),
+    settings: candidate.settings,
+  }
+}
+
+export function applyWorkspacePatch(current: NativeWorkspace, patch: NativeWorkspacePatch): NativeWorkspace {
+  if (patch.expectedRevision !== current.revision) {
+    throw new Error(`Workspace patch expected revision ${patch.expectedRevision}, current ${current.revision}`)
+  }
+  const boards = applyEntityPatch(current.boards, patch.boardOrder, patch.boards, "Board")
+  const cardIds = patch.boardOrder.flatMap(boardId => boards[boardId]!.nowLayer.liveCards)
+  const widgetIds = patch.boardOrder.flatMap(boardId => boards[boardId]!.nextLayer.liveWidgets)
+  const liveCards = applyEntityPatch(current.liveCards, cardIds, patch.liveCards, "LiveCard")
+  const liveWidgets = applyEntityPatch(current.liveWidgets, widgetIds, patch.liveWidgets, "LiveWidget")
+  const normalized = fromNativeWorkspaceData({ boardOrder: patch.boardOrder, boards, liveCards, liveWidgets })
+  const normalizedNative = toNativeWorkspaceData(normalized)
+  if (normalizedNative.boardOrder.length !== patch.boardOrder.length
+    || Object.keys(normalizedNative.boards).length !== Object.keys(boards).length
+    || Object.keys(normalizedNative.liveCards).length !== Object.keys(liveCards).length
+    || Object.keys(normalizedNative.liveWidgets).length !== Object.keys(liveWidgets).length) {
+    throw new Error("Workspace patch produced invalid entities")
+  }
+  return {
+    revision: current.revision + 1,
+    updatedAt: patch.updatedAt,
+    ...normalizedNative,
+    settings: patch.settings,
+  }
+}
+
+function changedValues<T>(current: Record<string, T>, candidate: Record<string, T>): Record<string, T> {
+  return Object.fromEntries(Object.entries(candidate).filter(([id, value]) => JSON.stringify(current[id]) !== JSON.stringify(value)))
+}
+
+function applyEntityPatch<T>(current: Record<string, T>, ids: string[], updates: Record<string, T>, label: string): Record<string, T> {
+  if (new Set(ids).size !== ids.length || ids.some(id => !id)) throw new Error(`Workspace patch has invalid ${label} IDs`)
+  const required = new Set(ids)
+  if (Object.keys(updates).some(id => !required.has(id))) throw new Error(`Workspace patch has an invalid ${label} update`)
+  return Object.fromEntries(ids.map((id) => {
+    const value = updates[id] ?? current[id]
+    if (!value) throw new Error(`Workspace patch references unknown ${label} '${id}'`)
+    return [id, value]
+  }))
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -59,104 +85,5 @@ function isNonNegativeSafeInteger(value: unknown): value is number {
 }
 
 function isIdentifierArray(value: unknown): value is string[] {
-  return Array.isArray(value)
-    && value.every(id => typeof id === "string" && id.length > 0)
-    && new Set(value).size === value.length
-}
-
-export function createWorkspacePatch(
-  current: NativeWorkspace,
-  candidate: NativeWorkspace,
-): NativeWorkspacePatch {
-  return {
-    expectedRevision: current.revision,
-    updatedAt: candidate.updatedAt,
-    boardOrder: candidate.boards.map(board => board.id),
-    boards: changedValues(current.boards, candidate.boards, board => board.id),
-    cardOrder: candidate.liveCards.map(card => card.cardId),
-    liveCards: changedValues(
-      current.liveCards,
-      candidate.liveCards,
-      card => card.cardId,
-    ),
-    settings: candidate.settings,
-  }
-}
-
-export function applyWorkspacePatch(
-  current: NativeWorkspace,
-  patch: NativeWorkspacePatch,
-): NativeWorkspace {
-  if (patch.expectedRevision !== current.revision) {
-    throw new Error(
-      `Workspace patch expected revision ${patch.expectedRevision}, current ${current.revision}`,
-    )
-  }
-  const boards = applyOrderedPatch(
-    current.boards,
-    patch.boardOrder,
-    patch.boards,
-    board => board.id,
-    "Board",
-  )
-  const liveCards = applyOrderedPatch(
-    current.liveCards,
-    patch.cardOrder,
-    patch.liveCards,
-    card => card.cardId,
-    "LiveCard",
-  )
-  const normalized = fromNativeWorkspaceData({
-    boards,
-    liveCards,
-  })
-  const normalizedNative = toNativeWorkspaceData(normalized)
-  if (normalized.boards.length !== boards.length
-    || normalizedNative.liveCards.length !== liveCards.length) {
-    throw new Error("Workspace patch produced invalid entities")
-  }
-  return {
-    revision: current.revision + 1,
-    updatedAt: patch.updatedAt,
-    boards: normalizedNative.boards,
-    liveCards: normalizedNative.liveCards,
-    settings: patch.settings,
-  }
-}
-
-function changedValues<T>(
-  current: T[],
-  candidate: T[],
-  id: (value: T) => string,
-): T[] {
-  const currentValues = new Map(current.map(value => [id(value), JSON.stringify(value)]))
-  return candidate.filter(value => currentValues.get(id(value)) !== JSON.stringify(value))
-}
-
-function applyOrderedPatch<T>(
-  current: T[],
-  order: string[],
-  updates: T[],
-  id: (value: T) => string,
-  label: string,
-): T[] {
-  if (new Set(order).size !== order.length || order.some(value => !value)) {
-    throw new Error(`Workspace patch has invalid ${label} order`)
-  }
-  const orderIds = new Set(order)
-  const values = new Map(current.map(value => [id(value), value]))
-  const updatedIds = new Set<string>()
-  for (const update of updates) {
-    const updateId = id(update)
-    if (!updateId || !orderIds.has(updateId) || updatedIds.has(updateId)) {
-      throw new Error(`Workspace patch has an invalid ${label} update`)
-    }
-    updatedIds.add(updateId)
-    values.set(updateId, update)
-  }
-  return order.map((orderedId) => {
-    const value = values.get(orderedId)
-    if (!value) throw new Error(`Workspace patch references unknown ${label} '${orderedId}'`)
-    return value
-  })
+  return Array.isArray(value) && value.every(id => typeof id === "string" && id.length > 0) && new Set(value).size === value.length
 }

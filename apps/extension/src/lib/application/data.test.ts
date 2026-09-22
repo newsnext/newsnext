@@ -9,10 +9,10 @@ describe("ensureApplicationDataIntegrity", () => {
       createdAt: 1,
     })
 
-    expect(data.boards[0]).toMatchObject({
+    expect(data.boards.board).toMatchObject({
       createdAt: 1,
-      id: "board",
       name: "我的看板",
     })
+    expect(data.boardOrder).toEqual(["board"])
   })
 })

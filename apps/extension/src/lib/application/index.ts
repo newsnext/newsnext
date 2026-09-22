@@ -1,5 +1,5 @@
 export type { ApplicationData } from "./data"
-export { APPLICATION_DATA_VERSION, createEmptyApplicationData, createInitialApplicationData, ensureApplicationDataIntegrity, getApplicationLiveCards } from "./data"
+export { APPLICATION_DATA_VERSION, createEmptyApplicationData, createInitialApplicationData, ensureApplicationDataIntegrity, getApplicationBoards, getApplicationLiveCards, getApplicationLiveWidgets, getStoredBoard, toBoard, toLiveCard, toLiveWidget } from "./data"
 export type { ApplicationMutationDependencies, ApplicationMutationExecution, ApplicationMutationResult, BoardConfiguration, BoardDeleteInput } from "./mutations"
 export { configureLiveCardMutation, configureLiveWidgetMutation, createBoardMutation, createLiveCardMutation, createLiveWidgetMutation, deleteBoardMutation, deleteLiveCardMutation, deleteLiveWidgetMutation, moveLiveCardMutation, moveLiveWidgetMutation, resetLiveCardMetadataMutation, resetLiveCardParamsMutation, resetLiveWidgetMetadataMutation, resetLiveWidgetParamsMutation, setLiveWidgetLayoutsMutation, setNextLayerManualOrderMutation, setNowLayerManualOrderMutation, updateBoardMutation } from "./mutations"
 export type { ApplicationBoardContext, ApplicationNowLayerLiveCard, LiveWidget } from "./queries"

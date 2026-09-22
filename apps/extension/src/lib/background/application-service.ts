@@ -61,7 +61,7 @@ export async function mutateApplicationData(
       const stored = await browser.storage.local.get(settingsKey)
       const settings = normalizePersistedSettings(stored[settingsKey])
       const destinationBoardId = options.targetBoardId
-        ?? committedData.boards[0]?.id
+        ?? committedData.boardOrder[0]
       if (!destinationBoardId) throw new Error("NewsNext must keep at least one Board")
       if (settings.general.defaultBoardId === options.deletedBoardId) {
         updates[settingsKey] = {
@@ -100,12 +100,12 @@ async function enqueueApplicationDataReplacement(
     const data = commit && applicationDataCommitter
       ? await applicationDataCommitter(candidate)
       : candidate
-    const fallbackBoardId = data.boards[0]?.id
+    const fallbackBoardId = data.boardOrder[0]
     if (!fallbackBoardId) throw new Error("NewsNext must keep at least one Board")
     const settingsKey = PERSISTED_DATA_SLICES.settings.key
     const stored = await browser.storage.local.get(settingsKey)
     const settings = normalizePersistedSettings(stored[settingsKey])
-    const boardIds = new Set(data.boards.map(board => board.id))
+    const boardIds = new Set(Object.keys(data.boards))
     const updates: Record<string, unknown> = {
       [PERSISTED_DATA_SLICES.application.key]: data,
     }

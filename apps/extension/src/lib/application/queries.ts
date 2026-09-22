@@ -3,6 +3,7 @@ import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
 import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"
+import { getApplicationBoards, getApplicationLiveCards, getApplicationLiveWidgets, getStoredBoard, toBoard, toLiveCard, toLiveWidget } from "./data"
 
 // Queries never filter by registry availability; missing Sources degrade to generic cards.
 export type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, LiveWidget } from "@newsnext/sdk/models"
@@ -12,7 +13,7 @@ export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDe
 }
 
 export function listBoardsQuery(data: ApplicationData): Board[] {
-  return data.boards
+  return getApplicationBoards(data)
 }
 
 export function getBoardQuery(
@@ -39,40 +40,39 @@ export function listBoardLiveWidgetsQuery(
 export function listAllLiveWidgetsQuery(
   data: ApplicationData,
 ): ApplicationNextLayerLiveWidget[] {
-  return data.boards.flatMap(board =>
-    board.nextLayer.liveWidgets.map(widget => ({ ...widget, boardId: board.id })),
-  )
+  return getApplicationLiveWidgets(data)
 }
 
 export function getBoardLiveWidgetQuery(
   data: ApplicationData,
   input: { boardId: string, liveWidgetId: string },
 ): ApplicationNextLayerLiveWidget {
-  const widget = getBoard(data, input.boardId).nextLayer.liveWidgets.find(candidate => candidate.liveWidgetId === input.liveWidgetId)
-  if (!widget) throw new Error(`LiveWidget '${input.liveWidgetId}' not found in Board '${input.boardId}'`)
-  return { ...widget, boardId: input.boardId }
+  const widget = data.liveWidgets[input.liveWidgetId]
+  if (!widget || !data.boards[input.boardId]?.nextLayer.liveWidgets.includes(input.liveWidgetId)) throw new Error(`LiveWidget '${input.liveWidgetId}' not found in Board '${input.boardId}'`)
+  return { ...toLiveWidget(input.liveWidgetId, widget), boardId: input.boardId }
 }
 
 export function getLiveWidgetQuery(
   data: ApplicationData,
   input: { liveWidgetId: string },
 ): ApplicationNextLayerLiveWidget {
-  for (const board of data.boards) {
-    const widget = board.nextLayer.liveWidgets.find(w => w.liveWidgetId === input.liveWidgetId)
-    if (widget) return { ...widget, boardId: board.id }
-  }
-  throw new Error(`LiveWidget '${input.liveWidgetId}' not found`)
+  const widget = data.liveWidgets[input.liveWidgetId]
+  if (!widget) throw new Error(`LiveWidget '${input.liveWidgetId}' not found`)
+  const boardId = data.boardOrder.find(id => data.boards[id]?.nextLayer.liveWidgets.includes(input.liveWidgetId))
+  if (!boardId) throw new Error(`LiveWidget '${input.liveWidgetId}' is not assigned to a Board`)
+  return { ...toLiveWidget(input.liveWidgetId, widget), boardId }
 }
 
 export function listLiveCardsQuery(data: ApplicationData): LiveCard[] {
-  return data.boards.flatMap(board => board.nowLayer.liveCards)
+  return getApplicationLiveCards(data)
 }
 
 export function getLiveCardQuery(
   data: ApplicationData,
   input: { cardId: string },
 ): LiveCard {
-  const card = listLiveCardsQuery(data).find(candidate => candidate.cardId === input.cardId)
+  const stored = data.liveCards[input.cardId]
+  const card = stored && toLiveCard(input.cardId, stored)
   if (!card) throw new Error(`LiveCard '${input.cardId}' not found`)
   return card
 }
@@ -101,14 +101,13 @@ function resolveBoardContext(
   data: ApplicationData,
   currentBoardId?: string,
 ): ApplicationBoardContext {
-  const board = data.boards.find(candidate => candidate.id === currentBoardId)
-    ?? data.boards[0]
+  const board = currentBoardId && data.boards[currentBoardId]
+    ? toBoard(data, currentBoardId)
+    : getApplicationBoards(data)[0]
   if (!board) throw new Error("NewsNext has no Boards")
   return { boardId: board.id, boardName: board.name }
 }
 
 function getBoard(data: ApplicationData, boardId: string): Board {
-  const board = data.boards.find(candidate => candidate.id === boardId)
-  if (!board) throw new Error(`Board '${boardId}' not found`)
-  return board
+  return toBoard(data, boardId, getStoredBoard(data, boardId))
 }

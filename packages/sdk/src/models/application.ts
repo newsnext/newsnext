@@ -1,10 +1,23 @@
 import type { Board, LiveWidget } from "./board.js"
+import type { LiveCard } from "./live-card.js"
 
-export const APPLICATION_DATA_VERSION = 10 as const
+export const APPLICATION_DATA_VERSION = 12 as const
+
+export interface StoredBoard extends Omit<Board, "id" | "nowLayer" | "nextLayer"> {
+  nowLayer: { liveCards: string[] }
+  nextLayer: { liveWidgets: string[] }
+}
+
+export type StoredLiveCard = Omit<LiveCard, "cardId">
+
+export type StoredLiveWidget = Omit<LiveWidget, "liveWidgetId">
 
 export interface ApplicationData {
   version: typeof APPLICATION_DATA_VERSION
-  boards: Board[]
+  boardOrder: string[]
+  boards: Record<string, StoredBoard>
+  liveCards: Record<string, StoredLiveCard>
+  liveWidgets: Record<string, StoredLiveWidget>
 }
 
 export interface ApplicationBoardContext {

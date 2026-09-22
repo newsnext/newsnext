@@ -19,7 +19,7 @@ export const NATIVE_HOST_NAME = import.meta.env.DEV
 // replacing the source-cache terminology on the wire.
 // Protocol 30 carries the Widget catalog inside Ready and every catalog push
 // instead of serving it from the loopback Widget server.
-export const PROTOCOL_VERSION = 34
+export const PROTOCOL_VERSION = 35
 export const WORKSPACE_SYNCED_AT_KEY = "newsnext-workspace-synced-at"
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"
@@ -30,8 +30,10 @@ function createInitialWorkspace(): NativeWorkspace {
   return {
     revision: 0,
     updatedAt: 0,
-    boards: [],
-    liveCards: [],
+    boardOrder: [],
+    boards: {},
+    liveCards: {},
+    liveWidgets: {},
     settings: JSON.stringify(normalizePersistedSettings(undefined)),
   }
 }

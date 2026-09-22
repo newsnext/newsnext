@@ -4,45 +4,50 @@ import { stableStringify } from "@newsnext/shared/utils"
 
 export function summarizeWorkspace(workspace: Workspace): WorkspaceSummary {
   return {
-    boards: workspace.boards.length,
-    liveCards: workspace.liveCards.length,
-    liveWidgets: workspace.boards.reduce((count, board) => count + board.nextLayer.liveWidgets.length, 0),
+    boards: workspace.boardOrder.length,
+    liveCards: Object.keys(workspace.liveCards).length,
+    liveWidgets: Object.keys(workspace.liveWidgets).length,
   }
 }
 
 export function needsWorkspaceResolution(local: Workspace, shared: Workspace, syncedAt: number | undefined): boolean {
   if (syncedAt !== undefined && local.updatedAt <= syncedAt) return false
-  return stableStringify({ boards: local.boards, liveCards: local.liveCards, settings: JSON.parse(local.settings) })
-    !== stableStringify({ boards: shared.boards, liveCards: shared.liveCards, settings: JSON.parse(shared.settings) })
+  return stableStringify({ boardOrder: local.boardOrder, boards: local.boards, liveCards: local.liveCards, liveWidgets: local.liveWidgets, settings: JSON.parse(local.settings) })
+    !== stableStringify({ boardOrder: shared.boardOrder, boards: shared.boards, liveCards: shared.liveCards, liveWidgets: shared.liveWidgets, settings: JSON.parse(shared.settings) })
 }
 
 // Shared IDs retain their content and Board ownership. Local-only entities are
 // appended without changing Worker ownership or collapsing Widget definitions.
 export function mergeWorkspaces(shared: Workspace, local: Workspace): Workspace {
   const result = structuredClone(shared)
-  const boardMap = new Map(result.boards.map(board => [board.id, board]))
-  const cardIds = new Set(shared.liveCards.map(card => card.cardId))
-  const widgetIds = new Set(shared.boards.flatMap(board => board.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)))
-  result.liveCards.push(...structuredClone(local.liveCards.filter(card => !cardIds.has(card.cardId))))
-  for (const localBoard of local.boards) {
-    let board = boardMap.get(localBoard.id)
+  const cardIds = new Set(Object.keys(shared.liveCards))
+  const widgetIds = new Set(Object.keys(shared.liveWidgets))
+  for (const boardId of local.boardOrder) {
+    const localBoard = local.boards[boardId]!
+    let board = result.boards[boardId]
     if (!board) {
       board = structuredClone(localBoard)
       board.nowLayer.liveCards = []
       board.nextLayer.liveWidgets = []
-      result.boards.push(board)
-      boardMap.set(board.id, board)
+      result.boards[boardId] = board
+      result.boardOrder.push(boardId)
     }
     board.nowLayer.liveCards.push(...localBoard.nowLayer.liveCards.filter(id => !cardIds.has(id)))
+    for (const cardId of localBoard.nowLayer.liveCards) {
+      if (!cardIds.has(cardId) && local.liveCards[cardId]) result.liveCards[cardId] = structuredClone(local.liveCards[cardId])
+    }
     const ownedCards = new Set(board.nowLayer.liveCards)
-    for (const widget of localBoard.nextLayer.liveWidgets) {
-      if (widgetIds.has(widget.liveWidgetId)) continue
-      const added = structuredClone(widget)
+    for (const widgetId of localBoard.nextLayer.liveWidgets) {
+      if (widgetIds.has(widgetId)) continue
+      const localWidget = local.liveWidgets[widgetId]
+      if (!localWidget) continue
+      const added = structuredClone(localWidget)
       if (added.dataScope.type === "cards") {
         added.dataScope.cardIds = added.dataScope.cardIds.filter(id => ownedCards.has(id))
       }
-      board.nextLayer.liveWidgets.push(added)
-      widgetIds.add(added.liveWidgetId)
+      result.liveWidgets[widgetId] = added
+      board.nextLayer.liveWidgets.push(widgetId)
+      widgetIds.add(widgetId)
     }
     for (const id of board.nowLayer.liveCards) cardIds.add(id)
   }

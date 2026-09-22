@@ -1,10 +1,11 @@
 import type { ApplicationData } from "../lib/application"
 import type { Board, BoardCreateInput } from "../lib/board"
 import type { OpmlImport } from "../lib/opml"
-import type { LiveCardPatch } from "../lib/source"
+import type { LiveCard, LiveCardPatch } from "../lib/source"
 import { atom } from "jotai"
 import { atomWithStorage, selectAtom, splitAtom } from "jotai/utils"
 import { actions } from "../lib/actions"
+import { getApplicationBoards, getApplicationLiveCards } from "../lib/application"
 import {
   DEFAULT_BOARD_LAYER,
 } from "../lib/board"
@@ -28,18 +29,33 @@ const persistedApplicationDataAtom = atomWithStorage<ApplicationData>(
 )
 export const applicationDataAtom = atom(get => get(persistedApplicationDataAtom))
 
+let liveCardViewCache = new Map<string, { stored: ApplicationData["liveCards"][string], value: LiveCard }>()
+
+function selectLiveCards(data: ApplicationData): LiveCard[] {
+  const nextCache = new Map<string, { stored: ApplicationData["liveCards"][string], value: LiveCard }>()
+  const values = getApplicationLiveCards(data).map((value) => {
+    const stored = data.liveCards[value.cardId]!
+    const cached = liveCardViewCache.get(value.cardId)
+    const selected = cached?.stored === stored ? cached.value : value
+    nextCache.set(value.cardId, { stored, value: selected })
+    return selected
+  })
+  liveCardViewCache = nextCache
+  return values
+}
+
 export async function initializeApplicationDataStorage(): Promise<void> {
   await applicationDataStorage.initialize()
 }
 
-export const boardsAtom = selectAtom(applicationDataAtom, data => data.boards)
+export const boardsAtom = selectAtom(applicationDataAtom, getApplicationBoards)
 export const currentBoardAtom = atom((get) => {
   const currentBoardId = get(currentBoardIdAtom)
   return get(boardsAtom).find(board => board.id === currentBoardId)
 })
 export const liveCardsAtom = selectAtom(
   applicationDataAtom,
-  data => data.boards.flatMap(board => board.nowLayer.liveCards),
+  selectLiveCards,
   (current, next) => current.length === next.length && current.every((card, index) => card === next[index]),
 )
 // Each LiveCard subscribes to its own item atom keyed by cardId, so edits stay local.

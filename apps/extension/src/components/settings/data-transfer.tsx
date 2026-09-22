@@ -116,8 +116,8 @@ export function DataTransferSettings({
       }
 
       const nextData = await importData(selectedData)
-      if (routeBoardId && !nextData.boards.some(board => board.id === routeBoardId)) {
-        const fallbackBoardId = nextData.boards[0]?.id
+      if (routeBoardId && !nextData.boards[routeBoardId]) {
+        const fallbackBoardId = nextData.boardOrder[0]
         if (fallbackBoardId) {
           await navigate({
             to: "/board/$boardId",
@@ -147,7 +147,7 @@ export function DataTransferSettings({
       queryClient.clear()
       handleThemeModeSwitch("system")
       handleThemeSwitch(DEFAULT_BOARD_COLOR)
-      const boardId = clearedData.boards[0]?.id
+      const boardId = clearedData.boardOrder[0]
       if (!boardId) throw new Error("NewsNext must keep at least one Board")
       await navigate({
         to: "/board/$boardId",

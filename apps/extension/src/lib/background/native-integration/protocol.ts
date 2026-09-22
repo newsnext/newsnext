@@ -77,14 +77,18 @@ function parseWorkspace(value: unknown): NativeWorkspace {
     || Number(value.revision) < 0
     || !Number.isSafeInteger(value.updatedAt)
     || Number(value.updatedAt) < 0
-    || !Array.isArray(value.boards)
-    || !Array.isArray(value.liveCards)
+    || !Array.isArray(value.boardOrder)
+    || !isRecord(value.boards)
+    || !isRecord(value.liveCards)
+    || !isRecord(value.liveWidgets)
     || typeof value.settings !== "string") {
     throw new Error("The native host returned an invalid Workspace")
   }
   const application = fromNativeWorkspaceData({
+    boardOrder: value.boardOrder as NativeWorkspace["boardOrder"],
     boards: value.boards as NativeWorkspace["boards"],
     liveCards: value.liveCards as NativeWorkspace["liveCards"],
+    liveWidgets: value.liveWidgets as NativeWorkspace["liveWidgets"],
   })
   const nativeData = toNativeWorkspaceData(application)
   return {

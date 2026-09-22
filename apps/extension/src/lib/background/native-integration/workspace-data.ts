@@ -1,28 +1,25 @@
 import type { ApplicationData } from "../../application"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
-import { getApplicationLiveCards } from "../../application"
+import { APPLICATION_DATA_VERSION } from "../../application"
 import { normalizeApplicationData } from "../../settings/persisted-data"
 
-type NativeWorkspaceData = Pick<NativeWorkspace, "boards" | "liveCards">
+type NativeWorkspaceData = Pick<NativeWorkspace, "boardOrder" | "boards" | "liveCards" | "liveWidgets">
 
 export function toNativeWorkspaceData(data: ApplicationData): NativeWorkspaceData {
   return {
-    boards: data.boards.map(board => ({
-      ...board,
-      nowLayer: {
-        liveCards: board.nowLayer.liveCards.map(card => card.cardId),
-      },
-    })),
-    liveCards: getApplicationLiveCards(data),
+    boardOrder: data.boardOrder,
+    boards: Object.fromEntries(Object.entries(data.boards).map(([boardId, board]) => [boardId, { ...board, id: boardId }])),
+    liveCards: Object.fromEntries(Object.entries(data.liveCards).map(([cardId, card]) => [cardId, { ...card, cardId }])),
+    liveWidgets: Object.fromEntries(Object.entries(data.liveWidgets).map(([liveWidgetId, widget]) => [liveWidgetId, { ...widget, liveWidgetId }])),
   }
 }
 
 export function fromNativeWorkspaceData(data: NativeWorkspaceData): ApplicationData {
   return normalizeApplicationData({
-    version: 8,
+    version: APPLICATION_DATA_VERSION,
+    boardOrder: data.boardOrder,
     boards: data.boards,
-    // Native Workspace keeps cards in a flat transport list; reattach them to
-    // the Board tree through the existing v8 migration path.
     liveCards: data.liveCards,
+    liveWidgets: data.liveWidgets,
   })
 }

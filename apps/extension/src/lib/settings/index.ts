@@ -12,8 +12,6 @@ export {
   hasPersistedUserDataSlice,
   mergePersistedUserData,
   normalizeApplicationData,
-  normalizeBoards,
-  normalizeLiveCards,
   parsePersistedDataExport,
   PERSISTED_DATA_SLICES,
   PERSISTED_PORTABLE_SLICE_IDS,

@@ -75,8 +75,10 @@ function acceptWorkspace(
   runtime.workspace = nextWorkspace
   runtime.localCardIds = new Set(nextLocalCardIds)
   return fromNativeWorkspaceData({
+    boardOrder: nextWorkspace.boardOrder,
     boards: nextWorkspace.boards,
     liveCards: nextWorkspace.liveCards,
+    liveWidgets: nextWorkspace.liveWidgets,
   })
 }
 
@@ -113,7 +115,7 @@ export function resolveWorkspace(resolution: WorkspaceResolution, expectedRevisi
     }
     if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext CLI disconnected during Workspace resolution")
     runtime.pendingWorkspace = next
-    await applyWorkspace(next, next.liveCards.filter(card => card.workerId === runtime.workerId).map(card => card.cardId))
+    await applyWorkspace(next, Object.values(next.liveCards).filter(card => card.workerId === runtime.workerId).map(card => card.cardId))
     runtime.pendingWorkspace = undefined
     runtime.connectionState = "connected"
   })
@@ -188,7 +190,7 @@ export function registerApplicationDataSync(requireConnection: RequireNativeConn
         nextWorkspaceUpdatedAt(runtime.workspace.updatedAt),
         parseWorkspaceSettings(runtime.workspace.settings),
       )
-      const nextLocalCardIds = candidate.liveCards
+      const nextLocalCardIds = Object.values(candidate.liveCards)
         .filter(card => card.workerId === runtime.workerId)
         .map(card => card.cardId)
       await persistWorkspaceUpdatedAt(candidate.updatedAt)
@@ -202,8 +204,10 @@ export function registerApplicationDataSync(requireConnection: RequireNativeConn
       parseWorkspaceSettings(current.settings),
     ), requireConnection)
     return fromNativeWorkspaceData({
+      boardOrder: committed.boardOrder,
       boards: committed.boards,
       liveCards: committed.liveCards,
+      liveWidgets: committed.liveWidgets,
     })
   })
 }

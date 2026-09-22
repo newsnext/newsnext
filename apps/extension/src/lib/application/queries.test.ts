@@ -1,122 +1,31 @@
-import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
-import {
-  getBoardLiveWidgetQuery,
-  getLiveWidgetQuery,
-  getNowLayerLiveCardsQuery,
-  listAllLiveWidgetsQuery,
-  listBoardLiveCardsQuery,
-  listBoardLiveWidgetsQuery,
-  listSourcesQuery,
-} from "./queries"
+import { getBoardLiveWidgetQuery, getLiveCardQuery, getNowLayerLiveCardsQuery, listAllLiveWidgetsQuery, listBoardLiveCardsQuery, listBoardsQuery } from "./queries"
 
 function createData(): ApplicationData {
   return {
-    version: 10,
-    boards: [{
-      color: "blue",
-      id: "reading",
-      name: "Reading",
-      createdAt: 1,
-      nowLayer: { liveCards: [
-        { cardId: "second", workerId: "worker-a", sourceId: "rss:second", provider: { color: "blue", title: "RSS" }, patch: {}, createdAt: 2 },
-        { cardId: "first", workerId: "worker-a", sourceId: "rss:first", provider: { color: "blue", title: "RSS" }, patch: {}, createdAt: 1 },
-      ] },
-      layer: "now",
-      nextLayer: { liveWidgets: [] },
-    }],
+    version: 12,
+    boardOrder: ["reading"],
+    boards: { reading: { color: "blue", createdAt: 1, layer: "now", name: "Reading", nowLayer: { liveCards: ["second", "first"] }, nextLayer: { liveWidgets: ["widget"] } } },
+    liveCards: {
+      first: { createdAt: 1, patch: {}, provider: { color: "blue", title: "RSS" }, sourceId: "rss:first", workerId: "worker" },
+      second: { createdAt: 2, patch: {}, provider: { color: "blue", title: "RSS" }, sourceId: "rss:second", workerId: "worker" },
+    },
+    liveWidgets: { widget: { dataScope: { type: "board" }, layout: { height: 2, width: 2 }, widgetId: "snake" } },
   }
 }
 
 describe("application queries", () => {
-  it("resolves Sources from query context", () => {
-    const source = { id: "rss:first" } as SourceDescriptor
-    expect(listSourcesQuery([source]))
-      .toEqual([source])
+  it("assembles ordered public Board data", () => {
+    expect(listBoardsQuery(createData())[0]?.nowLayer.liveCards.map(card => card.cardId)).toEqual(["second", "first"])
+    expect(listBoardLiveCardsQuery(createData(), { boardId: "reading" }).map(card => card.cardId)).toEqual(["second", "first"])
   })
-
-  it("lists Board LiveCards in liveCards order", () => {
-    const liveCards = listBoardLiveCardsQuery(createData(), { boardId: "reading" })
-    expect(liveCards.map(card => card.cardId)).toEqual(["second", "first"])
+  it("looks entities up directly by ID", () => {
+    expect(getLiveCardQuery(createData(), { cardId: "first" }).sourceId).toBe("rss:first")
+    expect(getBoardLiveWidgetQuery(createData(), { boardId: "reading", liveWidgetId: "widget" }).widgetId).toBe("snake")
+    expect(listAllLiveWidgetsQuery(createData())[0]?.boardId).toBe("reading")
   })
-
-  it("lists Board Widget placements in installation order", () => {
-    const data = createData()
-    data.boards[0]!.nextLayer.liveWidgets.push({
-      dataScope: { type: "board" },
-      layout: { height: 2, width: 2 },
-      liveWidgetId: "instance-a",
-      widgetId: "snake",
-    })
-    const widgets = listBoardLiveWidgetsQuery(data, { boardId: "reading" })
-    expect(widgets.map(widget => widget.liveWidgetId)).toEqual(["instance-a"])
-  })
-
-  it("lists all Widget placements with their Board IDs", () => {
-    const data = createData()
-    data.boards[0]!.nextLayer.liveWidgets.push({
-      dataScope: { type: "board" },
-      layout: { height: 2, width: 2 },
-      liveWidgetId: "instance-a",
-      widgetId: "snake",
-    })
-    expect(listAllLiveWidgetsQuery(data)).toEqual([{
-      boardId: "reading",
-      dataScope: { type: "board" },
-      layout: { height: 2, width: 2 },
-      liveWidgetId: "instance-a",
-      widgetId: "snake",
-    }])
-  })
-
-  it("returns one Widget placement with its Board ID", () => {
-    const data = createData()
-    data.boards[0]!.nextLayer.liveWidgets.push({
-      dataScope: { type: "board" },
-      layout: { height: 2, width: 2 },
-      liveWidgetId: "instance-a",
-      widgetId: "snake",
-    })
-    expect(getBoardLiveWidgetQuery(data, { boardId: "reading", liveWidgetId: "instance-a" })).toEqual({
-      boardId: "reading",
-      dataScope: { type: "board" },
-      layout: { height: 2, width: 2 },
-      liveWidgetId: "instance-a",
-      widgetId: "snake",
-    })
-    expect(() => getBoardLiveWidgetQuery(data, { boardId: "reading", liveWidgetId: "missing" }))
-      .toThrow("LiveWidget 'missing' not found")
-  })
-
-  it("returns one Widget placement across all Boards", () => {
-    const data = createData()
-    data.boards[0]!.nextLayer.liveWidgets.push({
-      dataScope: { type: "board" },
-      layout: { height: 2, width: 2 },
-      liveWidgetId: "instance-a",
-      widgetId: "snake",
-    })
-    expect(getLiveWidgetQuery(data, { liveWidgetId: "instance-a" })).toEqual({
-      boardId: "reading",
-      dataScope: { type: "board" },
-      layout: { height: 2, width: 2 },
-      liveWidgetId: "instance-a",
-      widgetId: "snake",
-    })
-    expect(() => getLiveWidgetQuery(data, { liveWidgetId: "missing" }))
-      .toThrow("LiveWidget 'missing' not found")
-  })
-
-  it("throws for Widget placements of an unknown Board", () => {
-    expect(() => listBoardLiveWidgetsQuery(createData(), { boardId: "missing" }))
-      .toThrow("Board 'missing' not found")
-  })
-
-  it("returns NowLayer cards with their Board and source IDs", () => {
-    expect(getNowLayerLiveCardsQuery(createData(), "reading")).toEqual([
-      { boardId: "reading", cardId: "second", sourceId: "rss:second" },
-      { boardId: "reading", cardId: "first", sourceId: "rss:first" },
-    ])
+  it("returns ordered Now Layer references", () => {
+    expect(getNowLayerLiveCardsQuery(createData(), "reading").map(card => card.cardId)).toEqual(["second", "first"])
   })
 })

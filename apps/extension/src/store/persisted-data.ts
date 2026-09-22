@@ -21,7 +21,10 @@ export const importPersistedUserDataAtom = atom(
     const data = mergePersistedUserData(get(persistedUserDataAtom), imported)
     await actions.application.replace({
       version: data.version,
+      boardOrder: data.boardOrder,
       boards: data.boards,
+      liveCards: data.liveCards,
+      liveWidgets: data.liveWidgets,
     })
     set(persistedSettingsAtom, data.settings)
     return data
@@ -30,7 +33,7 @@ export const importPersistedUserDataAtom = atom(
 
 export const clearPersistedUserDataAtom = atom(null, async (_get, set, boardName: string) => {
   const data = createInitialApplicationData({ boardName })
-  const boardId = data.boards[0]?.id
+  const boardId = data.boardOrder[0]
   if (!boardId) throw new Error("NewsNext must keep at least one Board")
   await actions.application.replace(data)
   set(persistedSettingsAtom, createDefaultPersistedSettings())

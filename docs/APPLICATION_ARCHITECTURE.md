@@ -5,8 +5,8 @@ Status: active architecture.
 ## Purpose
 
 One application model shared by UI, agents, and CLI: a typed Action registry
-(`mutation` | `query` | `command`) over a Workspace of Boards. Each Board owns
-its ordered LiveCards plus Now/Next Layers; Worker is a browser UI running
+(`mutation` | `query` | `command`) over a Workspace of Boards. Durable Boards,
+LiveCards, and LiveWidgets are ID-keyed entities; Worker is a browser UI running
 browser-owned Loaders.
 
 ## Package boundaries
@@ -31,9 +31,10 @@ browser-owned Loaders.
   when their Source left the registry (snapshot → generic card → routed refresh).
   Snapshots and query caches are disposable acceleration; clearing them never
   edits membership.
-- Single ownership: `nowLayer.liveCards` stores each Board's complete LiveCards;
-  array order is display order (newest first, drag rewrites the array).
-  Adding an owned card transfers it; re-adding to the same Board is idempotent.
+- Single ownership: LiveCard and LiveWidget bodies are ID-keyed records, while
+  `nowLayer.liveCards` and `nextLayer.liveWidgets` contain only ordered ID arrays.
+  Adding an owned entity transfers its ID; re-adding it to the same Board is
+  idempotent.
 
 ## Sync and persistence
 
@@ -41,10 +42,10 @@ browser-owned Loaders.
   in-memory Workspace and routes loads to the bound Worker.
 - Join conflicts (overwrite / merge / discard) pause sync until resolved in CLI
   Settings; mutations are rejected while a decision is pending.
-- Schema: application data version 9, export version 7; version 8 Application
-  data migrates by embedding LiveCards into their owning Boards while preserving
-  order. Other unknown versions throw, never initialize as empty. Daemon DB
-  schema 15, no legacy migrations at startup.
+- Schema: application data version 12, export version 8. Only the current
+  ID-keyed shape is accepted; mismatched versions throw instead of silently
+  initializing empty data. Native Workspace and CLI use the same keyed shape
+  under protocol version 35. Daemon DB schema 15.
 
 ## Host internals overview
 

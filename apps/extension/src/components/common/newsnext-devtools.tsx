@@ -5,7 +5,7 @@ import type { StreamStatus as NativeStreamStatus } from "@/lib/native-protocol/S
 import { useCallback, useEffect, useRef, useState } from "react"
 import { browser } from "#imports"
 import { useBackgroundEvent } from "@/hooks/use-background-event"
-import { getApplicationLiveCards } from "@/lib/application"
+import { getApplicationBoards, getApplicationLiveCards } from "@/lib/application"
 import { createBackgroundClient } from "@/lib/background"
 import { BACKGROUND_DIAGNOSTICS_PORT } from "@/lib/background/diagnostics-service"
 
@@ -130,7 +130,7 @@ export function NewsNextDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen: b
     overview: undefined,
     actions: snapshot?.actions.length,
     streams: snapshot?.collection.status?.streams.length,
-    boards: snapshot?.application.boards.length,
+    boards: snapshot ? Object.keys(snapshot.application.boards).length : undefined,
     liveCards: snapshot ? getApplicationLiveCards(snapshot.application).length : undefined,
     state: snapshot ? 1 : undefined,
   }
@@ -518,10 +518,11 @@ function ActionDetail({ action }: { action: BackgroundActionRecord }): React.JSX
 
 function ApplicationPanel({ category, filter, snapshot }: PanelProps & { category: ApplicationPanelId }): React.JSX.Element {
   const application = snapshot.application
+  const boards = getApplicationBoards(application)
   const liveCards = getApplicationLiveCards(application)
   const [selectedId, setSelectedId] = useState<string>()
   const categoryEntries = category === "boards"
-    ? application.boards.map(value => ({ id: `board:${value.id}`, kind: "Board", label: value.name || value.id, description: "Board", value }))
+    ? boards.map(value => ({ id: `board:${value.id}`, kind: "Board", label: value.name || value.id, description: "Board", value }))
     : category === "liveCards"
       ? liveCards.map(value => ({ id: `card:${value.cardId}`, kind: "LiveCard", label: value.patch.metadata?.title || value.sourceId, description: `${value.sourceId} · ${formatLiveCardParams(value.patch.params)}`, value }))
       : [

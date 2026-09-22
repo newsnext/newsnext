@@ -71,10 +71,9 @@ async function executeLocal(
   snapshotOnly: boolean,
   actionContext: BackgroundActionContext,
 ): Promise<SourceLoadResponse | null> {
-  const liveCards = runtime.enabled
-    ? runtime.workspace.liveCards
-    : getApplicationLiveCards(await readApplicationData())
-  const card = liveCards.find(candidate => candidate.cardId === input.cardId)
+  const card = runtime.enabled
+    ? runtime.workspace.liveCards[input.cardId]
+    : getApplicationLiveCards(await readApplicationData()).find(candidate => candidate.cardId === input.cardId)
   if (!card) throw new Error(`LiveCard '${input.cardId}' not found`)
   if (card.workerId !== runtime.workerId) {
     throw new Error("The LiveCard's NewsNext Worker is not connected")
