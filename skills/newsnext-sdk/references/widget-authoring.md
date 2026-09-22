@@ -151,9 +151,12 @@ Extension views retain display state but do not maintain a separate data cache.
 With `data.mjs` present, a data-only `widget.json` can be `{}`. Without that
 file, declare `data.queries`. Omit both for a data-free Widget: the pipeline
 yields empty `queries`, and the host hides the refresh button. Built-in views
-still require their view query in the declared data. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
+still require their view query in the declared data. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including
-`~/.bun/bin` and `~/.deno/bin`, so browser launches do not depend on shell PATH.
+`~/.bun/bin` and `~/.local/bin`, so browser launches do not depend on shell PATH.
+Script executions share one short-lived runtime host with at most four isolated
+worker threads. An idle thread exits after 10 seconds; the host exits after 60
+seconds without a script request.
 The selected runtime receives a preconfigured `client`, `signal`, `widgetId`,
 `cardIds` for the resolved placement scope, and resolved `params`. Use `client`
 directly for SDK calls; it inherits the current environment and abort signal without
