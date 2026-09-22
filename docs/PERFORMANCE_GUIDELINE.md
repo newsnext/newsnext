@@ -50,6 +50,9 @@ Restore any data mutated by an audit.
   (`splitAtom` keyed by `cardId`). Board-only appearance resolves at the
   `DraggableLiveCard` boundary; see
   `components/live-card/draggable-live-card.tsx`.
+- Start the Worker-local LiveCard snapshot read independently of Native routing;
+  only fresh Source execution waits for routing. A loaded snapshot is one
+  render unit, including its Source descriptor and items.
 - `DraggableLiveCard` is the manual board/item memo boundary; other
   components rely on React Compiler inference. See the component file.
 - Subscribe to the shared minute clock only in leaf text components

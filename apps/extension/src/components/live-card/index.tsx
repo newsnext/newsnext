@@ -4,20 +4,14 @@ import type { LiveCardViewModel } from "@/typings/source"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useQueryClient } from "@tanstack/react-query"
 import { useSetAtom } from "jotai"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import { useSourceParams } from "@/hooks"
-import { createLiveCardQueryTarget, getSourceQueryKey } from "@/hooks/source-query"
-import { useAsyncAction } from "@/hooks/use-async-action"
-import { useI18n } from "@/hooks/use-i18n"
 import { useInView } from "@/hooks/use-in-view"
-import { NATIVE_INTEGRATION_STATUS_QUERY_KEY, useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
-import { useSourceDescriptor } from "@/hooks/use-source-descriptor"
+import { useLiveCardRenderModel } from "@/hooks/use-live-card-render-model"
 import { useSourcePermission } from "@/hooks/use-source-permission"
-import { useSourceQuery } from "@/hooks/use-source-query"
 import { actions } from "@/lib/actions"
-import { applySourceDescriptor, applySourceLoaderMetadata, applySourceSnapshot, SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
+import { SOURCE_QUERY_OFFSCREEN_RETENTION_MS, SOURCE_QUERY_PRELOAD_MARGIN } from "@/lib/source"
 import {
   resetLiveCardParamsAtom,
   setLiveCardPatchAtom,
@@ -47,63 +41,20 @@ export interface LiveCardProps {
 }
 
 function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
-  const { t } = useI18n()
-  const queryClient = useQueryClient()
   const setLiveCardPatch = useSetAtom(setLiveCardPatchAtom)
   const resetLocalParams = useSetAtom(resetLiveCardParamsAtom)
   const [isFlipped, setIsFlipped] = useState(false)
   const cardId = target.kind === "card" ? target.cardId : undefined
-  const nativeIntegrationStatus = useNativeIntegrationStatus(cardId !== undefined)
-  const liveCardQueryKey = useMemo(
-    () => cardId
-      ? getSourceQueryKey(createLiveCardQueryTarget(cardId))
-      : undefined,
-    [cardId],
-  )
-  const offlineWorker = useMemo(
-    () => cardId
-      ? nativeIntegrationStatus.data?.offlineWorkers.find(worker => (
-          worker.cardIds.includes(cardId)
-        ))
-      : undefined,
-    [nativeIntegrationStatus.data?.offlineWorkers, cardId],
-  )
-  const routingResolved = cardId === undefined
-    || nativeIntegrationStatus.data !== undefined
-    || nativeIntegrationStatus.isError
-  useEffect(() => {
-    if (offlineWorker && liveCardQueryKey) {
-      void queryClient.cancelQueries({ exact: true, queryKey: liveCardQueryKey })
-    }
-  }, [liveCardQueryKey, offlineWorker, queryClient])
-  const { items, inlinePresentation, metadata, sourceSnapshot, refetch, isLoading, hasData, isError, errorMessage, loginUrl } = useSourceQuery({
-    source,
-    sourceId: source.sourceId,
-    cardId,
-    params: source.paramsValue,
-    enabled: routingResolved && offlineWorker === undefined,
-  })
-  // On-demand descriptor: placeholder/snapshot render first, the registry
-  // definition arrives separately and the newer version wins for appearance,
-  // params schema, and capabilities (loader metadata still describes the
-  // snapshot items and is applied later in displaySource).
-  // Drafts already carry their descriptor; only persisted cards resolve on demand.
-  const { descriptor, descriptorError, isDescriptorPending } = useSourceDescriptor(source.sourceId, { enabled: target.kind === "card" })
-  const resolvedSource = useMemo(() => {
-    if (descriptor && sourceSnapshot) {
-      return sourceSnapshot.version > descriptor.version
-        ? applySourceSnapshot(source, sourceSnapshot)
-        : applySourceDescriptor(source, descriptor)
-    }
-    if (sourceSnapshot) return applySourceSnapshot(source, sourceSnapshot)
-    if (descriptor) return applySourceDescriptor(source, descriptor)
-    return source
-  }, [descriptor, source, sourceSnapshot])
   const {
-    error: takeoverError,
-    isPending: isTakingOver,
-    run: runTakeover,
-  } = useAsyncAction(t("takeOverLiveCardFailed"))
+    source: displaySource,
+    items,
+    inlinePresentation,
+    isContentFetching,
+    sourceErrorMessage,
+    sourceLoginUrl,
+    sourceWorkerTakeover,
+    refetch,
+  } = useLiveCardRenderModel({ cardId, source })
   const {
     hasParams,
     savedParams,
@@ -115,43 +66,16 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     commitParams,
     discardDraftParams,
   } = useSourceParams({
-    params: resolvedSource.params,
-    initialValues: resolvedSource.paramsValue,
+    params: displaySource.params,
+    initialValues: displaySource.paramsValue,
   })
-  // A removed definition is an error: snapshot items must never render.
-  const isDefinitionMissing = target.kind === "card" && !isDescriptorPending && descriptorError !== undefined
-  const visibleItems = isDefinitionMissing ? [] : items
-  const visibleInlinePresentation = isDefinitionMissing ? undefined : inlinePresentation
   const {
     missingPermission,
     requestPermission,
-  } = useSourcePermission(resolvedSource, savedParams)
-  const sourceErrorMessage = isDefinitionMissing
-    ? t("loadSourceFailedWithError", { error: descriptorError?.message ?? source.sourceId })
-    : isError
-      ? errorMessage
-        ? t("loadSourceFailedWithError", { error: errorMessage })
-        : t("loadSourceFailed")
-      : undefined
-  const displaySource = useMemo(
-    () => applySourceLoaderMetadata(resolvedSource, metadata),
-    [metadata, resolvedSource],
-  )
+  } = useSourcePermission(displaySource, savedParams)
   const handleFlip = useCallback(() => {
     setIsFlipped(prev => !prev)
   }, [])
-
-  const handleTakeOver = useCallback(async (): Promise<void> => {
-    if (!offlineWorker || !cardId || !liveCardQueryKey) return
-    await runTakeover(async () => {
-      const status = await actions.nativeIntegration.takeOver({
-        cardIds: [cardId],
-        workerId: offlineWorker.id,
-      })
-      queryClient.removeQueries({ exact: true, queryKey: liveCardQueryKey })
-      queryClient.setQueryData(NATIVE_INTEGRATION_STATUS_QUERY_KEY, status)
-    })
-  }, [cardId, liveCardQueryKey, offlineWorker, queryClient, runTakeover])
 
   const handleSaveSourceParams = useCallback(async () => {
     const nextParams = getDraftParams()
@@ -193,19 +117,13 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
     >
       <LiveCardFront
         source={displaySource}
-        items={visibleItems}
-        inlinePresentation={visibleInlinePresentation}
-        isContentFetching={!isDefinitionMissing && !hasData && isLoading}
+        items={items}
+        inlinePresentation={inlinePresentation}
+        isContentFetching={isContentFetching}
         sourceErrorMessage={sourceErrorMessage}
-        sourceLoginUrl={isDefinitionMissing ? undefined : loginUrl}
-        sourcePermissionRequest={isDefinitionMissing ? undefined : missingPermission}
-        sourceWorkerTakeover={offlineWorker
-          ? {
-              isPending: isTakingOver,
-              message: takeoverError ?? t("workerOffline"),
-              onTakeOver: () => void handleTakeOver(),
-            }
-          : undefined}
+        sourceLoginUrl={sourceLoginUrl}
+        sourcePermissionRequest={missingPermission}
+        sourceWorkerTakeover={sourceWorkerTakeover}
         onRefresh={() => void refetch()}
         onRequestPermission={requestPermission}
         onFlip={handleFlip}
