@@ -3,21 +3,18 @@ import { RadioGroup as RadioGroupPrimitive } from "@base-ui/react/radio-group"
 
 import {
   PillGroup,
-  PillGroupIndicator,
   pillGroupItemClassName,
 } from "@newsnext/ui/components/pill-group"
 import { cn } from "@newsnext/ui/lib/utils"
-import { createContext, use, useId } from "react"
+import { createContext, use } from "react"
 
 type RadioGroupVariant = "default" | "segmented"
 
 interface RadioGroupStyleContextValue {
-  indicatorLayoutId: string
   variant: RadioGroupVariant
 }
 
 const RadioGroupStyleContext = createContext<RadioGroupStyleContextValue>({
-  indicatorLayoutId: "",
   variant: "default",
 })
 
@@ -27,10 +24,8 @@ function RadioGroup<Value>({
   children,
   ...props
 }: RadioGroupPrimitive.Props<Value> & { variant?: RadioGroupVariant }): React.JSX.Element {
-  const indicatorLayoutId = `segmented-radio-${useId()}`
-
   return (
-    <RadioGroupStyleContext value={{ indicatorLayoutId, variant }}>
+    <RadioGroupStyleContext value={{ variant }}>
       <RadioGroupPrimitive
         data-slot="radio-group"
         data-variant={variant}
@@ -52,7 +47,7 @@ function RadioGroupItem<Value>({
   children,
   ...props
 }: RadioPrimitive.Root.Props<Value>): React.JSX.Element {
-  const { indicatorLayoutId, variant } = use(RadioGroupStyleContext)
+  const { variant } = use(RadioGroupStyleContext)
 
   return (
     <RadioPrimitive.Root
@@ -65,14 +60,11 @@ function RadioGroupItem<Value>({
       )}
       {...props}
       render={variant === "segmented"
-        ? (renderProps, state) => (
-            <span {...renderProps}>
-              {state.checked && (
-                <PillGroupIndicator layoutId={indicatorLayoutId} />
-              )}
-              <span className="relative z-10">{children}</span>
-            </span>
-          )
+        ? renderProps => (
+          <span {...renderProps}>
+            <span className="relative z-10">{children}</span>
+          </span>
+        )
         : props.render}
     >
       {variant === "default" && (

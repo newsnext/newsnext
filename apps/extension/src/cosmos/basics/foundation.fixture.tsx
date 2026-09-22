@@ -5,7 +5,7 @@ import { Badge } from "@newsnext/ui/components/badge"
 import { Button } from "@newsnext/ui/components/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@newsnext/ui/components/card"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@newsnext/ui/components/command"
-import { PillGroup, PillGroupIndicator, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
+import { PillGroup, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { ArrowRight, Bell, MoreHorizontal, Plus, Trash2 } from "lucide-react"
 import { CardHeaderActionButton } from "@/components/card-shell/card-header"
@@ -390,8 +390,7 @@ export function NavigationAndDataFixture(): React.JSX.Element {
     >
       <FixtureSection title="Pill navigation" description="The moving indicator communicates the selected board or view.">
         <PillGroup>
-          <button className={pillGroupItemClassName({ active: true })} type="button">
-            <PillGroupIndicator layoutId="foundation-pill" />
+          <button aria-current="page" className={pillGroupItemClassName({ active: true })} type="button">
             <span className="relative">Latest</span>
           </button>
           <button className={pillGroupItemClassName({ active: false })} type="button">Saved</button>

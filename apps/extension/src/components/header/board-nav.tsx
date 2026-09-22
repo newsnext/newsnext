@@ -174,8 +174,11 @@ export function BoardNav({ onNotify }: BoardNavProps) {
 
   return (
     <>
-      <PillGroup className="max-w-[min(70vw,28rem)] min-w-0 overflow-hidden">
-        <div className="-m-1 flex min-w-0 items-center gap-1 overflow-x-auto p-1 scrollbar-hidden">
+      <PillGroup indicator={false} className="max-w-[min(70vw,28rem)] min-w-0 overflow-hidden">
+        <div
+          className="relative -m-1 flex min-w-0 items-center gap-1 overflow-x-auto p-1 scrollbar-hidden"
+        >
+          <PillGroupIndicator />
           {boards.map((board) => {
             const isActive = currentBoardId === board.id
             const isEditable = isActive
@@ -208,9 +211,6 @@ export function BoardNav({ onNotify }: BoardNavProps) {
                 aria-current={isActive ? "page" : undefined}
                 title={isEditable ? t("editBoard") : undefined}
               >
-                {isActive && (
-                  <PillGroupIndicator layoutId="active-board" />
-                )}
                 <span
                   className="relative z-10 block max-w-8 truncate sm:max-w-16"
                   title={board.name}

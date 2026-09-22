@@ -1,22 +1,26 @@
 import { cn } from "@newsnext/ui/lib/utils"
-import { m } from "motion/react"
+import { useLayoutEffect, useRef } from "react"
 
 interface PillGroupItemClassNameOptions {
   active?: boolean
   className?: string
 }
 
-interface PillGroupIndicatorProps {
-  layoutId: string
-}
-
-export function PillGroup({ className, ...props }: React.ComponentProps<"div">): React.JSX.Element {
+export function PillGroup({
+  children,
+  className,
+  indicator = true,
+  ...props
+}: React.ComponentProps<"div"> & { indicator?: boolean }): React.JSX.Element {
   return (
     <div
       data-slot="pill-group"
-      className={cn("island-pill flex w-fit items-center gap-1 p-1 text-xs leading-[18px] text-inherit", className)}
+      className={cn("island-pill relative flex w-fit items-center gap-1 p-1 text-xs leading-[18px] text-inherit", className)}
       {...props}
-    />
+    >
+      {indicator && <PillGroupIndicator />}
+      {children}
+    </div>
   )
 }
 
@@ -33,15 +37,48 @@ export function pillGroupItemClassName({
   )
 }
 
-export function PillGroupIndicator({ layoutId }: PillGroupIndicatorProps): React.JSX.Element {
+export function PillGroupIndicator(): React.JSX.Element {
+  const indicatorRef = useRef<HTMLSpanElement>(null)
+
+  useLayoutEffect(() => {
+    const indicator = indicatorRef.current
+    const container = indicator?.parentElement
+    if (!indicator || !container) return
+
+    const update = (): void => {
+      const activeItem = container.querySelector<HTMLElement>("[aria-current=page], [data-checked]")
+      if (!activeItem) return
+      indicator.style.width = `${activeItem.offsetWidth}px`
+      indicator.style.transform = `translate3d(${activeItem.offsetLeft}px, 0, 0)`
+      if (!indicator.hasAttribute("data-ready")) {
+        void indicator.offsetWidth
+        indicator.dataset.ready = ""
+      }
+    }
+
+    update()
+    const mutationObserver = new MutationObserver(update)
+    mutationObserver.observe(container, {
+      attributeFilter: ["aria-current", "data-checked"],
+      attributes: true,
+      childList: true,
+      subtree: true,
+    })
+    const resizeObserver = new ResizeObserver(update)
+    resizeObserver.observe(container)
+
+    return () => {
+      mutationObserver.disconnect()
+      resizeObserver.disconnect()
+    }
+  }, [])
+
   return (
-    <m.span
-      // Decorative sliding thumb: must stay click-through and hidden from AT, or it blocks the pill buttons beneath it.
+    <span
+      ref={indicatorRef}
       aria-hidden
       data-slot="pill-group-indicator"
-      layoutId={layoutId}
-      className="pointer-events-none absolute inset-0 rounded-full bg-primary shadow-md"
-      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+      className="pointer-events-none absolute inset-y-1 left-0 rounded-full bg-primary shadow-md will-change-transform data-[ready]:transition-[transform,width] data-[ready]:duration-300 data-[ready]:ease-out motion-reduce:transition-none"
     />
   )
 }
