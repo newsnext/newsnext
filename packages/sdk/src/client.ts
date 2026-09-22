@@ -1,6 +1,6 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
-import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
+import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistorySearchPage, HistorySearchQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
 import { SOURCE_REQUEST_TIMEOUT_MS } from "@newsnext/shared/constants"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
@@ -94,6 +94,14 @@ export class NewsNextClient {
   }
 
   readonly history = {
+    /** Search titles or all textual item fields within optional Board and LiveCard scopes. */
+    search: (query: HistorySearchQuery, options?: CallOptions): Promise<HistorySearchPage> => {
+      return this.call({
+        method: "history.search",
+        ...query,
+        ...timeRange(query.from, query.to),
+      }, options)
+    },
     /** One metadata page; use datasets() to collect all pages. */
     datasetPage: (query: DatasetQuery = {}, options?: CallOptions): Promise<DatasetPage> => {
       return this.queryHistory({ ...query, type: "datasets" }, options)

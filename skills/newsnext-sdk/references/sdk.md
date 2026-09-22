@@ -108,6 +108,28 @@ running the Widget data pipeline.
 
 ## History
 
+Search the latest retained value for each URL without reconstructing observations:
+
+```ts
+const page = await client.history.search({
+  keyword: "Jev",
+  searchIn: "fullText",
+  boardIds: ["saved-board-id"],
+  cardIds: ["additional-card-id"],
+  from: "2026-09-01T00:00:00Z",
+  to: "2026-09-30T23:59:59.999Z",
+  limit: 50,
+})
+```
+
+`boardIds` select the Boards' current Now Layer LiveCards and `cardIds` add explicit
+LiveCards; duplicate cards are searched once. Omitting both searches every configured
+LiveCard. Both time bounds are inclusive and filter item `publishedAt`; items without a
+publication time do not match a bounded search. `searchIn` defaults to `title`; use
+`fullText` to search every textual value in the retained item, including its title,
+summary, and body fields. Results default to newest first and URL deduplication. Pass
+`nextCursor` back as `cursor` while `hasMore` is true.
+
 ```ts
 // Round 1: find the dataset.
 const datasets = await client.history.datasets({ sourceId: "weibo:hot-search" })

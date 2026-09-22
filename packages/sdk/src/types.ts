@@ -75,6 +75,29 @@ export interface ObservationPage {
 export interface ObservationQuery { datasetId: string, cursor?: HistoryTime, from?: HistoryTime, to?: HistoryTime, limit?: number }
 export interface ExportQuery { datasetId: string, from?: HistoryTime, to?: HistoryTime }
 export interface CompareQuery { datasetId: string, before: HistoryTime, after: HistoryTime }
+export interface HistorySearchQuery {
+  keyword: string
+  boardIds?: string[]
+  cardIds?: string[]
+  cursor?: string
+  deduplicateBy?: string
+  direction?: "asc" | "desc"
+  from?: HistoryTime
+  to?: HistoryTime
+  limit?: number
+  searchIn?: "title" | "fullText"
+}
+export interface HistorySearchItem {
+  cardId: string
+  sourceId: string
+  metadata: JsonValue
+  value: JsonObject
+}
+export interface HistorySearchPage {
+  items: HistorySearchItem[]
+  hasMore: boolean
+  nextCursor?: string
+}
 export interface Comparison {
   completeness: Completeness
   dataset?: Dataset
