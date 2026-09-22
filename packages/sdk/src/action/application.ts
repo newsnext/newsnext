@@ -181,7 +181,7 @@ const BoardDeleteParams = Type.Unsafe<BoardDeleteInput>(Type.Union([
 const boardDeleteAction = defineActionContract({
   name: "board.delete",
   kind: "mutation",
-  description: "Delete a Board and either delete or transfer its LiveCards.",
+  description: "Delete a Board and either delete or transfer its LiveCards and Live Widgets.",
   params: BoardDeleteParams,
   result: EmptyObject,
 })

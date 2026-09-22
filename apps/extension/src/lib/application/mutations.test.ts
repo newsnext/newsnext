@@ -1,6 +1,6 @@
 import type { ApplicationData } from "./data"
 import { describe, expect, it } from "vitest"
-import { configureLiveWidgetMutation, createBoardMutation, createLiveCardMutation, createLiveWidgetMutation, deleteLiveCardMutation, deleteLiveWidgetMutation, moveLiveCardMutation, moveLiveWidgetMutation, resetLiveCardMetadataMutation, resetLiveWidgetParamsMutation, setLiveWidgetLayoutsMutation, setNextLayerManualOrderMutation, setNowLayerManualOrderMutation } from "./mutations"
+import { configureLiveWidgetMutation, createBoardMutation, createLiveCardMutation, createLiveWidgetMutation, deleteBoardMutation, deleteLiveCardMutation, deleteLiveWidgetMutation, moveLiveCardMutation, moveLiveWidgetMutation, resetLiveCardMetadataMutation, resetLiveWidgetParamsMutation, setLiveWidgetLayoutsMutation, setNextLayerManualOrderMutation, setNowLayerManualOrderMutation } from "./mutations"
 
 const dependencies = { createId: () => "new", now: () => 100, workerId: "worker-a" }
 
@@ -134,6 +134,37 @@ describe("application mutations", () => {
       layer: "next",
       nextLayer: { liveWidgets: [] },
     })
+  })
+
+  it("transfers a deleted Board's LiveCards and Widgets to the target Board", () => {
+    const data = createData()
+    data.boards.push(createTargetBoard(["target-card"]))
+    data.liveCards.push({ cardId: "target-card", workerId: "worker-a", sourceId: "target", patch: {}, createdAt: 2 })
+    const withSourceWidget = createLiveWidgetMutation(data, {
+      boardId: "reading",
+      widgetId: "feed",
+      dataScope: { type: "cards", cardIds: ["rss:feed::one"] },
+      size: {},
+    }, { createId: () => "source-widget" }).data
+    const withBothWidgets = createLiveWidgetMutation(withSourceWidget, {
+      boardId: "target",
+      widgetId: "feed",
+      dataScope: { type: "board" },
+      size: {},
+    }, { createId: () => "target-widget" }).data
+
+    const execution = deleteBoardMutation(withBothWidgets, {
+      boardId: "reading",
+      targetBoardId: "target",
+    })
+
+    expect(execution.data.boards).toHaveLength(1)
+    expect(execution.data.boards[0]?.nowLayer.liveCards).toEqual(["rss:feed::one", "target-card"])
+    expect(execution.data.boards[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual([
+      "source-widget",
+      "target-widget",
+    ])
+    expect(execution.data.liveCards).toEqual(withBothWidgets.liveCards)
   })
 
   it("adds new LiveCards to the front of their Board order", () => {

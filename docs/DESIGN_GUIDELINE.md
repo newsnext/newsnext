@@ -371,8 +371,9 @@ Search, Settings, or single-column — all share the modal foundation.
 - Unified Board dialog for create/edit: same name/theme/order/layer fields;
   deletion edit-only; title + primary action reflect mode
   (`Create board` / `Save changes`, upper-right header). Deletion needs ≥1
-  remaining board. `Delete with LiveCards` removes owned cards; `Transfer and
-  Delete` requires target board, merges cards in. Default layer = compact
+  remaining board. `Delete board and contents` removes all owned content;
+  `Transfer contents and delete board` requires a target board and merges both
+  layers into it. Default layer = compact
   `Now`/`Next` segmented control, decides opening view.
 
 ### LiveCard Board ownership

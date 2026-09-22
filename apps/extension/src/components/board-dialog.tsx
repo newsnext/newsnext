@@ -182,7 +182,7 @@ function ConfigurableBoardDialog({
                     type="button"
                     disabled={isSubmitting || !canDelete}
                     title={!canDelete ? t("keepOneBoard") : undefined}
-                    label={t("deleteWithLiveCards")}
+                    label={t("deleteBoardAndContents")}
                     confirmLabel={t("confirmDelete")}
                     pending={isSubmitting}
                     pendingLabel={t("deleting")}
@@ -193,7 +193,7 @@ function ConfigurableBoardDialog({
                       type="button"
                       disabled={isSubmitting || !canDelete || !targetBoardId}
                       title={!canDelete ? t("keepOneBoard") : undefined}
-                      label={t("transferAndDelete")}
+                      label={t("transferContentsAndDeleteBoard")}
                       confirmLabel={t("confirmTransfer")}
                       pending={isSubmitting}
                       pendingLabel={t("transferring")}

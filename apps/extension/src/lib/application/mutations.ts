@@ -120,7 +120,14 @@ export function deleteBoardMutation(
       boards: data.boards.flatMap((candidate) => {
         if (candidate.id === boardId) return []
         if (!deleteLiveCards && candidate.id === targetBoardId) {
-          return [board.nowLayer.liveCards.toReversed().reduce(addLiveCardToBoard, candidate)]
+          const target = board.nowLayer.liveCards.toReversed().reduce(addLiveCardToBoard, candidate)
+          return [{
+            ...target,
+            nextLayer: {
+              ...target.nextLayer,
+              liveWidgets: [...board.nextLayer.liveWidgets, ...target.nextLayer.liveWidgets],
+            },
+          }]
         }
         return [candidate]
       }),
@@ -557,12 +564,6 @@ function replaceBoard(data: ApplicationData, board: Board): ApplicationMutationE
 function assertWidgetId(widgetId: string): void {
   if (!widgetId || !/^[\w-]+$/.test(widgetId)) {
     throw new Error("Widget ID must contain only letters, numbers, '-' or '_'")
-  }
-}
-
-function assertWidgetInstalled(board: Board, liveWidgetId: string): void {
-  if (!board.nextLayer.liveWidgets.some(widget => widget.liveWidgetId === liveWidgetId)) {
-    throw new Error(`Widget '${liveWidgetId}' is not installed in Board '${board.id}'`)
   }
 }
 

@@ -29,7 +29,7 @@ documented in sdk.md.
 | --- | --- | --- |
 | `application.replace` | mutation | Replace all durable Application data after validating its integrity. |
 | `board.create` | mutation | Create a Board and optional configured LiveCards. Returns the created Board so callers can verify without a follow-up query. |
-| `board.delete` | mutation | Delete a Board and either delete or transfer its LiveCards. |
+| `board.delete` | mutation | Delete a Board and either delete or transfer its LiveCards and Live Widgets. |
 | `board.get` | query | Get a Board with ordered entries and resolved LiveCards. |
 | `board.list` | query | List Boards. |
 | `board.listLiveCards` | query | List the LiveCards in a Board's Now Layer in display order. Entries carry only patch overrides; the display title resolves as patch.metadata.title ?? source.metadata.title ?? provider.title. |
@@ -94,7 +94,7 @@ await client.actions.board.create(input: { color?: "red" | "pink" | "fuchsia" | 
 
 ### board.delete
 
-*mutation* — Delete a Board and either delete or transfer its LiveCards.
+*mutation* — Delete a Board and either delete or transfer its LiveCards and Live Widgets.
 
 ```ts
 await client.actions.board.delete(input: { boardId: string; deleteLiveCards: boolean } | { boardId: string; targetBoardId: string })
