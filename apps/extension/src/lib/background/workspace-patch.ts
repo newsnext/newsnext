@@ -1,11 +1,10 @@
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import type { WorkspacePatch as NativeWorkspacePatch } from "@/lib/native-protocol/WorkspacePatch"
-import { APPLICATION_DATA_VERSION } from "../application"
 import {
-  normalizeApplicationData,
   normalizeBoards,
   normalizeLiveCards,
 } from "../settings/persisted-data"
+import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./native-integration/workspace-data"
 
 export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
   if (!isRecord(value)
@@ -18,7 +17,21 @@ export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
     || typeof value.settings !== "string") {
     throw new Error("The native host returned an invalid Workspace patch")
   }
-  const boards = normalizeBoards(value.boards)
+  const referencedCardIds = value.boards.flatMap(candidate => isRecord(candidate) && isRecord(candidate.nowLayer) && Array.isArray(candidate.nowLayer.liveCards)
+    ? candidate.nowLayer.liveCards.filter((cardId): cardId is string => typeof cardId === "string")
+    : [])
+  const placeholderCards = new Map(referencedCardIds.map(cardId => [cardId, {
+    cardId,
+    workerId: "validation",
+    sourceId: "validation",
+    patch: {},
+    createdAt: 0,
+  }]))
+  const normalizedBoards = normalizeBoards(value.boards, placeholderCards)
+  const boards = normalizedBoards.map(board => ({
+    ...board,
+    nowLayer: { liveCards: board.nowLayer.liveCards.map(card => card.cardId) },
+  }))
   const liveCards = normalizeLiveCards(value.liveCards)
   if (boards.length !== value.boards.length
     || liveCards.length !== value.liveCards.length) {
@@ -91,20 +104,20 @@ export function applyWorkspacePatch(
     card => card.cardId,
     "LiveCard",
   )
-  const normalized = normalizeApplicationData({
-    version: APPLICATION_DATA_VERSION,
+  const normalized = fromNativeWorkspaceData({
     boards,
     liveCards,
   })
+  const normalizedNative = toNativeWorkspaceData(normalized)
   if (normalized.boards.length !== boards.length
-    || normalized.liveCards.length !== liveCards.length) {
+    || normalizedNative.liveCards.length !== liveCards.length) {
     throw new Error("Workspace patch produced invalid entities")
   }
   return {
     revision: current.revision + 1,
     updatedAt: patch.updatedAt,
-    boards: normalized.boards,
-    liveCards: normalized.liveCards,
+    boards: normalizedNative.boards,
+    liveCards: normalizedNative.liveCards,
     settings: patch.settings,
   }
 }

@@ -74,12 +74,12 @@ const boardCreateAction = defineAction(actionContracts["board.create"], async (i
   await context.requireSources((input.liveCards ?? []).map(card => card.sourceId))
   const result = await context.mutate((data, dependencies) => createBoardMutation(data, input, dependencies))
   if (!result.boardId) throw new Error("Board creation returned no Board ID")
-  const { board } = getBoardQuery(await context.data(), { boardId: result.boardId })
+  const board = getBoardQuery(await context.data(), { boardId: result.boardId })
   return { boardId: result.boardId, board }
 })
 const boardUpdateAction = defineAction(actionContracts["board.update"], async (input, context: ApplicationActionContext) => {
   await context.mutate(data => updateBoardMutation(data, input))
-  return getBoardQuery(await context.data(), { boardId: input.boardId }).board
+  return getBoardQuery(await context.data(), { boardId: input.boardId })
 })
 
 const boardDeleteAction = defineAction(actionContracts["board.delete"], async (input, context: ApplicationActionContext) => (

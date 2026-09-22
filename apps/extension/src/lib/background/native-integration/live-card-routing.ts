@@ -2,6 +2,7 @@ import type { LiveCard } from "../../source/live-cards"
 import type { SourceLoadResponse } from "../../source/load-result"
 import type { BackgroundActionContext } from "../background-actions"
 import type { RequireNativeConnection } from "./types"
+import { getApplicationLiveCards } from "../../application"
 import { isSourceLoadResponse } from "../../source/load-result"
 import { readApplicationData } from "../application-service"
 import { nativeRpc } from "./rpc"
@@ -70,8 +71,10 @@ async function executeLocal(
   snapshotOnly: boolean,
   actionContext: BackgroundActionContext,
 ): Promise<SourceLoadResponse | null> {
-  const application = !runtime.enabled ? await readApplicationData() : runtime.workspace
-  const card = application.liveCards.find(candidate => candidate.cardId === input.cardId)
+  const liveCards = runtime.enabled
+    ? runtime.workspace.liveCards
+    : getApplicationLiveCards(await readApplicationData())
+  const card = liveCards.find(candidate => candidate.cardId === input.cardId)
   if (!card) throw new Error(`LiveCard '${input.cardId}' not found`)
   if (card.workerId !== runtime.workerId) {
     throw new Error("The LiveCard's NewsNext Worker is not connected")

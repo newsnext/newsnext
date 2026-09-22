@@ -5,6 +5,7 @@ import type { StreamStatus as NativeStreamStatus } from "@/lib/native-protocol/S
 import { useCallback, useEffect, useRef, useState } from "react"
 import { browser } from "#imports"
 import { useBackgroundEvent } from "@/hooks/use-background-event"
+import { getApplicationLiveCards } from "@/lib/application"
 import { createBackgroundClient } from "@/lib/background"
 import { BACKGROUND_DIAGNOSTICS_PORT } from "@/lib/background/diagnostics-service"
 
@@ -130,7 +131,7 @@ export function NewsNextDevtoolsPanel({ devtoolsOpen, theme }: { devtoolsOpen: b
     actions: snapshot?.actions.length,
     streams: snapshot?.collection.status?.streams.length,
     boards: snapshot?.application.boards.length,
-    liveCards: snapshot?.application.liveCards.length,
+    liveCards: snapshot ? getApplicationLiveCards(snapshot.application).length : undefined,
     state: snapshot ? 1 : undefined,
   }
 
@@ -219,8 +220,9 @@ interface PanelProps {
 
 function Overview({ filter, snapshot, onSelectStream, attentionFirst }: PanelProps & { attentionFirst: boolean, onSelectStream: (id: string) => void }): React.JSX.Element {
   const { status, error } = snapshot.collection
+  const liveCards = getApplicationLiveCards(snapshot.application)
   const summary = status ? summarizeStreams(status.streams) : null
-  const streams = sortStreams(status?.streams ?? [], attentionFirst).filter(stream => matchesStream(stream, filter, snapshot.application.liveCards))
+  const streams = sortStreams(status?.streams ?? [], attentionFirst).filter(stream => matchesStream(stream, filter, liveCards))
   const stats = [
     ["Observations · current streams", summary ? `${summary.unknownCounts ? "≥ " : ""}${summary.observations.toLocaleString()}` : "—"],
     ["Streams", status?.streams.length ?? "—"],
@@ -255,7 +257,7 @@ function Overview({ filter, snapshot, onSelectStream, attentionFirst }: PanelPro
               {!streams.length && <CenteredMessage>{filter ? "No matching streams." : "No data streams yet."}</CenteredMessage>}
               {streams.slice(0, 8).map(stream => (
                 <ListButton key={stream.streamId} active={false} onClick={() => onSelectStream(stream.streamId)}>
-                  <StreamRow stream={stream} liveCards={snapshot.application.liveCards} />
+                  <StreamRow stream={stream} liveCards={liveCards} />
                 </ListButton>
               ))}
               {streams.length > 8 && (
@@ -299,7 +301,7 @@ function CollectionNotice({ collection }: { collection: BackgroundDiagnosticsSna
   )
 }
 
-type DiagnosticLiveCards = BackgroundDiagnosticsSnapshot["application"]["liveCards"]
+type DiagnosticLiveCards = ReturnType<typeof getApplicationLiveCards>
 
 function StreamRow({ stream, liveCards }: { stream: NativeStreamStatus, liveCards: DiagnosticLiveCards }): React.JSX.Element {
   return (
@@ -371,7 +373,8 @@ function StreamsPanel({ snapshot, filter, selectedId, onSelect, attentionFirst }
       </>
     )
   }
-  const streams = sortStreams(status.streams, attentionFirst).filter(stream => matchesStream(stream, filter, snapshot.application.liveCards))
+  const liveCards = getApplicationLiveCards(snapshot.application)
+  const streams = sortStreams(status.streams, attentionFirst).filter(stream => matchesStream(stream, filter, liveCards))
   const selected = streams.find(stream => stream.streamId === selectedId) ?? streams[0]
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
@@ -381,7 +384,7 @@ function StreamsPanel({ snapshot, filter, selectedId, onSelect, attentionFirst }
           empty={streams.length === 0}
           list={streams.map(stream => (
             <ListButton key={stream.streamId} active={stream.streamId === selected?.streamId} onClick={() => onSelect(stream.streamId)}>
-              <StreamRow stream={stream} liveCards={snapshot.application.liveCards} />
+              <StreamRow stream={stream} liveCards={liveCards} />
             </ListButton>
           ))}
         >
@@ -390,7 +393,7 @@ function StreamsPanel({ snapshot, filter, selectedId, onSelect, attentionFirst }
               <DetailHeader title={selected.sourceId} eyebrow="Data stream" trailing={<StreamActivity stream={selected} />} />
               <div style={styles.streamIdentityBlock}>
                 <span style={styles.statLabel}>LiveCard parameter overrides</span>
-                <StreamIdentity stream={selected} liveCards={snapshot.application.liveCards} />
+                <StreamIdentity stream={selected} liveCards={liveCards} />
               </div>
               <StreamMetrics stream={selected} />
               <details key={selected.streamId}>
@@ -398,7 +401,7 @@ function StreamsPanel({ snapshot, filter, selectedId, onSelect, attentionFirst }
                   {`Sharing LiveCards · ${selected.cardIds.length}`}
                 </summary>
                 <JsonBlock
-                  value={streamLiveCards(selected, snapshot.application.liveCards)}
+                  value={streamLiveCards(selected, liveCards)}
                   compact
                 />
               </details>
@@ -515,18 +518,19 @@ function ActionDetail({ action }: { action: BackgroundActionRecord }): React.JSX
 
 function ApplicationPanel({ category, filter, snapshot }: PanelProps & { category: ApplicationPanelId }): React.JSX.Element {
   const application = snapshot.application
+  const liveCards = getApplicationLiveCards(application)
   const [selectedId, setSelectedId] = useState<string>()
   const categoryEntries = category === "boards"
     ? application.boards.map(value => ({ id: `board:${value.id}`, kind: "Board", label: value.name || value.id, description: "Board", value }))
     : category === "liveCards"
-      ? application.liveCards.map(value => ({ id: `card:${value.cardId}`, kind: "LiveCard", label: value.patch.metadata?.title || value.sourceId, description: `${value.sourceId} · ${formatLiveCardParams(value.patch.params)}`, value }))
+      ? liveCards.map(value => ({ id: `card:${value.cardId}`, kind: "LiveCard", label: value.patch.metadata?.title || value.sourceId, description: `${value.sourceId} · ${formatLiveCardParams(value.patch.params)}`, value }))
       : [
           { id: "settings", kind: "State", label: "Settings", description: "State", value: snapshot.settings },
         ]
   const entries = categoryEntries.filter(entry => matches(filter, entry.kind, entry.label, entry.id, entry.description))
   const selected = entries.find(entry => entry.id === selectedId) ?? entries[0]
   const selectedLiveCard = category === "liveCards" && selected
-    ? application.liveCards.find(card => `card:${card.cardId}` === selected.id)
+    ? liveCards.find(card => `card:${card.cardId}` === selected.id)
     : undefined
   const collectionStatus = snapshot.collection.status
   const stream = selectedLiveCard

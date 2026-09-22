@@ -39,9 +39,15 @@ export async function regenerateWorker(
   try {
     await replaceApplicationData({
       ...application,
-      liveCards: application.liveCards.map(card => card.workerId === previousWorkerId
-        ? { ...card, workerId: nextWorkerId }
-        : card),
+      boards: application.boards.map(board => ({
+        ...board,
+        nowLayer: {
+          ...board.nowLayer,
+          liveCards: board.nowLayer.liveCards.map(card => card.workerId === previousWorkerId
+            ? { ...card, workerId: nextWorkerId }
+            : card),
+        },
+      })),
     })
   } catch (error) {
     await replaceWorkerIdentity(previousWorkerId)

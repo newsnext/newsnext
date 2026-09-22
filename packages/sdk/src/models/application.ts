@@ -1,12 +1,10 @@
 import type { Board, LiveWidget } from "./board.js"
-import type { LiveCard } from "./live-card.js"
 
-export const APPLICATION_DATA_VERSION = 8 as const
+export const APPLICATION_DATA_VERSION = 9 as const
 
 export interface ApplicationData {
   version: typeof APPLICATION_DATA_VERSION
   boards: Board[]
-  liveCards: LiveCard[]
 }
 
 export interface ApplicationBoardContext {
@@ -22,11 +20,6 @@ export interface ApplicationNowLayerLiveCard {
 
 export interface ApplicationNextLayerLiveWidget extends LiveWidget {
   boardId: string
-}
-
-export interface BoardDetail {
-  board: Board
-  liveCards: LiveCard[]
 }
 
 export type BoardDeleteInput

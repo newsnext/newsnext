@@ -1,5 +1,6 @@
 import type { CardMetadata } from "./card.js"
 import type { Color } from "./color.js"
+import type { LiveCard } from "./live-card.js"
 
 export type BoardLayer = "now" | "next"
 
@@ -50,7 +51,7 @@ export interface Board {
   id: string
   name: string
   nowLayer: {
-    liveCards: string[]
+    liveCards: LiveCard[]
   }
   nextLayer: {
     liveWidgets: LiveWidget[]

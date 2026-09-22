@@ -78,7 +78,7 @@ export function BoardView({ board }: { board: Board }) {
     return dropTargetForElements({
       element: dropTarget,
       canDrop: ({ source }) => isSortableData(source.data)
-        && !board.nowLayer.liveCards.includes(source.data.id),
+        && !board.nowLayer.liveCards.some(card => card.cardId === source.data.id),
       getDropEffect: () => "move",
       onDragEnter: () => setIsSearchTransferOver(true),
       onDragLeave: () => setIsSearchTransferOver(false),

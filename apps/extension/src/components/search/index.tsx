@@ -53,7 +53,7 @@ function groupSearchItems(
   const itemsByBoardId = new Map<string, LiveCardViewModel[]>()
   liveCards.forEach((liveCard) => {
     for (const board of boards) {
-      if (board.nowLayer.liveCards.includes(liveCard.id)) {
+      if (board.nowLayer.liveCards.some(card => card.cardId === liveCard.id)) {
         const items = itemsByBoardId.get(board.id) ?? []
         items.push({ ...liveCard, boardId: board.id })
         itemsByBoardId.set(board.id, items)

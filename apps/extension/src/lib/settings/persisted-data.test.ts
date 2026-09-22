@@ -12,23 +12,22 @@ function createData(): PersistedUserData {
   const settings = createDefaultPersistedSettings()
   settings.general.defaultBoardId = "reading"
   return {
-    version: 8,
+    version: 9,
     settings,
     boards: [{
       color: "blue",
       id: "reading",
       name: "Reading",
       createdAt: 1,
-      nowLayer: { liveCards: ["rss:feed::one"] },
+      nowLayer: { liveCards: [{
+        cardId: "rss:feed::one",
+        workerId: "worker-a",
+        sourceId: "rss:feed",
+        patch: { params: { url: "https://example.com/feed.xml" } },
+        createdAt: 1,
+      }] },
       layer: "next",
       nextLayer: { liveWidgets: [] },
-    }],
-    liveCards: [{
-      cardId: "rss:feed::one",
-      workerId: "worker-a",
-      sourceId: "rss:feed",
-      patch: { params: { url: "https://example.com/feed.xml" } },
-      createdAt: 1,
     }],
   }
 }
@@ -64,7 +63,10 @@ describe("persisted user data", () => {
     expect(data.boards[0]).toMatchObject({
       color: "blue",
       name: "Reading",
-      nowLayer: { liveCards: ["second", "first"] },
+      nowLayer: { liveCards: [
+        { cardId: "second", workerId: "worker-b", sourceId: "rss:feed", patch: {}, createdAt: 2 },
+        { cardId: "first", workerId: "worker-a", sourceId: "rss:feed", patch: {}, createdAt: 1 },
+      ] },
       nextLayer: {
         liveWidgets: [{
           widgetId: "latest",
@@ -74,7 +76,8 @@ describe("persisted user data", () => {
         }],
       },
     })
-    expect(data.liveCards.map(card => card.workerId)).toEqual(["worker-a", "worker-b"])
+    expect(data.boards[0]?.nowLayer.liveCards.map(card => card.workerId)).toEqual(["worker-b", "worker-a"])
+    expect(data).not.toHaveProperty("liveCards")
   })
 
   it("keeps the first Board as each LiveCard's owner", () => {
@@ -84,7 +87,7 @@ describe("persisted user data", () => {
       id: "duplicate",
       name: "Duplicate",
       createdAt: 2,
-      nowLayer: { liveCards: ["rss:feed::one"] },
+      nowLayer: { liveCards: [data.boards[0]!.nowLayer.liveCards[0]!] },
       layer: "now",
       nextLayer: {
         liveWidgets: [{
@@ -98,7 +101,7 @@ describe("persisted user data", () => {
 
     const normalized = normalizeApplicationData(data)
 
-    expect(normalized.boards[0]?.nowLayer.liveCards).toEqual(["rss:feed::one"])
+    expect(normalized.boards[0]?.nowLayer.liveCards.map(card => card.cardId)).toEqual(["rss:feed::one"])
     expect(normalized.boards[1]?.nowLayer.liveCards).toEqual([])
     expect(normalized.boards[1]?.nextLayer.liveWidgets[0]?.dataScope).toEqual({
       type: "cards",
@@ -106,7 +109,7 @@ describe("persisted user data", () => {
     })
   })
 
-  it.each([3, 6, 7, 9])("rejects unsupported Application Data version %s without resetting it", (version) => {
+  it.each([3, 6, 7, 10])("rejects unsupported Application Data version %s without resetting it", (version) => {
     const original = { ...createData(), version }
     const before = structuredClone(original)
     expect(() => normalizeApplicationData(original)).toThrow("stored data must be preserved")
@@ -114,7 +117,7 @@ describe("persisted user data", () => {
   })
 
   it("initializes only absent storage and rejects malformed stored collections", () => {
-    expect(normalizeApplicationData(undefined)).toEqual({ version: 8, boards: [], liveCards: [] })
+    expect(normalizeApplicationData(undefined)).toEqual({ version: 9, boards: [] })
     expect(() => normalizeApplicationData(null)).toThrow()
     expect(() => normalizeApplicationData({ version: 8, boards: null, liveCards: [] })).toThrow("refusing")
     expect(() => normalizeApplicationData({ version: 8, boards: [], liveCards: null })).toThrow("refusing")
@@ -123,7 +126,7 @@ describe("persisted user data", () => {
   it("round-trips the current application shape and settings", () => {
     const data = createData()
     const serialized = serializePersistedDataExport(data)
-    expect(JSON.parse(serialized).version).toBe(6)
+    expect(JSON.parse(serialized).version).toBe(7)
     expect(parsePersistedDataExport(serialized)?.data).toEqual(data)
   })
 
@@ -145,11 +148,11 @@ describe("persisted user data", () => {
 
   it("repairs ownership after a partial Board import", () => {
     const merged = mergePersistedUserData(createData(), {
-      version: 8,
+      version: 9,
       boards: [],
     })
     expect(merged.boards).toHaveLength(1)
-    expect(merged.boards[0]?.nowLayer.liveCards).toEqual(["rss:feed::one"])
+    expect(merged.boards[0]?.nowLayer.liveCards).toEqual([])
     expect(merged.settings.general.defaultBoardId).toBe(merged.boards[0]?.id)
   })
 

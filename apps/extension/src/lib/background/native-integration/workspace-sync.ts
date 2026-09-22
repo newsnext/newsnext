@@ -3,7 +3,6 @@ import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { NativePort, RequireNativeConnection } from "./types"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import { browser } from "#imports"
-import { APPLICATION_DATA_VERSION } from "../../application"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../../settings/persisted-data"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"
 import {
@@ -15,6 +14,7 @@ import { applyWorkspacePatch, createWorkspacePatch } from "../workspace-patch"
 import { mergeWorkspaces, needsWorkspaceResolution } from "../workspace-resolution"
 import { nativeRpc } from "./rpc"
 import { runtime, WORKSPACE_SYNCED_AT_KEY, WORKSPACE_UPDATED_AT_KEY } from "./state"
+import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./workspace-data"
 
 let incomingWorkspaces = 0
 
@@ -25,11 +25,11 @@ export function createWorkspace(
   settings: unknown,
 ): NativeWorkspace {
   const application = normalizeApplicationData(value)
+  const nativeData = toNativeWorkspaceData(application)
   return {
     revision,
     updatedAt,
-    boards: application.boards,
-    liveCards: application.liveCards,
+    ...nativeData,
     settings: serializeWorkspaceSettings(settings),
   }
 }
@@ -74,8 +74,7 @@ function acceptWorkspace(
 ) {
   runtime.workspace = nextWorkspace
   runtime.localCardIds = new Set(nextLocalCardIds)
-  return normalizeApplicationData({
-    version: APPLICATION_DATA_VERSION,
+  return fromNativeWorkspaceData({
     boards: nextWorkspace.boards,
     liveCards: nextWorkspace.liveCards,
   })
@@ -202,8 +201,7 @@ export function registerApplicationDataSync(requireConnection: RequireNativeConn
       nextWorkspaceUpdatedAt(current.updatedAt),
       parseWorkspaceSettings(current.settings),
     ), requireConnection)
-    return normalizeApplicationData({
-      version: APPLICATION_DATA_VERSION,
+    return fromNativeWorkspaceData({
       boards: committed.boards,
       liveCards: committed.liveCards,
     })

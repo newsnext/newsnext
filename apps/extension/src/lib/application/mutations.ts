@@ -7,7 +7,7 @@ import type {
   LiveWidgetDataScope,
   LiveWidgetLayout,
 } from "../board"
-import type { LiveCardPatch } from "../source/live-cards"
+import type { LiveCard, LiveCardPatch } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 import { MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 import { createBoard } from "../board"
@@ -111,9 +111,6 @@ export function deleteBoardMutation(
     }
     assertBoardExists(data, targetBoardId)
   }
-  const liveCards = deleteLiveCards
-    ? data.liveCards.filter(card => !board.nowLayer.liveCards.includes(card.cardId))
-    : data.liveCards
   return {
     data: {
       ...data,
@@ -131,7 +128,6 @@ export function deleteBoardMutation(
         }
         return [candidate]
       }),
-      liveCards,
     },
   }
 }
@@ -141,7 +137,8 @@ export function setNowLayerManualOrderMutation(
   input: { boardId: string, liveCards: string[] },
 ): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertCompleteLiveCardOrder(board.nowLayer.liveCards, input.liveCards)
+  assertCompleteLiveCardOrder(board.nowLayer.liveCards.map(card => card.cardId), input.liveCards)
+  const cardsById = new Map(board.nowLayer.liveCards.map(card => [card.cardId, card]))
   return {
     data: {
       ...data,
@@ -150,7 +147,11 @@ export function setNowLayerManualOrderMutation(
             ...candidate,
             nowLayer: {
               ...candidate.nowLayer,
-              liveCards: [...input.liveCards],
+              liveCards: input.liveCards.map((cardId) => {
+                const card = cardsById.get(cardId)
+                if (!card) throw new Error(`LiveCard '${cardId}' not found in Board '${board.id}'`)
+                return card
+              }),
             },
           }
         : candidate),
@@ -234,7 +235,7 @@ export function moveLiveWidgetMutation(
   const moved = {
     ...widget,
     dataScope: widget.dataScope.type === "cards"
-      ? { ...widget.dataScope, cardIds: widget.dataScope.cardIds.filter(id => target.nowLayer.liveCards.includes(id)) }
+      ? { ...widget.dataScope, cardIds: widget.dataScope.cardIds.filter(id => target.nowLayer.liveCards.some(card => card.cardId === id)) }
       : widget.dataScope,
   }
   return {
@@ -366,12 +367,12 @@ export function moveLiveCardMutation(
   input: { boardId: string, cardId: string },
 ): ApplicationMutationExecution {
   assertBoardExists(data, input.boardId)
-  assertLiveCardExists(data, input.cardId)
+  const card = getLiveCard(data, input.cardId)
   return {
     data: {
       ...data,
       boards: data.boards.map(board => board.id === input.boardId
-        ? addLiveCardToBoard(board, input.cardId)
+        ? addLiveCardToBoard(board, card)
         : removeLiveCardFromBoard(board, input.cardId)),
     },
   }
@@ -386,21 +387,21 @@ export function createLiveCardMutation(
   if (!sourceId.trim()) throw new Error("Source ID is required")
   assertBoardExists(data, boardId)
   const cardId = dependencies.createId()
-  if (data.liveCards.some(card => card.cardId === cardId)) {
+  if (findLiveCard(data, cardId)) {
     throw new Error(`LiveCard '${cardId}' already exists`)
+  }
+  const card = {
+    cardId,
+    workerId: dependencies.workerId,
+    sourceId,
+    patch,
+    createdAt: dependencies.now(),
   }
   return {
     data: {
       ...data,
-      liveCards: [...data.liveCards, {
-        cardId,
-        workerId: dependencies.workerId,
-        sourceId,
-        patch,
-        createdAt: dependencies.now(),
-      }],
       boards: data.boards.map(board => board.id === boardId
-        ? addLiveCardToBoard(board, cardId)
+        ? addLiveCardToBoard(board, card)
         : board),
     },
     result: { cardId },
@@ -411,13 +412,10 @@ export function configureLiveCardMutation(
   data: ApplicationData,
   input: { cardId: string, patch: LiveCardPatch },
 ): ApplicationMutationExecution {
-  assertLiveCardExists(data, input.cardId)
   return {
     data: {
       ...data,
-      liveCards: data.liveCards.map(card => card.cardId === input.cardId
-        ? { ...card, patch: mergeLiveCardPatch(card.patch, input.patch) }
-        : card),
+      boards: mapLiveCard(data, input.cardId, card => ({ ...card, patch: mergeLiveCardPatch(card.patch, input.patch) })),
     },
   }
 }
@@ -426,13 +424,10 @@ export function resetLiveCardMetadataMutation(
   data: ApplicationData,
   input: { cardId: string },
 ): ApplicationMutationExecution {
-  assertLiveCardExists(data, input.cardId)
   return {
     data: {
       ...data,
-      liveCards: data.liveCards.map(card => card.cardId === input.cardId
-        ? { ...card, patch: { ...card.patch, metadata: {} } }
-        : card),
+      boards: mapLiveCard(data, input.cardId, card => ({ ...card, patch: { ...card.patch, metadata: {} } })),
     },
   }
 }
@@ -441,13 +436,10 @@ export function resetLiveCardParamsMutation(
   data: ApplicationData,
   input: { cardId: string },
 ): ApplicationMutationExecution {
-  assertLiveCardExists(data, input.cardId)
   return {
     data: {
       ...data,
-      liveCards: data.liveCards.map(card => card.cardId === input.cardId
-        ? { ...card, patch: { ...card.patch, params: {} } }
-        : card),
+      boards: mapLiveCard(data, input.cardId, card => ({ ...card, patch: { ...card.patch, params: {} } })),
     },
   }
 }
@@ -456,35 +448,34 @@ export function deleteLiveCardMutation(
   data: ApplicationData,
   input: { cardId: string },
 ): ApplicationMutationExecution {
-  assertLiveCardExists(data, input.cardId)
+  getLiveCard(data, input.cardId)
   return {
     data: {
       ...data,
-      liveCards: data.liveCards.filter(card => card.cardId !== input.cardId),
       boards: data.boards.map(board => removeLiveCardFromBoard(board, input.cardId)),
     },
   }
 }
 
-function addLiveCardToBoard(board: Board, cardId: string): Board {
-  if (board.nowLayer.liveCards.includes(cardId)) return board
+function addLiveCardToBoard(board: Board, card: LiveCard): Board {
+  if (board.nowLayer.liveCards.some(candidate => candidate.cardId === card.cardId)) return board
   // Front-insert keeps newest-first display order; the LiveCard's creation time is untouched.
   return {
     ...board,
     nowLayer: {
       ...board.nowLayer,
-      liveCards: [cardId, ...board.nowLayer.liveCards],
+      liveCards: [card, ...board.nowLayer.liveCards],
     },
   }
 }
 
 function removeLiveCardFromBoard(board: Board, cardId: string): Board {
-  if (!board.nowLayer.liveCards.includes(cardId)) return board
+  if (!board.nowLayer.liveCards.some(card => card.cardId === cardId)) return board
   return {
     ...board,
     nowLayer: {
       ...board.nowLayer,
-      liveCards: board.nowLayer.liveCards.filter(candidate => candidate !== cardId),
+      liveCards: board.nowLayer.liveCards.filter(candidate => candidate.cardId !== cardId),
     },
     nextLayer: {
       ...board.nextLayer,
@@ -542,10 +533,32 @@ function assertBoardExists(data: ApplicationData, boardId: string): void {
   getBoard(data, boardId)
 }
 
-function assertLiveCardExists(data: ApplicationData, cardId: string): void {
-  if (!data.liveCards.some(card => card.cardId === cardId)) {
-    throw new Error(`LiveCard '${cardId}' not found`)
-  }
+function findLiveCard(data: ApplicationData, cardId: string): LiveCard | undefined {
+  return data.boards.flatMap(board => board.nowLayer.liveCards).find(card => card.cardId === cardId)
+}
+
+function getLiveCard(data: ApplicationData, cardId: string): LiveCard {
+  const card = findLiveCard(data, cardId)
+  if (!card) throw new Error(`LiveCard '${cardId}' not found`)
+  return card
+}
+
+function mapLiveCard(data: ApplicationData, cardId: string, update: (card: LiveCard) => LiveCard): Board[] {
+  let found = false
+  const boards = data.boards.map((board) => {
+    const cardIndex = board.nowLayer.liveCards.findIndex(card => card.cardId === cardId)
+    if (cardIndex === -1) return board
+    found = true
+    return {
+      ...board,
+      nowLayer: {
+        ...board.nowLayer,
+        liveCards: board.nowLayer.liveCards.with(cardIndex, update(board.nowLayer.liveCards[cardIndex]!)),
+      },
+    }
+  })
+  if (!found) throw new Error(`LiveCard '${cardId}' not found`)
+  return boards
 }
 
 function assertBoardName(name: string): void {
@@ -579,7 +592,7 @@ function assertWidgetDataScope(board: Board, dataScope: LiveWidgetDataScope): vo
   if (dataScope.type === "board") return
   const cardIds = new Set(dataScope.cardIds)
   if (cardIds.size !== dataScope.cardIds.length
-    || dataScope.cardIds.some(cardId => !board.nowLayer.liveCards.includes(cardId))) {
+    || dataScope.cardIds.some(cardId => !board.nowLayer.liveCards.some(card => card.cardId === cardId))) {
     throw new Error("Widget data scope must contain unique LiveCards from its Board")
   }
 }

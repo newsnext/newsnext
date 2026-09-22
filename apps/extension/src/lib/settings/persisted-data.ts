@@ -18,12 +18,11 @@ import {
 } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 6
+export const PERSISTED_DATA_EXPORT_VERSION = 7
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
   "boards",
-  "liveCards",
 ] as const
 
 export type PersistedPortableSliceId = typeof PERSISTED_PORTABLE_SLICE_IDS[number]
@@ -62,27 +61,35 @@ export interface PersistedDataExport {
 
 export function normalizeApplicationData(value: unknown): ApplicationData {
   if (value === undefined) return createEmptyApplicationData()
-  if (!isRecord(value) || value.version !== APPLICATION_DATA_VERSION) {
+  if (!isRecord(value) || (value.version !== APPLICATION_DATA_VERSION && value.version !== 8)) {
     throw new Error("Unsupported Application data version; stored data must be preserved until a compatible version is available")
   }
-  if (!Array.isArray(value.boards) || !Array.isArray(value.liveCards)) {
-    throw new TypeError("Invalid Application data; refusing to replace stored collections with empty data")
+  if (!Array.isArray(value.boards)) {
+    throw new TypeError("Invalid Application data; refusing to replace stored Boards with empty data")
   }
-
-  const liveCards = normalizeLiveCards(value.liveCards)
-  const cardIds = new Set(liveCards.map(card => card.cardId))
-  const boards = normalizeBoards(value.boards, cardIds)
-
+  if (value.version === 8 && !Array.isArray(value.liveCards)) {
+    throw new TypeError("Invalid Application data; refusing to migrate stored LiveCards as empty data")
+  }
+  const legacyCards = value.version === 8
+    ? new Map(normalizeLiveCards(value.liveCards).map(card => [card.cardId, card]))
+    : undefined
+  const boards = normalizeBoards(value.boards, legacyCards)
+  if (legacyCards && boards.length > 0) {
+    const assigned = new Set(boards.flatMap(board => board.nowLayer.liveCards.map(card => card.cardId)))
+    const unassigned = [...legacyCards.values()]
+      .filter(card => !assigned.has(card.cardId))
+      .toSorted((left, right) => right.createdAt - left.createdAt || left.cardId.localeCompare(right.cardId))
+    if (unassigned.length > 0) boards[0]!.nowLayer.liveCards.unshift(...unassigned)
+  }
   return {
     version: APPLICATION_DATA_VERSION,
     boards,
-    liveCards,
   }
 }
 
 export function normalizeBoards(
   value: unknown,
-  cardIds?: ReadonlySet<string>,
+  legacyCards?: ReadonlyMap<string, LiveCard>,
 ): Board[] {
   if (!Array.isArray(value)) return []
   const seenIds = new Set<string>()
@@ -94,19 +101,22 @@ export function normalizeBoards(
     if (!identity || !isRecord(candidate)) return []
 
     const nowLayer = isRecord(candidate.nowLayer) ? candidate.nowLayer : {}
-    const ids = normalizeIdentifierArray(nowLayer.liveCards, cardIds).filter((cardId) => {
-      if (assignedCardIds.has(cardId)) return false
-      assignedCardIds.add(cardId)
+    const cards = (legacyCards
+      ? normalizeIdentifierArray(nowLayer.liveCards, new Set(legacyCards.keys())).flatMap(cardId => legacyCards.get(cardId) ?? [])
+      : normalizeLiveCards(nowLayer.liveCards)).filter((card) => {
+      if (assignedCardIds.has(card.cardId)) return false
+      assignedCardIds.add(card.cardId)
       return true
     })
+    const cardIds = new Set(cards.map(card => card.cardId))
     const nextLayer = isRecord(candidate.nextLayer) ? candidate.nextLayer : {}
     return [{
       ...identity,
       color: isThemeColor(candidate.color) ? candidate.color : DEFAULT_BOARD_COLOR,
       layer: normalizeBoardLayer(candidate.layer),
-      nowLayer: { liveCards: ids },
+      nowLayer: { liveCards: cards },
       nextLayer: {
-        liveWidgets: normalizeLiveWidgets(nextLayer.liveWidgets, new Set(ids), assignedLiveWidgetIds),
+        liveWidgets: normalizeLiveWidgets(nextLayer.liveWidgets, cardIds, assignedLiveWidgetIds),
       },
     }]
   })
@@ -259,12 +269,11 @@ export function selectPersistedUserData(
   sliceIds: readonly PersistedPortableSliceId[],
 ): Partial<PersistedUserData> {
   const selected = new Set(sliceIds)
-  const includesApplicationData = selected.has("boards") || selected.has("liveCards")
+  const includesApplicationData = selected.has("boards")
   return {
     ...(includesApplicationData ? { version: APPLICATION_DATA_VERSION } : {}),
     ...(selected.has("settings") && data.settings !== undefined ? { settings: data.settings } : {}),
     ...(selected.has("boards") && data.boards !== undefined ? { boards: data.boards } : {}),
-    ...(selected.has("liveCards") && data.liveCards !== undefined ? { liveCards: data.liveCards } : {}),
   }
 }
 
@@ -273,7 +282,6 @@ export function hasPersistedUserDataSlice(
   sliceId: PersistedPortableSliceId,
 ): boolean {
   if (sliceId === "settings") return data.settings !== undefined
-  if (sliceId === "liveCards") return data.liveCards !== undefined
   return data.boards !== undefined
 }
 
@@ -288,7 +296,6 @@ export function mergePersistedUserData(
     version: APPLICATION_DATA_VERSION,
     settings,
     boards: imported.boards ?? current.boards,
-    liveCards: imported.liveCards ?? current.liveCards,
   })
 }
 
@@ -308,23 +315,17 @@ function normalizePartialPersistedUserData(
 ): Partial<PersistedUserData> {
   if (!isRecord(value)) return {}
   const data = value
-  const hasLiveCards = Object.hasOwn(data, "liveCards")
   const hasBoards = Object.hasOwn(data, "boards")
-  if ((hasBoards || hasLiveCards) && data.version !== APPLICATION_DATA_VERSION) {
+  if (hasBoards && data.version !== APPLICATION_DATA_VERSION) {
     return {}
   }
-  const liveCards = normalizeLiveCards(data.liveCards)
-  const cardIds = hasLiveCards
-    ? new Set(liveCards.map(card => card.cardId))
-    : undefined
   const boards = hasBoards
-    ? normalizeBoards(data.boards, cardIds)
+    ? normalizeBoards(data.boards)
     : undefined
   return {
-    ...((boards || hasLiveCards) ? { version: APPLICATION_DATA_VERSION } : {}),
+    ...(boards ? { version: APPLICATION_DATA_VERSION } : {}),
     ...(Object.hasOwn(data, "settings") ? { settings: normalizePersistedSettings(data.settings) } : {}),
     ...(boards ? { boards } : {}),
-    ...(hasLiveCards ? { liveCards } : {}),
   }
 }
 

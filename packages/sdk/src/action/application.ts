@@ -1,4 +1,4 @@
-import type { ApplicationData, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, Board, BoardDeleteInput, BoardDetail, LiveCard, LiveCardPatch, LiveWidget, LiveWidgetDataScope, LiveWidgetInstallSize, SourceDescriptor } from "../models/index.js"
+import type { ApplicationData, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, Board, BoardDeleteInput, LiveCard, LiveCardPatch, LiveWidget, LiveWidgetDataScope, LiveWidgetInstallSize, SourceDescriptor } from "../models/index.js"
 import Type from "typebox"
 import { COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
@@ -98,16 +98,11 @@ const BoardResult = Type.Unsafe<Board>(Type.Object({
   id: Identifier,
   name: Identifier,
   nowLayer: Type.Object({
-    liveCards: IdentifierArray,
+    liveCards: Type.Array(LiveCardResult),
   }),
   nextLayer: Type.Object({
     liveWidgets: Type.Array(LiveWidgetResult),
   }),
-}))
-
-const BoardDetailResult = Type.Unsafe<BoardDetail>(Type.Object({
-  board: BoardResult,
-  liveCards: Type.Array(LiveCardResult),
 }))
 
 const NowLayerLiveCardResult = Type.Unsafe<ApplicationNowLayerLiveCard>(Type.Object({
@@ -402,7 +397,7 @@ const boardGetAction = defineActionContract({
   kind: "query",
   description: "Get a Board with ordered entries and resolved LiveCards.",
   params: Type.Object({ boardId: BoardIdParam }, { additionalProperties: false }),
-  result: BoardDetailResult,
+  result: BoardResult,
 })
 
 const boardListLiveCardsAction = defineActionContract({
@@ -439,7 +434,6 @@ const nowLayerGetLiveCardsAction = defineActionContract({
 
 const ApplicationDataSchema = Type.Unsafe<ApplicationData>(Type.Object({
   boards: Type.Array(BoardResult),
-  liveCards: Type.Array(LiveCardResult),
   version: Type.Number(),
 }, { additionalProperties: false }))
 

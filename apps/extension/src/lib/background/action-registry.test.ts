@@ -17,8 +17,7 @@ function createContext(): BackgroundActionContext {
       layer: "now",
       nextLayer: { liveWidgets: [] },
     }],
-    liveCards: [],
-    version: 8,
+    version: 9,
   }
   return {
     data: vi.fn(async () => storedData),
@@ -138,7 +137,7 @@ describe("action Registry", () => {
       timeoutMs: 10_000,
       url: "https://example.com/api",
     }, "connected", ActionContext)).rejects.toThrow("browser-managed")
-    const data = { boards: [], liveCards: [], version: 8 as const }
+    const data = { boards: [], version: 9 as const }
     await expect(executeRegisteredAction("application.replace", data, "connected", ActionContext))
       .resolves
       .toEqual(data)

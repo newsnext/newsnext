@@ -1,11 +1,11 @@
-import type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
+import type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, LiveWidget } from "@newsnext/sdk/models"
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { Board } from "../board"
 import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"
 
 // Queries never filter by registry availability; missing Sources degrade to generic cards.
-export type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, BoardDetail, LiveWidget } from "@newsnext/sdk/models"
+export type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, LiveWidget } from "@newsnext/sdk/models"
 
 export function listSourcesQuery(sources: readonly SourceDescriptor[]): SourceDescriptor[] {
   return [...sources]
@@ -18,16 +18,15 @@ export function listBoardsQuery(data: ApplicationData): Board[] {
 export function getBoardQuery(
   data: ApplicationData,
   input: { boardId: string },
-): BoardDetail {
-  const board = getBoard(data, input.boardId)
-  return { board, liveCards: resolveBoardLiveCards(data, board) }
+): Board {
+  return getBoard(data, input.boardId)
 }
 
 export function listBoardLiveCardsQuery(
   data: ApplicationData,
   input: { boardId: string },
 ): LiveCard[] {
-  return resolveBoardLiveCards(data, getBoard(data, input.boardId))
+  return getBoard(data, input.boardId).nowLayer.liveCards
 }
 
 export function listBoardLiveWidgetsQuery(
@@ -66,14 +65,14 @@ export function getLiveWidgetQuery(
 }
 
 export function listLiveCardsQuery(data: ApplicationData): LiveCard[] {
-  return data.liveCards
+  return data.boards.flatMap(board => board.nowLayer.liveCards)
 }
 
 export function getLiveCardQuery(
   data: ApplicationData,
   input: { cardId: string },
 ): LiveCard {
-  const card = data.liveCards.find(candidate => candidate.cardId === input.cardId)
+  const card = listLiveCardsQuery(data).find(candidate => candidate.cardId === input.cardId)
   if (!card) throw new Error(`LiveCard '${input.cardId}' not found`)
   return card
 }
@@ -91,7 +90,7 @@ export function getNowLayerLiveCardsQuery(
 ): ApplicationNowLayerLiveCard[] {
   const context = resolveBoardContext(data, currentBoardId)
   const board = getBoard(data, context.boardId)
-  return resolveBoardLiveCards(data, board).map(card => ({
+  return board.nowLayer.liveCards.map(card => ({
     boardId: board.id,
     cardId: card.cardId,
     sourceId: card.sourceId,
@@ -112,15 +111,4 @@ function getBoard(data: ApplicationData, boardId: string): Board {
   const board = data.boards.find(candidate => candidate.id === boardId)
   if (!board) throw new Error(`Board '${boardId}' not found`)
   return board
-}
-
-function resolveBoardLiveCards(
-  data: ApplicationData,
-  board: Board,
-): LiveCard[] {
-  const liveCards = new Map(data.liveCards.map(card => [card.cardId, card]))
-  return board.nowLayer.liveCards.flatMap((cardId) => {
-    const card = liveCards.get(cardId)
-    return card ? [card] : []
-  })
 }

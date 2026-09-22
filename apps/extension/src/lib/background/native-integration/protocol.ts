@@ -2,13 +2,12 @@ import type { OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/models"
 import type { HostToExtension } from "@/lib/native-protocol/HostToExtension"
 import type { NativeNotification } from "@/lib/native-protocol/NativeNotification"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
-import { APPLICATION_DATA_VERSION } from "../../application"
-import { normalizeApplicationData } from "../../settings/persisted-data"
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
 import { parseWorkspacePatch } from "../workspace-patch"
 import { parseCollectionStatus } from "./collection-status"
 import { parseLocalCardIds, parseLogs, parseRevision, parseWidgetCatalog } from "./message-values"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
+import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./workspace-data"
 
 type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & {
   capabilities: string[]
@@ -78,19 +77,20 @@ function parseWorkspace(value: unknown): NativeWorkspace {
     || Number(value.revision) < 0
     || !Number.isSafeInteger(value.updatedAt)
     || Number(value.updatedAt) < 0
+    || !Array.isArray(value.boards)
+    || !Array.isArray(value.liveCards)
     || typeof value.settings !== "string") {
     throw new Error("The native host returned an invalid Workspace")
   }
-  const application = normalizeApplicationData({
-    version: APPLICATION_DATA_VERSION,
-    boards: value.boards,
-    liveCards: value.liveCards,
+  const application = fromNativeWorkspaceData({
+    boards: value.boards as NativeWorkspace["boards"],
+    liveCards: value.liveCards as NativeWorkspace["liveCards"],
   })
+  const nativeData = toNativeWorkspaceData(application)
   return {
     revision: Number(value.revision),
     updatedAt: Number(value.updatedAt),
-    boards: application.boards,
-    liveCards: application.liveCards,
+    ...nativeData,
     settings: value.settings,
   }
 }

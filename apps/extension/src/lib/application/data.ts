@@ -1,4 +1,5 @@
 import type { ApplicationData } from "@newsnext/sdk/models"
+import type { LiveCard } from "../source"
 import { APPLICATION_DATA_VERSION } from "@newsnext/sdk/models"
 import { createBoard, INITIAL_BOARD_NAME } from "../board"
 import { createId } from "../id"
@@ -6,7 +7,7 @@ import { createId } from "../id"
 export { APPLICATION_DATA_VERSION } from "@newsnext/sdk/models"
 export type { ApplicationData } from "@newsnext/sdk/models"
 
-// Workspace envelope: full Boards + LiveCards mirror; browser storage owns durability.
+// Browser storage owns the Board tree; each Board owns its ordered LiveCards.
 export interface InitialApplicationDataOptions {
   boardId?: string
   boardName?: string
@@ -17,7 +18,6 @@ export function createEmptyApplicationData(): ApplicationData {
   return {
     version: APPLICATION_DATA_VERSION,
     boards: [],
-    liveCards: [],
   }
 }
 
@@ -32,8 +32,11 @@ export function createInitialApplicationData(
   return {
     version: APPLICATION_DATA_VERSION,
     boards: [createBoard(boardId, boardName, createdAt)],
-    liveCards: [],
   }
+}
+
+export function getApplicationLiveCards(data: ApplicationData): LiveCard[] {
+  return data.boards.flatMap(board => board.nowLayer.liveCards)
 }
 
 export function ensureApplicationDataIntegrity(
@@ -42,29 +45,6 @@ export function ensureApplicationDataIntegrity(
 ): ApplicationData {
   const initialized = data.boards.length > 0
     ? data
-    : {
-        ...createInitialApplicationData(options),
-        liveCards: data.liveCards,
-      }
-  const assignedCardIds = new Set(initialized.boards.flatMap(board => board.nowLayer.liveCards))
-  const unassignedCardIds = initialized.liveCards
-    .filter(card => !assignedCardIds.has(card.cardId))
-    .toSorted((left, right) => right.createdAt - left.createdAt || left.cardId.localeCompare(right.cardId))
-    .map(card => card.cardId)
-  if (unassignedCardIds.length === 0) return initialized
-
-  const fallbackBoard = initialized.boards[0]!
-  const liveCards = [...unassignedCardIds, ...fallbackBoard.nowLayer.liveCards]
-  return {
-    ...initialized,
-    boards: initialized.boards.map(board => board.id === fallbackBoard.id
-      ? {
-          ...board,
-          nowLayer: {
-            ...board.nowLayer,
-            liveCards,
-          },
-        }
-      : board),
-  }
+    : createInitialApplicationData(options)
+  return initialized
 }

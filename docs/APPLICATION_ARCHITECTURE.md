@@ -5,9 +5,9 @@ Status: active architecture.
 ## Purpose
 
 One application model shared by UI, agents, and CLI: a typed Action registry
-(`mutation` | `query` | `command`) over a Workspace of Boards and LiveCards.
-Concepts: Workspace owns Boards/LiveCards; Board owns membership plus Now/Next
-Layers; Worker is a browser UI running browser-owned Loaders.
+(`mutation` | `query` | `command`) over a Workspace of Boards. Each Board owns
+its ordered LiveCards plus Now/Next Layers; Worker is a browser UI running
+browser-owned Loaders.
 
 ## Package boundaries
 
@@ -31,8 +31,8 @@ Layers; Worker is a browser UI running browser-owned Loaders.
   when their Source left the registry (snapshot → generic card → routed refresh).
   Snapshots and query caches are disposable acceleration; clearing them never
   edits membership.
-- Single ownership: a LiveCard belongs to exactly one Board; `nowLayer.liveCards`
-  order is display order (newest first, drag rewrites the array).
+- Single ownership: `nowLayer.liveCards` stores each Board's complete LiveCards;
+  array order is display order (newest first, drag rewrites the array).
   Adding an owned card transfers it; re-adding to the same Board is idempotent.
 
 ## Sync and persistence
@@ -41,8 +41,10 @@ Layers; Worker is a browser UI running browser-owned Loaders.
   in-memory Workspace and routes loads to the bound Worker.
 - Join conflicts (overwrite / merge / discard) pause sync until resolved in CLI
   Settings; mutations are rejected while a decision is pending.
-- Schema: application data version 8, export version 6; unknown versions throw,
-  never initialize as empty. Daemon DB schema 15, no legacy migrations at startup.
+- Schema: application data version 9, export version 7; version 8 Application
+  data migrates by embedding LiveCards into their owning Boards while preserving
+  order. Other unknown versions throw, never initialize as empty. Daemon DB
+  schema 15, no legacy migrations at startup.
 
 ## Host internals overview
 

@@ -39,12 +39,13 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
     }))
     const nextLiveCards: Record<string, NowLayerLiveCard> = {}
 
-    for (const cardId of currentBoard.nowLayer.liveCards) {
+    for (const card of currentBoard.nowLayer.liveCards) {
+      const cardId = card.cardId
       const entry = liveCardsById.get(cardId)
       if (!entry) continue
-      const { card, liveCardAtom } = entry
+      const { card: resolvedCard, liveCardAtom } = entry
 
-      const descriptor = createSourcePlaceholder(card.sourceId)
+      const descriptor = createSourcePlaceholder(resolvedCard.sourceId)
 
       nextLiveCards[cardId] = {
         boardId,
@@ -59,7 +60,7 @@ export function useNowLayerLiveCards(boardId: string): NowLayerLiveCardsResult {
   }, [boardId, currentBoard.nowLayer.liveCards, liveCardAtoms, liveCards])
 
   const cardIds = useMemo(
-    () => currentBoard.nowLayer.liveCards.filter(cardId => liveCardsByCardId[cardId] !== undefined),
+    () => currentBoard.nowLayer.liveCards.map(card => card.cardId).filter(cardId => liveCardsByCardId[cardId] !== undefined),
     [currentBoard.nowLayer.liveCards, liveCardsByCardId],
   )
 

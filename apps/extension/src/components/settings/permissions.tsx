@@ -107,7 +107,7 @@ export function PermissionsSettings({
     getLiveCardsUsingOrigin(origin, sources, liveCards, resolvedCards),
   ])), [sources, liveCards, origins, resolvedCards])
   const boardIdByCardId = useMemo(() => new Map(
-    boards.flatMap(board => board.nowLayer.liveCards.map(cardId => [cardId, board.id] as const)),
+    boards.flatMap(board => board.nowLayer.liveCards.map(card => [card.cardId, board.id] as const)),
   ), [boards])
 
   const refreshOrigins = useCallback(async (): Promise<void> => {

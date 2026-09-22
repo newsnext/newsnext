@@ -13,20 +13,19 @@ import {
 
 function createData(): ApplicationData {
   return {
-    version: 8,
+    version: 9,
     boards: [{
       color: "blue",
       id: "reading",
       name: "Reading",
       createdAt: 1,
-      nowLayer: { liveCards: ["second", "first"] },
+      nowLayer: { liveCards: [
+        { cardId: "second", workerId: "worker-a", sourceId: "rss:second", patch: {}, createdAt: 2 },
+        { cardId: "first", workerId: "worker-a", sourceId: "rss:first", patch: {}, createdAt: 1 },
+      ] },
       layer: "now",
       nextLayer: { liveWidgets: [] },
     }],
-    liveCards: [
-      { cardId: "first", workerId: "worker-a", sourceId: "rss:first", patch: {}, createdAt: 1 },
-      { cardId: "second", workerId: "worker-a", sourceId: "rss:second", patch: {}, createdAt: 2 },
-    ],
   }
 }
 

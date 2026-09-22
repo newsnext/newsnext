@@ -35,11 +35,6 @@ const DATA_SLICE_OPTIONS: Array<{
     labelKey: "boards",
     descriptionKey: "boardsDataDescription",
   },
-  {
-    id: "liveCards",
-    labelKey: "liveCards",
-    descriptionKey: "liveCardsDataDescription",
-  },
 ]
 
 interface TransferStatus {

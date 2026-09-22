@@ -37,7 +37,11 @@ export const currentBoardAtom = atom((get) => {
   const currentBoardId = get(currentBoardIdAtom)
   return get(boardsAtom).find(board => board.id === currentBoardId)
 })
-export const liveCardsAtom = selectAtom(applicationDataAtom, data => data.liveCards)
+export const liveCardsAtom = selectAtom(
+  applicationDataAtom,
+  data => data.boards.flatMap(board => board.nowLayer.liveCards),
+  (current, next) => current.length === next.length && current.every((card, index) => card === next[index]),
+)
 // Each LiveCard subscribes to its own item atom keyed by cardId, so edits stay local.
 export const liveCardAtomsAtom = splitAtom(liveCardsAtom, card => card.cardId)
 
