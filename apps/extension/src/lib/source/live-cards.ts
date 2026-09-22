@@ -90,14 +90,17 @@ export function createLiveCard(
   }, card)
 }
 
-export function createSourcePlaceholder(sourceId: string): SourceDescriptor {
+export function createSourcePlaceholder(
+  sourceId: string,
+  provider?: SourceDescriptor["provider"],
+): SourceDescriptor {
   const providerId = sourceId.split(":", 1)[0] || sourceId
   return {
     id: sourceId,
     version: 0,
     capabilities: { cookies: [], network: [] },
     metadata: { title: sourceId },
-    provider: {
+    provider: provider ?? {
       color: "slate",
       title: providerId,
     },
@@ -134,10 +137,10 @@ export function buildLiveCards({
     // Missing definition: keep the card with a generic placeholder so it
     // explains itself instead of disappearing. Appearance snapshots upgrade
     // this placeholder once the load result arrives (see applySourceSnapshot).
-    const source = descriptorsById.get(sourceId) ?? createSourcePlaceholder(sourceId)
+    const source = descriptorsById.get(sourceId)
     return cards
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(card => createLiveCard(source, card, boardId))
+      .map(card => createLiveCard(source ?? createSourcePlaceholder(sourceId, card.provider), card, boardId))
   })
 }
 

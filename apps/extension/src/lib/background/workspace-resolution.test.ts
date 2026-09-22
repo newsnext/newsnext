@@ -21,7 +21,7 @@ function workspace(suffix = "a"): Workspace {
         layout: { width: 2, height: 2 },
       }] },
     }],
-    liveCards: [{ cardId: `card-${suffix}`, workerId: `worker-${suffix}`, sourceId: "source:a", createdAt: 1, patch: {} }],
+    liveCards: [{ cardId: `card-${suffix}`, workerId: `worker-${suffix}`, sourceId: "source:a", createdAt: 1, patch: {}, provider: { color: "blue", title: "Source" } }],
   }
 }
 

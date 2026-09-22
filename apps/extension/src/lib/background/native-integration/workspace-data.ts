@@ -21,6 +21,8 @@ export function fromNativeWorkspaceData(data: NativeWorkspaceData): ApplicationD
   return normalizeApplicationData({
     version: 8,
     boards: data.boards,
+    // Native Workspace keeps cards in a flat transport list; reattach them to
+    // the Board tree through the existing v8 migration path.
     liveCards: data.liveCards,
   })
 }

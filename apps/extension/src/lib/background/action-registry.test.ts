@@ -6,6 +6,14 @@ import {
   executeRegisteredAction,
 } from "./action-registry"
 
+const testSource = {
+  capabilities: { cookies: [], network: [] },
+  id: "github:trending",
+  metadata: {},
+  provider: { color: "slate" as const, title: "GitHub" },
+  version: 1,
+}
+
 function createContext(): BackgroundActionContext {
   let storedData: ApplicationData = {
     boards: [{
@@ -17,7 +25,7 @@ function createContext(): BackgroundActionContext {
       layer: "now",
       nextLayer: { liveWidgets: [] },
     }],
-    version: 9,
+    version: 10,
   }
   return {
     data: vi.fn(async () => storedData),
@@ -27,8 +35,8 @@ function createContext(): BackgroundActionContext {
       return execution.result ?? {}
     }),
     replace: vi.fn(async data => data),
-    requireSources: vi.fn(async () => undefined),
-    sources: vi.fn(async () => []),
+    requireSources: vi.fn(async () => [testSource]),
+    sources: vi.fn(async () => [testSource]),
     developer: {
       fetch: vi.fn(async input => ({
         body: "ok",
@@ -137,7 +145,7 @@ describe("action Registry", () => {
       timeoutMs: 10_000,
       url: "https://example.com/api",
     }, "connected", ActionContext)).rejects.toThrow("browser-managed")
-    const data = { boards: [], version: 9 as const }
+    const data = { boards: [], version: 10 as const }
     await expect(executeRegisteredAction("application.replace", data, "connected", ActionContext))
       .resolves
       .toEqual(data)

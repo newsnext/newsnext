@@ -54,7 +54,7 @@ export interface ApplicationActionContext {
     },
   ) => Promise<ApplicationMutationResult>
   replace: (data: ApplicationData) => Promise<ApplicationData>
-  requireSources: (sourceIds: string[]) => Promise<void>
+  requireSources: (sourceIds: string[]) => Promise<SourceDescriptor[]>
   sources: () => Promise<SourceDescriptor[]>
 }
 
@@ -71,8 +71,13 @@ async function readLiveWidget(context: ApplicationActionContext, liveWidgetId: s
 }
 
 const boardCreateAction = defineAction(actionContracts["board.create"], async (input, context: ApplicationActionContext) => {
-  await context.requireSources((input.liveCards ?? []).map(card => card.sourceId))
-  const result = await context.mutate((data, dependencies) => createBoardMutation(data, input, dependencies))
+  const requestedCards = input.liveCards ?? []
+  const sources = await context.requireSources(requestedCards.map(card => card.sourceId))
+  const liveCards = input.liveCards?.map((card, index) => ({
+    ...card,
+    provider: sources[index]!.provider,
+  }))
+  const result = await context.mutate((data, dependencies) => createBoardMutation(data, { ...input, liveCards }, dependencies))
   if (!result.boardId) throw new Error("Board creation returned no Board ID")
   const board = getBoardQuery(await context.data(), { boardId: result.boardId })
   return { boardId: result.boardId, board }
@@ -158,8 +163,11 @@ const liveCardMoveAction = defineAction(actionContracts["liveCard.move"], async 
 })
 
 const liveCardCreateAction = defineAction(actionContracts["liveCard.create"], async (input, context: ApplicationActionContext) => {
-  await context.requireSources([input.sourceId])
-  const result = await context.mutate((data, dependencies) => createLiveCardMutation(data, input, dependencies))
+  const [source] = await context.requireSources([input.sourceId])
+  const result = await context.mutate((data, dependencies) => createLiveCardMutation(data, {
+    ...input,
+    provider: source!.provider,
+  }, dependencies))
   if (!result.cardId) throw new Error("LiveCard creation returned no LiveCard ID")
   const liveCard = await readLiveCard(context, result.cardId)
   return { cardId: result.cardId, liveCard }

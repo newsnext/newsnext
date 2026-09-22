@@ -1,3 +1,4 @@
+import type { SourceProvider } from "@newsnext/sdk/models"
 import type { ApplicationData } from "../application/data"
 import type {
   Board,
@@ -6,7 +7,7 @@ import type {
 } from "../board"
 import type { LiveCard, LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { isThemeColor } from "@newsnext/sdk/models"
+import { CATEGORY_IDS, isThemeColor } from "@newsnext/sdk/models"
 import {
   APPLICATION_DATA_VERSION,
   createEmptyApplicationData,
@@ -61,7 +62,7 @@ export interface PersistedDataExport {
 
 export function normalizeApplicationData(value: unknown): ApplicationData {
   if (value === undefined) return createEmptyApplicationData()
-  if (!isRecord(value) || (value.version !== APPLICATION_DATA_VERSION && value.version !== 8)) {
+  if (!isRecord(value) || (value.version !== APPLICATION_DATA_VERSION && value.version !== 9 && value.version !== 8)) {
     throw new Error("Unsupported Application data version; stored data must be preserved until a compatible version is available")
   }
   if (!Array.isArray(value.boards)) {
@@ -217,10 +218,32 @@ export function normalizeLiveCards(value: unknown): LiveCard[] {
       cardId: candidate.cardId,
       workerId: candidate.workerId,
       sourceId: candidate.sourceId,
+      provider: normalizeSourceProvider(candidate.provider, candidate.sourceId),
       patch: candidate.patch,
       createdAt: candidate.createdAt,
     }]
   })
+}
+
+function normalizeSourceProvider(
+  value: unknown,
+  sourceId: string,
+): SourceProvider {
+  const fallbackTitle = sourceId.split(":", 1)[0] || sourceId
+  if (!isRecord(value)
+    || typeof value.title !== "string"
+    || !value.title.trim()
+    || !isThemeColor(value.color)) {
+    return { color: "slate", title: fallbackTitle }
+  }
+  return {
+    color: value.color,
+    title: value.title.trim(),
+    ...(typeof value.icon === "string" ? { icon: value.icon } : {}),
+    ...(typeof value.category === "string" && CATEGORY_IDS.includes(value.category as typeof CATEGORY_IDS[number])
+      ? { category: value.category as typeof CATEGORY_IDS[number] }
+      : {}),
+  }
 }
 
 export function createPersistedDataExport(

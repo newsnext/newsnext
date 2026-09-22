@@ -6,12 +6,12 @@ import { configureLiveWidgetMutation, createBoardMutation, createLiveCardMutatio
 const dependencies = { createId: () => "new", now: () => 100, workerId: "worker-a" }
 
 function liveCard(cardId: string, createdAt = 1): LiveCard {
-  return { cardId, workerId: "worker-a", sourceId: "rss:feed", patch: {}, createdAt }
+  return { cardId, workerId: "worker-a", sourceId: "rss:feed", provider: { color: "blue", title: "RSS" }, patch: {}, createdAt }
 }
 
 function createData(): ApplicationData {
   return {
-    version: 9,
+    version: 10,
     boards: [{
       color: "blue",
       id: "reading",
@@ -167,6 +167,7 @@ describe("application mutations", () => {
     const execution = createLiveCardMutation(createData(), {
       boardId: "reading",
       sourceId: "github:trending",
+      provider: { color: "slate", title: "GitHub" },
       patch: {},
     }, dependencies)
 

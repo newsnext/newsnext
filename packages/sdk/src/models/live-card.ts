@@ -1,9 +1,11 @@
-import type { SourcePatch, SourcePresentationMetadata } from "./source.js"
+import type { SourcePatch, SourcePresentationMetadata, SourceProvider } from "./source.js"
 
 export interface LiveCard {
   cardId: string
   workerId: string
   sourceId: string
+  /** Immutable provider presentation captured when the LiveCard is created. */
+  provider: SourceProvider
   patch: LiveCardPatch
   createdAt: number
 }

@@ -1,4 +1,4 @@
-import type { BoardDeleteInput, LiveWidgetInstallSize, WidgetMetadata } from "@newsnext/sdk/models"
+import type { BoardDeleteInput, LiveWidgetInstallSize, SourceProvider, WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type {
   Board,
@@ -21,6 +21,7 @@ export interface BoardConfiguration {
 
 interface ApplicationLiveCardCreationInput {
   patch: LiveCardPatch
+  provider: SourceProvider
   sourceId: string
 }
 
@@ -383,7 +384,7 @@ export function createLiveCardMutation(
   input: ApplicationLiveCardCreationInput & { boardId: string },
   dependencies: ApplicationMutationDependencies,
 ): ApplicationMutationExecution {
-  const { boardId, patch, sourceId } = input
+  const { boardId, patch, provider, sourceId } = input
   if (!sourceId.trim()) throw new Error("Source ID is required")
   assertBoardExists(data, boardId)
   const cardId = dependencies.createId()
@@ -394,6 +395,7 @@ export function createLiveCardMutation(
     cardId,
     workerId: dependencies.workerId,
     sourceId,
+    provider,
     patch,
     createdAt: dependencies.now(),
   }

@@ -49,6 +49,7 @@ function createCustomLiveCard(patch: Partial<LiveCard> = {}): LiveCard {
     cardId: "test:feed::AbCdEfGh1234",
     workerId: "worker-a",
     sourceId: "test:feed",
+    provider: { color: "blue", title: "Test" },
     patch: {},
     createdAt: 1,
     ...patch,
@@ -56,6 +57,26 @@ function createCustomLiveCard(patch: Partial<LiveCard> = {}): LiveCard {
 }
 
 describe("buildLiveCards", () => {
+  it("renders the saved provider before the Source registry is available", () => {
+    const [liveCard] = buildLiveCards({
+      sources: [],
+      boardId: null,
+      liveCards: [createCustomLiveCard({
+        provider: {
+          color: "purple",
+          icon: "https://example.com/saved.png",
+          title: "Saved provider",
+        },
+      })],
+    })
+
+    expect(liveCard?.provider).toEqual({
+      color: "purple",
+      icon: "https://example.com/saved.png",
+      title: "Saved provider",
+    })
+  })
+
   it("projects saved LiveCards as LiveCards", () => {
     const liveCards = buildLiveCards({
       sources: testSources,

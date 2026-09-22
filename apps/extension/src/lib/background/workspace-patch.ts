@@ -1,3 +1,4 @@
+import type { LiveCard } from "../source"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import type { WorkspacePatch as NativeWorkspacePatch } from "@/lib/native-protocol/WorkspacePatch"
 import {
@@ -20,10 +21,11 @@ export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
   const referencedCardIds = value.boards.flatMap(candidate => isRecord(candidate) && isRecord(candidate.nowLayer) && Array.isArray(candidate.nowLayer.liveCards)
     ? candidate.nowLayer.liveCards.filter((cardId): cardId is string => typeof cardId === "string")
     : [])
-  const placeholderCards = new Map(referencedCardIds.map(cardId => [cardId, {
+  const placeholderCards = new Map<string, LiveCard>(referencedCardIds.map(cardId => [cardId, {
     cardId,
     workerId: "validation",
     sourceId: "validation",
+    provider: { color: "slate", title: "validation" },
     patch: {},
     createdAt: 0,
   }]))

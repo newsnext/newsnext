@@ -12,7 +12,7 @@ function createData(): PersistedUserData {
   const settings = createDefaultPersistedSettings()
   settings.general.defaultBoardId = "reading"
   return {
-    version: 9,
+    version: 10,
     settings,
     boards: [{
       color: "blue",
@@ -23,6 +23,7 @@ function createData(): PersistedUserData {
         cardId: "rss:feed::one",
         workerId: "worker-a",
         sourceId: "rss:feed",
+        provider: { color: "blue", title: "RSS" },
         patch: { params: { url: "https://example.com/feed.xml" } },
         createdAt: 1,
       }] },
@@ -33,6 +34,16 @@ function createData(): PersistedUserData {
 }
 
 describe("persisted user data", () => {
+  it("backfills a provider for LiveCards saved before provider snapshots", () => {
+    const data = createData()
+    delete (data.boards[0]!.nowLayer.liveCards[0] as Partial<typeof data.boards[0]["nowLayer"]["liveCards"][number]>).provider
+
+    expect(normalizeApplicationData(data).boards[0]?.nowLayer.liveCards[0]?.provider).toEqual({
+      color: "slate",
+      title: "rss",
+    })
+  })
+
   it("normalizes current Board membership, color, and layer state", () => {
     const data = normalizeApplicationData({
       version: 8,
@@ -109,7 +120,7 @@ describe("persisted user data", () => {
     })
   })
 
-  it.each([3, 6, 7, 10])("rejects unsupported Application Data version %s without resetting it", (version) => {
+  it.each([3, 6, 7, 11])("rejects unsupported Application Data version %s without resetting it", (version) => {
     const original = { ...createData(), version }
     const before = structuredClone(original)
     expect(() => normalizeApplicationData(original)).toThrow("stored data must be preserved")
@@ -117,7 +128,7 @@ describe("persisted user data", () => {
   })
 
   it("initializes only absent storage and rejects malformed stored collections", () => {
-    expect(normalizeApplicationData(undefined)).toEqual({ version: 9, boards: [] })
+    expect(normalizeApplicationData(undefined)).toEqual({ version: 10, boards: [] })
     expect(() => normalizeApplicationData(null)).toThrow()
     expect(() => normalizeApplicationData({ version: 8, boards: null, liveCards: [] })).toThrow("refusing")
     expect(() => normalizeApplicationData({ version: 8, boards: [], liveCards: null })).toThrow("refusing")
@@ -148,7 +159,7 @@ describe("persisted user data", () => {
 
   it("repairs ownership after a partial Board import", () => {
     const merged = mergePersistedUserData(createData(), {
-      version: 9,
+      version: 10,
       boards: [],
     })
     expect(merged.boards).toHaveLength(1)

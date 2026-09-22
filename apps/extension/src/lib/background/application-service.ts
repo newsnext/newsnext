@@ -1,3 +1,4 @@
+import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type {
   ApplicationData,
   ApplicationMutationDependencies,
@@ -122,12 +123,13 @@ async function enqueueApplicationDataReplacement(
   return await replacement
 }
 
-export async function requireRegisteredSources(sourceIds: string[]): Promise<void> {
-  if (sourceIds.length === 0) return
+export async function requireRegisteredSources(sourceIds: string[]): Promise<SourceDescriptor[]> {
+  if (sourceIds.length === 0) return []
   const sources = await loadSourceDescriptors()
-  const registeredSourceIds = new Set(sources.map(source => source.id))
-  const missingSourceId = sourceIds.find(sourceId => !registeredSourceIds.has(sourceId))
+  const sourcesById = new Map(sources.map(source => [source.id, source]))
+  const missingSourceId = sourceIds.find(sourceId => !sourcesById.has(sourceId))
   if (missingSourceId) throw new Error(`Source '${missingSourceId}' not found`)
+  return sourceIds.map(sourceId => sourcesById.get(sourceId)!)
 }
 
 export async function readApplicationData(): Promise<ApplicationData> {

@@ -1,6 +1,6 @@
 import type { Board, LiveWidget } from "./board.js"
 
-export const APPLICATION_DATA_VERSION = 9 as const
+export const APPLICATION_DATA_VERSION = 10 as const
 
 export interface ApplicationData {
   version: typeof APPLICATION_DATA_VERSION

@@ -35,6 +35,7 @@ function workspace(revision: number): NativeWorkspace {
       cardId: "card-a",
       workerId: "worker-a",
       patch: {},
+      provider: { color: "red", title: "Source" },
       sourceId: "source:a",
     }],
     settings: JSON.stringify({ version: 1 }),
@@ -103,6 +104,7 @@ describe("workspace patches", () => {
       cardId: "card-b",
       workerId: "worker-b",
       patch: {},
+      provider: { color: "blue", title: "Source" },
       sourceId: "source:b",
     })
     candidate.boards[0] = {

@@ -1,6 +1,6 @@
 import type { ApplicationData, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, Board, BoardDeleteInput, LiveCard, LiveCardPatch, LiveWidget, LiveWidgetDataScope, LiveWidgetInstallSize, SourceDescriptor } from "../models/index.js"
 import Type from "typebox"
-import { COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
+import { CATEGORY_IDS, COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
 import { BoardIdParam, CardIdParam, EmptyObject, Identifier, LiveWidgetIdParam, RecordValue, SourceIdParam, stringEnum, TargetBoardIdParam, WidgetIdParam } from "./schema.js"
 
@@ -50,10 +50,18 @@ const LiveCardPatchResult = Type.Object({
   params: Type.Optional(RecordValue),
 })
 
+const SourceProviderResult = Type.Object({
+  category: Type.Optional(stringEnum(CATEGORY_IDS)),
+  color: stringEnum(COLORS),
+  icon: Type.Optional(Type.String()),
+  title: Type.String(),
+})
+
 const LiveCardResult = Type.Unsafe<LiveCard>(Type.Object({
   cardId: Identifier,
   createdAt: Type.Number(),
   patch: LiveCardPatchResult,
+  provider: SourceProviderResult,
   sourceId: Identifier,
   workerId: Identifier,
 }))

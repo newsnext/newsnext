@@ -13,15 +13,15 @@ import {
 
 function createData(): ApplicationData {
   return {
-    version: 9,
+    version: 10,
     boards: [{
       color: "blue",
       id: "reading",
       name: "Reading",
       createdAt: 1,
       nowLayer: { liveCards: [
-        { cardId: "second", workerId: "worker-a", sourceId: "rss:second", patch: {}, createdAt: 2 },
-        { cardId: "first", workerId: "worker-a", sourceId: "rss:first", patch: {}, createdAt: 1 },
+        { cardId: "second", workerId: "worker-a", sourceId: "rss:second", provider: { color: "blue", title: "RSS" }, patch: {}, createdAt: 2 },
+        { cardId: "first", workerId: "worker-a", sourceId: "rss:first", provider: { color: "blue", title: "RSS" }, patch: {}, createdAt: 1 },
       ] },
       layer: "now",
       nextLayer: { liveWidgets: [] },
