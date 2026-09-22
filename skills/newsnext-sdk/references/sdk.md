@@ -111,6 +111,12 @@ running the Widget data pipeline.
 Search the latest retained value for each URL without reconstructing observations:
 
 ```ts
+const latest = await client.history.latest({
+  keyword: "agent", // Optional title substring.
+  boardIds: ["saved-board-id"],
+  limit: 50,
+})
+
 const page = await client.history.search({
   keyword: "Jev",
   searchIn: "fullText",
@@ -121,6 +127,11 @@ const page = await client.history.search({
   limit: 50,
 })
 ```
+
+`history.latest()` returns newest retained items and accepts an optional title keyword.
+It supports the same Board/LiveCard scopes, time bounds, ordering, deduplication, and
+pagination as search. Use `history.search()` when the keyword is required or
+`searchIn: "fullText"` is needed.
 
 `boardIds` select the Boards' current Now Layer LiveCards and `cardIds` add explicit
 LiveCards; duplicate cards are searched once. Omitting both searches every configured

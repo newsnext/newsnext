@@ -104,6 +104,35 @@ Items absent from the newest observation remain searchable. `publishedAt` remain
 the source publication time; refresh time is never substituted for it. No matches
 produce an empty list.
 
+Use a `search` query when the Widget should search history directly and optionally
+choose a scope independent of its placement:
+
+```json
+{
+  "data": {
+    "queries": {
+      "matches": {
+        "type": "search",
+        "keyword": "AI agent",
+        "searchIn": "fullText",
+        "boardIds": ["board-id"],
+        "cardIds": ["card-id"],
+        "window": "24h",
+        "limit": 50
+      }
+    }
+  }
+}
+```
+
+`boardIds` and `cardIds` form a deduplicated union. If both are omitted, the query
+inherits the Widget placement scope. `searchIn` is `title` by default and also
+accepts `fullText`. Use `window` (`Nh` or `Nd`) for a relative publication window,
+or millisecond `from`/`to` boundaries; `window` and `from` cannot be combined.
+Results default to descending publication time and URL deduplication. `direction`,
+`deduplicateBy`, and `limit` customize those defaults. Like `latest`, `search`
+reads retained history without executing Sources.
+
 Access data without a view, open page, or Board placement:
 
 ```ts
@@ -125,8 +154,13 @@ yields empty `queries`, and the host hides the refresh button. Built-in views
 still require their view query in the declared data. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, Deno, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including
 `~/.bun/bin` and `~/.deno/bin`, so browser launches do not depend on shell PATH.
-The selected runtime receives
-`signal`, `widgetId`, optional `boardId`, resolved `params`, and `clientOptions` for the Node SDK.
+The selected runtime receives a preconfigured `client`, `signal`, `widgetId`,
+`cardIds` for the resolved placement scope, and resolved `params`. Use `client`
+directly for SDK calls; it inherits the current environment and abort signal without
+requiring `@newsnext/sdk` in the Widget directory.
+The client connects directly to the current daemon over authenticated local IPC; it does
+not launch another CLI process. History export uses the same direct transport and remains
+pull-based.
 Execution is bounded to 60 seconds, 16 MiB of JSON and 64 KiB of diagnostics.
 Use console logging for diagnostics; do not write other data to stdout. Local
 scripts are trusted code with the runtime's normal filesystem/network access.

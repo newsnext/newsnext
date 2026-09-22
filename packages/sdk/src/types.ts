@@ -87,6 +87,9 @@ export interface HistorySearchQuery {
   limit?: number
   searchIn?: "title" | "fullText"
 }
+export interface HistoryLatestQuery extends Omit<HistorySearchQuery, "keyword" | "searchIn"> {
+  keyword?: string
+}
 export interface HistorySearchItem {
   cardId: string
   sourceId: string

@@ -1,6 +1,6 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
-import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistorySearchPage, HistorySearchQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
+import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryLatestQuery, HistorySearchPage, HistorySearchQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
 import { SOURCE_REQUEST_TIMEOUT_MS } from "@newsnext/shared/constants"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
@@ -53,6 +53,14 @@ export class NewsNextClient {
     return this.call({ method: "history.query", query }, options)
   }
 
+  private searchHistory(query: HistorySearchQuery, options?: CallOptions): Promise<HistorySearchPage> {
+    return this.call({
+      method: "history.search",
+      ...query,
+      ...timeRange(query.from, query.to),
+    }, options)
+  }
+
   run(input: RunInput, options: ActionOptions = {}): Promise<RunResult> {
     return this.executeAction("developer.runSource", { ...input, debug: input.debug ?? false }, options)
   }
@@ -94,13 +102,13 @@ export class NewsNextClient {
   }
 
   readonly history = {
+    /** Read the latest retained items, optionally filtering titles and selecting a scope. */
+    latest: (query: HistoryLatestQuery = {}, options?: CallOptions): Promise<HistorySearchPage> => {
+      return this.searchHistory({ ...query, keyword: query.keyword ?? "", searchIn: "title" }, options)
+    },
     /** Search titles or all textual item fields within optional Board and LiveCard scopes. */
     search: (query: HistorySearchQuery, options?: CallOptions): Promise<HistorySearchPage> => {
-      return this.call({
-        method: "history.search",
-        ...query,
-        ...timeRange(query.from, query.to),
-      }, options)
+      return this.searchHistory(query, options)
     },
     /** One metadata page; use datasets() to collect all pages. */
     datasetPage: (query: DatasetQuery = {}, options?: CallOptions): Promise<DatasetPage> => {
