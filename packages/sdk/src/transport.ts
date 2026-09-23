@@ -12,7 +12,6 @@ export async function* stream<T>(client: ClientOptions, request: object, options
   const command = client.command ?? ["newsnext"]
   const child = spawn(command[0], [...command.slice(1), "__sdk"], {
     cwd: client.cwd,
-    env: { ...process.env, NEWSNEXT_ENV: client.environment ?? "production" },
     stdio: ["pipe", "pipe", "pipe"],
     detached: process.platform !== "win32",
     windowsHide: true,

@@ -2,9 +2,7 @@
 
 `newsnext <command> --help` is the source of truth for flags, arguments, and
 examples. This reference only lists what exists and the conventions `--help`
-does not cover. The examples below show `newsnext` directly. Prefix them with
-the environment selected by the active instructions. Outside a
-repository-specific override, use `NEWSNEXT_ENV=production`.
+does not cover.
 
 ## Available commands
 
@@ -39,25 +37,3 @@ use `install-native-host` instead.
 - Each `eval` invocation starts a fresh runtime; variables do not persist
   between calls. Keep `eval` output small: project only needed fields and emit
   single-line JSON instead of full pretty-printed dumps.
-
-## Runtime environment
-
-Use one environment consistently across daemon lifecycle, Native Messaging
-registration, and data commands:
-
-```sh
-NEWSNEXT_ENV=production newsnext status
-```
-
-The default is production. Repository instructions (`AGENTS.md`) may select a
-different environment for development work; when they do, use that same
-environment for every related command. Environments use separate IPC
-endpoints, Native Messaging host names, databases, widget directories, and
-startup-error files.
-
-Advanced overrides:
-
-- `NEWSNEXT_DATABASE_PATH`: non-empty custom database path.
-- `NEWSNEXT_WIDGETS_PATH`: non-empty custom widget directory.
-
-Use these only when the task requires isolated data or widget storage.

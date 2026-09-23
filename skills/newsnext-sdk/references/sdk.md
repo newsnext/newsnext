@@ -1,9 +1,7 @@
 # NewsNext CLI SDK
 
-The SDK ships inside the CLI and is only invoked through it. Run JavaScript
-with `newsnext eval`: the evaluated script receives a preconfigured `client`
-global targeting the invocation's environment, with no installation,
-imports, or setup beyond the CLI itself:
+Run JavaScript with `newsnext eval`, which provides a preconfigured `client`
+global:
 
 ```sh
 newsnext eval -e '
@@ -24,25 +22,20 @@ npm install -g @newsnext/cli
 newsnext status
 ```
 
-The evaluated `client` calls the same CLI over its machine transport. The SDK
-is not published as a standalone npm package: it ships inside the CLI and the
-workspace, so never install it separately. CLI packages target macOS, Linux glibc
-and Windows, on x64 and arm64. The CLI selects its platform binary through
-optional dependencies, which must remain enabled during CLI installation. No
-Rust compiler is needed.
+The SDK ships inside the CLI. CLI packages target macOS, Linux glibc, and
+Windows on x64 and arm64. The CLI selects its platform binary through optional
+dependencies during installation.
 
-## Client and environment
+## Client
 
 ```ts
 const status = await client.status()
 ```
 
-The invocation selects the environment (`NEWSNEXT_ENV`, default production)
-for the daemon endpoint, database, widget directory, and Native Messaging
-host alike. Clients hold no persistent process and need no close call. Each
-request owns its process; early iterator return or an AbortSignal terminates
-it. Unix cancellation also terminates its process group. Each `eval` starts a
-fresh runtime: JavaScript variables do not persist between invocations.
+Clients hold no persistent process and need no close call. Each request owns
+its process; early iterator return or an AbortSignal terminates it. Unix
+cancellation also terminates its process group. Each `eval` starts a fresh
+runtime: JavaScript variables do not persist between invocations.
 
 `timeoutMs` is 1–600000, default 60000, per daemon request. Time spent
 processing a yielded observation is excluded. Exports have no fixed total timeout;
@@ -51,34 +44,19 @@ already sent to the Worker.
 
 ## Work efficiently
 
-- Batch independent awaits in one `eval`: each invocation spawns a fresh
-  runtime and CLI process, so one script with several awaits beats several
-  invocations. JavaScript variables do not persist between invocations; print
-  every ID the next round needs (Board IDs, card IDs, widget IDs).
+- Batch independent awaits in one `eval` and print IDs needed by later calls.
+  Each invocation starts a fresh runtime and CLI process.
 - Keep the action sequence and its verification in the same script: resolve
   IDs, mutate, assert on the returned entity, then print the final state last
   so the next round can act on it directly. Mutations return the affected
   entity; a follow-up query for the same state is waste.
-- Collect only the cheapest state sufficient to choose the next action: one
-  `liveCard.get` beats `board.get`, and `liveWidget.list` beats one
-  `board.listLiveWidgets` per Board. Once the returned value verifies a
-  mutation, stop; do not re-query the same state through another surface.
-- If an Action fails, inspect the error (`NewsNextError.code`) before
-  deciding whether to retry. Do not blindly repeat the call or switch to an
-  unrelated surface to confirm the same state.
+- Query the smallest scope needed: one `liveCard.get` instead of `board.get`,
+  or `liveWidget.list` instead of one `board.listLiveWidgets` per Board.
+- If an Action fails, inspect `NewsNextError.code` before retrying.
 - Quote `eval -e` scripts with single quotes and use double quotes inside
   the JavaScript. Print results with `console.log(JSON.stringify(value))`
   (no indentation) as the last statement. Prefer stdin (`newsnext eval <
   script.js`) for long scripts.
-
-## Calling Actions
-
-- Call only Actions listed in [actions.md](actions.md), as
-  `client.actions.<domain>.<method>` with the documented input shape. Do not
-  invent Action names or parameters; the catalog is generated from the SDK
-  contracts. `actions.list()` is a runtime diagnostic, never a prerequisite.
-- The evaluated script receives a preconfigured `client` global: no imports,
-  no setup, no manually constructed clients.
 
 ## LiveCard and LiveWidget data
 

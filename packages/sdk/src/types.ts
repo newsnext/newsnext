@@ -15,7 +15,6 @@ export interface CallOptions {
 }
 
 export interface ClientOptions extends CallOptions {
-  environment?: "development" | "production"
   /** Executable followed by prefix arguments; no shell evaluation. */
   command?: readonly [string, ...string[]]
   cwd?: string
