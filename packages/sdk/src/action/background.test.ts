@@ -29,7 +29,7 @@ const entry = {
   params: {},
   refreshIntervalMs: 300_000,
   title: "Plain",
-  view: { type: "custom" },
+  url: "http://127.0.0.1:43121/widgets/plain/index.html",
   viewRevision: "rev",
   width: 2,
 }
@@ -42,8 +42,10 @@ describe("nativeIntegration.getStatus result", () => {
 })
 
 describe("nativeIntegration.getWidgets result", () => {
-  it("accepts catalog entries with the hasData flag", () => {
+  it("accepts custom entries without a view and built-in entries with a preset", () => {
     expect(() => Value.Parse(getWidgets.result, [{ ...entry, hasData: false }])).not.toThrow()
+    const { url: _url, ...builtin } = entry
+    expect(() => Value.Parse(getWidgets.result, [{ ...builtin, view: { preset: "live-card", query: "feed" } }])).not.toThrow()
   })
 
   it("rejects catalog entries without the data flag and view revision", () => {

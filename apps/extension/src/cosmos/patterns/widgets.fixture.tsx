@@ -5,7 +5,7 @@ import { CardBackContent, CardShell } from "@/components/card-shell"
 import { CardHeader, CardHeaderActionButton } from "@/components/card-shell/card-header"
 import { CardContentBackground } from "@/components/card-shell/card-refresh"
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
-import { WidgetChartContent } from "@/components/nextlayer/chart/widget-chart-content"
+import { WidgetWordCloudContent } from "@/components/nextlayer/word-cloud/word-cloud-content"
 import { FixturePage } from "../fixture-layout"
 
 const rows = [{ label: "AI", value: 100 }, { label: "Research", value: 95 }, { label: "Design", value: 90 }]
@@ -19,7 +19,7 @@ function DemoCard(): React.JSX.Element {
         <CardShell header={header}>
           <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl">
             <CardContentBackground />
-            <WidgetChartContent rows={rows} layout={{ width: 2, height: 1 }} />
+            <WidgetWordCloudContent rows={rows} layout={{ width: 2, height: 1 }} />
           </div>
         </CardShell>
         <CardShell header={header}><CardBackContent><p className="text-sm text-muted-foreground">View is defined in widget.json.</p></CardBackContent></CardShell>

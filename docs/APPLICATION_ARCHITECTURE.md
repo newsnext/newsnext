@@ -45,7 +45,7 @@ browser-owned Loaders.
 - Schema: application data version 12, export version 8. Only the current
   ID-keyed shape is accepted; mismatched versions throw instead of silently
   initializing empty data. Native Workspace and CLI use the same keyed shape
-  under protocol version 35. Daemon DB schema 15.
+  under protocol version 36. Daemon DB schema 15.
 
 ## Host internals overview
 

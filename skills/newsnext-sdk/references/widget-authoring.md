@@ -12,7 +12,7 @@ newsnext widget create keyword-watch --preset data-only
 ```
 
 The default `live-card` preset generates a `widget.json` with a `live-card`
-view and a `latest` feed query. `chart` adds a sample `data.mjs`, `custom`
+view and a `latest` feed query. `word-cloud` adds a sample `data.mjs`, `custom`
 adds a sample `data.mjs` and `index.html`, and `data-only` generates only
 `widget.json` with no view. The command prints the created directory; the
 directory name is the Widget ID (for example, `keyword-watch/widget.json`
@@ -59,7 +59,8 @@ the Widget ID (for example, `keyword-watch/widget.json` identifies
 ```json
 {
   "title": "Keyword Watch",
-  "view": { "type": "live-card", "query": "feed" }
+  "preset": "live-card",
+  "query": "feed"
 }
 ```
 
@@ -175,9 +176,9 @@ pipeline. Widgets have no background schedule; `refresh.intervalMs` controls
 visible polling. Unplaced data executes on SDK request. No separate producer or data.json is necessary. Existing
 `file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
 
-`view` may select `live-card` with optional `presentation: "list" | "ranking"`;
+`preset: "live-card"` may use optional `presentation: "list" | "ranking"`;
 omit presentation for automatic timeline/list selection. Built-in views need no HTML file. Custom views use `index.html` beside
-`widget.json` and are covered in their own section below. With `view` omitted,
+`widget.json` and are covered in their own section below. Without `preset`,
 `index.html` selects a custom view; without it the Widget is data-only.
 Neither `entry` nor `data.entry` is a supported manifest field.
 Preserve original millisecond `publishedAt` values; never substitute fetch time.
@@ -246,7 +247,7 @@ metadata independently of its Source parameters.
 
 ### Word cloud Widget
 
-Use `view: { "type": "chart", "chart": "word-cloud", "query": "observations" }`
+Use `"preset": "word-cloud"` with `"query": "observations"`
 for the built-in word cloud. No HTML or chart library import is needed in the
 view. The host owns the card header and visualization.
 
@@ -267,7 +268,8 @@ A minimal matching `widget.json`:
 {
   "title": "Topic cloud",
   "color": "teal",
-  "view": { "type": "chart", "chart": "word-cloud", "query": "observations" }
+  "preset": "word-cloud",
+  "query": "observations"
 }
 ```
 
@@ -365,8 +367,7 @@ the install flow with `widgetId: "board-word-cloud"`.
 A runnable example lives at `references/examples/custom-html-widget/`
 (`widget.json`, `data.mjs`, `index.html`).
 
-A custom view is an `index.html` beside `widget.json` (declare
-`view: { "type": "custom" }` or omit `view`). The host owns the shell,
+A custom view is an `index.html` beside `widget.json`; omit `preset`. The host owns the shell,
 surface, scroll container, and status layer; the document only styles and
 draws its own content. The protocol version is `1`. The view posts
 `{ type: "newsnext.widget.ready", version: 1 }` once its message listener is

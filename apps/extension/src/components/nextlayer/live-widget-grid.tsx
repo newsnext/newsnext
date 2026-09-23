@@ -28,8 +28,6 @@ import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
 import { readWidgetAppearanceSnapshots, rememberWidgetAppearances } from "./catalog/widget-appearance"
 import { parseWidgetCatalog } from "./catalog/widget-manifest"
-import { WidgetChartContent } from "./chart/widget-chart-content"
-import { parseChartRows } from "./chart/widget-chart-data"
 import { useLiveWidgetData } from "./data/use-live-widget-data"
 import { parseWidgetItems } from "./data/widget-items"
 import { SortableWidgetGrid } from "./grid/sortable-widget-grid"
@@ -37,6 +35,8 @@ import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./gr
 import { DeleteWidgetButton, WidgetBoardSelect } from "./widget-actions"
 import { WidgetItemListContent } from "./widget-item-list-content"
 import { bindWidgetSdk } from "./widget-sdk"
+import { WidgetWordCloudContent } from "./word-cloud/word-cloud-content"
+import { parseWordCloudRows } from "./word-cloud/word-cloud-data"
 
 const WIDGET_PROTOCOL_VERSION = 1
 
@@ -50,7 +50,7 @@ interface LiveWidgetCardProps {
   cardIds: string[]
   title: string
   url?: string
-  ui: WidgetUi
+  ui?: WidgetUi
   dataRevision: string
   viewRevision: string
   refreshIntervalMs: number
@@ -101,31 +101,31 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
     [frame.params, parameterState.savedParams],
   )
   const dataQuery = useLiveWidgetData({ ...frame, params: resolvedParams }, active)
-  const chartView = frame.ui.type === "chart" ? frame.ui : undefined
+  const wordCloudView = frame.ui?.preset === "word-cloud" ? frame.ui : undefined
   const isContentLoading = !dataQuery.data || dataQuery.isContentFetching
   const [viewStatus, setViewStatus] = useState<string>()
   const [viewHeight, setViewHeight] = useState<number>()
-  const chartData = useMemo(() => {
-    if (!chartView) return undefined
+  const wordCloudData = useMemo(() => {
+    if (!wordCloudView) return undefined
     try {
-      return { rows: parseChartRows(dataQuery.data?.queries[chartView.query], chartView), error: undefined }
+      return { rows: parseWordCloudRows(dataQuery.data?.queries[wordCloudView.query], wordCloudView), error: undefined }
     } catch (error) {
-      return { rows: [], error: error instanceof Error ? error.message : "Invalid chart data." }
+      return { rows: [], error: error instanceof Error ? error.message : "Invalid word cloud data." }
     }
-  }, [chartView, dataQuery.data])
+  }, [wordCloudView, dataQuery.data])
   const contentStatus = useMemo(() => {
     const queries = dataQuery.data?.queries ?? {}
-    if (frame.ui.type === "live-card") {
+    if (frame.ui?.preset === "live-card") {
       try {
         return parseWidgetItems(queries[frame.ui.query]).length === 0 ? "No matching items." : undefined
       } catch (error) {
         return error instanceof Error ? error.message : "Invalid Widget data"
       }
     }
-    if (chartData) return chartData.error ?? (chartData.rows.length === 0 ? "No data to display." : undefined)
+    if (wordCloudData) return wordCloudData.error ?? (wordCloudData.rows.length === 0 ? "No data to display." : undefined)
     return undefined
-  }, [dataQuery.data, frame.ui, chartData])
-  const customStatus = frame.ui.type === "custom" ? viewStatus : undefined
+  }, [dataQuery.data, frame.ui, wordCloudData])
+  const customStatus = frame.ui === undefined ? viewStatus : undefined
   const statusMessage = isContentLoading ? undefined : dataQuery.error?.message ?? contentStatus ?? customStatus
   async function saveParams(params: Record<string, unknown>): Promise<void> {
     await actions.liveWidget.configure({ liveWidgetId: frame.liveWidgetId, patch: { params } })
@@ -194,14 +194,14 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
             </CardHeaderActionButton>
           )}
         >
-          {chartView
+          {wordCloudView
             ? (
-                <WidgetChartContent
-                  rows={chartData?.rows ?? []}
+                <WidgetWordCloudContent
+                  rows={wordCloudData?.rows ?? []}
                   layout={frame.layout}
                 />
               )
-            : frame.ui.type === "live-card"
+            : frame.ui?.preset === "live-card"
               ? (
                   <WidgetItemListContent
                     color={color}
@@ -373,6 +373,7 @@ function useNativeWidgetConnection() {
   const catalogQuery = useWidgetCatalog()
   return {
     isLoading: statusQuery.isLoading || catalogQuery.isLoading,
+    catalogError: catalogQuery.error,
     serverOrigin: statusQuery.data?.widgetServerOrigin,
     state: statusQuery.data?.state,
     entries: catalogQuery.data,
@@ -389,12 +390,13 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
   const { t } = useI18n()
   const connection = useNativeWidgetConnection()
   const catalog = useMemo<WidgetCatalog>(() => {
+    if (connection.catalogError) return { error: connection.catalogError.message, widgets: [] }
     try {
       return { widgets: parseWidgetCatalog(connection.entries, connection.serverOrigin) }
     } catch (error) {
       return { error: error instanceof Error ? error.message : "Invalid Widget catalog", widgets: [] }
     }
-  }, [connection.entries, connection.serverOrigin])
+  }, [connection.catalogError, connection.entries, connection.serverOrigin])
   const boards = useAtomValue(boardsAtom)
   const board = boards.find(candidate => candidate.id === boardId)
   // Read synchronously every render: tiny payload, and always current with

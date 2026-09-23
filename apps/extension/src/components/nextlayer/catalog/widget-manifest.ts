@@ -1,15 +1,14 @@
-import type { WidgetChartView } from "@newsnext/sdk/models"
+import type { WidgetWordCloudView } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
-import { isThemeColor, MIN_WIDGET_WIDTH, parseWidgetChartView } from "@newsnext/sdk/models"
+import { isThemeColor, MIN_WIDGET_WIDTH, parseWidgetWordCloudView } from "@newsnext/sdk/models"
 import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
 
-/** Widget view selector. `view` omitted means custom when `index.html` exists, else data-only. */
+/** Widget view selector. The daemon selects custom views when `index.html` exists. */
 export type WidgetUi
-  = | WidgetChartView
-    | { type: "custom" }
+  = | WidgetWordCloudView
     /** Built-in LiveCard UI; `query` names the manifest query holding NewsItems. Omit `presentation` for auto timeline/list. */
-    | { type: "live-card", query: string, presentation?: "ranking" | "list" }
+    | { preset: "live-card", query: string, presentation?: "ranking" | "list" }
 
 /** Validated Widget definition from the daemon catalog. Directory name is the Widget ID. */
 export interface LocalWidgetManifest {
@@ -27,7 +26,7 @@ export interface LocalWidgetManifest {
   title: string
   /** Entry document URL; only custom views declare one. */
   url?: string
-  view: WidgetUi
+  view?: WidgetUi
   /** Data-pipeline fingerprint; view fingerprint remounts the placed frame. */
   dataRevision: string
   viewRevision: string
@@ -69,7 +68,7 @@ export function parseWidgetCatalog(
     const params = candidate.params as SourceParamSchemaMap | undefined
     const ui = parseWidgetUi(candidate.view)
     let url: URL | undefined
-    if (ui.type === "custom") {
+    if (ui === undefined) {
       if (typeof candidate.url !== "string") throw new Error("Custom Widget UI requires an entry URL")
       url = new URL(candidate.url)
       if (url.origin !== expectedOrigin || !url.pathname.startsWith(`/widgets/${candidate.id}/`)) {
@@ -126,14 +125,14 @@ function isGridSize(value: unknown, maximum: number): value is number {
   return Number.isInteger(value) && Number(value) > 0 && Number(value) <= maximum
 }
 
-export function parseWidgetUi(value: unknown): WidgetUi {
-  if (isRecord(value) && value.type === "chart") return parseWidgetChartView(value)
-  if (value === undefined) return { type: "custom" }
-  if (isRecord(value) && value.type === "custom") return { type: "custom" }
-  if (isRecord(value) && value.type === "live-card" && isIdentifier(value.query)
-    && (value.presentation === undefined || value.presentation === "ranking" || value.presentation === "list")) {
+export function parseWidgetUi(value: unknown): WidgetUi | undefined {
+  if (value === undefined) return undefined
+  if (isRecord(value) && value.preset === "word-cloud") return parseWidgetWordCloudView(value)
+  if (isRecord(value) && value.preset === "live-card" && isIdentifier(value.query)
+    && (value.presentation === undefined || value.presentation === "ranking" || value.presentation === "list")
+    && Object.keys(value).every(key => key === "preset" || key === "query" || key === "presentation")) {
     return {
-      type: "live-card",
+      preset: "live-card",
       query: value.query,
       ...(value.presentation === undefined ? {} : { presentation: value.presentation }),
     }

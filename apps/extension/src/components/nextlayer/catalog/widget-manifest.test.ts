@@ -11,7 +11,7 @@ describe("parseWidgetCatalog", () => {
       minHeight: 1,
       width: 6,
       minWidth: 1,
-      view: { type: "live-card", query: "feed" },
+      view: { preset: "live-card", query: "feed" },
       params: { limit: { type: "number", title: "Limit", default: 10, min: 1, max: 20 } },
       dataFiles: [],
       dataRevision: "rev",
@@ -28,7 +28,7 @@ describe("parseWidgetCatalog", () => {
   })
 
   it("accepts widgets served by the declared loopback origin", () => {
-    expect(parseWidgetCatalog([{
+    const [manifest] = parseWidgetCatalog([{
       height: 4,
       id: "headlines",
       minHeight: 2,
@@ -40,7 +40,8 @@ describe("parseWidgetCatalog", () => {
       dataRevision: "rev",
       hasData: true,
       viewRevision: "rev",
-    }], SERVER_URL)).toHaveLength(1)
+    }], SERVER_URL)
+    expect(manifest?.view).toBeUndefined()
   })
 
   it("resolves an omitted palette and rejects unsupported colors", () => {
@@ -120,25 +121,25 @@ describe("parseWidgetCatalog", () => {
 })
 
 describe("built-in Widget UI", () => {
-  const widget = { id: "feed", title: "Feed", height: 4, minHeight: 2, width: 4, minWidth: 2, view: { type: "live-card", query: "items" }, dataFiles: [], dataRevision: "rev", hasData: true, viewRevision: "rev" }
+  const widget = { id: "feed", title: "Feed", height: 4, minHeight: 2, width: 4, minWidth: 2, view: { preset: "live-card", query: "items" }, dataFiles: [], dataRevision: "rev", hasData: true, viewRevision: "rev" }
   it("accepts a data-only Widget without an HTML entry", () => {
     const [manifest] = parseWidgetCatalog([widget], SERVER_URL)
-    expect(manifest?.view).toEqual({ type: "live-card", query: "items" })
+    expect(manifest?.view).toEqual({ preset: "live-card", query: "items" })
     expect(manifest?.url).toBeUndefined()
   })
   it("rejects mixed renderers, unknown UIs and invalid presentation options", () => {
     expect(() => parseWidgetCatalog([{ ...widget, url: `${SERVER_URL}/widgets/feed/index.html` }], SERVER_URL)).toThrow("must not declare")
-    expect(() => parseWidgetCatalog([{ ...widget, view: { type: "unknown" } }], SERVER_URL)).toThrow("Invalid Widget UI")
-    expect(() => parseWidgetCatalog([{ ...widget, view: { type: "live-card", query: "items", presentation: "invalid" } }], SERVER_URL)).toThrow("Invalid Widget UI")
+    expect(() => parseWidgetCatalog([{ ...widget, view: { preset: "unknown" } }], SERVER_URL)).toThrow("Invalid Widget UI")
+    expect(() => parseWidgetCatalog([{ ...widget, view: { preset: "live-card", query: "items", presentation: "invalid" } }], SERVER_URL)).toThrow("Invalid Widget UI")
   })
 })
 
 describe("chart Widget manifests", () => {
   const base = { id: "chart", title: "Chart", height: 2, minHeight: 1, width: 2, minWidth: 1, dataFiles: [], dataRevision: "rev", hasData: true, viewRevision: "rev" }
   it("parses chart mappings and rejects unknown or out-of-range configuration", () => {
-    const view = { type: "chart", chart: "word-cloud", query: "stats", label: "day", value: "count", limit: 30 }
+    const view = { preset: "word-cloud", query: "stats", label: "day", value: "count", limit: 30 }
     expect(parseWidgetCatalog([{ ...base, view }], SERVER_URL)[0]?.view).toEqual(view)
-    for (const patch of [{ chart: "unknown" }, { limit: 0 }, { value: "" }, { unknown: true }]) {
+    for (const patch of [{ preset: "unknown" }, { limit: 0 }, { value: "" }, { unknown: true }]) {
       expect(() => parseWidgetCatalog([{ ...base, view: { ...view, ...patch } }], SERVER_URL)).toThrow()
     }
   })

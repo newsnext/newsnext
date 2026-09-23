@@ -8,7 +8,7 @@ import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { parseWidgetItems } from "./data/widget-items"
 
 interface WidgetItemListContentProps {
-  ui: Extract<WidgetUi, { type: "live-card" }>
+  ui: Extract<WidgetUi, { preset: "live-card" }>
   title: string
   color: Color
   loading: boolean

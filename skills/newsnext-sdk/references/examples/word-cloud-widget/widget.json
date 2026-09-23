@@ -1,6 +1,8 @@
 {
   "title": "Board Word Cloud",
-  "view": { "type": "chart", "chart": "word-cloud", "query": "cloud", "sort": "desc" },
+  "preset": "word-cloud",
+  "query": "cloud",
+  "sort": "desc",
   "data": {
     "queries": {
       "recent": { "type": "latest", "limit": 500, "deduplicateBy": "url" }

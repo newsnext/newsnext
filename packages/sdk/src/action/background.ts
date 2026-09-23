@@ -22,7 +22,7 @@ const WorkspaceSummaryResult = Type.Object({
   liveWidgets: Type.Integer({ minimum: 0 }),
 }, { additionalProperties: false })
 
-// `view` and `params` carry the Widget manifest schema the extension validates before rendering.
+// Built-in `view` and `params` carry the Widget manifest schema; custom views use `url`.
 const WidgetCatalogEntryResult = Type.Unsafe<WidgetCatalogEntry>(Type.Object({
   id: Identifier,
   title: Type.String(),
@@ -32,7 +32,7 @@ const WidgetCatalogEntryResult = Type.Unsafe<WidgetCatalogEntry>(Type.Object({
   minWidth: Type.Integer({ minimum: 1 }),
   minHeight: Type.Integer({ minimum: 1 }),
   url: Type.Optional(Type.String()),
-  view: Type.Unknown(),
+  view: Type.Optional(Type.Unknown()),
   params: Type.Unknown(),
   dataRevision: Type.String(),
   dataFiles: Type.Array(Type.String()),

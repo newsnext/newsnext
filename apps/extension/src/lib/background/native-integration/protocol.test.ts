@@ -33,3 +33,31 @@ describe("parseNativeNotification logsChanged", () => {
     ]) expect(() => parseNativeNotification("logsChanged", params)).toThrow()
   })
 })
+
+describe("parseNativeNotification widgetCatalogChanged", () => {
+  it("accepts custom entries without view and built-in entries with preset", () => {
+    const base = {
+      id: "clock",
+      title: "Clock",
+      color: "slate",
+      width: 2,
+      height: 1,
+      minWidth: 2,
+      minHeight: 1,
+      params: {},
+      dataRevision: "data-rev",
+      dataFiles: [],
+      viewRevision: "view-rev",
+      hasData: false,
+      refreshIntervalMs: 300_000,
+    }
+    const widgets = [
+      { ...base, url: "http://127.0.0.1:43121/widgets/clock/index.html" },
+      { ...base, id: "cloud", title: "Cloud", view: { preset: "word-cloud", query: "words" } },
+    ]
+    expect(parseNativeNotification("widgetCatalogChanged", { widgets })).toEqual({
+      method: "widgetCatalogChanged",
+      params: { widgets },
+    })
+  })
+})

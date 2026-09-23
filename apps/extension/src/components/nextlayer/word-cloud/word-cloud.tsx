@@ -1,4 +1,4 @@
-import type { ChartRow } from "./widget-chart-data"
+import type { WordCloudRow } from "./word-cloud-data"
 import type { WidgetLayoutSpan } from "@/lib/widget-host"
 import cloud from "d3-cloud"
 import { useEffect, useRef, useState } from "react"
@@ -31,14 +31,14 @@ function seededRandom(seed: number): () => number {
   }
 }
 
-function hashRows(rows: ChartRow[], width: number, height: number): number {
+function hashRows(rows: WordCloudRow[], width: number, height: number): number {
   let hash = 2166136261
   const text = `${width}:${height}:${rows.map(row => `${row.label}:${row.value}`).join("|")}`
   for (let index = 0; index < text.length; index++) hash = Math.imul(hash ^ text.charCodeAt(index), 16777619)
   return hash >>> 0
 }
 
-export default function WidgetWordCloud({ rows, layout: widgetLayout }: { rows: ChartRow[], layout: WidgetLayoutSpan }): React.JSX.Element {
+export default function WidgetWordCloud({ rows, layout: widgetLayout }: { rows: WordCloudRow[], layout: WidgetLayoutSpan }): React.JSX.Element {
   const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement>(null)
   const [layout, setLayout] = useState<LayoutResult>()
@@ -84,7 +84,7 @@ export default function WidgetWordCloud({ rows, layout: widgetLayout }: { rows: 
   }, [rows, widgetLayout.width, widgetLayout.height])
 
   return (
-    <div ref={containerRef} className="min-h-0 w-full flex-1" aria-label={t("chartAriaLabel", { chart: "word-cloud" })}>
+    <div ref={containerRef} className="min-h-0 w-full flex-1" aria-label={t("wordCloudAriaLabel")}>
       {layout && (
         <svg className="size-full overflow-hidden" viewBox={`0 0 ${layout.width} ${layout.height}`} role="img" aria-hidden="true">
           <g transform={layout.transform} fontFamily="inherit" fontWeight={600} textAnchor="middle">

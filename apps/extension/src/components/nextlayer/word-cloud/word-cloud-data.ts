@@ -1,15 +1,15 @@
-import type { WidgetChartView } from "@newsnext/sdk/models"
+import type { WidgetWordCloudView } from "@newsnext/sdk/models"
 
-export interface ChartRow {
+export interface WordCloudRow {
   label: string
   value: number
 }
 
 /** Invalid observations are surfaced, never silently converted to zero. */
-export function parseChartRows(input: unknown, view: WidgetChartView): ChartRow[] {
+export function parseWordCloudRows(input: unknown, view: WidgetWordCloudView): WordCloudRow[] {
   if (!input || typeof input !== "object" || !("rows" in input) || !Array.isArray(input.rows)) throw new Error("Expected a query result with a rows array.")
-  if (input.rows.length > 10_000) throw new Error("Chart data exceeds 10,000 rows.")
-  const rows = input.rows.map((row: unknown, index): ChartRow => {
+  if (input.rows.length > 10_000) throw new Error("Word cloud data exceeds 10,000 rows.")
+  const rows = input.rows.map((row: unknown, index): WordCloudRow => {
     if (!row || typeof row !== "object" || Array.isArray(row)) throw new Error(`Row ${index + 1} must be an object.`)
     const record = row as Record<string, unknown>
     const label = record[view.label ?? "label"]

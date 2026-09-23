@@ -1,11 +1,11 @@
-import type { ChartRow } from "./widget-chart-data"
+import type { WordCloudRow } from "./word-cloud-data"
 import type { WidgetLayoutSpan } from "@/lib/widget-host"
 import { lazy, Suspense } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 
-const WidgetWordCloud = lazy(() => import("./widget-word-cloud"))
+const WidgetWordCloud = lazy(() => import("./word-cloud"))
 
-export function WidgetChartContent({ rows, layout }: { rows: ChartRow[], layout: WidgetLayoutSpan }): React.JSX.Element {
+export function WidgetWordCloudContent({ rows, layout }: { rows: WordCloudRow[], layout: WidgetLayoutSpan }): React.JSX.Element {
   const { t } = useI18n()
 
   return (

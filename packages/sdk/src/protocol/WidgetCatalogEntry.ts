@@ -4,13 +4,13 @@
  * One renderable Widget definition.
  *
  * `view` and `params` stay untyped here: the daemon owns the Widget manifest schema and the
- * extension validates both before rendering them.
+ * extension validates both before rendering them. Custom views omit `view` and use `url`.
  */
 export type WidgetCatalogEntry = { id: string, title: string, color: string, width: number, height: number, minWidth: number, minHeight: number, 
 /**
  * Entry document for a custom view, served by the loopback Widget server.
  */
-url?: string, view: unknown, params: unknown, dataRevision: string, dataFiles: Array<string>, 
+url?: string, view?: unknown, params: unknown, dataRevision: string, dataFiles: Array<string>,
 /**
  * Fingerprint of the rendered view: the custom entry document bytes, or the
  * built-in view definition. The host reloads the view when it changes.
