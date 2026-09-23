@@ -1,9 +1,0 @@
-{
-  "title": "Fourier",
-  "color": "cyan",
-  "width": 4,
-  "height": 2,
-  "view": {
-    "type": "custom"
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "title": "MIDI Keys",
-  "color": "purple",
-  "width": 4,
-  "height": 2,
-  "view": {
-    "type": "custom"
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "title": "Custom HTML",
-  "color": "slate",
-  "width": 2,
-  "height": 1,
-  "view": {
-    "type": "custom"
-  }
-}

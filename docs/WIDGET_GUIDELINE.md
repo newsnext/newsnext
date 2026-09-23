@@ -13,7 +13,6 @@ types; visual rules live in the Design Guideline.
 - Host/content protocol:
   `apps/extension/src/lib/widget-host.ts`,
   `apps/extension/src/components/nextlayer/live-widget-grid.tsx` (`postData`).
-- Reference custom view: `examples/widgets/demo-custom-html/index.html`.
 
 ## Definition vs instance
 
@@ -74,5 +73,5 @@ schedule. Placement metadata/params overrides apply via
 
 Scaffold with `newsnext widget create <widget-id>`, validate with
 `newsnext widget validate --run <widget-id>`, install via
-`liveWidget.create` on an explicitly chosen Board. Runnable examples live
-in `examples/widgets`; preview presets in Cosmos **Patterns → Widgets**.
+`liveWidget.create` on an explicitly chosen Board. Preview presets are in
+Cosmos **Patterns → Widgets**.
