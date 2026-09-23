@@ -166,6 +166,7 @@ export const zhCN = {
   saving: "正在保存…",
   name: "名称",
   themeColor: "主题颜色",
+  defaultLayer: "默认层",
   justNow: "刚刚",
   deleteBoardAndContents: "删除看板及其内容",
   confirmDelete: "确认删除",

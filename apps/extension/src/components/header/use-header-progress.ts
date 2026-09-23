@@ -1,7 +1,7 @@
 import type { MotionValue } from "motion/react"
 import type { MouseEvent } from "react"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
-import { useLocation, useRouter } from "@tanstack/react-router"
+import { useLocation, useRouter, useSearch } from "@tanstack/react-router"
 import { useAtomValueRawSync } from "jotai"
 import { useMotionValue } from "motion/react"
 import { useCallback, useLayoutEffect, useRef, useState } from "react"
@@ -22,7 +22,8 @@ export function useHeaderProgress(): HeaderProgressState {
   const router = useRouter()
   const routeHref = useLocation({ select: location => location.href })
   const currentBoard = useAtomValueRawSync(currentBoardAtom)
-  const isNextLayer = currentBoard?.layer === "next"
+  const search = useSearch({ strict: false })
+  const isNextLayer = (search.layer ?? currentBoard?.layer) === "next"
   const [isAtTop, setIsAtTop] = useState(true)
   const isAtTopRef = useRef(true)
   const opacity = useMotionValue(0)

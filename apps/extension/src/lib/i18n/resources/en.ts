@@ -162,6 +162,7 @@ export const en = {
   saving: "Saving…",
   name: "Name",
   themeColor: "Theme color",
+  defaultLayer: "Default layer",
   justNow: "Just now",
   deleteBoardAndContents: "Delete board and contents",
   confirmDelete: "Confirm delete",

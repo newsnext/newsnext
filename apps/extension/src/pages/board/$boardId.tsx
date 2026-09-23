@@ -1,4 +1,4 @@
-import { useParams } from "@tanstack/react-router"
+import { useParams, useSearch } from "@tanstack/react-router"
 import { useAtomValueRawSync, useSetAtom } from "jotai"
 import { useEffect } from "react"
 import { BoardView } from "@/components/board-view"
@@ -8,6 +8,7 @@ import { currentBoardIdAtom } from "@/store/settings"
 
 export function BoardIdComponent() {
   const { boardId } = useParams({ from: "/board/$boardId" })
+  const { layer } = useSearch({ from: "/board/$boardId" })
   // RawSync avoids missing hydration between render and subscribe; useAtomValue can route to a stale default board.
   const boards = useAtomValueRawSync(boardsAtom)
   const setCurrentBoardId = useSetAtom(currentBoardIdAtom)
@@ -38,5 +39,5 @@ export function BoardIdComponent() {
     )
   }
 
-  return <BoardView board={board} />
+  return <BoardView board={board} layer={layer ?? board.layer} />
 }

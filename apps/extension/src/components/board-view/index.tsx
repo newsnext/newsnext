@@ -3,6 +3,7 @@ import type { Board, BoardLayer } from "@/lib/board"
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useHotkey } from "@tanstack/react-hotkeys"
+import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
@@ -10,7 +11,7 @@ import { NowLayer } from "@/components/nowlayer"
 import { useBoardScrollRestoration } from "@/hooks/use-board-scroll-restoration"
 import { isSortableData } from "@/lib/board"
 import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
-import { moveLiveCardAtom, updateBoardAtom } from "@/store/board"
+import { moveLiveCardAtom } from "@/store/board"
 import { shortcutSettingsAtom } from "@/store/settings"
 import { ScatterCardLayer } from "./scatter-card-layer"
 
@@ -31,12 +32,10 @@ interface RenderedView {
   revision: number
 }
 
-export function BoardView({ board }: { board: Board }) {
-  // The active Layer comes from the persisted Board; never mirror it in route or history state.
-  const layer = board.layer
+export function BoardView({ board, layer }: { board: Board, layer: BoardLayer }) {
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const moveLiveCard = useSetAtom(moveLiveCardAtom)
-  const updateBoard = useSetAtom(updateBoardAtom)
+  const navigate = useNavigate()
   const isNextLayer = layer === "next"
   const [renderedView, setRenderedView] = useState<RenderedView>({ boardId: board.id, layer, revision: 0 })
   const [outgoingView, setOutgoingView] = useState<RenderedView | null>(null)
@@ -98,18 +97,19 @@ export function BoardView({ board }: { board: Board }) {
     setEnteredViewKey(renderedViewKey)
   }, [renderedViewKey])
 
-  async function handleToggleLayer(): Promise<void> {
+  function handleToggleLayer(): void {
     const nextLayer = isNextLayer ? "now" : "next"
-    try {
-      await updateBoard({ ...board, layer: nextLayer })
-    } catch (error) {
-      console.error("Failed to update the Board layer", error)
-    }
+    void navigate({
+      to: "/board/$boardId",
+      params: { boardId: board.id },
+      search: { layer: nextLayer },
+      replace: true,
+    })
   }
 
   useHotkey(
     shortcuts.toggleNextLayer ?? DEFAULT_SHORTCUT_SETTINGS.toggleNextLayer,
-    () => void handleToggleLayer(),
+    handleToggleLayer,
     {
       enabled: shortcuts.toggleNextLayer !== null,
       meta: {

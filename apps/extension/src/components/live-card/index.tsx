@@ -35,7 +35,6 @@ export interface LiveCardProps {
   /** Bypass viewport deferral. Only the dialog-portal search preview may set this; board cards always defer. */
   eager?: boolean
   className?: string
-  sizeClassName?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandleRef?: CardDragHandleRef
 }
@@ -168,12 +167,12 @@ export function LiveCard(props: LiveCardProps): React.JSX.Element {
     once: SOURCE_QUERY_OFFSCREEN_RETENTION_MS,
   })
 
+  // Cards render in Boards, Dialogs, and the Radar popup with different parent typography.
   return (
     <div
       ref={setRef}
       className={cn(
-        "select-none",
-        props.sizeClassName ?? "h-125 w-100",
+        "h-125 w-100 select-none font-sans text-xs font-normal leading-4.5 tracking-normal text-foreground",
         props.className,
       )}
     >

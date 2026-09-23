@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
+import { useNavigate } from "@tanstack/react-router"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ScrollProgressProvider } from "@/components/common/scroll-progress-provider"
 import { RadarDeck } from "@/components/popup/radar-deck"
@@ -14,6 +15,55 @@ import { consumeExternalRssRadarOpenRequest } from "@/lib/radar"
 import { loadSourceDescriptor } from "@/lib/source/registry"
 
 const RSS_SOURCE_ID = "rss:feed"
+
+async function animateCardToBoard(cardId: string, sourceElement: HTMLElement | null): Promise<void> {
+  if (!sourceElement || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+
+  const sourceRect = sourceElement.getBoundingClientRect()
+  const clone = sourceElement.cloneNode(true) as HTMLElement
+  Object.assign(clone.style, {
+    position: "fixed",
+    left: `${sourceRect.left}px`,
+    top: `${sourceRect.top}px`,
+    width: `${sourceRect.width}px`,
+    height: `${sourceRect.height}px`,
+    margin: "0",
+    opacity: "1",
+    pointerEvents: "none",
+    transform: "none",
+    transformOrigin: "top left",
+    zIndex: "100",
+  })
+  document.body.append(clone)
+
+  try {
+    const selector = `[data-live-card-id="${CSS.escape(cardId)}"]`
+    const deadline = performance.now() + 1500
+    let target: HTMLElement | null = null
+    while (!target && performance.now() < deadline) {
+      target = document.querySelector<HTMLElement>(selector)
+      if (!target) await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    }
+    if (!target) return
+
+    target.scrollIntoView({ block: "center", behavior: "instant" })
+    const targetRect = target.getBoundingClientRect()
+    const previousVisibility = target.style.visibility
+    target.style.visibility = "hidden"
+    try {
+      await clone.animate([
+        { transform: "translate(0px, 0px) scale(1, 1)" },
+        {
+          transform: `translate(${targetRect.left - sourceRect.left}px, ${targetRect.top - sourceRect.top}px) scale(${targetRect.width / sourceRect.width}, ${targetRect.height / sourceRect.height})`,
+        },
+      ], { duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }).finished
+    } finally {
+      target.style.visibility = previousVisibility
+    }
+  } finally {
+    clone.remove()
+  }
+}
 
 type ExternalRssRadarState
   = | { feedUrl: string, status: "loading" }
@@ -30,6 +80,7 @@ function readInitialState(): ExternalRssRadarState | null {
 
 export function ExternalRssRadarDialog(): React.JSX.Element | null {
   const { t } = useI18n()
+  const navigate = useNavigate()
   const [state, setState] = useState<ExternalRssRadarState | null>(readInitialState)
   const [isCelebrating, setIsCelebrating] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -46,8 +97,17 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
     setState(null)
   }, [])
 
-  const beginCelebration = useCallback(() => {
+  const handleBoardChange = useCallback((boardId: string) => {
+    void navigate({ to: "/board/$boardId", params: { boardId }, search: { layer: "now" } })
+  }, [navigate])
+
+  const handleCreationStart = useCallback(async (cardId: string, sourceElement: HTMLElement | null) => {
     setIsCelebrating(true)
+    try {
+      await animateCardToBoard(cardId, sourceElement)
+    } catch (error) {
+      console.error("Failed to animate the new LiveCard", error)
+    }
   }, [])
 
   useEffect(() => {
@@ -104,7 +164,7 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
           radius={0}
           className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-100"
           overlayClassName={isCelebrating ? "pointer-events-none opacity-0" : undefined}
-          surfaceClassName="min-h-0 overflow-visible"
+          surfaceClassName={isCelebrating ? "min-h-0 overflow-visible opacity-0" : "min-h-0 overflow-visible"}
         >
           <DialogTitle className="sr-only">{t("radarTitle")}</DialogTitle>
           <DialogDescription className="sr-only">
@@ -124,7 +184,8 @@ export function ExternalRssRadarDialog(): React.JSX.Element | null {
           {state.status === "ready" && (
             <RadarDeck
               suggestions={[state.suggestion]}
-              onCreationStart={beginCelebration}
+              onCreationStart={handleCreationStart}
+              onBoardChange={handleBoardChange}
               onCreated={close}
               layout="dialog"
             />

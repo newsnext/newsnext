@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
-import type { Board, BoardCreateInput } from "@/lib/board"
+import type { Board, BoardCreateInput, BoardLayer } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   ContentDialogContent,
@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
 import { Input } from "@newsnext/ui/components/input"
+import { PillGroup, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newsnext/ui/components/select"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { ThemeSelector } from "@newsnext/ui/components/theme-selector"
@@ -64,7 +65,7 @@ function ConfigurableBoardDialog({
       : DEFAULT_BOARD_COLOR
   const [name, setName] = useState(() => board?.name ?? "")
   const [color, setColor] = useState<Color>(initialColor)
-  const initialLayer = currentBoard?.layer ?? DEFAULT_BOARD_LAYER
+  const [layer, setLayer] = useState<BoardLayer>(board?.layer ?? currentBoard?.layer ?? DEFAULT_BOARD_LAYER)
   const transferBoards = boards.filter(candidate => candidate.id !== boardId)
   const [targetBoardId, setTargetBoardId] = useState(
     () => transferBoards[0]?.id ?? "",
@@ -89,6 +90,7 @@ function ConfigurableBoardDialog({
         const nextBoard: Board = {
           ...board,
           color,
+          layer,
           name: normalizedName,
         }
         await onUpdate(nextBoard)
@@ -101,7 +103,7 @@ function ConfigurableBoardDialog({
       await onCreate({
         name: normalizedName,
         color,
-        layer: initialLayer,
+        layer,
       })
     })
     if (succeeded) onClose()
@@ -163,6 +165,23 @@ function ConfigurableBoardDialog({
                 value={name}
                 onChange={event => setName(event.target.value)}
               />
+            </ConfigSection>
+
+            <ConfigSection variant="group" title={t("defaultLayer")}>
+              <PillGroup>
+                {(["now", "next"] as const).map(option => (
+                  <button
+                    key={option}
+                    type="button"
+                    aria-pressed={layer === option}
+                    data-checked={layer === option ? "" : undefined}
+                    className={pillGroupItemClassName({ active: layer === option })}
+                    onClick={() => setLayer(option)}
+                  >
+                    {option === "now" ? "Now" : "Next"}
+                  </button>
+                ))}
+              </PillGroup>
             </ConfigSection>
 
             <ConfigSection variant="group" title={t("themeColor")}>

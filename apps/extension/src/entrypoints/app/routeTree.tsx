@@ -1,3 +1,4 @@
+import type { BoardLayer } from "@/lib/board"
 import { createRoute } from "@tanstack/react-router"
 import { Route as rootRoute } from "@/pages/__root"
 import { BoardIdComponent } from "@/pages/board/$boardId"
@@ -6,6 +7,9 @@ import { IndexComponent } from "@/pages/index"
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
+  validateSearch: (search: Record<string, unknown>): { layer?: "now" } => (
+    search.layer === "now" ? { layer: "now" } : {}
+  ),
   component: IndexComponent,
 })
 
@@ -14,6 +18,9 @@ const indexRoute = createRoute({
 const boardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/board/$boardId",
+  validateSearch: (search: Record<string, unknown>): { layer?: BoardLayer } => (
+    search.layer === "now" || search.layer === "next" ? { layer: search.layer } : {}
+  ),
   component: BoardIdComponent,
 })
 

@@ -66,6 +66,12 @@ export function stageExternalRssRadarIntent(
   }
 
   const targetHash = hash.startsWith("#/") ? hash : "#/"
+  const [path = "#/", query = ""] = targetHash.split("?", 2)
+  if (path === "#/" || path.startsWith("#/board/")) {
+    const params = new URLSearchParams(query)
+    params.set("layer", "now")
+    return `${pathname}${path}?${params}`
+  }
   return `${pathname}${targetHash}`
 }
 

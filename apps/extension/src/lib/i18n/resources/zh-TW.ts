@@ -166,6 +166,7 @@ export const zhTW = {
   saving: "正在儲存…",
   name: "名稱",
   themeColor: "主題顏色",
+  defaultLayer: "預設層",
   justNow: "剛剛",
   deleteBoardAndContents: "刪除看板及其內容",
   confirmDelete: "確認刪除",

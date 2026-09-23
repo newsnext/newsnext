@@ -10,10 +10,30 @@ describe("stageExternalRssRadarIntent", () => {
       "/app.html",
       "?feed=https%3A%2F%2Fexample.com%2Ffeed.xml?format=rss",
       "#/board/example",
-    )).toBe("/app.html#/board/example")
+    )).toBe("/app.html#/board/example?layer=now")
     expect(consumeExternalRssRadarOpenRequest()).toEqual({
       feedUrl: "https://example.com/feed.xml?format=rss",
     })
+  })
+
+  it("opens Now even when an RSS deeplink requests Next", () => {
+    expect(stageExternalRssRadarIntent(
+      "/app.html",
+      "?feed=https%3A%2F%2Fexample.com%2Ffeed.xml&layer=next",
+      "#/board/example",
+    )).toBe("/app.html#/board/example?layer=now")
+    expect(consumeExternalRssRadarOpenRequest()).toEqual({
+      feedUrl: "https://example.com/feed.xml",
+    })
+  })
+
+  it("overrides an existing preview layer", () => {
+    expect(stageExternalRssRadarIntent(
+      "/app.html",
+      "?feed=https%3A%2F%2Fexample.com%2Ffeed.xml",
+      "#/board/example?layer=next",
+    )).toBe("/app.html#/board/example?layer=now")
+    consumeExternalRssRadarOpenRequest()
   })
 
   it("does not support the CheckChan hash convention", () => {
@@ -43,7 +63,7 @@ describe("stageExternalRssRadarIntent", () => {
     const hash = "#/board/2oxGHlh_QwT2"
 
     expect(stageExternalRssRadarIntent("/app.html", search, hash))
-      .toBe("/app.html#/board/2oxGHlh_QwT2")
+      .toBe("/app.html#/board/2oxGHlh_QwT2?layer=now")
     expect(consumeExternalRssRadarOpenRequest()).toEqual({
       feedUrl: "https://rsshub.rss3.workers.dev/dedao/knowledge",
     })
@@ -51,7 +71,7 @@ describe("stageExternalRssRadarIntent", () => {
 
   it("stages invalid input as a one-shot error intent", () => {
     expect(stageExternalRssRadarIntent("/app.html", "?feed=not-a-url"))
-      .toBe("/app.html#/")
+      .toBe("/app.html#/?layer=now")
     expect(consumeExternalRssRadarOpenRequest()).toEqual({
       message: "The RSS feed URL is invalid.",
     })
@@ -60,7 +80,7 @@ describe("stageExternalRssRadarIntent", () => {
 
   it("stages an empty feed parameter as a one-shot error intent", () => {
     expect(stageExternalRssRadarIntent("/app.html", "?feed="))
-      .toBe("/app.html#/")
+      .toBe("/app.html#/?layer=now")
     expect(consumeExternalRssRadarOpenRequest()).toEqual({
       message: "No RSS feed URL was provided.",
     })
@@ -70,7 +90,7 @@ describe("stageExternalRssRadarIntent", () => {
     expect(stageExternalRssRadarIntent(
       "/app.html",
       "?feed=file%3A%2F%2F%2Ftmp%2Ffeed.xml",
-    )).toBe("/app.html#/")
+    )).toBe("/app.html#/?layer=now")
     expect(consumeExternalRssRadarOpenRequest()).toEqual({
       message: "The RSS feed URL must use HTTP or HTTPS.",
     })

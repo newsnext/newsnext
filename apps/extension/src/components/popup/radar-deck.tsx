@@ -94,20 +94,15 @@ function launchRadarConfetti({ color, originElement }: RadarConfettiOptions): vo
 
 interface RadarLiveCardProps {
   liveCard: LiveCardViewModel
-  className?: string
   onPatchChange: (patch: LiveCardPatch) => void
 }
 
-function RadarLiveCard({ liveCard, className, onPatchChange }: RadarLiveCardProps) {
+function RadarLiveCard({ liveCard, onPatchChange }: RadarLiveCardProps) {
   return (
     <LiveCard
       source={liveCard}
       target={{ kind: "draft", onPatchChange }}
-      className={cn(
-        "overflow-hidden rounded-3xl",
-        className,
-      )}
-      sizeClassName="h-[30rem] w-full"
+      className="overflow-hidden rounded-3xl"
     />
   )
 }
@@ -139,7 +134,7 @@ function RadarTrackCard({
 
   return (
     <motion.div
-      className="relative h-120 w-full shrink-0 origin-bottom"
+      className="relative h-125 w-100 shrink-0 origin-bottom"
       style={{ rotate, y }}
     >
       <div
@@ -158,7 +153,8 @@ function RadarTrackCard({
 
 interface RadarDeckProps {
   layout?: "dialog" | "popup"
-  onCreationStart?: () => void
+  onCreationStart?: (cardId: string, sourceElement: HTMLElement | null) => Promise<void> | void
+  onBoardChange?: (boardId: string) => void
   onCreated?: () => void
   suggestions: ResolvedRadarSuggestion[]
 }
@@ -172,13 +168,14 @@ export function RadarDeck({
   layout = "popup",
   onCreated,
   onCreationStart,
+  onBoardChange,
   suggestions,
 }: RadarDeckProps) {
   const boards = useAtomValueRawSync(boardsAtom)
   const currentBoardId = useAtomValueRawSync(currentBoardIdAtom)
   const initialBoardId = boards.find(board => board.id === currentBoardId)?.id
     ?? boards[0]?.id
-  const deckKey = `${suggestions.map(suggestion => suggestion.id).join("\0")}\0${initialBoardId ?? ""}`
+  const deckKey = `${suggestions.map(suggestion => suggestion.id).join("\0")}\0${layout === "popup" ? initialBoardId ?? "" : ""}`
   return (
     <RadarDeckContent
       key={deckKey}
@@ -186,6 +183,7 @@ export function RadarDeck({
       initialBoardId={initialBoardId}
       onCreated={onCreated}
       onCreationStart={onCreationStart}
+      onBoardChange={onBoardChange}
       suggestions={suggestions}
     />
   )
@@ -196,6 +194,7 @@ function RadarDeckContent({
   layout,
   onCreated,
   onCreationStart,
+  onBoardChange,
   suggestions,
 }: RadarDeckContentProps) {
   const { t } = useI18n()
@@ -226,7 +225,7 @@ function RadarDeckContent({
   }, [onCreated])
 
   useEffect(() => {
-    if (!isCreated) return
+    if (!isCreated || onCreationStart) return
     if (prefersReducedMotion) {
       finishCreation()
       return
@@ -234,7 +233,7 @@ function RadarDeckContent({
 
     const timeout = window.setTimeout(finishCreation, RADAR_CELEBRATION_DURATION)
     return () => window.clearTimeout(timeout)
-  }, [finishCreation, isCreated, prefersReducedMotion])
+  }, [finishCreation, isCreated, onCreationStart, prefersReducedMotion])
 
   useEffect(() => {
     const targetX = getRadarTrackX(activeIndex, trackItemOffset)
@@ -328,7 +327,7 @@ function RadarDeckContent({
     }
 
     await runCreate(async () => {
-      await createLiveCard({
+      const result = await createLiveCard({
         boardId: targetBoardId,
         sourceId: activeSuggestion.sourceId,
         patch: mergeLiveCardPatch(
@@ -336,14 +335,18 @@ function RadarDeckContent({
           draftPatches[activeSuggestion.id] ?? {},
         ),
       })
-      onCreationStart?.()
       setIsCreated(true)
       launchRadarConfetti({
         color: activeLiveCard.provider.color,
         originElement: actionRef.current,
       })
+      if (onCreationStart) {
+        const sourceElement = deckRef.current?.children[0]?.children[activeIndex]
+        await onCreationStart(result.cardId, sourceElement instanceof HTMLElement ? sourceElement : null)
+        finishCreation()
+      }
     })
-  }, [activeLiveCard, activeSuggestion, createLiveCard, draftPatches, isCreated, onCreationStart, runCreate, targetBoardId])
+  }, [activeIndex, activeLiveCard, activeSuggestion, createLiveCard, draftPatches, finishCreation, isCreated, onCreationStart, runCreate, targetBoardId])
 
   const handleDraftSourceChange = useCallback((suggestionId: string, patch: LiveCardPatch) => {
     setDraftPatches((prev) => {
@@ -445,7 +448,10 @@ function RadarDeckContent({
         >
           <BoardSelect
             value={targetBoardId}
-            onValueChange={setTargetBoardId}
+            onValueChange={(boardId) => {
+              setTargetBoardId(boardId)
+              onBoardChange?.(boardId)
+            }}
             ariaLabel={t("destinationBoard")}
             align="end"
             className={cn(
