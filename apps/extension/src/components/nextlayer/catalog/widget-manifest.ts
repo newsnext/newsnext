@@ -1,7 +1,7 @@
 import type { WidgetChartView } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
-import { isThemeColor, parseWidgetChartView } from "@newsnext/sdk/models"
+import { isThemeColor, MIN_WIDGET_WIDTH, parseWidgetChartView } from "@newsnext/sdk/models"
 import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
 
 /** Widget view selector. `view` omitted means custom when `index.html` exists, else data-only. */
@@ -19,7 +19,7 @@ export interface LocalWidgetManifest {
   color: Color
   /** False when no queries and no `data.mjs`; the shell hides refresh. */
   hasData: boolean
-  /** Footprint in half-LiveCard grid units (width 1–4, defaults 2). */
+  /** Footprint in half-LiveCard grid units (width 2–4, defaults 2). */
   height: number
   id: string
   minHeight: number
@@ -100,12 +100,12 @@ export function parseWidgetCatalog(
       height: candidate.height,
       id: candidate.id,
       minHeight: candidate.minHeight,
-      minWidth: candidate.minWidth,
+      minWidth: Math.max(MIN_WIDGET_WIDTH, candidate.minWidth),
       title: candidate.title,
       url: url?.href,
       view: ui,
       refreshIntervalMs: Number(refreshIntervalMs),
-      width: candidate.width,
+      width: Math.max(MIN_WIDGET_WIDTH, candidate.width),
     }
   })
 }

@@ -19,6 +19,8 @@ describe("parseWidgetCatalog", () => {
       viewRevision: "rev",
     }
     expect(parseWidgetCatalog([widget], SERVER_URL)[0]?.params).toEqual(widget.params)
+    expect(parseWidgetCatalog([widget], SERVER_URL)[0]?.minWidth).toBe(2)
+    expect(parseWidgetCatalog([{ ...widget, width: 1 }], SERVER_URL)[0]?.width).toBe(2)
     expect(() => parseWidgetCatalog([{
       ...widget,
       params: { limit: { ...widget.params.limit, default: 30 } },
@@ -134,9 +136,9 @@ describe("built-in Widget UI", () => {
 describe("chart Widget manifests", () => {
   const base = { id: "chart", title: "Chart", height: 2, minHeight: 1, width: 2, minWidth: 1, dataFiles: [], dataRevision: "rev", hasData: true, viewRevision: "rev" }
   it("parses chart mappings and rejects unknown or out-of-range configuration", () => {
-    const view = { type: "chart", chart: "line", query: "stats", label: "day", value: "count", limit: 30 }
+    const view = { type: "chart", chart: "word-cloud", query: "stats", label: "day", value: "count", limit: 30 }
     expect(parseWidgetCatalog([{ ...base, view }], SERVER_URL)[0]?.view).toEqual(view)
-    for (const patch of [{ chart: "unknown" }, { limit: 0 }, { decimals: 7 }, { target: 0 }, { value: "" }, { unknown: true }]) {
+    for (const patch of [{ chart: "unknown" }, { limit: 0 }, { value: "" }, { unknown: true }]) {
       expect(() => parseWidgetCatalog([{ ...base, view: { ...view, ...patch } }], SERVER_URL)).toThrow()
     }
   })

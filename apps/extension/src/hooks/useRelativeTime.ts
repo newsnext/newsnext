@@ -20,7 +20,14 @@ function sampleClock(lastTickAt: number): Date {
 
 minuteClockAtom.onMount = (setAtom) => {
   let timer: ReturnType<typeof setTimeout> | undefined
-  const updateClock = () => setAtom(Date.now())
+  let lastMinute: number | undefined
+  const updateClock = () => {
+    const now = Date.now()
+    const minute = Math.floor(now / 60_000)
+    if (minute === lastMinute) return
+    lastMinute = minute
+    setAtom(now)
+  }
 
   const scheduleNextMinute = () => {
     if (timer !== undefined) clearTimeout(timer)

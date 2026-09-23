@@ -244,17 +244,11 @@ explicit LiveCard selections are restricted to that Board's LiveCards.
 metadata independently of its Source parameters.
 
 
-### Preset chart Widgets
+### Word cloud Widget
 
-Use `view: { "type": "chart", "chart": "bar", "query": "observations" }`
-for a built-in visualization. No HTML, chart library import, or network request is
-needed in the view. Supported presets are `metric`, `line`, `area`, `bar`,
-`ranking` (horizontal bars), `stacked-bar`, `donut`, `scatter`, `heatmap`,
-`histogram`, `radar`, `funnel`, `table`, `word-cloud`, `progress`,
-`trend-metric`, `change-ranking`, `calendar`, `status`, `timeline`, `treemap`,
-`bullet`, `boxplot`, `waterfall`, and `sankey`.
-The host uses ECharts and its word-cloud extension; metric and table views use
-semantic HTML, as do status, timeline and comparison summaries. The front contains only the visualization and shared card header.
+Use `view: { "type": "chart", "chart": "word-cloud", "query": "observations" }`
+for the built-in word cloud. No HTML or chart library import is needed in the
+view. The host owns the card header and visualization.
 
 Return a named result from `data.mjs`:
 
@@ -271,72 +265,22 @@ A minimal matching `widget.json`:
 
 ```json
 {
-  "title": "Topic share",
+  "title": "Topic cloud",
   "color": "teal",
-  "view": { "type": "chart", "chart": "donut", "query": "observations" }
+  "view": { "type": "chart", "chart": "word-cloud", "query": "observations" }
 }
 ```
 
-Rows use a string or numeric `label` and a finite numeric `value`. Strings are
-never coerced to numbers and malformed data is reported visibly. Use `series`
-to group lines or bars; declare its field explicitly, for example
-`"series": "source"`. `scatter` uses numeric `x` and `y`; `heatmap` uses scalar
-`x` and `y` category coordinates and numeric `value` for intensity. Coordinate
-fields default to `x`/`y`, falling back to `label`/`value`. `label`, `value`,
-`series`, `x`, and `y` in the view select literal row field names, not expressions.
-Aggregate duplicate labels within each Cartesian/radar series in the data
-producer. Missing series observations remain gaps rather than zeroes.
+Rows require a string or finite numeric `label` and a non-negative finite
+numeric `value`. View options are `label` and `value` (literal row field names),
+`limit` (1–500, default 100), and `sort` (`none`, `asc`, `desc`, default data
+order). Sorting happens before the row limit. Query results may contain at most
+10,000 rows. Empty rows are a normal empty state.
 
-View options are `limit` (1–500, default 100), `sort` (`none`, `asc`, `desc`,
-default data order), `decimals` (0–6, default 1), `suffix` (default empty),
-`bins` (1–50, default 10), and `target` (positive progress target, default 100).
-Sorting happens before the row limit; histograms bin the selected rows. Query
-results may contain at most 10,000 rows. Donut, stacked bars, funnel, radar,
-word cloud, and progress require non-negative values. Radar requires at least
-three selected observations. Empty rows are a normal empty state.
-
-The card back has a separate **View** section with Edit, Save, Cancel and Reset.
-Field mapping and chart choices live here, separate from producer **Parameters**.
-Changing the view never changes the query identifier or executes another data
-pipeline. A placement stores Source-style sparse overrides in
-`patch: { params, metadata, view }`. Each view field falls back to `widget.json`.
-Only explicit `patch` sections are read; top-level placement settings are ignored.
-
-```ts
-const updated = await client.actions.liveWidget.configure({
-  liveWidgetId,
-  patch: { view: { chart: "bar", limit: 12 }, metadata: { title: "Top topics" } },
-})
-return updated
-```
-
-Patch sections merge field by field; omitted fields are retained. Arrays replace
-as values. `null` resets an entire section; `{}` is an empty merge. Existing
-`liveWidget.configure` replaces its respective sections. To reset the view,
-pass `patch: { view: null }`. Only resolved data parameters and
-scope affect the daemon's data identity; metadata and view patches do not.
-
-#### Additional preset data
-
-Additional fields below have fixed names; `label` and `value` retain their view
-field mappings. Producers own comparisons, statistics, chronological ordering,
-and rank calculations. A view change does not manufacture missing fields.
-
-| Preset | Additional row fields and behavior |
-| --- | --- |
-| `trend-metric` | Finite `previous` and `history` (1–500 finite numbers, oldest first). Displays current value, period change and sparkline. Use `limit: 1` for one compact metric. |
-| `change-ranking` | Finite `previous`; optional positive integer `previousRank`. Current rank follows visible row order. Percentage changes use the absolute previous value; a zero baseline has no percentage. |
-| `calendar` | `label` is a real `YYYY-MM-DD` date; `value` is non-negative. Unique dates, maximum span 366 days between endpoints. Increase `limit` above 100 for longer periods. Missing dates remain empty. |
-| `status` | `status`: `ok`, `warning`, `error`, or `unknown`; timezone-qualified ISO `timestamp`; optional nonempty `detail`. No numeric value needed. |
-| `timeline` | Timezone-qualified ISO `timestamp`, optional nonempty `detail`. No numeric value needed. Producer order is retained. |
-| `treemap` | Non-negative category values. A flat composition treemap. |
-| `bullet` | Non-negative actual `value`, optional non-negative row `target` (falls back to view target, then 100); optional ordered non-negative `range: [low, high]`. Thin foreground marker indicates the target; shaded band indicates the reference range. |
-| `boxplot` | Ordered `box: [min, q1, median, q3, max]`; optional finite `outliers` array. `value` remains required for sorting/table switching; normally use the median. |
-| `waterfall` | Signed contributions in producer order, accumulating from zero. A starting balance is an ordinary first contribution. Zero-crossing intervals are supported. |
-| `sankey` | `label` names the source node, `destination` names the target node, non-negative `value` is flow magnitude. Cyclic flows are rejected. |
-
-Status meanings are shown in text as well as color. Sorting waterfall rows changes
-the contribution sequence; leave `sort: "none"` to preserve its meaning.
+The view and its field mappings belong to `widget.json`. Placement overrides
+cover data parameters and display metadata; view settings are not editable per
+placement. Only resolved data parameters and scope affect the daemon's data
+identity.
 
 #### Reusable producer analytics
 

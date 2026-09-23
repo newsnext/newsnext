@@ -9,9 +9,9 @@ export type LiveWidgetDataScope
   = | { type: "board" }
     | { type: "cards", cardIds: string[] }
 
-// Widget sizes use half-LiveCard units; one unit is the smallest placeable width.
+// Widget sizes use half-LiveCard units; two units is the smallest placeable width.
 // Placement order is the array order of the Board's Next Layer Widgets.
-export const MIN_WIDGET_WIDTH = 1
+export const MIN_WIDGET_WIDTH = 2
 
 /** Grid span in half-LiveCard grid units. */
 export interface LiveWidgetLayout {

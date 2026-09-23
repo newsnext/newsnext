@@ -1,4 +1,4 @@
-export const WIDGET_CHARTS = ["metric", "line", "area", "bar", "ranking", "stacked-bar", "donut", "scatter", "heatmap", "histogram", "radar", "funnel", "table", "word-cloud", "progress", "trend-metric", "change-ranking", "calendar", "status", "timeline", "treemap", "bullet", "boxplot", "waterfall", "sankey"] as const
+export const WIDGET_CHARTS = ["word-cloud"] as const
 export type WidgetChart = typeof WIDGET_CHARTS[number]
 
 /** Presentation only. Data producers return named results independently of this configuration. */
@@ -7,21 +7,9 @@ export interface WidgetChartOptions {
   /** Literal row field names, not expressions; `label`/`value` keep their view mapping. */
   label?: string
   value?: string
-  /** Groups lines/bars; declare its row field explicitly. */
-  series?: string
-  /** Coordinate fields default to `x`/`y`, falling back to `label`/`value`. */
-  x?: string
-  y?: string
   /** Row cap 1–500, default 100; sorting applies before the limit. */
   limit?: number
   sort?: "none" | "asc" | "desc"
-  /** Fraction digits 0–6, default 1. */
-  decimals?: number
-  suffix?: string
-  /** Positive progress target, default 100. */
-  target?: number
-  /** Histogram bins 1–50, default 10. */
-  bins?: number
 }
 
 /** Built-in chart view. Rows are `{ label, value }`; malformed rows error visibly. */
@@ -37,20 +25,16 @@ export function parseWidgetChartOptions(value: unknown): Partial<WidgetChartOpti
   for (const [key, entry] of Object.entries(value)) {
     switch (key) {
       case "chart":
-        if (!WIDGET_CHARTS.includes(entry)) throw new Error("Invalid Widget chart")
-        result.chart = entry as WidgetChart
+        if (entry !== "word-cloud") throw new Error("Invalid Widget chart")
+        result.chart = entry
         break
-      case "label": case "value": case "series": case "x": case "y": case "suffix":
-        if (typeof entry !== "string" || entry.length > 100 || (key !== "suffix" && key !== "series" && !entry.trim())) throw new Error(`Invalid Widget ${key}`)
+      case "label": case "value":
+        if (typeof entry !== "string" || entry.length > 100 || !entry.trim()) throw new Error(`Invalid Widget ${key}`)
         result[key] = entry
         break
-      case "limit": case "decimals": case "bins":
-        if (typeof entry !== "number" || !Number.isInteger(entry) || entry < (key === "decimals" ? 0 : 1) || entry > (key === "decimals" ? 6 : key === "bins" ? 50 : 500)) throw new Error(`Invalid Widget ${key}`)
+      case "limit":
+        if (typeof entry !== "number" || !Number.isInteger(entry) || entry < 1 || entry > 500) throw new Error(`Invalid Widget ${key}`)
         result[key] = entry
-        break
-      case "target":
-        if (typeof entry !== "number" || !Number.isFinite(entry) || entry <= 0) throw new Error("Invalid Widget target")
-        result.target = entry
         break
       case "sort":
         if (entry !== "none" && entry !== "asc" && entry !== "desc") throw new Error("Invalid Widget sort")

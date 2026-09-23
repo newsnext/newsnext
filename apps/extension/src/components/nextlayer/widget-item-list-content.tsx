@@ -1,11 +1,11 @@
 import type { Color } from "@newsnext/sdk/models"
-import type { WidgetUi } from "./widget-manifest"
+import type { WidgetUi } from "./catalog/widget-manifest"
 import { useMemo, useState } from "react"
 import { LiveCardItems } from "@/components/live-card/card-items"
 import { SourceErrorState } from "@/components/live-card/card-source-state"
 import { LiveCardIdentityContext } from "@/components/live-card/live-card-identity-context"
 import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
-import { parseWidgetItems } from "./widget-items"
+import { parseWidgetItems } from "./data/widget-items"
 
 interface WidgetItemListContentProps {
   ui: Extract<WidgetUi, { type: "live-card" }>

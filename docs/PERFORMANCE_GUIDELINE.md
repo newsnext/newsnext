@@ -57,6 +57,8 @@ Restore any data mutated by an audit.
   components rely on React Compiler inference. See the component file.
 - Subscribe to the shared minute clock only in leaf text components
   (`RelativeTime`, `Timeline`); see `hooks/useRelativeTime.ts`.
+- Focus and page visibility resync the minute clock only when the minute changes;
+  writing a new timestamp within the same minute rerenders every visible timeline.
 - Pass the committed scroll element (not a bare ref) to `VirtualList`;
   observe against the real scroll container with the preload margin. See
   `packages/ui/src/components/virtual-list.tsx`.

@@ -1,5 +1,6 @@
 import { cn } from "@newsnext/ui/lib/utils"
 import { useVirtualizer } from "@tanstack/react-virtual"
+import { memo } from "react"
 
 export interface VirtualListProps<T> {
   items: T[]
@@ -42,6 +43,9 @@ function VirtualListItem<T>({
   )
 }
 
+// Scroll commits should update only rows whose item, position, or renderer changed.
+const MemoizedVirtualListItem = memo(VirtualListItem) as typeof VirtualListItem
+
 export function VirtualList<T>({
   items,
   scrollElement,
@@ -71,7 +75,7 @@ export function VirtualList<T>({
         if (item === undefined) return null
 
         return (
-          <VirtualListItem
+          <MemoizedVirtualListItem
             key={virtualItem.key}
             item={item}
             index={virtualItem.index}

@@ -61,11 +61,11 @@ function getResizeDelta(session: ResizeSession, event: { clientX: number, client
 export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutChange, onReady }: SortableWidgetGridProps) {
   const { t } = useI18n()
   const containerRef = useRef<HTMLDivElement>(null)
+  const [availableWidth, setAvailableWidth] = useState(0)
   const gridRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<DragSession | null>(null)
   const resizeRef = useRef<ResizeSession | null>(null)
   const { rootScrollContainerRef } = useScrollProgressContext()
-  const [availableWidth, setAvailableWidth] = useState(0)
   const [draft, setDraft] = useState<{ source: string, nodes: SortableWidgetNode[] } | null>(null)
   const [dragHeight, setDragHeight] = useState(0)
   const readyRef = useRef(false)
@@ -87,12 +87,14 @@ export function SortableWidgetGrid({ children, enabled, label, nodes, onLayoutCh
   )
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
+    const element = containerRef.current
+    if (!element) return
     const observer = new ResizeObserver(([entry]) => {
-      if (entry) setAvailableWidth(entry.contentRect.width)
+      if (!entry) return
+      const width = entry.contentRect.width
+      setAvailableWidth(previous => previous === width ? previous : width)
     })
-    observer.observe(container)
+    observer.observe(element)
     return () => observer.disconnect()
   }, [])
 

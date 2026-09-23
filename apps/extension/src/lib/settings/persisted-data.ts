@@ -3,7 +3,7 @@ import type { ApplicationData } from "../application/data"
 import type { LiveWidgetDataScope } from "../board"
 import type { LiveCardPatch } from "../source"
 import type { PersistedSettings } from "./persisted-settings"
-import { CATEGORY_IDS, isThemeColor } from "@newsnext/sdk/models"
+import { CATEGORY_IDS, isThemeColor, MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 import {
   APPLICATION_DATA_VERSION,
   createEmptyApplicationData,
@@ -150,7 +150,7 @@ function normalizeLiveWidget(
     dataScope,
     layout: {
       height: layout.height,
-      width: layout.width,
+      width: Math.max(MIN_WIDGET_WIDTH, layout.width),
     },
     ...((patch.metadata || patch.params)
       ? { patch: {

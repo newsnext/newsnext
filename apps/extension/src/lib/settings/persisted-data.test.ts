@@ -39,6 +39,16 @@ describe("normalizeApplicationData", () => {
     expect(normalizeApplicationData(normalized)).toEqual(normalized)
   })
 
+  it("preserves legacy single-column widgets at the shared minimum width", () => {
+    const normalized = normalizeApplicationData({
+      ...currentData,
+      liveWidgets: {
+        widget: { ...currentData.liveWidgets.widget, layout: { height: 2, width: 1 } },
+      },
+    })
+    expect(normalized.liveWidgets.widget?.layout).toEqual({ height: 2, width: 2 })
+  })
+
   it("removes orphaned and duplicate entity references", () => {
     const normalized = normalizeApplicationData({
       ...currentData,

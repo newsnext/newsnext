@@ -2,10 +2,11 @@ import type { WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
-import type { SortableWidgetNode } from "./sortable-widget-grid"
-import type { WidgetAppearanceSnapshot } from "./widget-appearance"
-import type { WidgetCatalog, WidgetUi } from "./widget-manifest"
+import type { WidgetAppearanceSnapshot } from "./catalog/widget-appearance"
+import type { WidgetCatalog, WidgetUi } from "./catalog/widget-manifest"
+import type { SortableWidgetNode } from "./grid/sortable-widget-grid"
 import type { WidgetLayoutSpan } from "@/lib/widget-host"
+import { MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
 import { FlipAnimate } from "@newsnext/ui/components/flip-animate"
 import { useAtomValue } from "jotai"
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
@@ -25,16 +26,16 @@ import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
 import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
-import { SortableWidgetGrid } from "./sortable-widget-grid"
-import { useLiveWidgetData } from "./use-live-widget-data"
+import { readWidgetAppearanceSnapshots, rememberWidgetAppearances } from "./catalog/widget-appearance"
+import { parseWidgetCatalog } from "./catalog/widget-manifest"
+import { WidgetChartContent } from "./chart/widget-chart-content"
+import { parseChartRows } from "./chart/widget-chart-data"
+import { useLiveWidgetData } from "./data/use-live-widget-data"
+import { parseWidgetItems } from "./data/widget-items"
+import { SortableWidgetGrid } from "./grid/sortable-widget-grid"
+import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./grid/widget-layout"
 import { DeleteWidgetButton, WidgetBoardSelect } from "./widget-actions"
-import { readWidgetAppearanceSnapshots, rememberWidgetAppearances } from "./widget-appearance"
-import { WidgetChartContent } from "./widget-chart-content"
-import { parseChartRows } from "./widget-chart-data"
 import { WidgetItemListContent } from "./widget-item-list-content"
-import { parseWidgetItems } from "./widget-items"
-import { clampWidgetWidth, getChangedWidgetLayouts, getGridWidgetId } from "./widget-layout"
-import { parseWidgetCatalog } from "./widget-manifest"
 import { bindWidgetSdk } from "./widget-sdk"
 
 const WIDGET_PROTOCOL_VERSION = 1
@@ -100,10 +101,18 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
     [frame.params, parameterState.savedParams],
   )
   const dataQuery = useLiveWidgetData({ ...frame, params: resolvedParams }, active)
-  const chartView = useMemo(() => frame.ui.type === "chart" ? frame.ui : undefined, [frame.ui])
+  const chartView = frame.ui.type === "chart" ? frame.ui : undefined
   const isContentLoading = !dataQuery.data || dataQuery.isContentFetching
   const [viewStatus, setViewStatus] = useState<string>()
   const [viewHeight, setViewHeight] = useState<number>()
+  const chartData = useMemo(() => {
+    if (!chartView) return undefined
+    try {
+      return { rows: parseChartRows(dataQuery.data?.queries[chartView.query], chartView), error: undefined }
+    } catch (error) {
+      return { rows: [], error: error instanceof Error ? error.message : "Invalid chart data." }
+    }
+  }, [chartView, dataQuery.data])
   const contentStatus = useMemo(() => {
     const queries = dataQuery.data?.queries ?? {}
     if (frame.ui.type === "live-card") {
@@ -113,15 +122,9 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
         return error instanceof Error ? error.message : "Invalid Widget data"
       }
     }
-    if (chartView) {
-      try {
-        return parseChartRows(queries[chartView.query], chartView).length === 0 ? "No data to display." : undefined
-      } catch (error) {
-        return error instanceof Error ? error.message : "Invalid chart data."
-      }
-    }
+    if (chartData) return chartData.error ?? (chartData.rows.length === 0 ? "No data to display." : undefined)
     return undefined
-  }, [dataQuery.data, frame.ui, chartView])
+  }, [dataQuery.data, frame.ui, chartData])
   const customStatus = frame.ui.type === "custom" ? viewStatus : undefined
   const statusMessage = isContentLoading ? undefined : dataQuery.error?.message ?? contentStatus ?? customStatus
   async function saveParams(params: Record<string, unknown>): Promise<void> {
@@ -194,8 +197,8 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
           {chartView
             ? (
                 <WidgetChartContent
-                  view={chartView}
-                  queries={dataQuery.data?.queries ?? {}}
+                  rows={chartData?.rows ?? []}
+                  layout={frame.layout}
                 />
               )
             : frame.ui.type === "live-card"
@@ -445,7 +448,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
       id: getGridWidgetId(item.liveWidgetId),
       w: item.layout.width,
       h: item.layout.height,
-      minW: 1,
+      minW: MIN_WIDGET_WIDTH,
       minH: 1,
     }
   }), [items])

@@ -6,7 +6,7 @@ only that cross-cutting contract. Field semantics live as TSDoc on the
 types; visual rules live in the Design Guideline.
 
 - Manifest/view/data types:
-  `apps/extension/src/components/nextlayer/widget-manifest.ts`,
+  `apps/extension/src/components/nextlayer/catalog/widget-manifest.ts`,
   `packages/sdk/src/models/widget-view.ts`,
   `packages/sdk/src/models/board.ts` (`LiveWidget*`, `WidgetPatch`),
   `packages/sdk/src/types.ts` (`LiveWidgetDataQuery/Result`).
@@ -21,6 +21,14 @@ installed placement. All edits, moves, and removal target `liveWidgetId`.
 `client.liveWidgets.data` addresses the definition. Identical definition
 inputs share the daemon result cache. Repeated `liveWidget.create` calls may
 reuse one definition in one Board; each returns an independent `liveWidgetId`.
+
+## One Widget, one function
+
+Each Widget serves one primary task with one main view or control. Data and
+interaction that directly support that task belong together; independently
+useful charts, metrics, feeds, and controls belong in separate Widgets. At the
+minimum `2×1` size, the primary function must remain clear and usable. Larger
+sizes may show more detail of the same function, not add another function.
 
 ## Host owns the shell
 
@@ -62,7 +70,7 @@ schedule. Placement metadata/params overrides apply via
 
 - Next Layer grid, shell, header, back, palette, motion, and preset
   presentation rules: [Design Guideline](DESIGN_GUIDELINE.md). Widget sizes
-  are half-LiveCard grid units; layout clamping lives in `widget-layout.ts`.
+  are half-LiveCard grid units; layout clamping lives in `grid/widget-layout.ts`.
 - Source-style `params` schema, loaders, templates, and query semantics:
   [Source Authoring Guide](SOURCE_GUIDELINE.md) and
   `@newsnext/source-kit` / `packages/sdk` TSDoc.

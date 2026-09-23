@@ -207,10 +207,10 @@ LiveCards are the primary surface.
   (widgets can't move cards). Header trash dispatches by kind, requires
   originating board + widget IDs.
 - Footprints in half-card units (`2×2` = 400×500 LiveCard; see
-  `WIDGET_GUIDELINE.md`). Widths 1–4 units → visible 188/400/612/824px at
+  `WIDGET_GUIDELINE.md`). Widths 2–4 units → visible 400/612/824px at
   24px gutter, every viewport. Center complete columns up to 4 cards;
   horizontal scroll when widest widget can't fit. Cells 212×262 incl. gutter;
-  `1×1` = 188×238 after gutter. Whole units ≥1 only; never backfill gaps.
+  `2×1` = 400×238 after gutter. Width ≥2 and height ≥1; never backfill gaps.
 - Drag: snapshot order + grab offset at start; precompute packed result per
   insertion, others keep relative order. Follow nearest dragged-card position;
   switch only when another candidate is >12px closer; ties keep current
@@ -225,7 +225,7 @@ LiveCards are the primary surface.
   animates with 180ms ease (same as slot movement). Arrow keys resize one cell
   immediately. Transitions off only for navigation/pointer-resize/reduced
   motion. Dimensions change, order doesn't. Escape/cancel restores sizes.
-  Honor manifest minimums.
+  Honor the shared two-unit minimum width and manifest minimums.
 - Iframes stay mounted in stable React slots across geometry changes; disable
   iframe pointer events during drag/resize, restore after. Scatter animations
   on inner `data-widget-transition` wrapper (420ms entrance, 80ms delay, 10ms
