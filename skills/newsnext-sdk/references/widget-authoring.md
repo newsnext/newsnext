@@ -5,10 +5,10 @@ Author Widgets with `newsnext widget create`, validate them with
 
 ## Creating a Widget
 
-Scaffold a Widget instead of creating its directory by hand:
+Scaffold a Widget:
 
 ```sh
-newsnext widget create <widget-id> [--preset live-card|data-only|chart|custom] [--force]
+newsnext widget create keyword-watch --preset data-only
 ```
 
 The default `live-card` preset generates a `widget.json` with a `live-card`
@@ -137,7 +137,7 @@ Access data without a view, open page, or Board placement:
 
 ```ts
 const result = await client.liveWidgets.data({ widgetId: "keyword-watch" })
-const feed = result.queries.feed
+return result.queries.feed
 ```
 
 The result includes `queries`, completion `refreshedAt`, and LiveCard `errors`.
@@ -210,6 +210,7 @@ const result = await client.liveWidgets.data({
   widgetId: "keyword-watch",
   params: { limit: 5 },
 })
+return result.queries
 ```
 
 Parameters participate in the daemon cache identity. Declarative queries remain
@@ -302,20 +303,17 @@ pipeline. A placement stores Source-style sparse overrides in
 Only explicit `patch` sections are read; top-level placement settings are ignored.
 
 ```ts
-await client.actions.liveWidget.configure({
+const updated = await client.actions.liveWidget.configure({
   liveWidgetId,
   patch: { view: { chart: "bar", limit: 12 }, metadata: { title: "Top topics" } },
 })
-// Reset only presentation. Keep data parameters and metadata overrides.
-await client.actions.liveWidget.configure({
-  liveWidgetId, patch: { view: null },
-})
+return updated
 ```
 
 Patch sections merge field by field; omitted fields are retained. Arrays replace
 as values. `null` resets an entire section; `{}` is an empty merge. Existing
-`liveWidget.configure` replaces its respective sections,
-so `{}` with those Actions still resets them. Only resolved data parameters and
+`liveWidget.configure` replaces its respective sections. To reset the view,
+pass `patch: { view: null }`. Only resolved data parameters and
 scope affect the daemon's data identity; metadata and view patches do not.
 
 #### Additional preset data
@@ -382,15 +380,13 @@ definition inputs share the daemon's result cache. Host data messages expose bot
 A full install flow asks the user for the target Board first when they did not
 name one: list the Boards, let the user pick, and never install into a
 default Board. Then resolve that Board, install with a Board-wide scope,
-and read the placement back to verify:
+and verify the returned placement:
 
 ```ts
-// Round 1: resolve the Board.
 const named = (await client.actions.board.list()).filter(board => board.name === "<board name>")
 const board = named.length === 1 ? named[0] : undefined
 if (!board) throw new Error("Expected one matching Board; select a Board ID")
 const boardId = board.id
-// Round 2: install returns the placement; assert on it. No follow-up query.
 const { liveWidgetId, liveWidget } = await client.actions.liveWidget.create({
   boardId,
   dataScope: { type: "board" },
@@ -400,6 +396,7 @@ const { liveWidgetId, liveWidget } = await client.actions.liveWidget.create({
 if (liveWidget.liveWidgetId !== liveWidgetId || liveWidget.boardId !== boardId) {
   throw new Error("Widget placement missing after install")
 }
+return liveWidget
 ```
 
 `dataScope` is `{ type: "board" }` for the Board's complete LiveCard list or

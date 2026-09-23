@@ -65,53 +65,81 @@ Keep the configuration focused:
 
 Runnable provider examples live at `references/examples/`: `rss-provider`
 (minimal RSS feed), `json-provider` (JSON API with a `number` parameter,
-JMESPath fields, and a Liquid-conditional URL; runs live with
-`newsnext run <file> posts --param userId=1`), and `html-provider` (HTML
-scraping with CSS selectors and ranking metadata; runs live with
-`newsnext run <file> frontpage`). Copy one to
+JMESPath fields, and a Liquid-conditional URL), and `html-provider` (HTML
+scraping with CSS selectors and ranking metadata). Copy the closest example to
 `registry/src/<provider-id>.json`, substitute a real stream, and run it after
-every meaningful change:
-
-```sh
-newsnext run registry/src/example.json feed --param url='https://example.com/feed.xml'
-```
+every meaningful change with the script under **Validate Sources**.
 
 Use TypeScript custom loaders as a last resort. They must use `context.fetch`, declare network and cookie capabilities, propagate cancellation, return `{ items, metadata? }`, and normalize multiple response shapes through shared helpers. Collect required website values through declared cookie or local-storage secrets; do not expose or commit actual secret values.
 
-## Investigate with `fetch`
+## Investigate requests
 
-Use the installed `newsnext` CLI for the commands below.
-
-Use `fetch` to verify the exact feed, API, or HTML request from the connected extension before encoding it:
+Use `client.fetch` to verify the feed, API, or HTML request through a connected
+browser:
 
 ```sh
-newsnext fetch 'https://example.com/feed.xml' -i
-newsnext fetch 'https://example.com/api/items' -H 'Accept: application/json' -i
+newsnext eval -e '
+const response = await client.fetch({
+  url: "https://jsonplaceholder.typicode.com/posts/1",
+  headers: [["Accept", "application/json"]]
+})
+return {
+  status: response.status,
+  url: response.url,
+  contentType: response.headers.find(([name]) => name.toLowerCase() === "content-type")?.[1] ?? null,
+  bodyPreview: response.body.slice(0, 1000)
+}
+'
 ```
 
-Use the response to confirm status, content type, redirects, encoding, and the actual item shape. Begin with the minimum request and add only demonstrated requirements. `fetch` uses the connected browser's cookies but cannot verify Source parameter parsing, capability enforcement, secrets, result normalization, or Radar; it is investigation, not the final test.
+Use the response to confirm status, content type, redirects, encoding, and the
+item shape. Begin with the minimum request and add demonstrated requirements.
+`client.fetch` uses the connected browser's cookies. Verify Source parameters,
+capabilities, secrets, and result normalization with `client.run`.
 
 For a feed candidate, test the standard parser before building a dedicated provider:
 
 ```sh
-newsnext run rss:feed --param url='https://example.com/feed.xml'
+newsnext eval -e '
+const result = await client.run({
+  sourceId: "rss:feed",
+  params: { url: "https://news.ycombinator.com/rss" }
+})
+return { execution: result.execution, sample: result.data.slice(0, 3) }
+'
 ```
 
-## Validate with `run`
+## Validate Sources
 
-Run the local provider after every meaningful change. Select a source ID when the provider defines more than one and exercise representative non-default parameter values. The commands below assume a repository checkout as scoped at the top of this document:
+Run the local provider after every meaningful change. Select a source ID when
+the provider defines more than one and exercise representative non-default
+parameter values:
 
 ```sh
-newsnext run registry/src/example.json latest --debug
-newsnext run registry/src/example.json latest --param topic=technology
-newsnext run registry/src/example.json latest --watch
+newsnext eval -e '
+const { readFile } = await import("node:fs/promises")
+const provider = JSON.parse(await readFile("/absolute/path/to/registry/src/<provider-id>.json", "utf8"))
+const result = await client.run({
+  providerId: "<provider-id>", provider, sourceId: "latest",
+  params: { topic: "technology" }
+})
+return { execution: result.execution, itemCount: result.data.length, sample: result.data.slice(0, 3) }
+'
 ```
 
-For a TypeScript provider, first build the registry and run the registered Source ID unless the installed CLI version explicitly supports that local format. For a local provider that uses stored secrets, pass `--use-provider-secrets`; never print or commit the secret values.
+Use the checkout's absolute file path: `eval` runs in the daemon's runtime
+directory.
 
-If a run requires authentication, open the login URL printed by the CLI and rerun the command afterward. Quote text parameters that contain integers beyond JavaScript's safe integer range: a bare `--param id=1983553349228987887` is parsed as a number before text coercion and can lose precision, so use `--param 'id="1983553349228987887"'` instead.
+For a TypeScript provider, build the registry and run its registered Source ID.
+For a local provider that uses stored secrets, set `useProviderSecrets: true` in
+the `client.run` input.
 
-Use `--worker <ID_PREFIX>` when several Workers are connected or the run must be non-interactive. Use `--verbose` for extension-side stacks after an ordinary run fails. Use `--debug` only while diagnosing requests because its output can contain sensitive headers and response bodies.
+If a run requires authentication, open its login URL and rerun the script.
+Pass large numeric identifiers as strings in `params` to preserve every digit.
+
+Pass `{ workerId }` with the full ID from `client.status()` when browser choice
+matters. Set `debug: true` in `client.run` while diagnosing requests; its
+`fetches` can contain sensitive headers and response bodies.
 
 Check the complete result, not just the exit status:
 
@@ -133,4 +161,6 @@ the registry: regenerate generated artifacts with the repository's own build
 diff hygiene checks per that repository's `AGENTS.md`. Then:
 
 1. Confirm no credentials, session identifiers, transient request headers, or debug response data entered the diff.
-2. Report the chosen transport, the higher-priority options considered, the existing Source used as a model, live `fetch`/`run` coverage, and any browser-only or authenticated behavior that could not be tested.
+2. Report the chosen transport, the existing Source used as a model, live
+   `client.fetch` / `client.run` coverage, and remaining browser or
+   authentication constraints.

@@ -8,11 +8,11 @@
         "url": {
           "type": "url",
           "title": "Feed URL",
-          "default": "https://example.com/feed.xml"
+          "default": "https://news.ycombinator.com/rss"
         }
       },
       "loader": { "type": "rss", "url": "{{ scope.params.url }}" },
-      "capabilities": { "network": ["example.com"] }
+      "capabilities": { "network": ["news.ycombinator.com"] }
     }
   }
 }

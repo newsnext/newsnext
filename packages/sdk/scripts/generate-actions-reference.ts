@@ -77,7 +77,7 @@ const lines = [
   "`bun packages/sdk/scripts/generate-actions-reference.ts` from the web",
   "checkout after changing an action contract. Call actions as",
   "`client.actions.<domain>.<method>(input, options)` inside `newsnext eval`;",
-  "the evaluated script receives a preconfigured `client` global.",
+  "the evaluated script receives a preconfigured `client` variable.",
   "This catalog covers `client.actions.*` and background events; `status`,",
   "`history.*`, `liveCards.data`, `liveWidgets.data`, `run`, and `fetch` are",
   "documented in sdk.md.",

@@ -12,8 +12,9 @@ Consult `newsnext <command> --help` for command usage and
 
 Use `newsnext eval` for Board/LiveCard operations, structured history analysis,
 full snapshot exports, and other typed Actions. It provides a preconfigured
-`client` global. Read [references/sdk.md](references/sdk.md) for client, Action,
-and history usage.
+`client` variable. Eval scripts are async function bodies: use `await`, return
+the final value for JSON output, and use `await import(...)` for modules. Read
+[references/sdk.md](references/sdk.md) for client, Action, and history usage.
 Call `client.actions.<domain>.<method>` using the signatures in the generated
 [Actions catalog](references/actions.md). Use `history.export()` for complete
 observations.
@@ -34,6 +35,3 @@ placement to verify the result.
 
 Read [references/source-authoring.md](references/source-authoring.md) for Source
 discovery, implementation, and verification.
-
-Obtain authorization before running state-changing commands such as
-`install-native-host` and `widget create` when the user only asks for an explanation.

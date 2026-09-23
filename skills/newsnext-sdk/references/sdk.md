@@ -1,17 +1,21 @@
 # NewsNext CLI SDK
 
-Run JavaScript with `newsnext eval`, which provides a preconfigured `client`
-global:
+Run JavaScript with `newsnext eval`. The script is an async function body with
+a preconfigured `client` variable. Return a value to print it as JSON; an
+undefined return prints nothing:
 
 ```sh
 newsnext eval -e '
 const status = await client.status()
-console.log(JSON.stringify(status.workers.length))
+return status.workers.length
 '
-newsnext eval < script.js
 ```
 
+Load modules with `await import(...)`.
+
 See `newsnext eval --help` for input and timeout options.
+Use `newsnext eval --pretty` when reading a nested return value in a terminal;
+the default return format is compact JSON.
 
 ## Installation
 
@@ -28,10 +32,6 @@ dependencies during installation.
 
 ## Client
 
-```ts
-const status = await client.status()
-```
-
 Clients hold no persistent process and need no close call. Each request owns
 its process; early iterator return or an AbortSignal terminates it. Unix
 cancellation also terminates its process group. Each `eval` starts a fresh
@@ -44,19 +44,15 @@ already sent to the Worker.
 
 ## Work efficiently
 
-- Batch independent awaits in one `eval` and print IDs needed by later calls.
+- Batch independent awaits in one `eval` and return IDs needed by later calls.
   Each invocation starts a fresh runtime and CLI process.
-- Keep the action sequence and its verification in the same script: resolve
-  IDs, mutate, assert on the returned entity, then print the final state last
-  so the next round can act on it directly. Mutations return the affected
-  entity; a follow-up query for the same state is waste.
+- Keep the action sequence and its verification in one script: resolve IDs,
+  mutate, assert on the returned entity, then return the final state.
 - Query the smallest scope needed: one `liveCard.get` instead of `board.get`,
   or `liveWidget.list` instead of one `board.listLiveWidgets` per Board.
 - If an Action fails, inspect `NewsNextError.code` before retrying.
 - Quote `eval -e` scripts with single quotes and use double quotes inside
-  the JavaScript. Print results with `console.log(JSON.stringify(value))`
-  (no indentation) as the last statement. Prefer stdin (`newsnext eval <
-  script.js`) for long scripts.
+  the JavaScript. Prefer stdin (`newsnext eval < script.js`) for long scripts.
 
 ## LiveCard and LiveWidget data
 
@@ -72,6 +68,11 @@ const cachedWidget = await client.liveWidgets.readSnapshot({
   cardIds: ["saved-card-id"],
   params: { limit: 20 },
 })
+return {
+  cardItemCount: card.result.items.length,
+  widgetQueries: Object.keys(widget.queries),
+  cached: cachedWidget !== null,
+}
 ```
 
 LiveCard data loads the saved Source through its owning Worker and existing
@@ -104,6 +105,11 @@ const page = await client.history.search({
   to: "2026-09-30T23:59:59.999Z",
   limit: 50,
 })
+return {
+  latestCount: latest.items.length,
+  searchCount: page.items.length,
+  nextCursor: page.nextCursor ?? null,
+}
 ```
 
 `history.latest()` returns newest retained items and accepts an optional title keyword.
@@ -120,13 +126,11 @@ summary, and body fields. Results default to newest first and URL deduplication.
 `nextCursor` back as `cursor` while `hasMore` is true.
 
 ```ts
-// Round 1: find the dataset.
 const datasets = await client.history.datasets({ sourceId: "weibo:hot-search" })
 const candidates = datasets.filter(dataset => dataset.params.type === "search")
 const dataset = candidates.length === 1 ? candidates[0] : undefined
 if (!dataset) throw new Error("Select a dataset by Worker and Source version")
 
-// Round 2: export and analyze.
 const titles = new Set()
 for await (const snapshot of client.history.export({
   datasetId: dataset.id,
@@ -137,6 +141,7 @@ for await (const snapshot of client.history.export({
     if (typeof item.value.title === "string") titles.add(item.value.title)
   }
 }
+return { datasetId: dataset.id, uniqueTitleCount: titles.size }
 ```
 
 - Metadata: `datasets(filter)` collects all pages; `datasetPage(query)`
@@ -173,10 +178,7 @@ const result = await client.run({
   sourceId: "weibo:hot-search",
   params: { type: "search" },
 }, { workerId })
-
-const response = await client.fetch({ url: "https://example.com/feed.xml" }, { workerId })
-const sources = await client.actions.source.list({}, { workerId })
-const board = await client.actions.board.create({ name: "Reading" }, { workerId })
+return { execution: result.execution, itemCount: result.data.length }
 ```
 
 Use the full Worker ID returned by status when the call must run in a
@@ -210,17 +212,14 @@ Resolve the name (names are not unique), update only the requested field, and
 verify it. The example changes the AI Board to blue:
 
 ```ts
-// Round 1: resolve the name to a unique ID.
 const matches = (await client.actions.board.list()).filter(board => board.name === "AI")
 const board = matches.length === 1 ? matches[0] : undefined
 if (!board) throw new Error("Expected one AI Board; select a Board ID")
 const boardId = board.id
 
-// Round 2 (same script): update returns the updated Board; assert on it.
-// No follow-up query is needed: every mutation returns the affected entity.
 const updated = await client.actions.board.update({ boardId, color: "blue" })
 if (updated.color !== "blue") throw new Error("Board color verification failed")
-console.log({ boardId, name: updated.name, color: updated.color })
+return { boardId, name: updated.name, color: updated.color }
 ```
 
 The same typed client exposes `card`, `source`, `nowLayer`, `nextLayer`,
