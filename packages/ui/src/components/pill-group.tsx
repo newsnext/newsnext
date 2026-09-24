@@ -29,7 +29,7 @@ export function pillGroupItemClassName({
   className,
 }: PillGroupItemClassNameOptions = {}): string {
   return cn(
-    "relative inline-flex min-w-0 cursor-pointer items-center justify-center rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-2 focus-visible:ring-theme-400 active:translate-y-px disabled:pointer-events-none disabled:opacity-50",
+    "relative inline-flex min-w-0 cursor-pointer items-center justify-center rounded-full px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:ring-2 focus-visible:ring-theme-400 disabled:pointer-events-none disabled:opacity-50",
     active === true && "text-primary-foreground",
     active === false && "text-muted-foreground hover:text-foreground",
     active === undefined && "text-muted-foreground hover:text-foreground data-checked:text-primary-foreground",

@@ -497,7 +497,7 @@ Search, Settings, or single-column — all share the modal foundation.
   variant colors + not-allowed cursor, suppresses hover/active, never opacity.
 - Segmented radio groups speak board-nav-pill language: 4px gaps in shared
   island surface, muted inactive labels (contrast on hover only, no scale/bg),
-  theme active pill, theme focus ring, subtle pressed offset. Active pill moves
+  theme active pill, theme focus ring. Active pill moves
   via shared-layout spring of Board Nav; isolated layout identity per group.
   `PillGroup`/`pillGroupItemClassName`/`PillGroupIndicator` own
   container/item/background; semantics stay in owners. Theme selector is a
