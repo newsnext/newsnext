@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import type { CardDragHandleRef } from "@/components/card-shell/card-header"
+import type { RankingHistorySource } from "@/lib/background/ranking-history"
 import type { SourcePermissionRequest } from "@/lib/source"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { useMemo, useState } from "react"
@@ -29,6 +30,7 @@ interface LiveCardFrontProps {
   source: LiveCardViewModel
   items: NewsItem[]
   inlinePresentation?: string[]
+  rankingHistory?: RankingHistorySource
   isContentFetching: boolean
   sourceErrorMessage?: string
   sourceLoginUrl?: string
@@ -48,6 +50,7 @@ interface LiveCardFrontProps {
 interface LiveCardFrontContentProps {
   items: NewsItem[]
   inlinePresentation?: string[]
+  rankingHistory?: LiveCardFrontProps["rankingHistory"]
   markScale?: number
   providerTitle: string
   presentationType?: LiveCardViewModel["metadata"]["type"]
@@ -63,6 +66,7 @@ interface LiveCardFrontContentProps {
 function LiveCardFrontContent({
   items,
   inlinePresentation,
+  rankingHistory,
   markScale,
   providerTitle,
   presentationType,
@@ -112,6 +116,7 @@ function LiveCardFrontContent({
     <LiveCardItems
       items={items}
       inlinePresentation={inlinePresentation}
+      rankingHistory={rankingHistory}
       markScale={markScale}
       presentationType={presentationType}
       scrollElement={scrollElement}
@@ -123,6 +128,7 @@ export function LiveCardFront({
   source,
   items,
   inlinePresentation,
+  rankingHistory,
   isContentFetching,
   sourceErrorMessage,
   sourceLoginUrl,
@@ -206,6 +212,7 @@ export function LiveCardFront({
               <LiveCardFrontContent
                 items={items}
                 inlinePresentation={inlinePresentation}
+                rankingHistory={rankingHistory}
                 markScale={markScale}
                 providerTitle={provider.title}
                 presentationType={source.metadata.type}

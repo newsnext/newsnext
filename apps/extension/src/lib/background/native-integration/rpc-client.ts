@@ -1,5 +1,6 @@
 import type { JSONRPCRequest } from "json-rpc-2.0"
 import type { SourceLoadResponse } from "../../source/load-result"
+import type { RankingHistoryQuery, RankingPosition } from "../ranking-history"
 import type { CollectionStatus } from "@/lib/native-protocol/CollectionStatus"
 import type { CollectionStatusSubscribeParams } from "@/lib/native-protocol/CollectionStatusSubscribeParams"
 import type { ExtensionCommand } from "@/lib/native-protocol/ExtensionCommand"
@@ -22,6 +23,7 @@ import { parseLocalCardIds, parseLogs, parseRevision } from "./message-values"
 import { isRpcNotification, isRpcRequest, parseRpcNotification, parseRpcRequest, parseRpcResponse } from "./rpc-message"
 
 interface NativeMethods {
+  "rankingPositionsGet": { params: RankingHistoryQuery, result: RankingPosition[] }
   "collectionStatusSubscribe": { params: CollectionStatusSubscribeParams, result: null }
   "sdk.open": { params: SdkOpenParams, result: null }
   "sdk.next": { params: SdkStreamParams, result: unknown }
@@ -38,6 +40,12 @@ interface NativeMethods {
 }
 
 const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMethods[Method]["result"] } = {
+  "rankingPositionsGet": (value) => {
+    if (!Array.isArray(value) || !value.every(isRankingPosition)) {
+      throw new Error("The native host returned invalid ranking history")
+    }
+    return value
+  },
   "collectionStatusSubscribe": parseEmptyResult,
   "sdk.open": parseEmptyResult,
   "sdk.next": value => value,
@@ -66,6 +74,13 @@ const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMeth
 function parseEmptyResult(value: unknown): null {
   if (value !== null) throw new Error("The native host returned an invalid empty RPC result")
   return null
+}
+
+function isRankingPosition(value: unknown): value is RankingPosition {
+  if (!value || typeof value !== "object") return false
+  const point = value as Partial<RankingPosition>
+  return Number.isSafeInteger(point.observedAt)
+    && (point.position === null || Number.isSafeInteger(point.position))
 }
 
 // No message reached the transport, so callers must not allocate remote cleanup.

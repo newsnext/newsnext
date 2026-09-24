@@ -1,3 +1,4 @@
+import type { RankingHistorySource } from "@/lib/background/ranking-history"
 import type { LiveCardViewModel, NewsItem } from "@/typings/source"
 import { getNewsItemsPresentation } from "@/lib/source/presentation"
 import { Ranking } from "./ranking"
@@ -7,14 +8,15 @@ import { UnorderedList } from "./unordered-list"
 interface LiveCardItemsProps {
   items: NewsItem[]
   inlinePresentation?: string[]
+  rankingHistory?: RankingHistorySource
   markScale?: number
   presentationType?: LiveCardViewModel["metadata"]["type"]
   scrollElement: HTMLDivElement | null
 }
 
-export function LiveCardItems({ presentationType, ...props }: LiveCardItemsProps): React.JSX.Element {
+export function LiveCardItems({ presentationType, rankingHistory, ...props }: LiveCardItemsProps): React.JSX.Element {
   const presentation = getNewsItemsPresentation(props.items, presentationType)
-  if (presentation.type === "ranking") return <Ranking {...props} />
+  if (presentation.type === "ranking") return <Ranking {...props} rankingHistory={rankingHistory} />
   if (presentation.type === "list") return <UnorderedList {...props} />
   return <Timeline {...props} times={presentation.times} />
 }

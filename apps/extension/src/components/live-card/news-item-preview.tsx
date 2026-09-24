@@ -1,5 +1,6 @@
 import type { AdvancedIframe } from "@newsnext/shared/types"
 import type { CSSProperties, ReactNode } from "react"
+import type { RankingHistoryData } from "@/lib/background/ranking-history"
 import type { NewsItem } from "@/typings/source"
 import {
   Avatar,
@@ -21,9 +22,12 @@ import { SourceIcon } from "@/components/card-shell/source-icon"
 import { useI18n } from "@/hooks/use-i18n"
 import { useLiveCardIdentity } from "./live-card-identity-context"
 import { NewsItemInline } from "./news-item-inline"
+import { RankingHistory } from "./ranking-history"
 
 interface NewsItemPreviewProps {
   item: NewsItem
+  rankingHistory?: RankingHistoryData
+  currentPosition?: number
   pictureIndex: number
   onPictureIndexChange: (index: number) => void
   onOpen: () => void
@@ -33,10 +37,6 @@ function getPictures(item: NewsItem): string[] {
   const pictures = item.content?.pictures
   if (!pictures) return []
   return Array.isArray(pictures) ? pictures : [pictures]
-}
-
-function hasTextSelection(): boolean {
-  return window.getSelection()?.isCollapsed === false
 }
 
 interface NewsItemPreviewIdentityProps {
@@ -76,6 +76,8 @@ function NewsItemPreviewIdentity({ centered, item }: NewsItemPreviewIdentityProp
 
 export function NewsItemPreview({
   item,
+  rankingHistory,
+  currentPosition,
   pictureIndex,
   onPictureIndexChange,
   onOpen,
@@ -85,7 +87,13 @@ export function NewsItemPreview({
   const hasOpenTarget = pictures.length > 0 || Boolean(content?.html || content?.text)
 
   return (
-    <div className="flex flex-col gap-2 select-text">
+    <div
+      className="flex cursor-zoom-in flex-col gap-2 select-none"
+      onClick={(event) => {
+        event.preventDefault()
+        onOpen()
+      }}
+    >
       {pictures.length > 0 && (
         <NewsItemPictureCarousel
           pictures={pictures}
@@ -102,31 +110,26 @@ export function NewsItemPreview({
               role="button"
               tabIndex={0}
               className="cursor-zoom-in rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-theme-400"
-              onClick={(event) => {
-                if ((event.target as HTMLElement).closest("a")) return
-                if (hasTextSelection()) return
-                onOpen()
-              }}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return
                 event.preventDefault()
+                event.stopPropagation()
                 onOpen()
               }}
             >
-              <SafeHtml
-                as="div"
-                className="whitespace-pre-wrap wrap-break-word"
-                html={content.html}
-              />
+              <div inert>
+                <SafeHtml
+                  as="div"
+                  className="whitespace-pre-wrap wrap-break-word"
+                  html={content.html}
+                />
+              </div>
             </div>
           )
         : content?.text && (
           <button
             type="button"
             className="cursor-zoom-in whitespace-pre-wrap wrap-break-word rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-theme-400"
-            onClick={() => {
-              if (!hasTextSelection()) onOpen()
-            }}
           >
             {content.text}
           </button>
@@ -135,13 +138,11 @@ export function NewsItemPreview({
         <button
           type="button"
           className="cursor-zoom-in wrap-break-word rounded-lg text-left text-base font-medium outline-none focus-visible:ring-2 focus-visible:ring-theme-400"
-          onClick={() => {
-            if (!hasTextSelection()) onOpen()
-          }}
         >
           {item.title}
         </button>
       )}
+      {currentPosition !== undefined && <RankingHistory history={rankingHistory} currentPosition={currentPosition} />}
     </div>
   )
 }
@@ -202,7 +203,10 @@ function NewsItemPictureCarousel({
               type="button"
               className="size-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-theme-400"
               aria-label={t("viewImage")}
-              onClick={onPictureOpen}
+              onClick={(event) => {
+                event.stopPropagation()
+                onPictureOpen()
+              }}
             >
               <ProxiedImage
                 src={picture}
@@ -249,7 +253,10 @@ function PictureNavigationButton({
     <button
       type="button"
       aria-label={label}
-      onClick={onClick}
+      onClick={(event) => {
+        event.stopPropagation()
+        onClick()
+      }}
       className={cn(
         "absolute top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white opacity-80 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-white",
         direction === "previous" ? "left-2" : "right-2",
@@ -262,6 +269,8 @@ function PictureNavigationButton({
 
 interface NewsItemPreviewDialogProps {
   item: NewsItem
+  rankingHistory?: RankingHistoryData
+  currentPosition?: number
   open: boolean
   index: number
   onIndexChange: (index: number) => void
@@ -275,6 +284,8 @@ interface NewsItemPreviewDialogProps {
 
 export function NewsItemPreviewDialog({
   item,
+  rankingHistory,
+  currentPosition,
   open,
   index,
   onIndexChange,
@@ -342,6 +353,7 @@ export function NewsItemPreviewDialog({
                 <DialogTitle className="text-lg text-justify">
                   {item.title}
                 </DialogTitle>
+                {currentPosition !== undefined && <RankingHistory history={rankingHistory} currentPosition={currentPosition} />}
                 {hasBody && (
                   <div className="mt-4 text-justify text-[16px] text-foreground/90 [&_a]:underline [&_a]:underline-offset-3 [&_p]:mb-4 [&_p:last-child]:mb-0">
                     {content?.html
@@ -451,7 +463,8 @@ function NewsItemPreviewIframe({ iframe, expanded = false }: { iframe: AdvancedI
       width={width ?? "100%"}
       height={height ?? (useAspectRatio ? undefined : "320")}
       style={iframeStyle}
-      className={cn("w-full", expanded && "max-h-full", className)}
+      className={cn("w-full", expanded ? "max-h-full" : "pointer-events-none", className)}
+      tabIndex={expanded ? undefined : -1}
       loading={loading ?? "lazy"}
       sandbox={sandbox ?? "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"}
       title={title ?? t("newsItemPreviewTitle")}

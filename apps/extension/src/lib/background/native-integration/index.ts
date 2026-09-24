@@ -69,6 +69,10 @@ const workerConnectionControls = {
 }
 
 export const backgroundActionDependencies: BackgroundActionDependencies = {
+  rankingHistory: async (input) => {
+    if (!runtime.enabled || !runtime.capabilities.includes("rankingHistory")) return []
+    return await nativeRpc(await requireNativeConnection()).request("rankingPositionsGet", input)
+  },
   liveCardRouter: {
     load: input => loadRoutedLiveCard(
       input,

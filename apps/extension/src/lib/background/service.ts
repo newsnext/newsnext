@@ -8,6 +8,7 @@ import { createBackgroundDiagnosticsService } from "./diagnostics-service"
 export interface BackgroundService {
   action: BackgroundActionService
   diagnostics: BackgroundDiagnosticsService
+  rankingHistory: BackgroundActionDependencies["rankingHistory"]
 }
 
 export const BACKGROUND_SERVICE_KEY = "newsnext-background-service" as ProxyServiceKey<BackgroundService>
@@ -22,6 +23,7 @@ export function createBackgroundService(
 ): BackgroundService {
   return {
     action: createBackgroundActionService(dependencies),
+    rankingHistory: dependencies.rankingHistory,
     diagnostics: import.meta.env.DEV
       ? createBackgroundDiagnosticsService(dependencies.nativeIntegration)
       : unavailableDiagnosticsService,

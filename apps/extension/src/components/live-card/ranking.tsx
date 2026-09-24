@@ -1,3 +1,4 @@
+import type { RankingHistorySource } from "@/lib/background/ranking-history"
 import type { NewsItem } from "@/typings/source"
 import { VirtualList } from "@newsnext/ui/components/virtual-list"
 import { cn } from "@newsnext/ui/lib/utils"
@@ -8,6 +9,7 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 interface Props {
   items: NewsItem[]
   inlinePresentation?: string[]
+  rankingHistory?: RankingHistorySource
   markScale?: number
   scrollElement: HTMLDivElement | null
 }
@@ -101,7 +103,7 @@ function RankChangeBadge({ diff }: { diff?: number }) {
   )
 }
 
-export function Ranking({ items, inlinePresentation, markScale, scrollElement }: Props) {
+export function Ranking({ items, inlinePresentation, rankingHistory, markScale, scrollElement }: Props) {
   const rankChanges = useRankChanges(items)
 
   return (
@@ -118,6 +120,7 @@ export function Ranking({ items, inlinePresentation, markScale, scrollElement }:
           previewItems={items}
           previewIndex={index}
           previewInlinePresentation={inlinePresentation}
+          rankingHistory={rankingHistory}
           className="relative flex items-center gap-2 rounded-xl transition-colors hover:bg-muted"
         >
           <span className="flex min-h-6 w-6 shrink-0 self-stretch items-center justify-center rounded-full bg-muted text-sm opacity-80">

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { RankingHistoryData, RankingHistorySource } from "@/lib/background/ranking-history"
 import type { NewsItem } from "@/typings/source"
 import {
   Popover,
@@ -7,8 +8,9 @@ import {
 } from "@newsnext/ui/components/popover"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { RelativeTime } from "@/hooks/useRelativeTime"
+import { createBackgroundClient } from "@/lib/background"
 import { NewsItemInline, SemanticImage } from "./news-item-inline"
 import { NewsItemPreview, NewsItemPreviewDialog } from "./news-item-preview"
 
@@ -23,6 +25,7 @@ interface NewsItemLinkProps {
   previewIndex?: number
   previewInlinePresentation?: string[]
   showPreviewTime?: boolean
+  rankingHistory?: RankingHistorySource
 }
 
 export function NewsItemLink({
@@ -36,6 +39,7 @@ export function NewsItemLink({
   previewIndex = 0,
   previewInlinePresentation,
   showPreviewTime = false,
+  rankingHistory,
 }: NewsItemLinkProps): ReactNode {
   const [pictureIndex, setPictureIndex] = useState(0)
   const [popoverOpen, setPopoverOpen] = useState(false)
@@ -49,6 +53,27 @@ export function NewsItemLink({
     ? (activePreviewIndex === previewIndex ? inlineSuffix : undefined)
     : <RelativeTime date={activeTime} />
   const canNavigateItems = previewItems !== undefined && previewItems.length > 1
+  const [history, setHistory] = useState<RankingHistoryData & { url: string }>()
+  const historyUrl = previewDialogOpen ? activeItem.url : popoverOpen ? item.url : undefined
+  const historyCardId = rankingHistory?.cardId
+  const historyVersion = rankingHistory?.sourceVersion
+  const historyParams = rankingHistory?.params
+
+  useEffect(() => {
+    if (!historyUrl || !historyCardId || historyVersion === undefined || !historyParams) return
+    let cancelled = false
+    void createBackgroundClient().rankingHistory({
+      cardId: historyCardId,
+      sourceVersion: historyVersion,
+      params: historyParams,
+      url: historyUrl,
+    }).then((result) => {
+      if (!cancelled) setHistory({ url: historyUrl, positions: result, queriedAt: Date.now() })
+    }).catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [historyUrl, historyCardId, historyVersion, historyParams])
 
   const openPreviewDialog = (): void => {
     setActivePreviewIndex(previewIndex)
@@ -74,6 +99,7 @@ export function NewsItemLink({
             eventDetails.cancel()
             return
           }
+          if (open) setHistory(undefined)
           setPopoverOpen(open)
         }}
       >
@@ -114,6 +140,8 @@ export function NewsItemLink({
         >
           <NewsItemPreview
             item={item}
+            rankingHistory={history?.url === item.url ? history : undefined}
+            currentPosition={previewIndex + 1}
             pictureIndex={pictureIndex}
             onPictureIndexChange={setPictureIndex}
             onOpen={openPreviewDialog}
@@ -122,6 +150,8 @@ export function NewsItemLink({
       </Popover>
       <NewsItemPreviewDialog
         item={activeItem}
+        rankingHistory={history?.url === activeItem.url ? history : undefined}
+        currentPosition={activePreviewIndex + 1}
         open={previewDialogOpen}
         index={pictureIndex}
         onIndexChange={setPictureIndex}

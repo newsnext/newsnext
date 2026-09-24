@@ -1,5 +1,6 @@
 import type { LiveCard } from "../source"
 import type { BackgroundActionContext } from "./background-actions"
+import type { RankingHistoryQuery, RankingPosition } from "./ranking-history"
 import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
 import { readLiveCardSnapshotResponse, writeLiveCardSnapshot } from "../source/source-snapshot"
 import {
@@ -19,6 +20,7 @@ import { createSourceLoaderInvoker } from "./source-loader-invoker"
 
 export interface BackgroundActionDependencies {
   liveCardRouter: BackgroundActionContext["liveCardRouter"]
+  rankingHistory: (input: RankingHistoryQuery) => Promise<RankingPosition[]>
   nativeIntegration: BackgroundActionContext["nativeIntegration"]
   workerManagement: BackgroundActionContext["workerManagement"]
 }

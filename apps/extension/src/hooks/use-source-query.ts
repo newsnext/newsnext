@@ -82,6 +82,7 @@ export function useSourceQuery({
 
   return {
     result: data,
+    historyParams: query.data?.params ?? liveCardSnapshotQuery.data?.params,
     refetch: query.refetch,
     isLoading: (liveCardSnapshotQuery.isLoading || query.isLoading) && snapshotResult === undefined,
     isError: query.isError && !hasData,
