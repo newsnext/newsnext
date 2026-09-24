@@ -1,6 +1,6 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
-import type { ActionOptions, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryLatestQuery, HistorySearchPage, HistorySearchQuery, HistoryTime, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
+import type { ActionOptions, CacheEntry, CacheGetQuery, CachePutQuery, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryLatestQuery, HistorySearchPage, HistorySearchQuery, HistoryTime, JsonValue, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
 import { SOURCE_REQUEST_TIMEOUT_MS } from "@newsnext/shared/constants"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
@@ -99,6 +99,42 @@ export class NewsNextClient {
       method: "liveWidgets.data",
       ...query,
     }, options),
+  }
+
+  /** Durable JSON cache stored by the NewsNext daemon, separate from history. */
+  readonly cache = {
+    getMany: async <T extends JsonValue>(query: CacheGetQuery, options?: CallOptions): Promise<Record<string, CacheEntry<T>>> => {
+      const result = await this.call<{ entries: Record<string, CacheEntry<T>> }>({ method: "cache.getMany", ...query }, options)
+      return result.entries
+    },
+    putMany: (query: CachePutQuery, options?: CallOptions): Promise<{ stored: number }> =>
+      this.call({ method: "cache.putMany", ...query }, options),
+    getOrComputeMany: async <T extends JsonValue>(
+      query: CacheGetQuery & { ttlMs?: number },
+      compute: (missingKeys: string[]) => Promise<Record<string, T>>,
+      options?: CallOptions,
+    ): Promise<Record<string, T>> => {
+      const keys = [...new Set(query.keys)]
+      const cached = await this.cache.getMany<T>({ namespace: query.namespace, keys }, options)
+      const missing = keys.filter(key => !Object.hasOwn(cached, key))
+      const values = Object.create(null) as Record<string, T>
+      for (const key of keys) {
+        if (Object.hasOwn(cached, key)) values[key] = cached[key]!.value
+      }
+      if (missing.length) {
+        const computed = await compute(missing)
+        for (const key of missing) {
+          if (!Object.hasOwn(computed, key) || computed[key] === undefined) throw new Error(`Cache computation omitted key: ${key}`)
+          values[key] = computed[key]!
+        }
+        await this.cache.putMany({
+          namespace: query.namespace,
+          entries: missing.map(key => ({ key, value: values[key]! })),
+          ttlMs: query.ttlMs,
+        }, options)
+      }
+      return values
+    },
   }
 
   readonly history = {

@@ -85,6 +85,27 @@ an explicit input scope; refreshing a LiveWidget does not refresh its Sources.
 `liveWidgets.readSnapshot` returns the latest matching result or `null` without
 running the Widget data pipeline.
 
+## Cache
+
+The daemon stores reusable JSON values in a separate SQLite cache database.
+Entries are scoped by `namespace` and `key`. Omit `ttlMs` to keep an entry until
+it is overwritten; expired entries are omitted by `getMany` and pruned on later
+writes. Widget result snapshots use the same store with a 60-second freshness
+window, while `liveWidgets.readSnapshot` can still read a stale result.
+
+```ts
+const values = await client.cache.getOrComputeMany(
+  { namespace: "widget:example:translations", keys: ["content-hash"], ttlMs: 86_400_000 },
+  async missingKeys => Object.fromEntries(missingKeys.map(key => [key, { title: "Translated" }])),
+)
+const entries = await client.cache.getMany({ namespace: "widget:example:translations", keys: ["content-hash"] })
+return { value: values["content-hash"], expiresAt: entries["content-hash"]?.expiresAt }
+```
+
+`getOrComputeMany` performs a read, computes missing keys, then writes them;
+separate concurrent callers can compute the same cold key. Widget data requests
+for the same resolved scope are coalesced before the script runs.
+
 ## History
 
 Search the latest retained value for each URL without reconstructing observations:

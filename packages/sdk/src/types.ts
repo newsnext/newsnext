@@ -5,6 +5,18 @@ export type { Worker } from "./protocol/Worker.js"
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
 export interface JsonObject { [key: string]: JsonValue }
+export interface CacheEntry<T extends JsonValue = JsonValue> {
+  value: T
+  createdAt: number
+  expiresAt: number | null
+}
+export interface CacheGetQuery { namespace: string, keys: string[] }
+export interface CachePutQuery<T extends JsonValue = JsonValue> {
+  namespace: string
+  entries: { key: string, value: T }[]
+  /** Omit for no expiry. */
+  ttlMs?: number
+}
 export type HistoryTime = number | string | Date
 
 export interface CallOptions {

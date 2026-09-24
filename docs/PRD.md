@@ -66,11 +66,12 @@ schemas, transport details, and command syntax in those references and the
 | Boards, LiveCards, Widget placement/scope, portable Settings | Browser storage; synchronized through the daemon's in-memory Workspace |
 | Source permissions, credentials, device identity | Owning browser only |
 | Current Source snapshots | Owning Worker's replaceable Loader snapshot |
-| History, collection policies, Widget data caches | Daemon-owned local Turso database |
+| History, collection policies, Widget data caches | Daemon-owned local Turso databases |
 | Local Widget manifests and assets | CLI Widget directory |
 
 Development and production default to `~/.config/newsnext.dev/` and
-`~/.config/newsnext/`. Each contains `newsnext.db` and `widgets/`; runtime
+`~/.config/newsnext/`. Each contains `newsnext.history.db`,
+`newsnext.cache.db`, and `widgets/`; runtime
 configuration owns environment selection and explicit overrides. Database access
 is daemon-only and requires no cloud account. Browser Workspace data is not moved
 into the database.
@@ -123,7 +124,7 @@ create Board-owned configuration instead of shared mutable state.
 | DAT-01 | The desktop daemon is the only process that opens the product database | Browser extensions and CLI clients can read and mutate durable state only through validated daemon operations |
 | DAT-02 | Development and production use separate directories | Development operations use `~/.config/newsnext.dev`; production uses `~/.config/newsnext`; an automated test proves the paths remain isolated |
 | DAT-03 | Browser Workspace data is synchronized across supported browsers | Browsers retain snapshot update times; daemon startup selects and broadcasts the newest connected snapshot, and later mutations are revisioned without database persistence |
-| DAT-04 | Database setup is local-first | First launch creates and migrates the local database without a Turso account, remote connection, or network access |
+| DAT-04 | Database setup is local-first | First launch creates the local databases without a Turso account, remote connection, or network access |
 | DAT-05 | Schema initialization is atomic | The daemon creates the complete current schema transactionally before accepting requests and refuses incompatible versions |
 | DAT-06 | Durable daemon mutations are transactional | A failed Widget, observation, or task mutation leaves no partially updated durable state |
 | DAT-07 | Concurrent clients use one ordered writer | Independent bounded-wait reads remain available while the daemon serializes immediate write transactions and returns structured busy errors instead of hanging |
@@ -206,7 +207,7 @@ create Board-owned configuration instead of shared mutable state.
 - Keep Board interaction responsive: bound computation, virtualize expensive
   lists, isolate failures, and avoid hidden subscriptions or duplicate execution.
   See [Performance Guideline](PERFORMANCE_GUIDELINE.md).
-- Initialize/migrate schemas before serving database requests, reject unknown
+- Initialize schemas before serving database requests, reject unknown
   newer schemas, and never acknowledge partial durable writes. Retention and
   cache cleanup remain separate operations.
 - Restrict Widget data/capabilities and require explicit CPU, memory, time,

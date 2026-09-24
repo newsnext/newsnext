@@ -162,6 +162,12 @@ The selected runtime receives a preconfigured `client`, `signal`, `widgetId`,
 `cardIds` for the resolved placement scope, and resolved `params`. Use `client`
 directly for SDK calls; it inherits the current environment and abort signal without
 requiring `@newsnext/sdk` in the Widget directory.
+For reusable results across runs, use `client.cache.getOrComputeMany(
+{ namespace, keys, ttlMs? }, async missingKeys => values)`. It computes only missing
+keys and stores JSON values in the daemon's separate cache database. Omit `ttlMs`
+for entries that remain valid until their key changes. Include source content and
+processing version in the key when changes should invalidate a result. The same
+`client.cache.getMany` and `putMany` calls are available to other SDK clients.
 The client connects directly to the current daemon over authenticated local IPC; it does
 not launch another CLI process. History export uses the same direct transport and remains
 pull-based.
