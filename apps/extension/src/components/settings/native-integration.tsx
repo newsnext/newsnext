@@ -201,7 +201,6 @@ export function NativeIntegrationSettings(): React.JSX.Element {
     <div className="space-y-6">
       <ConfigSection
         title={t("integration")}
-        description={t("nativeIntegrationDescription")}
         surfaceClassName="gap-3 p-4"
       >
         <div className="flex items-center justify-between gap-4">

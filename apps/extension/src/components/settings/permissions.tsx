@@ -153,7 +153,6 @@ export function PermissionsSettings({
     <>
       <ConfigSection
         title={t("siteAccess")}
-        description={t("siteAccessDescription")}
         surfaceClassName="p-0"
       >
         {origins.length === 0

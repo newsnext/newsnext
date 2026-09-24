@@ -50,7 +50,6 @@ export function SourceIconSettings(): React.JSX.Element {
   return (
     <ConfigSection
       title={t("liveCardIcons")}
-      description={t("liveCardIconsDescription")}
       surfaceClassName="gap-4 p-4"
     >
       <ConfigSection

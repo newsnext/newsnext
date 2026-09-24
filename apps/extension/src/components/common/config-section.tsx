@@ -51,7 +51,7 @@ export function ConfigSection(props: ConfigSectionProps): React.JSX.Element {
         variant={variant}
       />
       {description && (
-        <p className="mt-0.5 px-0.5 text-xs leading-5 text-muted-foreground">
+        <p className="mt-0.5 px-2.5 text-xs leading-5 text-muted-foreground">
           {description}
         </p>
       )}
@@ -81,7 +81,7 @@ function SettingsTitle({
       {titleAccessory}
     </span>
   )
-  const className = "block w-full px-0.5 text-sm font-semibold"
+  const className = "block w-full px-2.5 text-sm font-semibold"
 
   if (variant === "field") {
     return <label htmlFor={htmlFor} className={className}>{content}</label>

@@ -100,19 +100,13 @@ function GeneralSettings() {
 
   return (
     <div className="space-y-6">
-      <ConfigSection
-        title={t("language")}
-        description={t("chooseLanguage")}
-      >
+      <ConfigSection title={t("language")}>
         <LanguageSelector value={preference} onValueChange={setPreference} />
       </ConfigSection>
       <ConfigSection title={t("themeMode")}>
         <ThemeModeSelector value={themeMode} onValueChange={setThemeMode} />
       </ConfigSection>
-      <ConfigSection
-        title={t("boardDefault")}
-        description={t("boardDefaultDescription")}
-      >
+      <ConfigSection title={t("boardDefault")}>
         <RadioGroup
           aria-label={t("boardDefault")}
           variant="segmented"
