@@ -11,30 +11,26 @@ import { useI18n } from "@/hooks/use-i18n"
 import { openAppTab } from "@/lib/app-tab"
 import { openSettings } from "@/lib/settings"
 
-interface RadarOverlayHeaderProps {
-  count: number
+interface RadarPopupHeaderProps {
   isScanning: boolean
 }
 
-function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): React.JSX.Element {
+function RadarPopupHeader({ isScanning }: RadarPopupHeaderProps): React.JSX.Element {
   const { t } = useI18n()
   const statusLabel = isScanning
     ? t("radarScanning")
-    : t("radarLiveCards", { count, unit: t(count === 1 ? "liveCard" : "liveCards") })
+    : t("radarTitle")
 
   return (
-    <div className="relative z-20 flex h-10 shrink-0 items-center justify-between gap-3">
-      <div
-        className="flex h-10 items-center gap-2 px-1 text-lg font-bold text-muted-foreground"
-        role="status"
-      >
+    <div className="relative z-20 flex h-8 shrink-0 items-center justify-between gap-2 px-5">
+      <div className="flex min-w-0 items-center gap-2 text-base font-bold text-muted-foreground" role="status">
         <ThemeIcon className="size-5 shrink-0" color="red" />
-        <span>{statusLabel}</span>
+        <span className="truncate">{statusLabel}</span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1">
         <Button
           variant="transparent"
-          size="icon-lg"
+          size="icon-sm"
           onClick={() => void openAppTab()}
           aria-label={t("openNewsNext")}
           title={t("openNewsNext")}
@@ -44,7 +40,7 @@ function RadarOverlayHeader({ count, isScanning }: RadarOverlayHeaderProps): Rea
         </Button>
         <Button
           variant="transparent"
-          size="icon-lg"
+          size="icon-sm"
           onClick={() => void openSettings()}
           aria-label={t("openOptions")}
           title={t("openOptions")}
@@ -66,7 +62,7 @@ export function RadarPopup() {
   }, [])
   const overlayScrollRef = useOverlayScrollbars(handleScrollContainerRef)
   const suggestions = useCurrentTabRadarSuggestions()
-  const suggestionCount = suggestions?.length ?? 0
+  const hasSuggestions = (suggestions?.length ?? 0) > 0
 
   return (
     <ScrollProgressProvider
@@ -75,12 +71,13 @@ export function RadarPopup() {
     >
       <main
         ref={overlayScrollRef}
+        data-expanded={hasSuggestions}
         className={cn(
-          "grid-texture-background relative flex min-h-0 flex-col gap-2 overflow-y-auto bg-background p-3 text-foreground zenith-theme-400",
-          suggestionCount > 0 ? "h-[600px]" : "h-16",
+          "grid-texture-background relative flex min-h-0 flex-col gap-2 overflow-y-auto bg-background p-2 text-foreground zenith-theme-400",
+          hasSuggestions ? "h-full" : "h-16",
         )}
       >
-        <RadarOverlayHeader count={suggestionCount} isScanning={suggestions === null} />
+        <RadarPopupHeader isScanning={suggestions === null} />
         <RadarDeck suggestions={suggestions ?? []} />
       </main>
     </ScrollProgressProvider>

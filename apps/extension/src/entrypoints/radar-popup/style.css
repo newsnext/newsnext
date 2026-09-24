@@ -7,6 +7,10 @@ body,
   overflow: hidden;
 }
 
+#root:has(main[data-expanded="true"]) {
+  height: 600px;
+}
+
 html {
   color-scheme: light dark;
 }

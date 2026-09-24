@@ -35,7 +35,6 @@ export const zhCN = {
   previousImage: "上一张图片",
   previousItem: "上一条",
   previousRadarSuggestion: "上一条 Radar 建议",
-  radarLiveCards: "Radar · {{count}} 个 {{unit}}",
   radarScanning: "Radar · 扫描中…",
   radarSuggestions: "Radar 建议",
   requestUnavailable: "此请求已失效。请重新运行 CLI 命令后再试。",

@@ -370,7 +370,7 @@ function RadarDeckContent({
 
   return (
     <section
-      className={cn("relative", isDialog ? "space-y-2" : "space-y-3")}
+      className="relative space-y-2"
       aria-label={t("radarSuggestions")}
     >
       <div className={cn("flex justify-center", isDialog ? "overflow-visible" : "overflow-hidden")}>
@@ -409,7 +409,7 @@ function RadarDeckContent({
         className={cn(
           "flex items-center gap-3",
           suggestions.length > 1 ? "justify-between" : "justify-end",
-          isDialog && "px-1",
+          isDialog ? "px-1" : "px-5",
         )}
       >
         {suggestions.length > 1 && (
@@ -425,6 +425,9 @@ function RadarDeckContent({
             >
               <PhArrowCircleLeft />
             </Button>
+            <span className="min-w-8 text-center text-xs tabular-nums text-muted-foreground" aria-live="polite">
+              {`${activeIndex + 1}/${suggestions.length}`}
+            </span>
             <Button
               variant="transparent"
               size="icon-fit"

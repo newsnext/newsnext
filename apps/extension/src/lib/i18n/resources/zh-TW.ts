@@ -35,7 +35,6 @@ export const zhTW = {
   previousImage: "上一張圖片",
   previousItem: "上一則",
   previousRadarSuggestion: "上一則 Radar 建議",
-  radarLiveCards: "Radar · {{count}} 個 {{unit}}",
   radarScanning: "Radar · 掃描中…",
   radarSuggestions: "Radar 建議",
   requestUnavailable: "此請求已失效。請重新執行 CLI 命令後再試。",

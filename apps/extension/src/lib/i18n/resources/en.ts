@@ -33,7 +33,6 @@ export const en = {
   previousImage: "Previous image",
   previousItem: "Previous item",
   previousRadarSuggestion: "Previous Radar suggestion",
-  radarLiveCards: "Radar · {{count}} {{unit}}",
   radarScanning: "Radar · Scanning…",
   radarSuggestions: "Radar suggestions",
   requestUnavailable: "This request is no longer available. Rerun the CLI command to try again.",
