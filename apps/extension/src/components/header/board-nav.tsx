@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react"
 import type { BoardDeleteAction, BoardDialogTarget } from "@/components/board-dialog"
 import type { HeaderNotification } from "@/components/header/notification"
-import type { BoardCreateInput } from "@/lib/board"
+import type { BoardCreateInput, BoardLayer } from "@/lib/board"
 import { Button } from "@newsnext/ui/components/button"
 import {
   DropdownMenu,
@@ -16,7 +16,7 @@ import {
 } from "@newsnext/ui/components/pill-group"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useHotkeys } from "@tanstack/react-hotkeys"
-import { useNavigate } from "@tanstack/react-router"
+import { useNavigate, useSearch } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
 import { useEffect, useRef, useState } from "react"
 import { BoardDialog } from "@/components/board-dialog"
@@ -57,6 +57,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   const { t } = useI18n()
   const boards = useAtomValue(boardsAtom)
   const navigate = useNavigate()
+  const { layer } = useSearch({ strict: false })
   const currentBoardId = useAtomValue(currentBoardIdAtom)
   const shortcuts = useAtomValue(shortcutSettingsAtom)
   const addBoard = useSetAtom(createBoardAtom)
@@ -65,6 +66,7 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   const deleteBoard = useSetAtom(deleteBoardAtom)
   const [dialogTarget, setDialogTarget] = useState<BoardDialogTarget | null>(null)
   const [isImporting, setIsImporting] = useState(false)
+  const boardLayersRef = useRef<Record<string, BoardLayer>>({})
   const activeBoardTabRef = useRef<HTMLButtonElement>(null)
   const opmlInputRef = useRef<HTMLInputElement>(null)
 
@@ -77,9 +79,15 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   }, [currentBoardId])
 
   function openBoard(boardId: string): void {
+    if (layer) {
+      boardLayersRef.current[currentBoardId] = layer
+    } else {
+      delete boardLayersRef.current[currentBoardId]
+    }
     void navigate({
       to: "/board/$boardId",
       params: { boardId },
+      search: { layer: boardLayersRef.current[boardId] },
     })
   }
 
