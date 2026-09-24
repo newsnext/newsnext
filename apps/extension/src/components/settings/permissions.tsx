@@ -71,7 +71,7 @@ export function PermissionsSettings({
   onOpenLiveCard: (id: string, boardId: string) => Promise<void> | void
 }) {
   const { t } = useI18n()
-  const [origins, setOrigins] = useState<string[]>([])
+  const [origins, setOrigins] = useState<string[] | null>(null)
   const liveCards = useAtomValue(liveCardsAtom)
   const boards = useAtomValue(boardsAtom)
   const deleteLiveCard = useSetAtom(deleteLiveCardAtom)
@@ -102,7 +102,7 @@ export function PermissionsSettings({
     () => baseCards.map((liveCard, index) => applySourceLoaderMetadata(liveCard, loaderMetadata[index])),
     [baseCards, loaderMetadata],
   )
-  const cardsByOrigin = useMemo(() => new Map(origins.map(origin => [
+  const cardsByOrigin = useMemo(() => new Map((origins ?? []).map(origin => [
     origin,
     getLiveCardsUsingOrigin(origin, sources, liveCards, resolvedCards),
   ])), [sources, liveCards, origins, resolvedCards])
@@ -148,6 +148,8 @@ export function PermissionsSettings({
       await refreshOrigins()
     })
   }, [cardsByOrigin, deleteLiveCard, refreshOrigins, runRevoke, t])
+
+  if (origins === null) return null
 
   return (
     <>
