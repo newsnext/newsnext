@@ -6,6 +6,7 @@ import {
   Dialog,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
+import { PillGroupIndicator, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { overlayScrollbarsRef, useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { useEffect, useRef } from "react"
@@ -62,13 +63,14 @@ export function SettingsModalShell({
           <div ref={overlayScrollbarsRef} className="min-h-0 w-24 shrink-0 overflow-y-auto py-4.5 sm:w-32">
             <TabsList
               aria-label={t("preferences")}
-              variant="sidebar"
+              className="relative mx-1 w-[calc(100%-0.5rem)] items-stretch gap-1 bg-transparent p-1"
             >
+              <PillGroupIndicator orientation="vertical" />
               {SETTINGS_TABS.map(tab => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className="min-w-0 text-xs sm:text-sm"
+                  className={pillGroupItemClassName({ className: "z-10 h-9 rounded-full text-xs data-active:bg-transparent data-active:text-primary-foreground dark:data-active:border-transparent dark:data-active:bg-transparent dark:data-active:text-primary-foreground sm:text-sm" })}
                 >
                   <span className="min-w-0 truncate" title={t(tab.labelKey)}>
                     {t(tab.labelKey)}

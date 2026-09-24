@@ -37,7 +37,9 @@ export function pillGroupItemClassName({
   )
 }
 
-export function PillGroupIndicator(): React.JSX.Element {
+export function PillGroupIndicator({
+  orientation = "horizontal",
+}: { orientation?: "horizontal" | "vertical" } = {}): React.JSX.Element {
   const indicatorRef = useRef<HTMLSpanElement>(null)
 
   useLayoutEffect(() => {
@@ -46,10 +48,15 @@ export function PillGroupIndicator(): React.JSX.Element {
     if (!indicator || !container) return
 
     const update = (): void => {
-      const activeItem = container.querySelector<HTMLElement>("[aria-current=page], [data-checked]")
+      const activeItem = container.querySelector<HTMLElement>("[aria-current=page], [data-checked], [data-active]")
       if (!activeItem) return
-      indicator.style.width = `${activeItem.offsetWidth}px`
-      indicator.style.transform = `translate3d(${activeItem.offsetLeft}px, 0, 0)`
+      if (orientation === "vertical") {
+        indicator.style.height = `${activeItem.offsetHeight}px`
+        indicator.style.transform = `translate3d(0, ${activeItem.offsetTop}px, 0)`
+      } else {
+        indicator.style.width = `${activeItem.offsetWidth}px`
+        indicator.style.transform = `translate3d(${activeItem.offsetLeft}px, 0, 0)`
+      }
       if (!indicator.hasAttribute("data-ready")) {
         void indicator.offsetWidth
         indicator.dataset.ready = ""
@@ -59,7 +66,7 @@ export function PillGroupIndicator(): React.JSX.Element {
     update()
     const mutationObserver = new MutationObserver(update)
     mutationObserver.observe(container, {
-      attributeFilter: ["aria-current", "data-checked"],
+      attributeFilter: ["aria-current", "data-checked", "data-active"],
       attributes: true,
       childList: true,
       subtree: true,
@@ -71,14 +78,19 @@ export function PillGroupIndicator(): React.JSX.Element {
       mutationObserver.disconnect()
       resizeObserver.disconnect()
     }
-  }, [])
+  }, [orientation])
 
   return (
     <span
       ref={indicatorRef}
       aria-hidden
       data-slot="pill-group-indicator"
-      className="pointer-events-none absolute inset-y-1 left-0 rounded-full bg-primary shadow-md will-change-transform data-[ready]:transition-[transform,width] data-[ready]:duration-300 data-[ready]:ease-out motion-reduce:transition-none"
+      className={cn(
+        "pointer-events-none absolute rounded-full bg-primary shadow-md will-change-transform data-[ready]:duration-300 data-[ready]:ease-out motion-reduce:transition-none",
+        orientation === "vertical"
+          ? "inset-x-1 top-0 data-[ready]:transition-[transform,height]"
+          : "inset-y-1 left-0 data-[ready]:transition-[transform,width]",
+      )}
     />
   )
 }
