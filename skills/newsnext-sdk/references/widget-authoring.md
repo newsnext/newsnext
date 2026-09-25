@@ -59,8 +59,7 @@ the Widget ID (for example, `keyword-watch/widget.json` identifies
 ```json
 {
   "title": "Keyword Watch",
-  "preset": "live-card",
-  "query": "feed"
+  "view": { "preset": "live-card", "query": "feed" }
 }
 ```
 
@@ -182,10 +181,11 @@ pipeline. Widgets have no background schedule; `refresh.intervalMs` controls
 visible polling. Unplaced data executes on SDK request. No separate producer or data.json is necessary. Existing
 `file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
 
-`preset: "live-card"` may use optional `presentation: "list" | "ranking"`;
-omit presentation for automatic timeline/list selection. Built-in views need no HTML file. Custom views use `index.html` beside
-`widget.json` and are covered in their own section below. Without `preset`,
-`index.html` selects a custom view; without it the Widget is data-only.
+`view: { preset: "live-card", query: "feed" }` may use optional
+`presentation: "list" | "ranking"` inside `view`; omit it for automatic
+timeline/list selection. Built-in views need no HTML file. Custom views use
+`index.html` beside `widget.json` and are covered in their own section below.
+Without `view`, `index.html` selects a custom view; without it the Widget is data-only.
 Neither `entry` nor `data.entry` is a supported manifest field.
 Preserve original millisecond `publishedAt` values; never substitute fetch time.
 
@@ -253,7 +253,7 @@ metadata independently of its Source parameters.
 
 ### Word cloud Widget
 
-Use `"preset": "word-cloud"` with `"query": "observations"`
+Use `"view": { "preset": "word-cloud", "query": "observations" }`
 for the built-in word cloud. No HTML or chart library import is needed in the
 view. The host owns the card header and visualization.
 
@@ -274,8 +274,7 @@ A minimal matching `widget.json`:
 {
   "title": "Topic cloud",
   "color": "teal",
-  "preset": "word-cloud",
-  "query": "observations"
+  "view": { "preset": "word-cloud", "query": "observations" }
 }
 ```
 
@@ -285,7 +284,7 @@ numeric `value`. View options are `label` and `value` (literal row field names),
 order). Sorting happens before the row limit. Query results may contain at most
 10,000 rows. Empty rows are a normal empty state.
 
-The view and its field mappings belong to `widget.json`. Placement overrides
+The view and its field mappings belong to `widget.json`'s `view` object. Placement overrides
 cover data parameters and display metadata; view settings are not editable per
 placement. Only resolved data parameters and scope affect the daemon's data
 identity.
@@ -373,7 +372,7 @@ the install flow with `widgetId: "board-word-cloud"`.
 A runnable example lives at `references/examples/custom-html-widget/`
 (`widget.json`, `data.mjs`, `index.html`).
 
-A custom view is an `index.html` beside `widget.json`; omit `preset`. The host owns the shell,
+A custom view is an `index.html` beside `widget.json`; omit `view`. The host owns the shell,
 surface, scroll container, and status layer; the document only styles and
 draws its own content. The protocol version is `1`. The view posts
 `{ type: "newsnext.widget.ready", version: 1 }` once its message listener is

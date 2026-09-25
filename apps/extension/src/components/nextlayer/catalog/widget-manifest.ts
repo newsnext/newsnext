@@ -4,7 +4,7 @@ import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import { isThemeColor, MIN_WIDGET_WIDTH, parseWidgetWordCloudView } from "@newsnext/sdk/models"
 import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
 
-/** Widget view selector. The daemon selects custom views when `index.html` exists. */
+/** `widget.json.view` selector. The daemon selects a custom view when `index.html` exists. */
 export type WidgetUi
   = | WidgetWordCloudView
     /** Built-in LiveCard UI; `query` names the manifest query holding NewsItems. Omit `presentation` for auto timeline/list. */
