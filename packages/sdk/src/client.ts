@@ -1,6 +1,6 @@
 import type { AllActionContract } from "./action/index.js"
 import type { ActionDescriptor, ActionInput, ActionName, ActionResult, FetchInput, FetchResult, RunInput, RunResult } from "./actions.js"
-import type { ActionOptions, CacheEntry, CacheGetQuery, CachePutQuery, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryLatestQuery, HistorySearchPage, HistorySearchQuery, HistoryTime, JsonValue, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, Status } from "./types.js"
+import type { ActionOptions, CacheEntry, CacheGetQuery, CachePutQuery, CallOptions, CompareQuery, Comparison, Dataset, DatasetPage, DatasetQuery, ExportQuery, HistoryLatestQuery, HistorySearchPage, HistorySearchQuery, HistoryTime, JsonObject, JsonValue, LiveCardDataQuery, LiveCardDataResult, LiveWidgetDataQuery, LiveWidgetDataResult, LiveWidgetSnapshotResult, Observation, ObservationPage, ObservationQuery, ObservationResult, PluginActionDescriptor, PluginDescriptor, StandaloneActionDescriptor, Status } from "./types.js"
 import { SOURCE_REQUEST_TIMEOUT_MS } from "@newsnext/shared/constants"
 import { createActionsClient } from "./action/client.js"
 import { DEFAULT_TIMEOUT_MS, historyTime, NewsNextError, timeRange } from "./protocol.js"
@@ -38,6 +38,24 @@ export class NewsNextClient {
 
   status(options?: CallOptions): Promise<Status> {
     return this.call({ method: "status" }, options)
+  }
+
+  /** Packages and Actions installed under the local plugins directory. */
+  readonly plugins = {
+    list: (options?: CallOptions): Promise<PluginDescriptor[]> =>
+      this.call({ method: "plugins.list" }, options),
+    actions: (options?: CallOptions): Promise<PluginActionDescriptor[]> =>
+      this.call({ method: "plugins.actions" }, options),
+    execute: <T extends JsonValue = JsonValue>(name: string, input: JsonObject = {}, options?: CallOptions): Promise<T> =>
+      this.call({ method: "plugins.execute", name, input }, options),
+  }
+
+  /** Actions installed independently under the local actions directory. */
+  readonly localActions = {
+    list: (options?: CallOptions): Promise<StandaloneActionDescriptor[]> =>
+      this.call({ method: "localActions.list" }, options),
+    execute: <T extends JsonValue = JsonValue>(name: string, input: JsonObject = {}, options?: CallOptions): Promise<T> =>
+      this.call({ method: "localActions.execute", name, input }, options),
   }
 
   private executeAction<T>(name: string, input: unknown, options: ActionOptions): Promise<T> {

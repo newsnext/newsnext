@@ -42,6 +42,87 @@ processing a yielded observation is excluded. Exports have no fixed total timeou
 use AbortSignal for a total deadline. Killing a request does not undo an Action
 already sent to the Worker.
 
+## Local capabilities and plugins
+
+Each capability can be installed without a plugin. Place Actions in
+`~/.config/newsnext/actions/<action-id>/`, Widgets in
+`~/.config/newsnext/widgets/<widget-id>/`, and Source provider JSON files in
+`~/.config/newsnext/sources/<provider-id>.json`. The development CLI uses
+`newsnext.dev` instead. `NEWSNEXT_ACTIONS_PATH` and `NEWSNEXT_SOURCES_PATH`
+override their respective directories.
+
+An independent Action directory contains `action.json` and `index.mjs` in the
+same format used inside a plugin. Run it by ID through the SDK, or by path:
+
+```ts
+const actions = await client.localActions.list()
+const result = await client.localActions.execute("greet", { name: "Ada" })
+```
+
+```sh
+newsnext action list
+newsnext action run ./actions/greet --input '{"name":"Ada"}'
+```
+
+### Plugin bundles
+
+Place each plugin in `~/.config/newsnext/plugins/<plugin-id>/` (or
+`~/.config/newsnext.dev/plugins/<plugin-id>/` with the development CLI).
+`NEWSNEXT_PLUGINS_PATH` overrides the plugins directory. A plugin needs a
+`plugin.json` with package metadata:
+
+```json
+{
+  "name": "Example"
+}
+```
+
+The loader discovers capabilities by convention. A plugin can contain any
+nonempty combination of `actions/<action-name>/`, `widgets/<widget-id>/`, and
+`sources/<provider-id>.json`. Adding one does not require editing `plugin.json`.
+Each Action owns its metadata and module. For `greet`, add
+`actions/greet/action.json`:
+
+```json
+{
+  "description": "Return a greeting",
+  "inputSchema": { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"], "additionalProperties": false },
+  "outputSchema": { "type": "object", "properties": { "message": { "type": "string" } }, "required": ["message"], "additionalProperties": false }
+}
+```
+
+Widget files use their existing format under `widgets/<widget-id>/`; Source
+provider JSON files go under `sources/<provider-id>.json`. A plugin bundles the
+same formats used by standalone capabilities. Standalone Widgets and Sources
+take precedence when IDs collide.
+
+`actions/greet/index.mjs`:
+
+```js
+export default async function greet({ name }, { client, signal }) {
+  return { message: `Hello, ${name}` }
+}
+```
+
+The local daemon supplies the SDK client to Actions that use it. Input and
+output are checked against the Action's own schemas.
+
+The SDK lists and invokes plugins through the local daemon:
+
+```ts
+const packages = await client.plugins.list()
+const actions = await client.plugins.actions()
+const result = await client.plugins.execute("example.greet", { name: "Ada" })
+```
+
+Plugin IDs and Action names use letters, digits, underscores, and hyphens.
+Action names are qualified as `<plugin-id>.<action-name>`. Inputs and outputs
+must match their JSON schemas. The plugin module is trusted local code; it
+receives the SDK client and an AbortSignal as its second argument. The manifest
+and module are loaded on each call, so edits to `plugin.json` or Action modules
+take effect without restarting the daemon. Invalid plugins are omitted from
+`plugins.list()` and `plugins.actions()`; execution errors are returned with code `PLUGIN_FAILED`.
+
 ## Work efficiently
 
 - Batch independent awaits in one `eval` and return IDs needed by later calls.

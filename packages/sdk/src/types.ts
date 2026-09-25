@@ -5,6 +5,26 @@ export type { Worker } from "./protocol/Worker.js"
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
 export interface JsonObject { [key: string]: JsonValue }
+/** A locally installed plugin Action, loaded from the NewsNext config directory. */
+export interface PluginActionDescriptor {
+  name: string
+  description: string
+  kind: "command"
+  pluginId: string
+  pluginName: string
+  inputSchema: JsonObject
+  outputSchema: JsonObject
+}
+/** An Action installed directly under the local actions directory. */
+export type StandaloneActionDescriptor = Omit<PluginActionDescriptor, "pluginId" | "pluginName">
+/** A local package can provide any nonempty combination of these capabilities. */
+export interface PluginDescriptor {
+  id: string
+  name: string
+  actions: string[]
+  widgets: string[]
+  sources: string[]
+}
 export interface CacheEntry<T extends JsonValue = JsonValue> {
   value: T
   createdAt: number

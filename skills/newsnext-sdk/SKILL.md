@@ -1,6 +1,6 @@
 ---
 name: newsnext-sdk
-description: Use the NewsNext CLI and TypeScript SDK to query history, manage Boards and LiveCards, invoke Actions, and create or test Sources, including discovering a Source from a website URL. Apply to NewsNext operations and Widget SDK usage.
+description: Use the NewsNext CLI and TypeScript SDK to query history, manage Boards and LiveCards, invoke Actions and local plugins, and create or test Sources, including discovering a Source from a website URL. Apply to NewsNext operations and Widget SDK usage.
 ---
 
 # NewsNext SDK
@@ -18,6 +18,9 @@ the final value for JSON output, and use `await import(...)` for modules. Read
 Call `client.actions.<domain>.<method>` using the signatures in the generated
 [Actions catalog](references/actions.md). Use `history.export()` for complete
 observations.
+Use `client.plugins.list()` to discover locally installed packages and
+`client.plugins.actions()` / `client.plugins.execute()` for their Actions; see
+[SDK reference](references/sdk.md#local-capabilities-and-plugins).
 
 When a user identifies a Board or LiveCard by name, resolve it to a unique ID
 before mutating it. Apply the requested change through its Action: mutations
