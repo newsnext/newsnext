@@ -22,7 +22,7 @@ the default return format is compact JSON.
 Install the CLI globally, then check the daemon connection:
 
 ```sh
-npm install -g @newsnext/cli
+npm install -g newsnext
 newsnext status
 ```
 
