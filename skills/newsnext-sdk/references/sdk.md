@@ -52,7 +52,9 @@ Each capability can be installed without a plugin. Place Actions in
 override their respective directories.
 
 An independent Action directory contains `action.json` and `index.mjs` in the
-same format used inside a plugin. Run it by ID through the SDK, or by path:
+same format used inside a plugin. Use the generated
+[Action manifest schema](schemas/action.json) for its accepted fields. Run it
+by ID through the SDK, or by path:
 
 ```ts
 const actions = await client.localActions.list()
@@ -69,7 +71,7 @@ newsnext action run ./actions/greet --input '{"name":"Ada"}'
 Place each plugin in `~/.config/newsnext/plugins/<plugin-id>/` (or
 `~/.config/newsnext.dev/plugins/<plugin-id>/` with the development CLI).
 `NEWSNEXT_PLUGINS_PATH` overrides the plugins directory. A plugin needs a
-`plugin.json` with package metadata:
+`plugin.json` matching the generated [Plugin manifest schema](schemas/plugin.json):
 
 ```json
 {

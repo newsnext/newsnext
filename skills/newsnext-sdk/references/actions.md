@@ -79,8 +79,8 @@ documented in sdk.md.
 *mutation* — Replace all durable Application data after validating its integrity.
 
 ```ts
-await client.actions.application.replace(input: { boards: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: …[] }; nextLayer: { liveWidgets: …[] } }[]; version: number })
-// => { boards: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: …[] }; nextLayer: { liveWidgets: …[] } }[]; version: number }
+await client.actions.application.replace(input: { boardOrder: string[]; boards: Record<string, unknown>; liveCards: Record<string, unknown>; liveWidgets: Record<string, unknown>; version: number })
+// => { boardOrder: string[]; boards: Record<string, unknown>; liveCards: Record<string, unknown>; liveWidgets: Record<string, unknown>; version: number }
 ```
 
 ### board.create
@@ -89,7 +89,7 @@ await client.actions.application.replace(input: { boards: { color: "red" | "pink
 
 ```ts
 await client.actions.board.create(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; layer?: "now" | "next"; liveCards?: { patch: { metadata?: Record<string, …>; params?: Record<string, …> }; sourceId: string }[]; name: string })
-// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }; boardId: string }
+// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; provider: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }; boardId: string }
 ```
 
 ### board.delete
@@ -107,7 +107,7 @@ await client.actions.board.delete(input: { boardId: string; deleteLiveCards: boo
 
 ```ts
 await client.actions.board.get(input: { boardId: string })
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; provider: { category?: …; color: …; icon?: …; title: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -118,7 +118,7 @@ await client.actions.board.get(input: { boardId: string })
 
 ```ts
 await client.actions.board.list()
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }[]
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; provider: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }[]
 ```
 
 ### board.listLiveCards
@@ -127,7 +127,7 @@ await client.actions.board.list()
 
 ```ts
 await client.actions.board.listLiveCards(input: { boardId: string })
-// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }[]
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string }[]
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -138,7 +138,7 @@ await client.actions.board.listLiveCards(input: { boardId: string })
 
 ```ts
 await client.actions.board.listLiveWidgets(input: { boardId: string })
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string }[]
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string }[]
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -149,7 +149,7 @@ await client.actions.board.listLiveWidgets(input: { boardId: string })
 
 ```ts
 await client.actions.board.update(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; layer?: "now" | "next"; boardId: string; name?: string })
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; provider: { category?: …; color: …; icon?: …; title: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -178,7 +178,7 @@ await client.actions.developer.runSource(input: { debug: boolean; params?: Recor
 
 ```ts
 await client.actions.liveCard.configure(input: { cardId: string; patch: { metadata?: Record<string, unknown>; params?: Record<string, unknown> } })
-// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string }
 ```
 
 - `input.cardId`: LiveCard identifier.
@@ -189,7 +189,7 @@ await client.actions.liveCard.configure(input: { cardId: string; patch: { metada
 
 ```ts
 await client.actions.liveCard.create(input: { boardId: string; patch: { metadata?: Record<string, unknown>; params?: Record<string, unknown> }; sourceId: string })
-// => { cardId: string; liveCard: { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string } }
+// => { cardId: string; liveCard: { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string } }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -212,7 +212,7 @@ await client.actions.liveCard.delete(input: { cardId: string })
 
 ```ts
 await client.actions.liveCard.get(input: { cardId: string })
-// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string }
 ```
 
 - `input.cardId`: LiveCard identifier.
@@ -223,7 +223,7 @@ await client.actions.liveCard.get(input: { cardId: string })
 
 ```ts
 await client.actions.liveCard.list()
-// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }[]
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string }[]
 ```
 
 ### liveCard.load
@@ -241,7 +241,7 @@ await client.actions.liveCard.load(input: { cardId: string })
 
 ```ts
 await client.actions.liveCard.move(input: { boardId: string; cardId: string })
-// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -262,7 +262,7 @@ await client.actions.liveCard.readSnapshot(input: { cardId: string })
 
 ```ts
 await client.actions.liveCard.resetMetadata(input: { cardId: string })
-// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string }
 ```
 
 - `input.cardId`: LiveCard identifier.
@@ -273,7 +273,7 @@ await client.actions.liveCard.resetMetadata(input: { cardId: string })
 
 ```ts
 await client.actions.liveCard.resetParams(input: { cardId: string })
-// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; sourceId: string; workerId: string }
+// => { cardId: string; createdAt: number; patch: { metadata?: { badge?: string; desc?: string; home?: string; title?: string; type?: "list" | "ranking" }; params?: Record<string, unknown> }; provider: { category?: "social" | "forum" | "news" | "finance" | "developer" | "entertainment"; color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; icon?: string; title: string }; sourceId: string; workerId: string }
 ```
 
 - `input.cardId`: LiveCard identifier.
@@ -284,7 +284,7 @@ await client.actions.liveCard.resetParams(input: { cardId: string })
 
 ```ts
 await client.actions.liveWidget.configure(input: { liveWidgetId: string; patch: { params?: unknown | Record<string, unknown>; metadata?: unknown | { title?: string; badge?: string; desc?: string; home?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate" }; dataScope?: unknown | { type: … } | { cardIds: …; type: … } } })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
 
 - `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
@@ -294,8 +294,8 @@ await client.actions.liveWidget.configure(input: { liveWidgetId: string; patch: 
 *mutation* — Create a configured LiveWidget in one Board's Next Layer. The placement prepends before existing Widgets; omitted size fields default to 2. Returns the created LiveWidget so callers can verify without a follow-up query.
 
 ```ts
-await client.actions.liveWidget.create(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; size: { height?: integer ≥ 1 ≤ 100; width?: integer ≥ 1 ≤ 12 }; widgetId: string })
-// => { liveWidget: { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }; liveWidgetId: string }
+await client.actions.liveWidget.create(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; size: { height?: integer ≥ 1 ≤ 100; width?: integer ≥ 2 ≤ 12 }; widgetId: string })
+// => { liveWidget: { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }; liveWidgetId: string }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -318,7 +318,7 @@ await client.actions.liveWidget.delete(input: { liveWidgetId: string })
 
 ```ts
 await client.actions.liveWidget.get(input: { liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
 
 - `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
@@ -329,7 +329,7 @@ await client.actions.liveWidget.get(input: { liveWidgetId: string })
 
 ```ts
 await client.actions.liveWidget.list()
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
 ```
 
 ### liveWidget.move
@@ -338,7 +338,7 @@ await client.actions.liveWidget.list()
 
 ```ts
 await client.actions.liveWidget.move(input: { boardId: string; liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -350,7 +350,7 @@ await client.actions.liveWidget.move(input: { boardId: string; liveWidgetId: str
 
 ```ts
 await client.actions.liveWidget.resetMetadata(input: { liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
 
 - `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
@@ -361,7 +361,7 @@ await client.actions.liveWidget.resetMetadata(input: { liveWidgetId: string })
 
 ```ts
 await client.actions.liveWidget.resetParams(input: { liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
 ```
 
 - `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
@@ -371,8 +371,8 @@ await client.actions.liveWidget.resetParams(input: { liveWidgetId: string })
 *mutation* — Persist Widget sizes and order for a Board's Next Layer in display order. Returns the placements in display order.
 
 ```ts
-await client.actions.liveWidget.setLayouts(input: { boardId: string; liveWidgets: { liveWidgetId: string; width: integer ≥ 1 ≤ 12; height: integer ≥ 1 ≤ 100 }[] })
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
+await client.actions.liveWidget.setLayouts(input: { boardId: string; liveWidgets: { liveWidgetId: string; width: integer ≥ 2 ≤ 12; height: integer ≥ 1 ≤ 100 }[] })
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -401,7 +401,7 @@ await client.actions.nativeIntegration.getStatus()
 
 ```ts
 await client.actions.nativeIntegration.getWidgets()
-// => { id: string; title: string; color: string; width: integer ≥ 1; height: integer ≥ 1; minWidth: integer ≥ 1; minHeight: integer ≥ 1; url?: string; view: unknown; params: unknown; dataRevision: string; dataFiles: string[]; viewRevision?: string; hasData?: boolean; refreshIntervalMs: number }[]
+// => { id: string; title: string; color: string; width: integer ≥ 1; height: integer ≥ 1; minWidth: integer ≥ 1; minHeight: integer ≥ 1; url?: string; view?: unknown; params: unknown; dataRevision: string; dataFiles: string[]; viewRevision: string; hasData: boolean; refreshIntervalMs: number }[]
 ```
 
 ### nativeIntegration.regenerateIdentity
@@ -464,7 +464,7 @@ await client.actions.nativeIntegration.takeOver(input: { cardIds: string[]; work
 
 ```ts
 await client.actions.nextLayer.setManualOrder(input: { boardId: string; widgetIds: string[] })
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 1 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.

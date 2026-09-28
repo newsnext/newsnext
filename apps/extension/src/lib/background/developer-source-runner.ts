@@ -7,6 +7,7 @@ import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   flattenProviderConfig,
   resolveSourceRegistry,
+  validateJsonSourceManifest,
 } from "@newsnext/source-kit/registry"
 import { normalizeSourceParams, parseSourceId, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { toLoadedSourceDescriptor, toSourceLoadResult } from "../source/load-result"
@@ -117,6 +118,7 @@ export async function runDeveloperSource(
   assertIdSegment(input.providerId, "providerId")
   assertIdSegment(input.sourceId, "sourceId")
 
+  validateJsonSourceManifest(input.provider, `Source provider "${input.providerId}"`)
   const registry = flattenProviderConfig(
     input.providerId,
     input.provider as ProviderConfig,

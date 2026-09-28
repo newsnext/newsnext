@@ -1,7 +1,7 @@
 # Widget authoring
 
 Author Widgets with `newsnext widget create`, validate them with
-`newsnext widget validate`, and install them through `newsnext eval`. This reference covers the manifest, views, data producers, parameters, and validation without additional files.
+`newsnext widget validate`, and install them through `newsnext eval`. This reference covers the manifest, views, data producers, parameters, and validation without additional files. Read the authoritative [Widget manifest schema](schemas/widget.json) and [parameter schema](schemas/params.json) for accepted JSON fields and constraints.
 
 ## Creating a Widget
 
@@ -226,9 +226,8 @@ choose SDK query arguments. The shared settings editor validates the Source
 schema's constraints. The daemon checks JSON types, bounds, and option membership.
 
 
-Widget layout dimensions use half-LiveCard units. Widths range from `1` (half a
-LiveCard) to `4` (two LiveCards), retaining half-card resize increments.
-Height may still be `1`.
+Widget layout dimensions use half-LiveCard units. Widths range from `2` to `12`,
+retaining half-card resize increments. Heights range from `1` to `100`.
 
 ### Widget display metadata
 

@@ -6,6 +6,7 @@ import type {
 } from "../types"
 
 import { SourceParamValueError } from "../types"
+import { assertSourceParamDefinitionsShape } from "./param-schema"
 import { compileSourceRegex, validateSourceRegexInput } from "./regex"
 
 export type SourceParamValidationResult<TValue>
@@ -192,126 +193,33 @@ export function validateSourceParamDefinitions(
   location: string,
 ): void {
   if (params === undefined) return
-  if (!isRecord(params)) {
-    throw new TypeError(`${location} must be a parameter record`)
-  }
+  assertSourceParamDefinitionsShape(params, location)
 
-  for (const [key, value] of Object.entries(params)) {
+  for (const [key, value] of Object.entries(params as SourceParamSchemaMap)) {
     const paramLocation = `${location}.${key}`
-    if (!key || !isRecord(value) || typeof value.type !== "string" || typeof value.title !== "string") {
-      throw new TypeError(`${paramLocation} must be a parameter definition`)
+    if (value.type === "number" && value.min !== undefined && value.max !== undefined && value.min > value.max) {
+      throw new TypeError(`${paramLocation}.min must not exceed max`)
     }
-    if (!value.title.trim()) {
-      throw new TypeError(`${paramLocation}.title must not be empty`)
+    if (value.type === "select" || value.type === "multiselect") {
+      const optionValues = value.values.map(option => option.value)
+      if (new Set(optionValues).size !== optionValues.length) {
+        throw new TypeError(`${paramLocation}.values must contain unique values`)
+      }
     }
-    if (value.description !== undefined && typeof value.description !== "string") {
-      throw new TypeError(`${paramLocation}.description must be a string`)
+    if (value.validate && "regex" in value.validate) {
+      try {
+        compileSourceRegex(value.validate.regex)
+      } catch (error) {
+        throw new TypeError(`${paramLocation}.validate.regex is invalid`, { cause: error })
+      }
     }
-    if (value.icon !== undefined && typeof value.icon !== "string") {
-      throw new TypeError(`${paramLocation}.icon must be a string`)
-    }
-    if (value.required !== undefined && typeof value.required !== "boolean") {
-      throw new TypeError(`${paramLocation}.required must be a boolean`)
-    }
-    validateSourceParamRule(value.validate, `${paramLocation}.validate`)
-    validateSourceParamDefinitionShape(value, paramLocation)
 
     try {
-      parseSourceParamValue(value as unknown as SourceParamSchema, undefined)
+      parseSourceParamValue(value, undefined)
     } catch (error) {
       throw new TypeError(`${paramLocation}.default is invalid`, { cause: error })
     }
   }
-}
-
-function validateSourceParamDefinitionShape(
-  param: Record<string, unknown>,
-  location: string,
-): void {
-  switch (param.type) {
-    case "text":
-    case "url":
-      if (typeof param.default !== "string") {
-        throw new TypeError(`${location}.default must be a string`)
-      }
-      return
-    case "number":
-      if (!Number.isFinite(param.default)) {
-        throw new TypeError(`${location}.default must be a finite number`)
-      }
-      if (param.min !== undefined && !Number.isFinite(param.min)) {
-        throw new TypeError(`${location}.min must be a finite number`)
-      }
-      if (param.max !== undefined && !Number.isFinite(param.max)) {
-        throw new TypeError(`${location}.max must be a finite number`)
-      }
-      if (typeof param.min === "number" && typeof param.max === "number" && param.min > param.max) {
-        throw new TypeError(`${location}.min must not exceed max`)
-      }
-      return
-    case "switch":
-      if (typeof param.default !== "boolean") {
-        throw new TypeError(`${location}.default must be a boolean`)
-      }
-      return
-    case "select":
-      validateSourceParamOptions(param.values, `${location}.values`)
-      if (typeof param.default !== "string") {
-        throw new TypeError(`${location}.default must be a string`)
-      }
-      return
-    case "multiselect":
-      validateSourceParamOptions(param.values, `${location}.values`)
-      if (!Array.isArray(param.default) || param.default.some(value => typeof value !== "string")) {
-        throw new TypeError(`${location}.default must be a string array`)
-      }
-      return
-    default:
-      throw new TypeError(`${location}.type is invalid`)
-  }
-}
-
-function validateSourceParamOptions(value: unknown, location: string): void {
-  if (
-    !Array.isArray(value)
-    || value.length === 0
-    || value.some(option => (
-      !isRecord(option)
-      || typeof option.label !== "string"
-      || typeof option.value !== "string"
-    ))
-  ) {
-    throw new TypeError(`${location} must be a non-empty option array`)
-  }
-  const optionValues = value.map(option => (option as { value: string }).value)
-  if (new Set(optionValues).size !== optionValues.length) {
-    throw new TypeError(`${location} must contain unique values`)
-  }
-}
-
-function validateSourceParamRule(value: unknown, location: string): void {
-  if (value === undefined) return
-  if (
-    !isRecord(value)
-    || Object.keys(value).some(key => key !== "format" && key !== "regex")
-    || Number("format" in value) + Number("regex" in value) !== 1
-  ) {
-    throw new TypeError(`${location} must contain exactly one validation rule`)
-  }
-  if ("format" in value && value.format === "digits") return
-  if ("regex" in value && typeof value.regex === "string") {
-    try {
-      compileSourceRegex(value.regex)
-      return
-    } catch (error) {
-      throw new TypeError(`${location}.regex is invalid`, { cause: error })
-    }
-  }
-  throw new TypeError(`${location} is invalid`)
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value)
 }
 
 export function parseSourceParams<TParams extends SourceParamSchemaMap>(

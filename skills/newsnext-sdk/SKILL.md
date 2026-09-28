@@ -1,6 +1,6 @@
 ---
 name: newsnext-sdk
-description: Use the NewsNext CLI and TypeScript SDK to query history, manage Boards and LiveCards, invoke Actions and local plugins, and create or test Sources, including discovering a Source from a website URL. Apply to NewsNext operations and Widget SDK usage.
+description: Use the NewsNext CLI and TypeScript SDK to query history, manage Boards and LiveCards, invoke or author Actions and local plugins, and create, validate, or test Sources and Widgets, including discovering a Source from a website URL.
 ---
 
 # NewsNext SDK
@@ -20,7 +20,9 @@ Call `client.actions.<domain>.<method>` using the signatures in the generated
 observations.
 Use `client.plugins.list()` to discover locally installed packages and
 `client.plugins.actions()` / `client.plugins.execute()` for their Actions; see
-[SDK reference](references/sdk.md#local-capabilities-and-plugins).
+[SDK reference](references/sdk.md#local-capabilities-and-plugins). When authoring
+portable packages, read the generated [Plugin](references/schemas/plugin.json)
+and [Action](references/schemas/action.json) schemas.
 
 When a user identifies a Board or LiveCard by name, resolve it to a unique ID
 before mutating it. Apply the requested change through its Action: mutations
@@ -29,7 +31,9 @@ requested fields.
 
 When authoring a Widget, follow the template and preset contracts in
 [references/widget-authoring.md](references/widget-authoring.md). Validate with
-`newsnext widget validate --run <widgetId>` before installing.
+`newsnext widget validate --run <widgetId>` before installing. Read the generated
+[Widget](references/schemas/widget.json) and
+[parameter](references/schemas/params.json) schemas for manifest fields.
 
 Installing a Widget mutates a Board. If the user did not name a target Board,
 list the Boards and ask which one to install into.
@@ -37,4 +41,6 @@ Resolve the chosen Board to a unique ID, install, then assert on the returned
 placement to verify the result.
 
 Read [references/source-authoring.md](references/source-authoring.md) for Source
-discovery, implementation, and verification.
+discovery, implementation, and verification. Read the generated
+[Source](references/schemas/source.json) and
+[parameter](references/schemas/params.json) schemas for manifest fields.

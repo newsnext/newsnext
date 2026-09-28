@@ -5,6 +5,7 @@ import { resolveSources } from "@newsnext/registry/sources"
 import {
   flattenProviderConfig,
   resolveSourceRegistry,
+  validateJsonSourceManifest,
 } from "@newsnext/source-kit/registry"
 import { configureExternalSourcesLoader } from "@newsnext/source-kit/runtime"
 import { syncConfiguredSourceRequestRules } from "./source-request-rules"
@@ -20,6 +21,7 @@ function resolveLocalSources(): Record<string, RuntimeSource> {
   for (const [providerId, provider] of Object.entries(localProviders)) {
     let flattened
     try {
+      validateJsonSourceManifest(provider, `Source provider "${providerId}"`)
       flattened = flattenProviderConfig(providerId, provider as ProviderConfig)
     } catch (error) {
       console.warn(`Skipping invalid local Source provider "${providerId}"`, error)

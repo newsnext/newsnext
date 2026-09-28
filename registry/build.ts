@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url"
 import {
   flattenProviderConfig,
   resolveSourceRegistry,
+  validateJsonSourceManifest,
 } from "@newsnext/source-kit/registry"
 
 const rootDir = dirname(fileURLToPath(import.meta.url))
@@ -123,8 +124,9 @@ async function generate(): Promise<void> {
     if (typescriptProviderIds.has(providerId)) {
       throw new Error(`Provider "${providerId}" cannot mix JSON and TypeScript Sources`)
     }
-    const provider = await Bun.file(join(rootDir, file)).json() as ProviderConfig
-    for (const [id, source] of Object.entries(flattenProviderConfig(providerId, provider))) {
+    const provider: unknown = await Bun.file(join(rootDir, file)).json()
+    validateJsonSourceManifest(provider, file)
+    for (const [id, source] of Object.entries(flattenProviderConfig(providerId, provider as ProviderConfig))) {
       addSource(id, source)
     }
   }

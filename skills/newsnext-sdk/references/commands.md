@@ -13,6 +13,9 @@ Use `newsnext <command> --help` for flags and arguments.
 - `widget list`: list installed Widgets.
 - `widget validate`: validate Widget manifests, optionally executing the data
   pipeline.
+- `action list`: list independently installed Actions.
+- `action run`: validate and execute a local directory containing `action.json`
+  and `index.mjs`.
 - `eval`: run an async JavaScript function body with a preconfigured NewsNext
   `client` variable. Its returned value is printed as JSON.
 - `install-native-host`: register the executable as a Native Messaging host.

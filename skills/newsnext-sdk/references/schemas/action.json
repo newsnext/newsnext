@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Generated from @newsnext/sdk TypeBox definitions; do not edit directly.",
+  "type": "object",
+  "required": [
+    "description",
+    "inputSchema",
+    "outputSchema"
+  ],
+  "properties": {
+    "description": {
+      "type": "string",
+      "pattern": "\\S"
+    },
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {},
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}

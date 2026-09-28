@@ -11,6 +11,7 @@
       "default": "./src/index.ts"
     },
     "./models": "./src/models/index.ts",
+    "./schemas": "./src/schemas/index.ts",
     "./actions": "./src/action/index.ts",
     "./extension": "./src/extension.ts",
     "./widget": "./src/widget.ts",
@@ -23,7 +24,9 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "tsdown && bun scripts/generate-actions-reference.ts && bun scripts/vendor-sdk-bundle.ts",
+    "build": "bun scripts/generate-json-schemas.ts --check && tsdown && bun scripts/generate-actions-reference.ts && bun scripts/vendor-sdk-bundle.ts",
+    "schemas:generate": "bun scripts/generate-json-schemas.ts",
+    "schemas:check": "bun scripts/generate-json-schemas.ts --check",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

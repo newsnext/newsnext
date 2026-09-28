@@ -4,6 +4,7 @@ export type {
   SourceConfig,
   SourceConfigDefaults,
 } from "../core/resolver"
+export { validateJsonSourceManifest } from "./json-manifest"
 export {
   mergeSourceRegistries,
   parseSourceRegistry,

@@ -1,0 +1,748 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "Generated from @newsnext/sdk TypeBox definitions; do not edit directly.",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "color": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "red"
+        },
+        {
+          "type": "string",
+          "const": "pink"
+        },
+        {
+          "type": "string",
+          "const": "fuchsia"
+        },
+        {
+          "type": "string",
+          "const": "purple"
+        },
+        {
+          "type": "string",
+          "const": "indigo"
+        },
+        {
+          "type": "string",
+          "const": "blue"
+        },
+        {
+          "type": "string",
+          "const": "cyan"
+        },
+        {
+          "type": "string",
+          "const": "teal"
+        },
+        {
+          "type": "string",
+          "const": "green"
+        },
+        {
+          "type": "string",
+          "const": "amber"
+        },
+        {
+          "type": "string",
+          "const": "orange"
+        },
+        {
+          "type": "string",
+          "const": "slate"
+        }
+      ]
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 12
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "params": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9_-]+$": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "title",
+                "type",
+                "default"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "validate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "format"
+                      ],
+                      "properties": {
+                        "format": {
+                          "type": "string",
+                          "const": "digits"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "regex"
+                      ],
+                      "properties": {
+                        "regex": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "const": "text"
+                },
+                "default": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "title",
+                "type",
+                "default"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "validate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "format"
+                      ],
+                      "properties": {
+                        "format": {
+                          "type": "string",
+                          "const": "digits"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "regex"
+                      ],
+                      "properties": {
+                        "regex": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "const": "url"
+                },
+                "default": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "title",
+                "type",
+                "default"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "validate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "format"
+                      ],
+                      "properties": {
+                        "format": {
+                          "type": "string",
+                          "const": "digits"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "regex"
+                      ],
+                      "properties": {
+                        "regex": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "const": "number"
+                },
+                "default": {
+                  "type": "number"
+                },
+                "min": {
+                  "type": "number"
+                },
+                "max": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "title",
+                "type",
+                "default"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "validate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "format"
+                      ],
+                      "properties": {
+                        "format": {
+                          "type": "string",
+                          "const": "digits"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "regex"
+                      ],
+                      "properties": {
+                        "regex": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "const": "switch"
+                },
+                "default": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "title",
+                "type",
+                "default",
+                "values"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "validate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "format"
+                      ],
+                      "properties": {
+                        "format": {
+                          "type": "string",
+                          "const": "digits"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "regex"
+                      ],
+                      "properties": {
+                        "regex": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "const": "select"
+                },
+                "default": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "label",
+                      "value"
+                    ],
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "title",
+                "type",
+                "default",
+                "values"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "validate": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "format"
+                      ],
+                      "properties": {
+                        "format": {
+                          "type": "string",
+                          "const": "digits"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "regex"
+                      ],
+                      "properties": {
+                        "regex": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "type": {
+                  "type": "string",
+                  "const": "multiselect"
+                },
+                "default": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "label",
+                      "value"
+                    ],
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "minItems": 1
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "refresh": {
+      "type": "object",
+      "properties": {
+        "intervalMs": {
+          "type": "integer",
+          "minimum": 60000
+        },
+        "staleTimeMs": {
+          "type": "integer",
+          "minimum": 30000
+        }
+      },
+      "additionalProperties": false
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "queries": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z0-9_-]+$": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "path"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "file"
+                    },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "latest"
+                    },
+                    "keyword": {
+                      "type": "string",
+                      "pattern": "\\S"
+                    },
+                    "deduplicateBy": {
+                      "type": "string",
+                      "pattern": "\\S"
+                    },
+                    "direction": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "asc"
+                        },
+                        {
+                          "type": "string",
+                          "const": "desc"
+                        }
+                      ]
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 500
+                    },
+                    "orderBy": {
+                      "type": "string",
+                      "const": "publishedAt"
+                    },
+                    "window": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "type",
+                    "keyword"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "search"
+                    },
+                    "keyword": {
+                      "type": "string",
+                      "pattern": "\\S"
+                    },
+                    "boardIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "\\S"
+                      }
+                    },
+                    "cardIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "\\S"
+                      }
+                    },
+                    "deduplicateBy": {
+                      "type": "string",
+                      "pattern": "\\S"
+                    },
+                    "direction": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "asc"
+                        },
+                        {
+                          "type": "string",
+                          "const": "desc"
+                        }
+                      ]
+                    },
+                    "from": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "to": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 500
+                    },
+                    "searchIn": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "const": "title"
+                        },
+                        {
+                          "type": "string",
+                          "const": "fullText"
+                        }
+                      ]
+                    },
+                    "window": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "view": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "preset",
+            "query"
+          ],
+          "properties": {
+            "preset": {
+              "type": "string",
+              "const": "live-card"
+            },
+            "query": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "presentation": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "ranking"
+                },
+                {
+                  "type": "string",
+                  "const": "list"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "preset",
+            "query"
+          ],
+          "properties": {
+            "preset": {
+              "type": "string",
+              "const": "word-cloud"
+            },
+            "query": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+$"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "pattern": "\\S"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100,
+              "pattern": "\\S"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            },
+            "sort": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "const": "none"
+                },
+                {
+                  "type": "string",
+                  "const": "asc"
+                },
+                {
+                  "type": "string",
+                  "const": "desc"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

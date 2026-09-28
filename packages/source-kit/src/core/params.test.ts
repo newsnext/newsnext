@@ -136,6 +136,6 @@ describe("source parameter validation", () => {
         ...params.id,
         required: "yes",
       },
-    }, "source.params")).toThrow("source.params.id.required must be a boolean")
+    }, "source.params")).toThrow("source.params.id.required must be boolean")
   })
 })

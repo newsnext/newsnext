@@ -33,7 +33,7 @@ Evaluate candidates in this order and use the first one that can faithfully prov
 
 Record why each higher-priority option was unavailable or insufficient. This makes the chosen contract reviewable and prevents an accidental dependency on a fragile private endpoint.
 
-Transport choice and source-file format are separate decisions. Prefer a JSON provider file for declarative `rss`, `json`, and `html` loaders. Use TypeScript only when the Source genuinely needs a custom loader, custom request callback, imported helper, browser API, computed configuration, request signing, token refresh, or response normalization that declarative fields cannot express.
+Transport choice and source-file format are separate decisions. Prefer a JSON provider file for declarative `rss`, `json`, and `html` loaders. Use TypeScript only when the Source genuinely needs a custom loader, custom request callback, imported helper, browser API, computed configuration, request signing, token refresh, or response normalization that declarative fields cannot express. Read the authoritative [Source manifest schema](schemas/source.json) and [parameter schema](schemas/params.json) for accepted JSON fields and constraints.
 
 ## Reference existing Sources first
 

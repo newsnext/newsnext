@@ -49,7 +49,7 @@
   "scripts": {
     "lint": "bun run --bun eslint .",
     "test": "vitest",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "bun --filter=@newsnext/sdk run schemas:check && tsc -b --noEmit",
     "prepare": "simple-git-hooks",
     "dev": "bun --filter=@newsnext/extension run dev",
     "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",
@@ -60,7 +60,7 @@
     "landing:deploy": "bun --filter=@newsnext/landing run deploy",
     "update-deps": "taze -r -w && bun install",
     "release": "bumpp --recursive --install --all --git-check",
-    "build": "bun --filter=@newsnext/extension run build",
+    "build": "bun --filter=@newsnext/sdk run schemas:check && bun --filter=@newsnext/extension run build",
     "build:chrome": "bun --filter=@newsnext/extension run build:chrome",
     "build:firefox": "bun --filter=@newsnext/extension run build:firefox"
   },
