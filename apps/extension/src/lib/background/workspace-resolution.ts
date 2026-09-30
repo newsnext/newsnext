@@ -17,11 +17,11 @@ export function needsWorkspaceResolution(local: Workspace, shared: Workspace, sy
 }
 
 // Shared IDs retain their content and Board ownership. Local-only entities are
-// appended without changing Worker ownership or collapsing Widget definitions.
+// appended without changing Worker ownership or collapsing Insight definitions.
 export function mergeWorkspaces(shared: Workspace, local: Workspace): Workspace {
   const result = structuredClone(shared)
   const cardIds = new Set(Object.keys(shared.liveCards))
-  const widgetIds = new Set(Object.keys(shared.liveWidgets))
+  const liveWidgetIds = new Set(Object.keys(shared.liveWidgets))
   for (const boardId of local.boardOrder) {
     const localBoard = local.boards[boardId]!
     let board = result.boards[boardId]
@@ -37,17 +37,17 @@ export function mergeWorkspaces(shared: Workspace, local: Workspace): Workspace 
       if (!cardIds.has(cardId) && local.liveCards[cardId]) result.liveCards[cardId] = structuredClone(local.liveCards[cardId])
     }
     const ownedCards = new Set(board.nowLayer.liveCards)
-    for (const widgetId of localBoard.nextLayer.liveWidgets) {
-      if (widgetIds.has(widgetId)) continue
-      const localWidget = local.liveWidgets[widgetId]
+    for (const liveWidgetId of localBoard.nextLayer.liveWidgets) {
+      if (liveWidgetIds.has(liveWidgetId)) continue
+      const localWidget = local.liveWidgets[liveWidgetId]
       if (!localWidget) continue
       const added = structuredClone(localWidget)
       if (added.dataScope.type === "cards") {
         added.dataScope.cardIds = added.dataScope.cardIds.filter(id => ownedCards.has(id))
       }
-      result.liveWidgets[widgetId] = added
-      board.nextLayer.liveWidgets.push(widgetId)
-      widgetIds.add(widgetId)
+      result.liveWidgets[liveWidgetId] = added
+      board.nextLayer.liveWidgets.push(liveWidgetId)
+      liveWidgetIds.add(liveWidgetId)
     }
     for (const id of board.nowLayer.liveCards) cardIds.add(id)
   }

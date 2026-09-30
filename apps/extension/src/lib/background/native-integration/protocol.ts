@@ -5,7 +5,7 @@ import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspa
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
 import { parseWorkspacePatch } from "../workspace-patch"
 import { parseCollectionStatus } from "./collection-status"
-import { parseLocalCardIds, parseLogs, parseRevision, parseWidgetCatalog } from "./message-values"
+import { parseInsightCatalog, parseLocalCardIds, parseLogs, parseRevision } from "./message-values"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./workspace-data"
 
@@ -46,8 +46,8 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
         && value.capabilities.every(capability => typeof capability === "string")
         ? value.capabilities
         : [],
-      widgetServerUrl: parseWidgetServerOrigin(value.widgetServerUrl),
-      widgets: parseWidgetCatalog(value.widgets),
+      insightServerUrl: parseInsightServerOrigin(value.insightServerUrl),
+      insights: parseInsightCatalog(value.insights),
       workspace: parseWorkspace(value.workspace),
       localCardIds: parseLocalCardIds(value.localCardIds),
       workerRoutingRevision: parseRevision(value.workerRoutingRevision, "Worker routing"),
@@ -121,7 +121,7 @@ function isIdentifierArray(value: unknown): value is string[] {
     && new Set(value).size === value.length
 }
 
-function parseWidgetServerOrigin(value: unknown): string {
+function parseInsightServerOrigin(value: unknown): string {
   if (typeof value !== "string") {
     throw new TypeError("The native host returned an invalid widget server URL")
   }
@@ -168,8 +168,8 @@ export function parseNativeNotification(method: string, params: unknown): Native
       return { method, params: { status: parseCollectionStatus(params.status) } }
     case "logsChanged":
       return { method, params: { entries: parseLogs(params.entries) } }
-    case "widgetCatalogChanged":
-      return { method, params: { widgets: parseWidgetCatalog(params.widgets) } }
+    case "insightCatalogChanged":
+      return { method, params: { insights: parseInsightCatalog(params.insights) } }
     case "localSourcesChanged":
       return { method, params: { providers: parseLocalProviders(params.providers) } }
     default:

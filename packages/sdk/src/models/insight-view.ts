@@ -1,5 +1,5 @@
 /** Built-in word cloud view. Data producers return named results independently. */
-export interface WidgetWordCloudView {
+export interface InsightWordCloudView {
   preset: "word-cloud"
   /** Names the `data.mjs` result consumed by this view. */
   query: string
@@ -11,25 +11,25 @@ export interface WidgetWordCloudView {
   sort?: "none" | "asc" | "desc"
 }
 
-export function parseWidgetWordCloudView(value: Record<string, unknown>): WidgetWordCloudView {
+export function parseInsightWordCloudView(value: Record<string, unknown>): InsightWordCloudView {
   const { preset, query, ...options } = value
-  if (preset !== "word-cloud" || typeof query !== "string" || !/^[\w-]+$/.test(query)) throw new Error("Invalid Widget word-cloud query")
-  const result: WidgetWordCloudView = { preset, query }
+  if (preset !== "word-cloud" || typeof query !== "string" || !/^[\w-]+$/.test(query)) throw new Error("Invalid Insight word-cloud query")
+  const result: InsightWordCloudView = { preset, query }
   for (const [key, entry] of Object.entries(options)) {
     switch (key) {
       case "label": case "value":
-        if (typeof entry !== "string" || entry.length > 100 || !entry.trim()) throw new Error(`Invalid Widget ${key}`)
+        if (typeof entry !== "string" || entry.length > 100 || !entry.trim()) throw new Error(`Invalid Insight ${key}`)
         result[key] = entry
         break
       case "limit":
-        if (typeof entry !== "number" || !Number.isInteger(entry) || entry < 1 || entry > 500) throw new Error(`Invalid Widget ${key}`)
+        if (typeof entry !== "number" || !Number.isInteger(entry) || entry < 1 || entry > 500) throw new Error(`Invalid Insight ${key}`)
         result.limit = entry
         break
       case "sort":
-        if (entry !== "none" && entry !== "asc" && entry !== "desc") throw new Error("Invalid Widget sort")
+        if (entry !== "none" && entry !== "asc" && entry !== "desc") throw new Error("Invalid Insight sort")
         result.sort = entry
         break
-      default: throw new Error(`Unknown Widget word-cloud option: ${key}`)
+      default: throw new Error(`Unknown Insight word-cloud option: ${key}`)
     }
   }
   return result

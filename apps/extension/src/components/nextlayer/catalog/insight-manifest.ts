@@ -1,17 +1,17 @@
-import type { WidgetWordCloudView } from "@newsnext/sdk/models"
+import type { InsightWordCloudView } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
-import { isThemeColor, MIN_WIDGET_WIDTH, parseWidgetWordCloudView } from "@newsnext/sdk/models"
+import { isThemeColor, MIN_WIDGET_WIDTH, parseInsightWordCloudView } from "@newsnext/sdk/models"
 import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
 
-/** `widget.json.view` selector. The daemon selects a custom view when `index.html` exists. */
-export type WidgetUi
-  = | WidgetWordCloudView
+/** `insight.json.view` selector. The daemon selects a custom view when `index.html` exists. */
+export type InsightView
+  = | InsightWordCloudView
     /** Built-in LiveCard UI; `query` names the manifest query holding NewsItems. Omit `presentation` for auto timeline/list. */
     | { preset: "live-card", query: string, presentation?: "ranking" | "list" }
 
-/** Validated Widget definition from the daemon catalog. Directory name is the Widget ID. */
-export interface LocalWidgetManifest {
+/** Validated Insight definition from the daemon catalog. Directory name is the Insight ID. */
+export interface LocalInsightManifest {
   /** Optional placement-scoped settings; same param schema as Sources. */
   params?: SourceParamSchemaMap
   /** Named palette color; `slate` when omitted. */
@@ -26,7 +26,7 @@ export interface LocalWidgetManifest {
   title: string
   /** Entry document URL; only custom views declare one. */
   url?: string
-  view?: WidgetUi
+  view?: InsightView
   /** Data-pipeline fingerprint; view fingerprint remounts the placed frame. */
   dataRevision: string
   viewRevision: string
@@ -37,18 +37,18 @@ export interface LocalWidgetManifest {
 }
 
 /** The catalog the daemon publishes, or the reason its definitions cannot be rendered. */
-export interface WidgetCatalog {
+export interface InsightCatalog {
   error?: string
-  widgets: LocalWidgetManifest[]
+  insights: LocalInsightManifest[]
 }
 
 /** Validates the catalog the daemon pushes over the native protocol. */
-export function parseWidgetCatalog(
+export function parseInsightCatalog(
   value: unknown,
   serverOrigin: string | undefined,
-): LocalWidgetManifest[] {
+): LocalInsightManifest[] {
   if (!serverOrigin) return []
-  if (!Array.isArray(value)) throw new Error("The daemon returned an invalid Widget catalog")
+  if (!Array.isArray(value)) throw new Error("The daemon returned an invalid Insight catalog")
   const expectedOrigin = new URL(serverOrigin).origin
   const ids = new Set<string>()
   return value.map((candidate) => {
@@ -60,35 +60,35 @@ export function parseWidgetCatalog(
       || !isGridSize(candidate.minWidth, candidate.width)
       || !isGridSize(candidate.height, 100)
       || !isGridSize(candidate.minHeight, candidate.height)) {
-      throw new Error("The daemon returned an invalid Widget manifest")
+      throw new Error("The daemon returned an invalid Insight manifest")
     }
-    if (ids.has(candidate.id)) throw new Error(`Duplicate widget ID '${candidate.id}'`)
+    if (ids.has(candidate.id)) throw new Error(`Duplicate insight ID '${candidate.id}'`)
     ids.add(candidate.id)
-    validateSourceParamDefinitions(candidate.params, `Widget ${candidate.id}.params`)
+    validateSourceParamDefinitions(candidate.params, `Insight ${candidate.id}.params`)
     const params = candidate.params as SourceParamSchemaMap | undefined
-    const ui = parseWidgetUi(candidate.view)
+    const ui = parseInsightView(candidate.view)
     let url: URL | undefined
     if (ui === undefined) {
-      if (typeof candidate.url !== "string") throw new Error("Custom Widget UI requires an entry URL")
+      if (typeof candidate.url !== "string") throw new Error("Custom Insight UI requires an entry URL")
       url = new URL(candidate.url)
-      if (url.origin !== expectedOrigin || !url.pathname.startsWith(`/widgets/${candidate.id}/`)) {
-        throw new Error(`Widget '${candidate.id}' has an invalid entry URL`)
+      if (url.origin !== expectedOrigin || !url.pathname.startsWith(`/insights/${candidate.id}/`)) {
+        throw new Error(`Insight '${candidate.id}' has an invalid entry URL`)
       }
     } else if (candidate.url !== undefined) {
-      throw new Error("Built-in Widget UI must not declare an entry URL")
+      throw new Error("Built-in Insight UI must not declare an entry URL")
     }
     const refreshIntervalMs = candidate.refreshIntervalMs ?? 300_000
     if (!Number.isSafeInteger(refreshIntervalMs) || Number(refreshIntervalMs) < 60_000) {
-      throw new Error("Invalid Widget refresh interval")
+      throw new Error("Invalid Insight refresh interval")
     }
     const dataRevision = candidate.dataRevision
-    if (typeof dataRevision !== "string") throw new Error("Invalid Widget data revision")
+    if (typeof dataRevision !== "string") throw new Error("Invalid Insight data revision")
     const viewRevision = candidate.viewRevision
-    if (typeof viewRevision !== "string") throw new Error("Invalid Widget view revision")
+    if (typeof viewRevision !== "string") throw new Error("Invalid Insight view revision")
     const dataFiles = candidate.dataFiles
-    if (!Array.isArray(dataFiles) || !dataFiles.every(isNonEmptyString)) throw new Error("Invalid Widget data files")
+    if (!Array.isArray(dataFiles) || !dataFiles.every(isNonEmptyString)) throw new Error("Invalid Insight data files")
     const hasData = candidate.hasData
-    if (typeof hasData !== "boolean") throw new Error("Invalid Widget data flag")
+    if (typeof hasData !== "boolean") throw new Error("Invalid Insight data flag")
     return {
       ...(params ? { params } : {}),
       dataFiles,
@@ -125,9 +125,9 @@ function isGridSize(value: unknown, maximum: number): value is number {
   return Number.isInteger(value) && Number(value) > 0 && Number(value) <= maximum
 }
 
-export function parseWidgetUi(value: unknown): WidgetUi | undefined {
+export function parseInsightView(value: unknown): InsightView | undefined {
   if (value === undefined) return undefined
-  if (isRecord(value) && value.preset === "word-cloud") return parseWidgetWordCloudView(value)
+  if (isRecord(value) && value.preset === "word-cloud") return parseInsightWordCloudView(value)
   if (isRecord(value) && value.preset === "live-card" && isIdentifier(value.query)
     && (value.presentation === undefined || value.presentation === "ranking" || value.presentation === "list")
     && Object.keys(value).every(key => key === "preset" || key === "query" || key === "presentation")) {
@@ -137,5 +137,5 @@ export function parseWidgetUi(value: unknown): WidgetUi | undefined {
       ...(value.presentation === undefined ? {} : { presentation: value.presentation }),
     }
   }
-  throw new Error("Invalid Widget UI")
+  throw new Error("Invalid Insight UI")
 }

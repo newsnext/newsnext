@@ -1,4 +1,4 @@
-import type { ConnectedFetchInput, FetchResponse, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse, WidgetCatalogEntry } from "../models/index.js"
+import type { ConnectedFetchInput, FetchResponse, InsightCatalogEntry, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse } from "../models/index.js"
 import Type from "typebox"
 import { defineActionContract } from "./definition.js"
 import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
@@ -22,8 +22,8 @@ const WorkspaceSummaryResult = Type.Object({
   liveWidgets: Type.Integer({ minimum: 0 }),
 }, { additionalProperties: false })
 
-// Built-in `view` and `params` carry the Widget manifest schema; custom views use `url`.
-const WidgetCatalogEntryResult = Type.Unsafe<WidgetCatalogEntry>(Type.Object({
+// Built-in `view` and `params` carry the Insight manifest schema; custom views use `url`.
+const InsightCatalogEntryResult = Type.Unsafe<InsightCatalogEntry>(Type.Object({
   id: Identifier,
   title: Type.String(),
   color: Type.String(),
@@ -70,7 +70,7 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
     "workerConflict",
   ] as const),
   workerId: Identifier,
-  widgetServerOrigin: Type.Optional(Type.String()),
+  insightServerOrigin: Type.Optional(Type.String()),
 }, { additionalProperties: false }))
 
 const FetchParams = Type.Unsafe<ConnectedFetchInput>(Type.Object({
@@ -196,12 +196,12 @@ const nativeIntegrationGetStatusAction = defineActionContract({
   result: NativeIntegrationStatusResult,
 })
 
-const nativeIntegrationGetWidgetsAction = defineActionContract({
-  name: "nativeIntegration.getWidgets",
+const nativeIntegrationGetInsightsAction = defineActionContract({
+  name: "nativeIntegration.getInsights",
   kind: "query",
-  description: "List the renderable Widget definitions the daemon last published, including their entry URLs.",
+  description: "List the renderable Insight definitions the daemon last published, including their entry URLs.",
   params: EmptyObject,
-  result: Type.Array(WidgetCatalogEntryResult),
+  result: Type.Array(InsightCatalogEntryResult),
 })
 
 const nativeIntegrationGetLogsAction = defineActionContract({
@@ -346,7 +346,7 @@ export const backgroundActionContracts = [
   sourceLoadAction,
   sourceCancelAction,
   nativeIntegrationGetStatusAction,
-  nativeIntegrationGetWidgetsAction,
+  nativeIntegrationGetInsightsAction,
   nativeIntegrationGetLogsAction,
   nativeIntegrationSetLogLevelAction,
   liveCardLoadAction,

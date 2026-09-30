@@ -1,5 +1,5 @@
 import type { Color } from "@newsnext/sdk/models"
-import type { WidgetUi } from "./catalog/widget-manifest"
+import type { InsightView } from "./catalog/insight-manifest"
 import { useMemo, useState } from "react"
 import { LiveCardItems } from "@/components/live-card/card-items"
 import { SourceErrorState } from "@/components/live-card/card-source-state"
@@ -8,7 +8,7 @@ import { useSourceMarkScales } from "@/hooks/use-source-mark-scales"
 import { parseWidgetItems } from "./data/widget-items"
 
 interface WidgetItemListContentProps {
-  ui: Extract<WidgetUi, { preset: "live-card" }>
+  ui: Extract<InsightView, { preset: "live-card" }>
   title: string
   color: Color
   loading: boolean

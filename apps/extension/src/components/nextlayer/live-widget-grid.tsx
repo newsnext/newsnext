@@ -2,8 +2,8 @@ import type { WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
 import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
-import type { WidgetAppearanceSnapshot } from "./catalog/widget-appearance"
-import type { WidgetCatalog, WidgetUi } from "./catalog/widget-manifest"
+import type { InsightAppearanceSnapshot } from "./catalog/insight-appearance"
+import type { InsightCatalog, InsightView } from "./catalog/insight-manifest"
 import type { SortableWidgetNode } from "./grid/sortable-widget-grid"
 import type { WidgetLayoutSpan } from "@/lib/widget-host"
 import { MIN_WIDGET_WIDTH } from "@newsnext/sdk/models"
@@ -19,15 +19,15 @@ import { ParameterSettings } from "@/components/card-shell/settings/parameter-se
 import { PhArrowCircleLeftDuotone, PhInfoDuotone } from "@/components/icons/ph"
 import { SourceStatusMessage } from "@/components/live-card/card-source-state"
 import { useI18n } from "@/hooks/use-i18n"
-import { useNativeIntegrationStatus, useWidgetCatalog } from "@/hooks/use-native-integration-status"
+import { useInsightCatalog, useNativeIntegrationStatus } from "@/hooks/use-native-integration-status"
 import { useSortable } from "@/hooks/use-sortable"
 import { useSourceParams } from "@/hooks/use-source-params"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { actions } from "@/lib/actions"
 import { isWidgetSize, isWidgetStatus } from "@/lib/widget-host"
 import { boardsAtom } from "@/store/board"
-import { readWidgetAppearanceSnapshots, rememberWidgetAppearances } from "./catalog/widget-appearance"
-import { parseWidgetCatalog } from "./catalog/widget-manifest"
+import { readInsightAppearanceSnapshots, rememberInsightAppearances } from "./catalog/insight-appearance"
+import { parseInsightCatalog } from "./catalog/insight-manifest"
 import { useLiveWidgetData } from "./data/use-live-widget-data"
 import { parseWidgetItems } from "./data/widget-items"
 import { SortableWidgetGrid } from "./grid/sortable-widget-grid"
@@ -50,12 +50,12 @@ interface LiveWidgetCardProps {
   cardIds: string[]
   title: string
   url?: string
-  ui?: WidgetUi
+  ui?: InsightView
   dataRevision: string
   viewRevision: string
   refreshIntervalMs: number
   dataFiles: string[]
-  widgetId: string
+  insightId: string
   liveWidgetId: string
   /** Grid span in half-LiveCard units, forwarded to custom views. */
   layout: WidgetLayoutSpan
@@ -150,11 +150,11 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
       params: resolvedParams,
       type: "newsnext.widget.data",
       version: WIDGET_PROTOCOL_VERSION,
-      widgetId: frame.widgetId,
+      insightId: frame.insightId,
       liveWidgetId: frame.liveWidgetId,
       layout: frame.layout,
     }, "*")
-  }, [frame.widgetId, frame.liveWidgetId, frame.layout, dataPayload, resolvedParams])
+  }, [frame.insightId, frame.liveWidgetId, frame.layout, dataPayload, resolvedParams])
 
   useEffect(() => {
     function handleMessage(event: MessageEvent<unknown>): void {
@@ -177,8 +177,8 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
     <article ref={setArticleRef} className={`relative h-full min-h-0 select-none ${isFlipped ? previewColor : color}`}>
       <FlipAnimate rotate="y" flipped={isFlipped}>
         <WidgetFace
-          // Seed by stable Widget ID (not title) so renames keep the same avatar on both faces.
-          avatarSeed={frame.widgetId}
+          // Seed by stable Insight ID (not title) so renames keep the same avatar on both faces.
+          avatarSeed={frame.insightId}
           title={title}
           metadata={frame.metadata}
           headerRef={isFlipped ? undefined : setHandleRef}
@@ -235,7 +235,7 @@ function LiveWidgetCard(frame: LiveWidgetCardProps) {
                 )}
         </WidgetFace>
         <WidgetFace
-          avatarSeed={frame.widgetId}
+          avatarSeed={frame.insightId}
           title={previewTitle || frame.title}
           metadata={{ ...frame.metadata, ...previewMetadata }}
           headerRef={isFlipped ? setHandleRef : undefined}
@@ -370,11 +370,11 @@ function useElementVisible(ref: RefObject<Element | null>): boolean {
 
 function useNativeWidgetConnection() {
   const statusQuery = useNativeIntegrationStatus()
-  const catalogQuery = useWidgetCatalog()
+  const catalogQuery = useInsightCatalog()
   return {
     isLoading: statusQuery.isLoading || catalogQuery.isLoading,
     catalogError: catalogQuery.error,
-    serverOrigin: statusQuery.data?.widgetServerOrigin,
+    serverOrigin: statusQuery.data?.insightServerOrigin,
     state: statusQuery.data?.state,
     entries: catalogQuery.data,
   }
@@ -389,34 +389,34 @@ interface LiveWidgetGridProps {
 export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridProps) {
   const { t } = useI18n()
   const connection = useNativeWidgetConnection()
-  const catalog = useMemo<WidgetCatalog>(() => {
-    if (connection.catalogError) return { error: connection.catalogError.message, widgets: [] }
+  const catalog = useMemo<InsightCatalog>(() => {
+    if (connection.catalogError) return { error: connection.catalogError.message, insights: [] }
     try {
-      return { widgets: parseWidgetCatalog(connection.entries, connection.serverOrigin) }
+      return { insights: parseInsightCatalog(connection.entries, connection.serverOrigin) }
     } catch (error) {
-      return { error: error instanceof Error ? error.message : "Invalid Widget catalog", widgets: [] }
+      return { error: error instanceof Error ? error.message : "Invalid Insight catalog", insights: [] }
     }
   }, [connection.catalogError, connection.entries, connection.serverOrigin])
   const boards = useAtomValue(boardsAtom)
   const board = boards.find(candidate => candidate.id === boardId)
   // Read synchronously every render: tiny payload, and always current with
   // removals that happen between catalog updates.
-  const appearanceSnapshots = readWidgetAppearanceSnapshots()
+  const appearanceSnapshots = readInsightAppearanceSnapshots()
   useEffect(() => {
     // Snapshot appearance on every catalog update so a removed definition
     // can still render name/color with a reason instead of disappearing.
-    if (catalog.widgets.length === 0) return
-    rememberWidgetAppearances(catalog.widgets)
-  }, [catalog.widgets])
+    if (catalog.insights.length === 0) return
+    rememberInsightAppearances(catalog.insights)
+  }, [catalog.insights])
   // Board order is preserved: a removed definition renders its snapshot
   // placeholder in place instead of disappearing or jumping to the end.
   type GridItem
-    = | { kind: "widget", layout: WidgetLayoutSpan, manifest: (typeof catalog.widgets)[number], minW: number, placement: NonNullable<typeof board>["nextLayer"]["liveWidgets"][number] }
-      | { kind: "missing", layout: WidgetLayoutSpan, liveWidgetId: string, widgetId: string }
+    = | { kind: "widget", layout: WidgetLayoutSpan, manifest: (typeof catalog.insights)[number], minW: number, placement: NonNullable<typeof board>["nextLayer"]["liveWidgets"][number] }
+      | { kind: "missing", layout: WidgetLayoutSpan, liveWidgetId: string, insightId: string }
   const items = useMemo<GridItem[]>(() => {
-    const manifestsById = new Map(catalog.widgets.map(widget => [widget.id, widget]))
+    const manifestsById = new Map(catalog.insights.map(widget => [widget.id, widget]))
     return (board?.nextLayer.liveWidgets ?? []).map((placement) => {
-      const manifest = manifestsById.get(placement.widgetId)
+      const manifest = manifestsById.get(placement.insightId)
       if (!manifest) {
         return {
           kind: "missing",
@@ -425,7 +425,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
             height: placement.layout.height,
           },
           liveWidgetId: placement.liveWidgetId,
-          widgetId: placement.widgetId,
+          insightId: placement.insightId,
         } as const
       }
       const minW = clampWidgetWidth(manifest.minWidth)
@@ -435,7 +435,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
       }
       return { kind: "widget", layout, manifest, minW, placement } as const
     })
-  }, [board?.nextLayer.liveWidgets, catalog.widgets])
+  }, [board?.nextLayer.liveWidgets, catalog.insights])
   const nodes = useMemo<SortableWidgetNode[]>(() => items.map((item) => {
     if (item.kind === "widget") {
       return {
@@ -487,8 +487,8 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
               key={item.liveWidgetId}
               boardId={boardId}
               liveWidgetId={item.liveWidgetId}
-              widgetId={item.widgetId}
-              snapshot={appearanceSnapshots[item.widgetId]}
+              insightId={item.insightId}
+              snapshot={appearanceSnapshots[item.insightId]}
             />
           )
         }
@@ -497,7 +497,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
           <LiveWidgetCard
             key={placement.liveWidgetId}
             boardId={boardId}
-            widgetId={placement.widgetId}
+            insightId={placement.insightId}
             liveWidgetId={placement.liveWidgetId}
             active={viewReady}
             color={manifest.color}
@@ -522,7 +522,7 @@ export function LiveWidgetGrid({ boardId, onReady, viewReady }: LiveWidgetGridPr
   )
 }
 
-function MissingWidgetCard({ boardId, liveWidgetId, widgetId, snapshot }: { boardId: string, liveWidgetId: string, widgetId: string, snapshot: WidgetAppearanceSnapshot | undefined }): React.JSX.Element {
+function MissingWidgetCard({ boardId, liveWidgetId, insightId, snapshot }: { boardId: string, liveWidgetId: string, insightId: string, snapshot: InsightAppearanceSnapshot | undefined }): React.JSX.Element {
   const { t } = useI18n()
   const { setNodeRef, setHandleRef } = useSortable({
     id: getGridWidgetId(liveWidgetId),
@@ -533,13 +533,13 @@ function MissingWidgetCard({ boardId, liveWidgetId, widgetId, snapshot }: { boar
     canDrag: canDragCardHeader,
     onGenerateDragPreview: generateCardDragPreview,
   })
-  const title = snapshot?.title ?? widgetId
+  const title = snapshot?.title ?? insightId
   const color = snapshot?.color ?? "slate"
   // A removed definition is an error: snapshot data must never render.
   return (
     <article ref={setNodeRef} className={`relative h-full min-h-0 select-none ${color}`}>
       <WidgetFace
-        avatarSeed={widgetId}
+        avatarSeed={insightId}
         title={title}
         headerRef={setHandleRef}
         actions={<DeleteWidgetButton liveWidgetId={liveWidgetId} />}

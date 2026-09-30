@@ -42,28 +42,28 @@ browser-owned Loaders.
   in-memory Workspace and routes loads to the bound Worker.
 - Join conflicts (overwrite / merge / discard) pause sync until resolved in CLI
   Settings; mutations are rejected while a decision is pending.
-- Schema: application data version 12, export version 8. Only the current
-  ID-keyed shape is accepted; mismatched versions throw instead of silently
+- Schema: application data version 13, export version 9. Only the current
+  format is accepted; other versions throw instead of silently
   initializing empty data. Native Workspace and CLI use the same keyed shape
-  under protocol version 36. Daemon DB schema 15.
+  under protocol version 37. Daemon DB schema 15.
 
 ## Host internals overview
 
 - LiveCard loads route opaquely (local direct, remote via daemon); the viewing
   browser never persists another Worker's result.
-- Widget data (`liveWidgets.data`) runs the manifest/JS pipeline with a
+- Insight data (`liveWidgets.data`) runs the manifest/JS pipeline with a
   one-minute request-protection cache; views poll, the daemon never schedules.
 - Widget iframes talk over `MessagePort` → runtime port → Native Messaging
   (`__sdk` dispatcher); each pull releases one frame; abort/unmount tears down
   the SDK child process. Custom-view message contracts live in
-  [Widget Guideline](WIDGET_GUIDELINE.md#content-protocol); the host owns title,
+  [Insight Guideline](INSIGHT_GUIDELINE.md#content-protocol); the host owns title,
   palette, layout, and details.
-- Widget catalog arrives via `ready` + `widgetCatalogChanged`; background caches
+- Insight catalog arrives via `ready` + `insightCatalogChanged`; background caches
   it and revalidates before render, emitting via `nativeIntegration.statusChanged`.
 
 ## Further reading
 
 - [Source Architecture](SOURCE_ARCHITECTURE.md) — execution, caching, transport.
 - [Data Stream Architecture](DATA_STREAM_ARCHITECTURE.md) — analytical target.
-- [Widget Guideline](WIDGET_GUIDELINE.md) — host/content contracts.
+- [Insight Guideline](INSIGHT_GUIDELINE.md) — host/content contracts.
 - [Design Guideline](DESIGN_GUIDELINE.md) / [Performance Guideline](PERFORMANCE_GUIDELINE.md) — shared UI and render rules.

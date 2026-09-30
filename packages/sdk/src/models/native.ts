@@ -35,7 +35,7 @@ export interface NativeIntegrationStatus {
   connectionError?: NativeIntegrationConnectionError
   state: NativeIntegrationState
   workerId: string
-  widgetServerOrigin?: string
+  insightServerOrigin?: string
 }
 
 export interface NativeIntegrationConnectionError {

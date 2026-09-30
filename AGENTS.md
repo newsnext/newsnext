@@ -50,12 +50,12 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Update it only when UI work creates or revises a reusable rule shared by
   multiple surfaces.
 
-### Widget Documentation
+### Insight Documentation
 
-- `docs/WIDGET_GUIDELINE.md` keeps only Widget contracts spanning host and
-  content. Manifest field semantics belong as TSDoc on the Widget types;
+- `docs/INSIGHT_GUIDELINE.md` keeps only Insight/LiveWidget contracts spanning host and
+  content. Manifest field semantics belong as TSDoc on the Insight types;
   layout rules already covered by the Design Guideline are linked, not copied.
-- Update it only when Widget-facing cross-cutting behavior changes.
+- Update it only when Insight-facing cross-cutting behavior changes.
 
 ### Performance Documentation
 

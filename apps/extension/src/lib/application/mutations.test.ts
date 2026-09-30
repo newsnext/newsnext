@@ -7,7 +7,7 @@ const dependencies = { createId: () => "new", now: () => 100, workerId: "worker-
 
 function createData(): ApplicationData {
   return {
-    version: 12,
+    version: 13,
     boardOrder: ["reading"],
     boards: { reading: { color: "blue", createdAt: 1, layer: "now", name: "Reading", nowLayer: { liveCards: ["one"] }, nextLayer: { liveWidgets: [] } } },
     liveCards: { one: { createdAt: 1, patch: {}, provider: { color: "blue", title: "RSS" }, sourceId: "rss:feed", workerId: "worker-a" } },
@@ -46,7 +46,7 @@ describe("application mutations", () => {
   })
 
   it("stores Widgets independently and keeps their scopes valid", () => {
-    const installed = createLiveWidgetMutation(withTarget(), { boardId: "reading", widgetId: "feed", dataScope: { type: "cards", cardIds: ["one"] }, size: {} }, { createId: () => "widget" }).data
+    const installed = createLiveWidgetMutation(withTarget(), { boardId: "reading", insightId: "feed", dataScope: { type: "cards", cardIds: ["one"] }, size: {} }, { createId: () => "widget" }).data
     expect(installed.liveWidgets.widget).toMatchObject({ layout: { height: 2, width: 2 } })
     expect(installed.boards.reading?.nextLayer.liveWidgets).toEqual(["widget"])
     const configured = configureLiveWidgetMutation(installed, { liveWidgetId: "widget", patch: { metadata: { title: " Feed " } } }).data
@@ -56,9 +56,9 @@ describe("application mutations", () => {
   })
 
   it("reorders and resizes Widgets", () => {
-    const first = createLiveWidgetMutation(createData(), { boardId: "reading", widgetId: "feed", dataScope: { type: "board" }, size: {} }, { createId: () => "first" }).data
-    const second = createLiveWidgetMutation(first, { boardId: "reading", widgetId: "feed", dataScope: { type: "board" }, size: {} }, { createId: () => "second" }).data
-    const ordered = setNextLayerManualOrderMutation(second, { boardId: "reading", widgetIds: ["first", "second"] }).data
+    const first = createLiveWidgetMutation(createData(), { boardId: "reading", insightId: "feed", dataScope: { type: "board" }, size: {} }, { createId: () => "first" }).data
+    const second = createLiveWidgetMutation(first, { boardId: "reading", insightId: "feed", dataScope: { type: "board" }, size: {} }, { createId: () => "second" }).data
+    const ordered = setNextLayerManualOrderMutation(second, { boardId: "reading", liveWidgetIds: ["first", "second"] }).data
     const resized = setLiveWidgetLayoutsMutation(ordered, { boardId: "reading", liveWidgets: [{ liveWidgetId: "second", width: 4, height: 3 }, { liveWidgetId: "first", width: 2, height: 2 }] }).data
     expect(getApplicationBoards(resized)[0]?.nextLayer.liveWidgets.map(widget => widget.liveWidgetId)).toEqual(["second", "first"])
     expect(resized.liveWidgets.second?.layout).toEqual({ width: 4, height: 3 })

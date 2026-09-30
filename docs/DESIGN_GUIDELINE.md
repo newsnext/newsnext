@@ -77,7 +77,7 @@ Tailwind utilities. Values here are normative; code comments point back here.
 - Board viewport, board nav, Widget grid, both LiveCard faces, and embedded
   Widget docs use `scrollbar-hidden` — never custom instances there. Keep
   keyboard scroll, scroll refs, virtual lists. Widget docs never scroll; host
-  panel owns scrolling (`WIDGET_GUIDELINE.md`, `cli/docs/widget-design.md`).
+  panel owns scrolling (`INSIGHT_GUIDELINE.md`, `cli/docs/insight-design.md`).
 - Tracks sit on the surface's outer edge. Settings/Board dialogs: move shell's
   10px right padding into the scroller so text keeps inset, scrollbar reaches
   edge.
@@ -116,7 +116,7 @@ LiveCards are the primary surface.
   available. Missing/failed icons: Boring `bauhaus` avatar via `SourceIcon`
   (geometric, no faces), inline SVG inheriting `--color-theme-*` (follows card
   palette incl. Color previews). Seed fixes geometry/palette; theme changes
-  update shades. Widget avatars seed on stable Widget ID (rename/palette/
+  update shades. LiveWidget avatars seed on stable Insight ID (rename/palette/
   refresh/move/flip keep identity). Circular + Badge overlay retained.
 - Headers: single title line beside icon + actions, 8px gap to inner panel
   both faces. No refresh times/subtitles; refresh shown via action animation.
@@ -205,9 +205,9 @@ LiveCards are the primary surface.
   previews, resize previews, reflow). Persist order + dimensions, never x/y
   (stored `x`/`y` ignored, order wins). Widget vs LiveCard drag data isolated
   (widgets can't move cards). Header trash dispatches by kind, requires
-  originating board + widget IDs.
+  originating Board + LiveWidget IDs.
 - Footprints in half-card units (`2×2` = 400×500 LiveCard; see
-  `WIDGET_GUIDELINE.md`). Widths 2–4 units → visible 400/612/824px at
+  `INSIGHT_GUIDELINE.md`). Widths 2–4 units → visible 400/612/824px at
   24px gutter, every viewport. Center complete columns up to 4 cards;
   horizontal scroll when widest widget can't fit. Cells 212×262 incl. gutter;
   `2×1` = 400×238 after gutter. Width ≥2 and height ≥1; never backfill gaps.
@@ -232,7 +232,7 @@ LiveCards are the primary surface.
   stagger, by visual row/column not DOM order). Slot transitions off while
   scatter pending/entering/exiting; initial measurement settles motion-free.
   Overflow visible during navigation; horizontal scroll after only if needed.
-- Widget definitions/views/documents/shell: `WIDGET_GUIDELINE.md`. Here: grid +
+- Insight definitions/views/documents/shell: `INSIGHT_GUIDELINE.md`. Here: grid +
   shared layer behavior only.
 - Now Layer keeps intrinsic centered card layout inside Next Layer's max width
   (≤ four-column row). Shared board container owns responsive insets; both

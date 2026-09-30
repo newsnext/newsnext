@@ -1,4 +1,4 @@
-import type { WidgetCatalogEntry } from "@newsnext/sdk/models"
+import type { InsightCatalogEntry } from "@newsnext/sdk/models"
 import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
 
 export function parseLocalCardIds(value: unknown): string[] {
@@ -29,8 +29,8 @@ export function parseLogs(value: unknown): NativeLogEntry[] {
   return value as NativeLogEntry[]
 }
 
-/** Checks the protocol shape only. The renderer validates Widget manifests and entry URLs again. */
-export function parseWidgetCatalog(value: unknown): WidgetCatalogEntry[] {
+/** Checks the protocol shape only. The renderer validates Insight manifests and entry URLs again. */
+export function parseInsightCatalog(value: unknown): InsightCatalogEntry[] {
   if (!Array.isArray(value) || value.some(entry => (
     !isRecord(entry)
     || typeof entry.id !== "string"
@@ -49,9 +49,9 @@ export function parseWidgetCatalog(value: unknown): WidgetCatalogEntry[] {
     || !Number.isSafeInteger(entry.refreshIntervalMs)
     || Number(entry.refreshIntervalMs) < 0
   ))) {
-    throw new Error("The native host returned an invalid Widget catalog")
+    throw new Error("The native host returned an invalid Insight catalog")
   }
-  return value as WidgetCatalogEntry[]
+  return value as InsightCatalogEntry[]
 }
 
 function isPositiveInteger(value: unknown): boolean {

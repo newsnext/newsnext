@@ -1,13 +1,14 @@
-# Widget Guideline
+# Insight Guideline
 
-Widgets span two sides: the trusted host shell (extension) and untrusted
+Insights define data processing; LiveWidgets carry their configured views.
+Together they span two sides: the trusted host shell (extension) and untrusted
 content (`data.mjs` producers, custom `index.html` views). This file keeps
 only that cross-cutting contract. Field semantics live as TSDoc on the
 types; visual rules live in the Design Guideline.
 
 - Manifest/view/data types:
-  `apps/extension/src/components/nextlayer/catalog/widget-manifest.ts`,
-  `packages/sdk/src/models/widget-view.ts`,
+  `apps/extension/src/components/nextlayer/catalog/insight-manifest.ts`,
+  `packages/sdk/src/models/insight-view.ts`,
   `packages/sdk/src/models/board.ts` (`LiveWidget*`, `WidgetPatch`),
   `packages/sdk/src/types.ts` (`LiveWidgetDataQuery/Result`).
 - Host/content protocol:
@@ -16,17 +17,20 @@ types; visual rules live in the Design Guideline.
 
 ## Definition vs instance
 
-`widgetId` names the definition (its directory); `liveWidgetId` names one
+Sources acquire data and are carried by LiveCards. Insights query, transform,
+and analyze data and are carried by LiveWidgets.
+
+`insightId` names the definition (its directory); `liveWidgetId` names one
 installed placement. All edits, moves, and removal target `liveWidgetId`.
 `client.liveWidgets.data` addresses the definition. Identical definition
 inputs share the daemon result cache. Repeated `liveWidget.create` calls may
 reuse one definition in one Board; each returns an independent `liveWidgetId`.
 
-## One Widget, one function
+## One LiveWidget, one function
 
-Each Widget serves one primary task with one main view or control. Data and
+Each LiveWidget serves one primary task with one main view or control. Data and
 interaction that directly support that task belong together; independently
-useful charts, metrics, feeds, and controls belong in separate Widgets. At the
+useful charts, metrics, feeds, and controls belong in separate Insights. At the
 minimum `2×1` size, the primary function must remain clear and usable. Larger
 sizes may show more detail of the same function, not add another function.
 
@@ -43,7 +47,7 @@ in a single bottom layer; renderers stay free of loading and status text.
 
 - Custom views answer `newsnext.widget.ready` once their listener is
   installed. The host sends `newsnext.widget.data`
-  (`status`, `stale`, `queries`, `params`, `layout`, `widgetId`,
+  (`status`, `stale`, `queries`, `params`, `layout`, `insightId`,
   `liveWidgetId`) and re-sends the latest payload after each load/refresh.
 - Views report empty/malformed data via `newsnext.widget.status`
   (`message: null` clears); the host renders it in the shared status layer.
@@ -60,7 +64,7 @@ in a single bottom layer; renderers stay free of loading and status text.
 or declare `data.queries` in the manifest; or omit both for data-free
 (no refresh button). JS receives materialized snapshots and its return
 replaces them. Runs are bounded (60s, 16 MiB JSON); entry paths stay inside
-the Widget directory; stdout carries JSON, diagnostics go to stderr.
+the Insight directory; stdout carries JSON, diagnostics go to stderr.
 Only initial load, manual refresh, and visible
 polling (`refreshIntervalMs`) execute the pipeline; there is no background
 schedule. Placement metadata/params overrides apply via
@@ -69,7 +73,7 @@ schedule. Placement metadata/params overrides apply via
 ## Linked rules (not copied here)
 
 - Next Layer grid, shell, header, back, palette, motion, and preset
-  presentation rules: [Design Guideline](DESIGN_GUIDELINE.md). Widget sizes
+  presentation rules: [Design Guideline](DESIGN_GUIDELINE.md). Insight sizes
   are half-LiveCard grid units; layout clamping lives in `grid/widget-layout.ts`.
 - Source-style `params` schema, loaders, templates, and query semantics:
   [Source Authoring Guide](SOURCE_GUIDELINE.md) and
@@ -79,7 +83,7 @@ schedule. Placement metadata/params overrides apply via
 
 ## Scaffold and verify
 
-Scaffold with `newsnext widget create <widget-id>`, validate with
-`newsnext widget validate --run <widget-id>`, install via
+Scaffold with `newsnext insight create <insight-id>`, validate with
+`newsnext insight validate --run <insight-id>`, install via
 `liveWidget.create` on an explicitly chosen Board. Preview presets are in
-Cosmos **Patterns → Widgets**.
+Cosmos **Patterns → Insights**.

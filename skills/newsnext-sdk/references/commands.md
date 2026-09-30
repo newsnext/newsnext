@@ -4,14 +4,14 @@ Use `newsnext <command> --help` for flags and arguments.
 
 ## Available commands
 
-- `status`: show the daemon PID, widget server URL and file directory, and
+- `status`: show the daemon PID, insight server URL and file directory, and
   connected browser Workers. The daemon starts automatically when the browser
   connects; restart it from Settings > Integration when needed.
 - `doctor`: check the executable, environment, Native Messaging registration,
-  database, widget manifests, daemon, and extension connectivity.
-- `widget create`: scaffold a Widget directory with a preset manifest.
-- `widget list`: list installed Widgets.
-- `widget validate`: validate Widget manifests, optionally executing the data
+  database, insight manifests, daemon, and extension connectivity.
+- `insight create`: scaffold an Insight directory with a preset manifest.
+- `insight list`: list installed Insights.
+- `insight validate`: validate Insight manifests, optionally executing the data
   pipeline.
 - `action list`: list independently installed Actions.
 - `action run`: validate and execute a local directory containing `action.json`

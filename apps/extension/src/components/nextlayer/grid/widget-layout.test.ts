@@ -5,7 +5,7 @@ import { clampWidgetWidth, getChangedWidgetLayouts, getClosestWidgetDropTarget, 
 const cellSize = { width: WIDGET_COLUMN_WIDTH, height: WIDGET_ROW_HEIGHT }
 
 const widget = {
-  widgetId: "headlines-definition",
+  insightId: "headlines-definition",
   liveWidgetId: "headlines",
   dataScope: { type: "board" as const },
   layout: { width: 3, height: 4 },
@@ -90,7 +90,7 @@ describe("widget insertion order", () => {
     expect(ordered.map(node => node.id)).toEqual(["widget-a", "widget-d", "widget-b", "widget-c"])
     const packed = getWidgetGridLayout(8, ordered)
     const widgets = original.map(node => ({
-      widgetId: "shared-definition",
+      insightId: "shared-definition",
       liveWidgetId: node.id.slice("widget-".length),
       dataScope: { type: "board" as const },
       layout: { width: node.w, height: node.h },

@@ -93,7 +93,7 @@ export function deleteBoardMutation(data: ApplicationData, input: BoardDeleteInp
   const liveWidgets = { ...data.liveWidgets }
   if (input.deleteLiveCards === true) {
     source.nowLayer.liveCards.forEach(cardId => delete liveCards[cardId])
-    source.nextLayer.liveWidgets.forEach(widgetId => delete liveWidgets[widgetId])
+    source.nextLayer.liveWidgets.forEach(liveWidgetId => delete liveWidgets[liveWidgetId])
   } else {
     const targetId = input.targetBoardId!
     const target = boards[targetId]!
@@ -112,26 +112,26 @@ export function setNowLayerManualOrderMutation(data: ApplicationData, input: { b
   return replaceBoard(data, input.boardId, { ...board, nowLayer: { liveCards: [...input.liveCards] } })
 }
 
-export function setNextLayerManualOrderMutation(data: ApplicationData, input: { boardId: string, widgetIds: string[] }): ApplicationMutationExecution {
+export function setNextLayerManualOrderMutation(data: ApplicationData, input: { boardId: string, liveWidgetIds: string[] }): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertCompleteOrder(board.nextLayer.liveWidgets, input.widgetIds, "Widget")
-  return replaceBoard(data, input.boardId, { ...board, nextLayer: { liveWidgets: [...input.widgetIds] } })
+  assertCompleteOrder(board.nextLayer.liveWidgets, input.liveWidgetIds, "Widget")
+  return replaceBoard(data, input.boardId, { ...board, nextLayer: { liveWidgets: [...input.liveWidgetIds] } })
 }
 
 export function createLiveWidgetMutation(data: ApplicationData, input: {
   boardId: string
   dataScope: LiveWidgetDataScope
   size: LiveWidgetInstallSize
-  widgetId: string
+  insightId: string
 }, dependencies: Pick<ApplicationMutationDependencies, "createId">): ApplicationMutationExecution {
   const board = getBoard(data, input.boardId)
-  assertWidgetId(input.widgetId)
+  assertInsightId(input.insightId)
   assertWidgetDataScope(board.nowLayer.liveCards, input.dataScope)
   const layout = { height: input.size.height ?? 2, width: input.size.width ?? 2 }
   assertWidgetLayout(layout)
   const liveWidgetId = dependencies.createId()
   if (!liveWidgetId || data.liveWidgets[liveWidgetId]) throw new Error("LiveWidget instance ID must be unique")
-  const widget: StoredLiveWidget = { dataScope: input.dataScope, layout, widgetId: input.widgetId }
+  const widget: StoredLiveWidget = { dataScope: input.dataScope, layout, insightId: input.insightId }
   return {
     data: {
       ...data,
@@ -294,9 +294,9 @@ function findCardBoardId(data: ApplicationData, cardId: string): string {
   return boardId
 }
 
-function findWidgetBoardId(data: ApplicationData, widgetId: string): string {
-  const boardId = data.boardOrder.find(id => data.boards[id]?.nextLayer.liveWidgets.includes(widgetId))
-  if (!boardId) throw new Error(`LiveWidget '${widgetId}' is not assigned to a Board`)
+function findWidgetBoardId(data: ApplicationData, liveWidgetId: string): string {
+  const boardId = data.boardOrder.find(id => data.boards[id]?.nextLayer.liveWidgets.includes(liveWidgetId))
+  if (!boardId) throw new Error(`LiveWidget '${liveWidgetId}' is not assigned to a Board`)
   return boardId
 }
 
@@ -331,10 +331,10 @@ function moveLayerEntry(boards: ApplicationData["boards"], sourceId: string, tar
 
 function removeCardFromWidgetScopes(widgets: ApplicationData["liveWidgets"], cardId: string): ApplicationData["liveWidgets"] {
   let changed = false
-  const next = Object.fromEntries(Object.entries(widgets).map(([widgetId, widget]) => {
-    if (widget.dataScope.type !== "cards" || !widget.dataScope.cardIds.includes(cardId)) return [widgetId, widget]
+  const next = Object.fromEntries(Object.entries(widgets).map(([liveWidgetId, widget]) => {
+    if (widget.dataScope.type !== "cards" || !widget.dataScope.cardIds.includes(cardId)) return [liveWidgetId, widget]
     changed = true
-    return [widgetId, { ...widget, dataScope: { ...widget.dataScope, cardIds: widget.dataScope.cardIds.filter(id => id !== cardId) } }]
+    return [liveWidgetId, { ...widget, dataScope: { ...widget.dataScope, cardIds: widget.dataScope.cardIds.filter(id => id !== cardId) } }]
   }))
   return changed ? next : widgets
 }
@@ -351,8 +351,8 @@ function assertBoardName(name: string): void {
   if (!name) throw new Error("Board name is required")
 }
 
-function assertWidgetId(id: string): void {
-  if (!id || !/^[\w-]+$/.test(id)) throw new Error("Widget ID must contain only letters, numbers, '-' or '_'")
+function assertInsightId(id: string): void {
+  if (!id || !/^[\w-]+$/.test(id)) throw new Error("Insight ID must contain only letters, numbers, '-' or '_'")
 }
 
 function assertWidgetDataScope(boardCardIds: string[], scope: LiveWidgetDataScope): void {

@@ -16,8 +16,8 @@ export const BoardIdParam = describedId("Board identifier. Board names are not u
 export const TargetBoardIdParam = describedId("Destination Board identifier.")
 export const CardIdParam = describedId("LiveCard identifier.")
 export const CardIdArrayParam = Type.Array(CardIdParam, { uniqueItems: true, description: "LiveCard identifiers in order." })
-export const LiveWidgetIdParam = describedId("LiveWidget instance identifier, not the Widget definition ID.")
-export const WidgetIdParam = describedId("Widget definition ID (e.g. \"snake\"); the running instance ID is liveWidgetId.")
+export const LiveWidgetIdParam = describedId("LiveWidget instance identifier, not the Insight definition ID.")
+export const InsightIdParam = describedId("Insight definition ID (e.g. \"snake\"); the running instance ID is liveWidgetId.")
 export const SourceIdParam = describedId("Qualified Source ID (e.g. \"x:list\").")
 
 export function stringEnum<const Values extends readonly string[]>(values: Values): TUnsafe<Values[number]> {

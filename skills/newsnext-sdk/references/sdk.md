@@ -45,8 +45,8 @@ already sent to the Worker.
 ## Local capabilities and plugins
 
 Each capability can be installed without a plugin. Place Actions in
-`~/.config/newsnext/actions/<action-id>/`, Widgets in
-`~/.config/newsnext/widgets/<widget-id>/`, and Source provider JSON files in
+`~/.config/newsnext/actions/<action-id>/`, Insights in
+`~/.config/newsnext/insights/<insight-id>/`, and Source provider JSON files in
 `~/.config/newsnext/sources/<provider-id>.json`. The development CLI uses
 `newsnext.dev` instead. `NEWSNEXT_ACTIONS_PATH` and `NEWSNEXT_SOURCES_PATH`
 override their respective directories.
@@ -80,7 +80,7 @@ Place each plugin in `~/.config/newsnext/plugins/<plugin-id>/` (or
 ```
 
 The loader discovers capabilities by convention. A plugin can contain any
-nonempty combination of `actions/<action-name>/`, `widgets/<widget-id>/`, and
+nonempty combination of `actions/<action-name>/`, `insights/<insight-id>/`, and
 `sources/<provider-id>.json`. Adding one does not require editing `plugin.json`.
 Each Action owns its metadata and module. For `greet`, add
 `actions/greet/action.json`:
@@ -93,9 +93,9 @@ Each Action owns its metadata and module. For `greet`, add
 }
 ```
 
-Widget files use their existing format under `widgets/<widget-id>/`; Source
+Insight files use their existing format under `insights/<insight-id>/`; Source
 provider JSON files go under `sources/<provider-id>.json`. A plugin bundles the
-same formats used by standalone capabilities. Standalone Widgets and Sources
+same formats used by standalone capabilities. Standalone Insights and Sources
 take precedence when IDs collide.
 
 `actions/greet/index.mjs`:
@@ -142,12 +142,12 @@ take effect without restarting the daemon. Invalid plugins are omitted from
 ```ts
 const card = await client.liveCards.data({ cardId: "saved-card-id" })
 const widget = await client.liveWidgets.data({
-  widgetId: "digest",
+  insightId: "digest",
   cardIds: ["saved-card-id"],
   params: { limit: 20 },
 })
 const cachedWidget = await client.liveWidgets.readSnapshot({
-  widgetId: "digest",
+  insightId: "digest",
   cardIds: ["saved-card-id"],
   params: { limit: 20 },
 })
@@ -166,14 +166,14 @@ LiveWidget data returns `{ queries, refreshedAt, errors }`, supports arbitrary
 named JSON results, and needs neither a Board placement nor a view. `cardIds` is
 an explicit input scope; refreshing a LiveWidget does not refresh its Sources.
 `liveWidgets.readSnapshot` returns the latest matching result or `null` without
-running the Widget data pipeline.
+running the Insight data pipeline.
 
 ## Cache
 
 The daemon stores reusable JSON values in a separate SQLite cache database.
 Entries are scoped by `namespace` and `key`. Omit `ttlMs` to keep an entry until
 it is overwritten; expired entries are omitted by `getMany` and pruned on later
-writes. Widget result snapshots use the same store with a 60-second freshness
+writes. Insight result snapshots use the same store with a 60-second freshness
 window, while `liveWidgets.readSnapshot` can still read a stale result.
 
 ```ts
@@ -186,7 +186,7 @@ return { value: values["content-hash"], expiresAt: entries["content-hash"]?.expi
 ```
 
 `getOrComputeMany` performs a read, computes missing keys, then writes them;
-separate concurrent callers can compute the same cold key. Widget data requests
+separate concurrent callers can compute the same cold key. Insight data requests
 for the same resolved scope are coalesced before the script runs.
 
 ## History
@@ -329,7 +329,7 @@ return { boardId, name: updated.name, color: updated.color }
 The same typed client exposes `card`, `source`, `nowLayer`, `nextLayer`,
 `application`, `developer`, and Worker/native integration Actions. `ActionName`,
 `ActionInput<Name>`, and `ActionResult<Name>` are also exported by the SDK root.
-All Actions are exposed, though dynamic data such as Widget snapshots may still
+All Actions are exposed, though dynamic data such as Insight snapshots may still
 have an `unknown` result type. Browser-dependent operations require a connected
 extension; the SDK does not execute browser Sources inside Node.
 
@@ -337,17 +337,17 @@ extension; the SDK does not execute browser Sources inside Node.
 
 NewsNext's own extension app can import `createClient` from
 `@newsnext/sdk/extension` and call `client.liveWidgets.data` or
-`client.liveWidgets.readSnapshot` with `{ widgetId, cardIds }` and `{ signal }`.
+`client.liveWidgets.readSnapshot` with `{ insightId, cardIds }` and `{ signal }`.
 The `@newsnext/sdk/*` specifiers below resolve through the workspace
 and the CLI's bundled SDK; the SDK is not installed from a registry.
 It uses the background's runtime-port SDK bridge and inherits the
 host environment. The background accepts this transport only from its own
-`app.html`; third-party pages and local widget iframes must use the Widget entry.
+`app.html`; third-party pages and local LiveWidget iframes must use the LiveWidget entry.
 
-## Widget authoring
+## Insight authoring
 
-When authoring a Widget rather than only querying its data, read
-[widget-authoring.md](widget-authoring.md): it covers the manifest, views, data
+When authoring an Insight rather than only querying its data, read
+[insight-authoring.md](insight-authoring.md): it covers the manifest, views, data
 producers, parameters, and validation without additional files.
 
 ## Workspace connection decisions

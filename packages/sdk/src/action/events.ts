@@ -9,7 +9,7 @@ import { EmptyObject } from "./schema.js"
 // monotonic id) so the Settings log viewer can append without re-pulling the
 // whole buffer; receivers dedupe by id and re-pull getLogs on reconnect.
 const nativeIntegrationStatusChangedEvent = defineEventContract({
-  description: "Native worker routing, Widget catalog, or connection state changed; re-read nativeIntegration.getStatus and nativeIntegration.getWidgets.",
+  description: "Native worker routing, Insight catalog, or connection state changed; re-read nativeIntegration.getStatus and nativeIntegration.getInsights.",
   name: "nativeIntegration.statusChanged",
   payload: EmptyObject,
 })

@@ -109,7 +109,7 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
       sendCollectionSubscription()
     },
     getStatus: async () => getNativeIntegrationStatus(),
-    getWidgets: async () => runtime.widgetCatalog.map(entry => ({ ...entry })),
+    getInsights: async () => runtime.insightCatalog.map(entry => ({ ...entry })),
     resolveWorkspace: async ({ resolution, expectedRevision }) => {
       await resolveWorkspace(resolution, expectedRevision)
       sendCollectionSubscription()
@@ -220,7 +220,7 @@ function getNativeIntegrationStatus(): NativeIntegrationStatus {
     connectionError: runtime.connectionError,
     state: runtime.enabled ? runtime.connectionState : "disabled",
     workerId: runtime.workerId,
-    widgetServerOrigin: runtime.widgetServerOrigin,
+    insightServerOrigin: runtime.insightServerOrigin,
   }
 }
 
@@ -288,8 +288,8 @@ function resetConnectionState(
   runtime.capabilities = []
   runtime.workerRoutingRevision = 0
   runtime.offlineWorkers = []
-  runtime.widgetCatalog = []
-  runtime.widgetServerOrigin = undefined
+  runtime.insightCatalog = []
+  runtime.insightServerOrigin = undefined
   runtime.connectionState = state
   runtime.connectionError = error
   const connectionFailure = new Error(error?.message ?? "NewsNext CLI disconnected")
@@ -374,8 +374,8 @@ function connect(): void {
   runtime.connectionState = "connecting"
   runtime.daemonVersion = undefined
   runtime.capabilities = []
-  runtime.widgetCatalog = []
-  runtime.widgetServerOrigin = undefined
+  runtime.insightCatalog = []
+  runtime.insightServerOrigin = undefined
   let nextPort: NativePort
   try {
     nextPort = browser.runtime.connectNative(NATIVE_HOST_NAME)
@@ -449,8 +449,8 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.capabilities = [...message.capabilities]
       runtime.workerRoutingRevision = message.workerRoutingRevision
       runtime.offlineWorkers = message.offlineWorkers
-      runtime.widgetCatalog = message.widgets
-      runtime.widgetServerOrigin = message.widgetServerUrl
+      runtime.insightCatalog = message.insights
+      runtime.insightServerOrigin = message.insightServerUrl
       setLocalSourceProviders(message.localSources)
       runtime.connectionError = undefined
       void initializeSharedWorkspace(connection, message.workspace, message.localCardIds).then(() => {
@@ -609,8 +609,8 @@ function handleNotification(connection: NativePort, method: string, params: unkn
         emitBackgroundEvent("nativeIntegration.logsChanged", { entries: notification.params.entries })
       }
       break
-    case "widgetCatalogChanged":
-      runtime.widgetCatalog = notification.params.widgets
+    case "insightCatalogChanged":
+      runtime.insightCatalog = notification.params.insights
       emitBackgroundEvent("nativeIntegration.statusChanged", {})
       break
     case "localSourcesChanged":

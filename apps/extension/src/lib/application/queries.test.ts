@@ -4,14 +4,14 @@ import { getBoardLiveWidgetQuery, getLiveCardQuery, getNowLayerLiveCardsQuery, l
 
 function createData(): ApplicationData {
   return {
-    version: 12,
+    version: 13,
     boardOrder: ["reading"],
     boards: { reading: { color: "blue", createdAt: 1, layer: "now", name: "Reading", nowLayer: { liveCards: ["second", "first"] }, nextLayer: { liveWidgets: ["widget"] } } },
     liveCards: {
       first: { createdAt: 1, patch: {}, provider: { color: "blue", title: "RSS" }, sourceId: "rss:first", workerId: "worker" },
       second: { createdAt: 2, patch: {}, provider: { color: "blue", title: "RSS" }, sourceId: "rss:second", workerId: "worker" },
     },
-    liveWidgets: { widget: { dataScope: { type: "board" }, layout: { height: 2, width: 2 }, widgetId: "snake" } },
+    liveWidgets: { widget: { dataScope: { type: "board" }, layout: { height: 2, width: 2 }, insightId: "snake" } },
   }
 }
 
@@ -22,7 +22,7 @@ describe("application queries", () => {
   })
   it("looks entities up directly by ID", () => {
     expect(getLiveCardQuery(createData(), { cardId: "first" }).sourceId).toBe("rss:first")
-    expect(getBoardLiveWidgetQuery(createData(), { boardId: "reading", liveWidgetId: "widget" }).widgetId).toBe("snake")
+    expect(getBoardLiveWidgetQuery(createData(), { boardId: "reading", liveWidgetId: "widget" }).insightId).toBe("snake")
     expect(listAllLiveWidgetsQuery(createData())[0]?.boardId).toBe("reading")
   })
   it("returns ordered Now Layer references", () => {

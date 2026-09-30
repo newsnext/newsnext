@@ -107,12 +107,12 @@ export class NewsNextClient {
   }
 
   readonly liveWidgets = {
-    /** Read the latest matching Widget snapshot without computing new data. */
+    /** Read the latest matching Insight snapshot without computing new data. */
     readSnapshot: (query: LiveWidgetDataQuery, options?: CallOptions): Promise<LiveWidgetSnapshotResult> => this.call({
       method: "liveWidgets.readSnapshot",
       ...query,
     }, options),
-    /** Compute Widget data with a daemon-owned one-minute request protection window. */
+    /** Compute Insight data with a daemon-owned one-minute request protection window. */
     data: (query: LiveWidgetDataQuery, options?: CallOptions): Promise<LiveWidgetDataResult> => this.call({
       method: "liveWidgets.data",
       ...query,

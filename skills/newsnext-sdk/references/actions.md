@@ -17,8 +17,8 @@ documented in sdk.md.
   placement): assert on the returned value instead of issuing a follow-up
   query. Deletes and removals return `{}`.
 - Identifiers are opaque strings. Board names are not unique: resolve a
-  name to an ID with `board.list` before mutating. `widgetId` names a
-  Widget definition; `liveWidgetId` names one installed instance.
+  name to an ID with `board.list` before mutating. `insightId` names a
+  Insight definition; `liveWidgetId` names one installed instance.
 - LiveCard entries carry only patch overrides. The display title resolves
   as `patch.metadata.title ?? source.metadata.title ?? provider.title`; use
   `source.get` for the fallback.
@@ -47,7 +47,7 @@ documented in sdk.md.
 | `liveCard.readSnapshot` | query | Read a LiveCard's Source snapshot through the Workspace router. |
 | `liveCard.resetMetadata` | mutation | Reset a LiveCard's presentation overrides while preserving its parameters. Returns the updated LiveCard. |
 | `liveCard.resetParams` | mutation | Reset a LiveCard's parameters while preserving presentation overrides. Returns the updated LiveCard. |
-| `liveWidget.configure` | mutation | Merge sparse overrides into a LiveWidget. Null resets a section to widget.json defaults. Returns the updated placement. |
+| `liveWidget.configure` | mutation | Merge sparse overrides into a LiveWidget. Null resets a section to insight.json defaults. Returns the updated placement. |
 | `liveWidget.create` | mutation | Create a configured LiveWidget in one Board's Next Layer. The placement prepends before existing Widgets; omitted size fields default to 2. Returns the created LiveWidget so callers can verify without a follow-up query. |
 | `liveWidget.delete` | mutation | Remove a local Widget from a Board's Next Layer. |
 | `liveWidget.get` | query | Get one configured LiveWidget. The entry carries only patch overrides; includes its Board ID. |
@@ -56,9 +56,9 @@ documented in sdk.md.
 | `liveWidget.resetMetadata` | mutation | Reset a LiveWidget's presentation overrides while preserving its parameters. Returns the updated LiveWidget. |
 | `liveWidget.resetParams` | mutation | Reset a LiveWidget's parameters while preserving presentation overrides. Returns the updated LiveWidget. |
 | `liveWidget.setLayouts` | mutation | Persist Widget sizes and order for a Board's Next Layer in display order. Returns the placements in display order. |
+| `nativeIntegration.getInsights` | query | List the renderable Insight definitions the daemon last published, including their entry URLs. |
 | `nativeIntegration.getLogs` | query | Get recent NewsNext CLI service logs. |
 | `nativeIntegration.getStatus` | query | Get the local NewsNext CLI connection status. |
-| `nativeIntegration.getWidgets` | query | List the renderable Widget definitions the daemon last published, including their entry URLs. |
 | `nativeIntegration.regenerateIdentity` | mutation | Generate a new Worker identity and reconnect this browser. |
 | `nativeIntegration.resolveWorkspace` | mutation | Resolve local and shared Workspace differences before synchronization. Overwrite replaces shared data, merge keeps shared conflicts, discard uses shared data. |
 | `nativeIntegration.restart` | mutation | Restart the local NewsNext CLI service. The connection drops and reconnects automatically. |
@@ -89,7 +89,7 @@ await client.actions.application.replace(input: { boardOrder: string[]; boards: 
 
 ```ts
 await client.actions.board.create(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; layer?: "now" | "next"; liveCards?: { patch: { metadata?: Record<string, …>; params?: Record<string, …> }; sourceId: string }[]; name: string })
-// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; provider: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }; boardId: string }
+// => { board: { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; provider: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; insightId: … }[] } }; boardId: string }
 ```
 
 ### board.delete
@@ -107,7 +107,7 @@ await client.actions.board.delete(input: { boardId: string; deleteLiveCards: boo
 
 ```ts
 await client.actions.board.get(input: { boardId: string })
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; provider: { category?: …; color: …; icon?: …; title: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; provider: { category?: …; color: …; icon?: …; title: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; insightId: string }[] } }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -118,7 +118,7 @@ await client.actions.board.get(input: { boardId: string })
 
 ```ts
 await client.actions.board.list()
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; provider: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; widgetId: … }[] } }[]
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: …; createdAt: …; patch: …; provider: …; sourceId: …; workerId: … }[] }; nextLayer: { liveWidgets: { dataScope: …; layout: …; liveWidgetId: …; patch?: …; insightId: … }[] } }[]
 ```
 
 ### board.listLiveCards
@@ -138,7 +138,7 @@ await client.actions.board.listLiveCards(input: { boardId: string })
 
 ```ts
 await client.actions.board.listLiveWidgets(input: { boardId: string })
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string }[]
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string }[]
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -149,7 +149,7 @@ await client.actions.board.listLiveWidgets(input: { boardId: string })
 
 ```ts
 await client.actions.board.update(input: { color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; layer?: "now" | "next"; boardId: string; name?: string })
-// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; provider: { category?: …; color: …; icon?: …; title: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; widgetId: string }[] } }
+// => { color: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; createdAt: number; layer: "now" | "next"; id: string; name: string; nowLayer: { liveCards: { cardId: string; createdAt: number; patch: { metadata?: …; params?: … }; provider: { category?: …; color: …; icon?: …; title: … }; sourceId: string; workerId: string }[] }; nextLayer: { liveWidgets: { dataScope: … | …; layout: { height: …; width: … }; liveWidgetId: string; patch?: { metadata?: …; params?: … }; insightId: string }[] } }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -280,26 +280,26 @@ await client.actions.liveCard.resetParams(input: { cardId: string })
 
 ### liveWidget.configure
 
-*mutation* — Merge sparse overrides into a LiveWidget. Null resets a section to widget.json defaults. Returns the updated placement.
+*mutation* — Merge sparse overrides into a LiveWidget. Null resets a section to insight.json defaults. Returns the updated placement.
 
 ```ts
 await client.actions.liveWidget.configure(input: { liveWidgetId: string; patch: { params?: unknown | Record<string, unknown>; metadata?: unknown | { title?: string; badge?: string; desc?: string; home?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate" }; dataScope?: unknown | { type: … } | { cardIds: …; type: … } } })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }
 ```
 
-- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Insight definition ID.
 
 ### liveWidget.create
 
 *mutation* — Create a configured LiveWidget in one Board's Next Layer. The placement prepends before existing Widgets; omitted size fields default to 2. Returns the created LiveWidget so callers can verify without a follow-up query.
 
 ```ts
-await client.actions.liveWidget.create(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; size: { height?: integer ≥ 1 ≤ 100; width?: integer ≥ 2 ≤ 12 }; widgetId: string })
-// => { liveWidget: { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }; liveWidgetId: string }
+await client.actions.liveWidget.create(input: { boardId: string; dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; size: { height?: integer ≥ 1 ≤ 100; width?: integer ≥ 2 ≤ 12 }; insightId: string })
+// => { liveWidget: { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }; liveWidgetId: string }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
-- `input.widgetId`: Widget definition ID (e.g. "snake"); the running instance ID is liveWidgetId.
+- `input.insightId`: Insight definition ID (e.g. "snake"); the running instance ID is liveWidgetId.
 
 ### liveWidget.delete
 
@@ -310,7 +310,7 @@ await client.actions.liveWidget.delete(input: { liveWidgetId: string })
 // => {}
 ```
 
-- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Insight definition ID.
 
 ### liveWidget.get
 
@@ -318,10 +318,10 @@ await client.actions.liveWidget.delete(input: { liveWidgetId: string })
 
 ```ts
 await client.actions.liveWidget.get(input: { liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }
 ```
 
-- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Insight definition ID.
 
 ### liveWidget.list
 
@@ -329,7 +329,7 @@ await client.actions.liveWidget.get(input: { liveWidgetId: string })
 
 ```ts
 await client.actions.liveWidget.list()
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }[]
 ```
 
 ### liveWidget.move
@@ -338,11 +338,11 @@ await client.actions.liveWidget.list()
 
 ```ts
 await client.actions.liveWidget.move(input: { boardId: string; liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
-- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Insight definition ID.
 
 ### liveWidget.resetMetadata
 
@@ -350,10 +350,10 @@ await client.actions.liveWidget.move(input: { boardId: string; liveWidgetId: str
 
 ```ts
 await client.actions.liveWidget.resetMetadata(input: { liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }
 ```
 
-- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Insight definition ID.
 
 ### liveWidget.resetParams
 
@@ -361,10 +361,10 @@ await client.actions.liveWidget.resetMetadata(input: { liveWidgetId: string })
 
 ```ts
 await client.actions.liveWidget.resetParams(input: { liveWidgetId: string })
-// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }
+// => { dataScope: { type: "board" } | { cardIds: string[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }
 ```
 
-- `input.liveWidgetId`: LiveWidget instance identifier, not the Widget definition ID.
+- `input.liveWidgetId`: LiveWidget instance identifier, not the Insight definition ID.
 
 ### liveWidget.setLayouts
 
@@ -372,10 +372,19 @@ await client.actions.liveWidget.resetParams(input: { liveWidgetId: string })
 
 ```ts
 await client.actions.liveWidget.setLayouts(input: { boardId: string; liveWidgets: { liveWidgetId: string; width: integer ≥ 2 ≤ 12; height: integer ≥ 1 ≤ 100 }[] })
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }[]
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
+
+### nativeIntegration.getInsights
+
+*query* — List the renderable Insight definitions the daemon last published, including their entry URLs.
+
+```ts
+await client.actions.nativeIntegration.getInsights()
+// => { id: string; title: string; color: string; width: integer ≥ 1; height: integer ≥ 1; minWidth: integer ≥ 1; minHeight: integer ≥ 1; url?: string; view?: unknown; params: unknown; dataRevision: string; dataFiles: string[]; viewRevision: string; hasData: boolean; refreshIntervalMs: number }[]
+```
 
 ### nativeIntegration.getLogs
 
@@ -392,16 +401,7 @@ await client.actions.nativeIntegration.getLogs()
 
 ```ts
 await client.actions.nativeIntegration.getStatus()
-// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; widgetServerOrigin?: string }
-```
-
-### nativeIntegration.getWidgets
-
-*query* — List the renderable Widget definitions the daemon last published, including their entry URLs.
-
-```ts
-await client.actions.nativeIntegration.getWidgets()
-// => { id: string; title: string; color: string; width: integer ≥ 1; height: integer ≥ 1; minWidth: integer ≥ 1; minHeight: integer ≥ 1; url?: string; view?: unknown; params: unknown; dataRevision: string; dataFiles: string[]; viewRevision: string; hasData: boolean; refreshIntervalMs: number }[]
+// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.regenerateIdentity
@@ -410,7 +410,7 @@ await client.actions.nativeIntegration.getWidgets()
 
 ```ts
 await client.actions.nativeIntegration.regenerateIdentity()
-// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; widgetServerOrigin?: string }
+// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.resolveWorkspace
@@ -419,7 +419,7 @@ await client.actions.nativeIntegration.regenerateIdentity()
 
 ```ts
 await client.actions.nativeIntegration.resolveWorkspace(input: { resolution: "overwrite" | "merge" | "discard"; expectedRevision: integer ≥ 0 })
-// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; widgetServerOrigin?: string }
+// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.restart
@@ -437,7 +437,7 @@ await client.actions.nativeIntegration.restart()
 
 ```ts
 await client.actions.nativeIntegration.setEnabled(input: { enabled: boolean })
-// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; widgetServerOrigin?: string }
+// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.setLogLevel
@@ -455,7 +455,7 @@ await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "erro
 
 ```ts
 await client.actions.nativeIntegration.takeOver(input: { cardIds: string[]; workerId: string })
-// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; widgetServerOrigin?: string }
+// => { workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "daemonOutdated" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nextLayer.setManualOrder
@@ -463,8 +463,8 @@ await client.actions.nativeIntegration.takeOver(input: { cardIds: string[]; work
 *mutation* — Set the complete manual Widget order for a Board's Next Layer. Returns the ordered widgets so callers can verify without a follow-up query.
 
 ```ts
-await client.actions.nextLayer.setManualOrder(input: { boardId: string; widgetIds: string[] })
-// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; widgetId: string; boardId: string }[]
+await client.actions.nextLayer.setManualOrder(input: { boardId: string; liveWidgetIds: string[] })
+// => { dataScope: { type: "board" } | { cardIds: …[]; type: "cards" }; layout: { height: integer ≥ 1 ≤ 100; width: integer ≥ 2 ≤ 12 }; liveWidgetId: string; patch?: { metadata?: { badge?: string; color?: "red" | "pink" | "fuchsia" | "purple" | "indigo" | "blue" | "cyan" | "teal" | "green" | "amber" | "orange" | "slate"; desc?: string; home?: string; title?: string }; params?: Record<string, unknown> }; insightId: string; boardId: string }[]
 ```
 
 - `input.boardId`: Board identifier. Board names are not unique: resolve with board.list first.
@@ -559,7 +559,7 @@ New NewsNext CLI service log entries; append them to the getLogs snapshot, dedup
 
 ### nativeIntegration.statusChanged
 
-Native worker routing, Widget catalog, or connection state changed; re-read nativeIntegration.getStatus and nativeIntegration.getWidgets.
+Native worker routing, Insight catalog, or connection state changed; re-read nativeIntegration.getStatus and nativeIntegration.getInsights.
 
 ```ts
 // payload: {}

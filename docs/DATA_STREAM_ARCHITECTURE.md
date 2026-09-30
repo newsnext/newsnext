@@ -1,7 +1,7 @@
 # Data Stream Architecture
 
 Status: target analytical architecture on existing collection, History, and
-Widget Snapshots. Pipeline/operator/provenance names are conceptual, not APIs.
+Insight snapshots. Pipeline/operator/provenance names are conceptual, not APIs.
 
 [Application Architecture](APPLICATION_ARCHITECTURE.md) owns identities and
 Actions; [Source Architecture](SOURCE_ARCHITECTURE.md) owns execution, caching,
@@ -10,7 +10,7 @@ History, and transport; [PRD](PRD.md) owns priorities.
 ## Baseline and target
 
 - Today: daemon collects LiveCards on a fixed cadence; History retains
-  observations per Worker + Source + version + params + fetch time; Widgets
+  observations per Worker + Source + version + params + fetch time; Insights
   compute on demand with request-protection caches.
 - Next: compare observations, keep incremental state, aggregate windows, combine
   streams, and materialize versioned outputs — durability from persisted state,
@@ -21,7 +21,7 @@ History, and transport; [PRD](PRD.md) owns priorities.
 ```text
 Browser execution -> validated result -> retained Observation
   -> compatible comparison -> incremental state / windows / combination
-  -> versioned Materialization -> Widget or Agent read
+  -> versioned Materialization -> LiveWidget or Agent read
 ```
 
 Rules: extension owns acquisition; foreground snapshots never write History
@@ -47,4 +47,4 @@ observation time while publication time stays item metadata.
 1. Durable Run ledger + observation-use attribution.
 2. Versioned incremental state and window aggregates with coverage.
 3. Typed Pipeline dependencies, checkpoints, replay, transitive provenance.
-4. Shared deterministic processing across Widgets with retention/compaction ops.
+4. Shared deterministic processing across Insights with retention/compaction ops.

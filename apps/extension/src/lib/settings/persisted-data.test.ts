@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { normalizeApplicationData } from "./persisted-data"
+import { normalizeApplicationData, parsePersistedDataExport, PERSISTED_DATA_EXPORT_KIND } from "./persisted-data"
 
 const currentData = {
-  version: 12,
+  version: 13,
   boardOrder: ["board"],
   boards: {
     board: {
@@ -27,7 +27,7 @@ const currentData = {
     widget: {
       dataScope: { type: "cards", cardIds: ["card"] },
       layout: { height: 2, width: 3 },
-      widgetId: "headlines",
+      insightId: "headlines",
     },
   },
 } as const
@@ -37,16 +37,6 @@ describe("normalizeApplicationData", () => {
     const normalized = normalizeApplicationData(currentData)
     expect(normalized).toEqual(currentData)
     expect(normalizeApplicationData(normalized)).toEqual(normalized)
-  })
-
-  it("preserves legacy single-column widgets at the shared minimum width", () => {
-    const normalized = normalizeApplicationData({
-      ...currentData,
-      liveWidgets: {
-        widget: { ...currentData.liveWidgets.widget, layout: { height: 2, width: 1 } },
-      },
-    })
-    expect(normalized.liveWidgets.widget?.layout).toEqual({ height: 2, width: 2 })
   })
 
   it("removes orphaned and duplicate entity references", () => {
@@ -75,7 +65,12 @@ describe("normalizeApplicationData", () => {
   })
 
   it("rejects old versions and structurally unsafe current data", () => {
-    expect(() => normalizeApplicationData({ ...currentData, version: 11 })).toThrow("stored data must be preserved")
+    expect(parsePersistedDataExport(JSON.stringify({
+      kind: PERSISTED_DATA_EXPORT_KIND,
+      version: 8,
+      data: currentData,
+    }))).toBeUndefined()
+    expect(() => normalizeApplicationData({ ...currentData, version: 12 })).toThrow("stored data must be preserved")
     expect(() => normalizeApplicationData({ ...currentData, boards: [] })).toThrow("entity maps")
   })
 })

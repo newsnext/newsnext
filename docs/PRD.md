@@ -6,6 +6,10 @@ workflow has passed end-to-end acceptance.
 
 ## Product definition
 
+Sources acquire data; Insights query, transform, and analyze it. LiveCards
+carry configured Sources, while LiveWidgets carry configured Insights and
+their views.
+
 NewsNext is an agent-programmable Board powered by stable data streams. Users
 follow a subject through configured Sources; agents operate the same typed
 Actions to discover Sources, organize LiveCards, and work with retained evidence.
@@ -38,7 +42,7 @@ A Widget presents selected inputs or a saved derived result.
   Missing from a sample does not mean deleted; observation time is not publication
   time; ranking movement alone does not prove popularity or cause.
 - Standalone reading works without the daemon. Durable collection, History, and
-  local Widget Snapshots use the connected CLI daemon and owning Workers.
+  local Insight snapshots use the connected CLI daemon and owning Workers.
 
 Implementation boundaries live in [Application Architecture](APPLICATION_ARCHITECTURE.md)
 and [Source Architecture](SOURCE_ARCHITECTURE.md). Future analytical processing
@@ -66,12 +70,12 @@ schemas, transport details, and command syntax in those references and the
 | Boards, LiveCards, Widget placement/scope, portable Settings | Browser storage; synchronized through the daemon's in-memory Workspace |
 | Source permissions, credentials, device identity | Owning browser only |
 | Current Source snapshots | Owning Worker's replaceable Loader snapshot |
-| History, collection policies, Widget data caches | Daemon-owned local Turso databases |
-| Local Widget manifests and assets | CLI Widget directory |
+| History, collection policies, Insight data caches | Daemon-owned local Turso databases |
+| Local Insight manifests and assets | CLI Insight directory |
 
 Development and production default to `~/.config/newsnext.dev/` and
 `~/.config/newsnext/`. Each contains `newsnext.history.db`,
-`newsnext.cache.db`, and `widgets/`; runtime
+`newsnext.cache.db`, and `insights/`; runtime
 configuration owns environment selection and explicit overrides. Database access
 is daemon-only and requires no cloud account. Browser Workspace data is not moved
 into the database.
@@ -129,7 +133,7 @@ create Board-owned configuration instead of shared mutable state.
 | DAT-06 | Durable daemon mutations are transactional | A failed Widget, observation, or task mutation leaves no partially updated durable state |
 | DAT-07 | Concurrent clients use one ordered writer | Independent bounded-wait reads remain available while the daemon serializes immediate write transactions and returns structured busy errors instead of hanging |
 | DAT-08 | Now Layer does not create implicit History | Repeated view-driven refresh replaces the current browser-local result and does not insert observation rows; automatic collection owns retention, and collection may later retain a cached foreground result at its original fetch time |
-| DAT-09 | Next Layer background work is Agent-owned | Widget query results commit as one revisioned Snapshot; stronger task/input/output atomicity remains target scope; opening Next Layer performs no implicit refresh or transformation |
+| DAT-09 | Next Layer background work is Agent-owned | Insight query results commit as one revisioned Snapshot; stronger task/input/output atomicity remains target scope; opening Next Layer performs no implicit refresh or transformation |
 | DAT-10 | Source execution remains browser-owned | Agent tasks request registered Source execution from a connected extension and receive normalized output without receiving browser credentials or duplicating the Source runtime |
 | DAT-11 | Credentials remain browser-owned | Source credentials and browser session secrets never enter Native Messaging, IPC, logs, task inputs, materialized outputs, or database fields |
 | DAT-12 | Database failures are diagnosable | CLI status and errors distinguish missing files, schema initialization failure, incompatible schema, lock contention, corruption, disk exhaustion, and unavailable browser Fetch authority |
@@ -175,7 +179,7 @@ create Board-owned configuration instead of shared mutable state.
 | ID | Requirement | Acceptance criteria |
 | --- | --- | --- |
 | AGT-01 | The Agent can discover Widget capabilities | The CLI returns stable operation names, descriptions, and machine-readable input and output schemas |
-| AGT-02 | The Agent can inspect Board data before authoring a Widget | Queries expose a requested Board, available LiveCards, fields, observations, existing Widgets, and dependency health |
+| AGT-02 | The Agent can inspect Board data before authoring an Insight | Queries expose a requested Board, available LiveCards, fields, observations, existing Widgets, and dependency health |
 | AGT-03 | The Agent can preview before persistence | A preview returns the proposed result, provenance, warnings, and resource failures without modifying the Board |
 | AGT-04 | The Agent can create, update, order, and delete Widgets | CLI changes use canonical Actions, validate at runtime, persist once, and propagate to open UI pages |
 | AGT-05 | Agent changes are inspectable | Each durable Agent-created Widget, task, or derived dataset records its origin, version, configuration, and update time |

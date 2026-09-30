@@ -7,7 +7,7 @@ export const {
   params: paramsSchema,
   plugin: pluginManifestSchema,
   source: sourceManifestSchema,
-  widget: widgetManifestSchema,
+  insight: insightManifestSchema,
 } = portableJsonSchemas
 
 /** Validate a portable JSON Schema without changing the input value. */

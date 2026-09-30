@@ -1,4 +1,4 @@
-import type { WidgetWordCloudView } from "@newsnext/sdk/models"
+import type { InsightWordCloudView } from "@newsnext/sdk/models"
 
 export interface WordCloudRow {
   label: string
@@ -6,7 +6,7 @@ export interface WordCloudRow {
 }
 
 /** Invalid observations are surfaced, never silently converted to zero. */
-export function parseWordCloudRows(input: unknown, view: WidgetWordCloudView): WordCloudRow[] {
+export function parseWordCloudRows(input: unknown, view: InsightWordCloudView): WordCloudRow[] {
   if (!input || typeof input !== "object" || !("rows" in input) || !Array.isArray(input.rows)) throw new Error("Expected a query result with a rows array.")
   if (input.rows.length > 10_000) throw new Error("Word cloud data exceeds 10,000 rows.")
   const rows = input.rows.map((row: unknown, index): WordCloudRow => {

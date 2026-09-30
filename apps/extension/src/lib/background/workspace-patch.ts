@@ -42,9 +42,9 @@ export function applyWorkspacePatch(current: NativeWorkspace, patch: NativeWorks
   }
   const boards = applyEntityPatch(current.boards, patch.boardOrder, patch.boards, "Board")
   const cardIds = patch.boardOrder.flatMap(boardId => boards[boardId]!.nowLayer.liveCards)
-  const widgetIds = patch.boardOrder.flatMap(boardId => boards[boardId]!.nextLayer.liveWidgets)
+  const liveWidgetIds = patch.boardOrder.flatMap(boardId => boards[boardId]!.nextLayer.liveWidgets)
   const liveCards = applyEntityPatch(current.liveCards, cardIds, patch.liveCards, "LiveCard")
-  const liveWidgets = applyEntityPatch(current.liveWidgets, widgetIds, patch.liveWidgets, "LiveWidget")
+  const liveWidgets = applyEntityPatch(current.liveWidgets, liveWidgetIds, patch.liveWidgets, "LiveWidget")
   const normalized = fromNativeWorkspaceData({ boardOrder: patch.boardOrder, boards, liveCards, liveWidgets })
   const normalizedNative = toNativeWorkspaceData(normalized)
   if (normalizedNative.boardOrder.length !== patch.boardOrder.length

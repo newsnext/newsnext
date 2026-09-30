@@ -1,27 +1,31 @@
-# Widget authoring
+# Insight authoring
 
-Author Widgets with `newsnext widget create`, validate them with
-`newsnext widget validate`, and install them through `newsnext eval`. This reference covers the manifest, views, data producers, parameters, and validation without additional files. Read the authoritative [Widget manifest schema](schemas/widget.json) and [parameter schema](schemas/params.json) for accepted JSON fields and constraints.
+An Insight defines data queries and processing, with an optional view. A
+LiveWidget is its configured carrier and view on a Board, just as a LiveCard
+carries a Source.
 
-## Creating a Widget
+Author Insights with `newsnext insight create`, validate them with
+`newsnext insight validate`, and install them through `newsnext eval`. This reference covers the manifest, views, data producers, parameters, and validation without additional files. Read the authoritative [Insight manifest schema](schemas/insight.json) and [parameter schema](schemas/params.json) for accepted JSON fields and constraints.
 
-Scaffold a Widget:
+## Creating an Insight
+
+Scaffold an Insight:
 
 ```sh
-newsnext widget create keyword-watch --preset data-only
+newsnext insight create keyword-watch --preset data-only
 ```
 
-The default `live-card` preset generates a `widget.json` with a `live-card`
+The default `live-card` preset generates a `insight.json` with a `live-card`
 view and a `latest` feed query. `word-cloud` adds a sample `data.mjs`, `custom`
 adds a sample `data.mjs` and `index.html`, and `data-only` generates only
-`widget.json` with no view. The command prints the created directory; the
-directory name is the Widget ID (for example, `keyword-watch/widget.json`
+`insight.json` with no view. The command prints the created directory; the
+directory name is the Insight ID (for example, `keyword-watch/insight.json`
 identifies `keyword-watch`). Never declare `id` in the JSON. Without
 `--force`, existing files fail the command instead of being replaced.
 
-## Widget clients
+## LiveWidget clients
 
-Inside an installed Widget iframe, use the browser entry:
+Inside an installed LiveWidget iframe, use the browser entry:
 
 ```ts
 import { createClient } from "@newsnext/sdk/widget"
@@ -31,10 +35,10 @@ const boards = await client.actions.board.list()
 const datasets = await client.history.datasets()
 ```
 
-Bundle this import with the Widget. Browser-aware bundlers also select the
-Widget entry for `@newsnext/sdk`. Both entries share the same Actions, history,
-`status`, `run`, and `fetch` implementation. Widget options are `workerId`,
-`timeoutMs`, and `signal`; the environment is inherited from the host, and Widgets
+Bundle this import with the Insight. Browser-aware bundlers also select the
+LiveWidget entry for `@newsnext/sdk`. Both entries share the same Actions, history,
+`status`, `run`, and `fetch` implementation. LiveWidget options are `workerId`,
+`timeoutMs`, and `signal`; the environment is inherited from the host, and Insights
 cannot select an executable or working directory. The default Worker is the
 embedding extension's Worker.
 
@@ -42,18 +46,18 @@ The host forwards requests through Native Messaging to its own CLI SDK process.
 History exports remain pull-based streams. Abort, early iterator return, iframe
 unmount, or disconnection cancels the request; this does not undo an Action
 already executed. The host must advertise the additive `sdk` capability. Update
-and reconnect the native host when the Widget client reports missing support.
+and reconnect the native host when the LiveWidget client reports missing support.
 
 Manifest Snapshot queries and active SDK calls can coexist. A placement's data
-scope applies to its Snapshot queries, not to SDK access; installed local Widgets
+scope applies to its Snapshot queries, not to SDK access; installed local Insights
 can call every Action, including mutations outside their Board.
 
 
-### Data-only Widgets
+### Data-only Insights
 
 Data and view are independent. Place custom data logic in `data.mjs` beside
-`widget.json`; the runtime discovers it automatically. The directory name is
-the Widget ID (for example, `keyword-watch/widget.json` identifies
+`insight.json`; the runtime discovers it automatically. The directory name is
+the Insight ID (for example, `keyword-watch/insight.json` identifies
 `keyword-watch`); do not declare `id` in the JSON:
 
 ```json
@@ -104,7 +108,7 @@ Items absent from the newest observation remain searchable. `publishedAt` remain
 the source publication time; refresh time is never substituted for it. No matches
 produce an empty list.
 
-Use a `search` query when the Widget should search history directly and optionally
+Use a `search` query when the Insight should search history directly and optionally
 choose a scope independent of its placement:
 
 ```json
@@ -126,7 +130,7 @@ choose a scope independent of its placement:
 ```
 
 `boardIds` and `cardIds` form a deduplicated union. If both are omitted, the query
-inherits the Widget placement scope. `searchIn` is `title` by default and also
+inherits the LiveWidget placement scope. `searchIn` is `title` by default and also
 accepts `fullText`. Use `window` (`Nh` or `Nd`) for a relative publication window,
 or millisecond `from`/`to` boundaries; `window` and `from` cannot be combined.
 Results default to descending publication time and URL deduplication. `direction`,
@@ -136,20 +140,20 @@ reads retained history without executing Sources.
 Access data without a view, open page, or Board placement:
 
 ```ts
-const result = await client.liveWidgets.data({ widgetId: "keyword-watch" })
+const result = await client.liveWidgets.data({ insightId: "keyword-watch" })
 return result.queries.feed
 ```
 
 The result includes `queries`, completion `refreshedAt`, and LiveCard `errors`.
 The daemon enforces a fixed 60-second request protection window by retaining the
-last successful result in SQLite for each Widget and resolved data scope. Calls
+last successful result in SQLite for each Insight and resolved data scope. Calls
 inside that window reuse the result; every request after it recomputes data.
 Automatic and manual requests follow the same rule, with no `force` option or
 additional `staleTimeMs` cache. Concurrent calls share the computed result. A
 changed data definition or resolved scope starts a separate protection window.
 Extension views retain display state but do not maintain a separate data cache.
-With `data.mjs` present, a data-only `widget.json` can be `{}`. Without that
-file, declare `data.queries`. Omit both for a data-free Widget: the pipeline
+With `data.mjs` present, a data-only `insight.json` can be `{}`. Without that
+file, declare `data.queries`. Omit both for a data-free Insight: the pipeline
 yields empty `queries`, and the host hides the refresh button. Built-in views
 still require their view query in the declared data. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, then Node.js 22+.
 The daemon searches PATH and standard installation directories, including
@@ -157,10 +161,10 @@ The daemon searches PATH and standard installation directories, including
 Script executions share one short-lived runtime host with at most four isolated
 worker threads. An idle thread exits after 10 seconds; the host exits after 60
 seconds without a script request.
-The selected runtime receives a preconfigured `client`, `signal`, `widgetId`,
+The selected runtime receives a preconfigured `client`, `signal`, `insightId`,
 `cardIds` for the resolved placement scope, and resolved `params`. Use `client`
 directly for SDK calls; it inherits the current environment and abort signal without
-requiring `@newsnext/sdk` in the Widget directory.
+requiring `@newsnext/sdk` in the Insight directory.
 For reusable results across runs, use `client.cache.getOrComputeMany(
 { namespace, keys, ttlMs? }, async missingKeys => values)`. It computes only missing
 keys and stores JSON values in the daemon's separate cache database. Omit `ttlMs`
@@ -173,26 +177,26 @@ pull-based.
 Execution is bounded to 60 seconds, 16 MiB of JSON and 64 KiB of diagnostics.
 Use console logging for diagnostics; do not write other data to stdout. Local
 scripts are trusted code with the runtime's normal filesystem/network access.
-Each run imports a fresh module. Entry paths/symlinks must stay inside the Widget
+Each run imports a fresh module. Entry paths/symlinks must stay inside the Insight
 directory; dependencies use normal module resolution.
 
-Initial load, manual refresh and visible placed-Widget polling execute the data
-pipeline. Widgets have no background schedule; `refresh.intervalMs` controls
+Initial load, manual refresh and visible placed LiveWidget polling execute the data
+pipeline. Insights have no background schedule; `refresh.intervalMs` controls
 visible polling. Unplaced data executes on SDK request. No separate producer or data.json is necessary. Existing
 `file` queries can still import `{ items: [...] }` JSON (16 MiB / 500 items).
 
 `view: { preset: "live-card", query: "feed" }` may use optional
 `presentation: "list" | "ranking"` inside `view`; omit it for automatic
 timeline/list selection. Built-in views need no HTML file. Custom views use
-`index.html` beside `widget.json` and are covered in their own section below.
-Without `view`, `index.html` selects a custom view; without it the Widget is data-only.
+`index.html` beside `insight.json` and are covered in their own section below.
+Without `view`, `index.html` selects a custom view; without it the Insight is data-only.
 Neither `entry` nor `data.entry` is a supported manifest field.
 Preserve original millisecond `publishedAt` values; never substitute fetch time.
 
 
-### Widget parameters
+### Insight parameters
 
-Declare optional top-level `params` in `widget.json` using the same parameter
+Declare optional top-level `params` in `insight.json` using the same parameter
 schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
 
 ```json
@@ -203,8 +207,8 @@ schema as Sources (`text`, `url`, `number`, `switch`, `select`, `multiselect`):
 }
 ```
 
-Placed Widgets show these settings on their back, with Edit, Save, Cancel, and
-Reset. Values belong to the Widget's Board placement. Reset clears overrides.
+Placed LiveWidgets show these settings on their back, with Edit, Save, Cancel, and
+Reset. Values belong to the Insight's Board placement. Reset clears overrides.
 Use `client.actions.liveWidget.configure({ liveWidgetId, patch: { params } })` to
 replace overrides programmatically. Pass `{}` to restore manifest defaults.
 
@@ -214,7 +218,7 @@ Direct data calls accept overrides independently of Board placement:
 
 ```ts
 const result = await client.liveWidgets.data({
-  widgetId: "keyword-watch",
+  insightId: "keyword-watch",
   params: { limit: 5 },
 })
 return result.queries
@@ -226,13 +230,13 @@ choose SDK query arguments. The shared settings editor validates the Source
 schema's constraints. The daemon checks JSON types, bounds, and option membership.
 
 
-Widget layout dimensions use half-LiveCard units. Widths range from `2` to `12`,
+LiveWidget layout dimensions use half-LiveCard units. Widths range from `2` to `12`,
 retaining half-card resize increments. Heights range from `1` to `100`.
 
-### Widget display metadata
+### Insight display metadata
 
-`widget.json.title` and `widget.json.color` define the default display identity,
-using a string title and the same named color palette as Sources. The Widget back
+`insight.json.title` and `insight.json.color` define the default display identity,
+using a string title and the same named color palette as Sources. The Insight back
 exposes these separately from business parameters. Board placements may override
 them with `metadata: { title, color, badge, desc, home }`, the same identity fields
 as Cards. Use
@@ -250,7 +254,7 @@ explicit LiveCard selections are restricted to that Board's LiveCards.
 metadata independently of its Source parameters.
 
 
-### Word cloud Widget
+### Word cloud Insight
 
 Use `"view": { "preset": "word-cloud", "query": "observations" }`
 for the built-in word cloud. No HTML or chart library import is needed in the
@@ -267,7 +271,7 @@ export default async function load() {
 }
 ```
 
-A minimal matching `widget.json`:
+A minimal matching `insight.json`:
 
 ```json
 {
@@ -283,7 +287,7 @@ numeric `value`. View options are `label` and `value` (literal row field names),
 order). Sorting happens before the row limit. Query results may contain at most
 10,000 rows. Empty rows are a normal empty state.
 
-The view and its field mappings belong to `widget.json`'s `view` object. Placement overrides
+The view and its field mappings belong to `insight.json`'s `view` object. Placement overrides
 cover data parameters and display metadata; view settings are not editable per
 placement. Only resolved data parameters and scope affect the daemon's data
 identity.
@@ -317,15 +321,15 @@ and percent (null for a zero baseline). Invalid numbers and invalid window/count
 arguments throw rather than silently changing observations.
 
 
-Widget definitions and instances have separate identities. `widget.json` remains
-in the directory named by `widgetId`; it is never copied into Workspace storage.
-`liveWidget.create({ boardId, widgetId, dataScope, size })` creates an
+Insight definitions and instances have separate identities. `insight.json` remains
+in the directory named by `insightId`; it is never copied into Workspace storage.
+`liveWidget.create({ boardId, insightId, dataScope, size })` creates an
 independent instance and returns `{ liveWidgetId }`. Repeated calls may use the
 same definition in the same Board. Use `liveWidgetId` for configuration, movement,
-removal, and layout updates; keep using `widgetId` for `client.liveWidgets.data`.
+removal, and layout updates; keep using `insightId` for `client.liveWidgets.data`.
 Each instance stores its own sparse `patch`, `dataScope`, and `layout`. Identical
 definition inputs share the daemon's result cache. Host data messages expose both
-`widgetId` and `liveWidgetId`; iframe source-window checks isolate each instance.
+`insightId` and `liveWidgetId`; iframe source-window checks isolate each instance.
 
 A full install flow asks the user for the target Board first when they did not
 name one: list the Boards, let the user pick, and never install into a
@@ -341,37 +345,37 @@ const { liveWidgetId, liveWidget } = await client.actions.liveWidget.create({
   boardId,
   dataScope: { type: "board" },
   size: { height: 1, width: 3 },
-  widgetId: "<widget-id>",
+  insightId: "<insight-id>",
 })
 if (liveWidget.liveWidgetId !== liveWidgetId || liveWidget.boardId !== boardId) {
-  throw new Error("Widget placement missing after install")
+  throw new Error("LiveWidget placement missing after install")
 }
 return liveWidget
 ```
 
 `dataScope` is `{ type: "board" }` for the Board's complete LiveCard list or
 `{ type: "cards", cardIds }` for selected cards. `size` takes the manifest's
-`width`/`height` (from `client.actions.nativeIntegration.getWidgets()`) in
+`width`/`height` (from `client.actions.nativeIntegration.getInsights()`) in
 half-LiveCard units; the placement always appends after the Board's existing
-Widgets. Omitted `width`/`height` fall back to 2.
+Insights. Omitted `width`/`height` fall back to 2.
 
-A minimal real-data Widget lives at `references/examples/word-cloud-widget/`
-(`widget.json` and `data.mjs`). Scaffold new Widgets with
-`newsnext widget create` instead of copying this directory by hand.
+A minimal real-datan Insight lives at `references/examples/word-cloud-insight/`
+(`insight.json` and `data.mjs`). Scaffold new Insights with
+`newsnext insight create` instead of copying this directory by hand.
 
-Validate with `newsnext widget validate --run <widgetId>` before installing:
+Validate with `newsnext insight validate --run <insightId>` before installing:
 `--run` resolves `latest` queries as empty, so zero rows standalone are
 expected and do not indicate a broken producer. `select` parameter values are
 strings; quote them for `--param` (`--param 'window="24"'`), since a bare
 number parses as JSON and fails validation. Install the example above through
-the install flow with `widgetId: "board-word-cloud"`.
+the install flow with `insightId: "board-word-cloud"`.
 
 ### Custom HTML views
 
-A runnable example lives at `references/examples/custom-html-widget/`
-(`widget.json`, `data.mjs`, `index.html`).
+A runnable example lives at `references/examples/custom-html-insight/`
+(`insight.json`, `data.mjs`, `index.html`).
 
-A custom view is an `index.html` beside `widget.json`; omit `view`. The host owns the shell,
+A custom view is an `index.html` beside `insight.json`; omit `view`. The host owns the shell,
 surface, scroll container, and status layer; the document only styles and
 draws its own content. The protocol version is `1`. The view posts
 `{ type: "newsnext.widget.ready", version: 1 }` once its message listener is
@@ -396,10 +400,10 @@ visible. Do not repeat the title, refresh control, outer padding, rounded
 shell, or background. Links may open as normal new-tab links. Use the
 NewsNext semantic typography, foreground, muted, divider, hover, spacing, and
 motion tokens instead of a separate visual system: the daemon injects its
-built-in stylesheet (`/widgets/newsnext.css`) into every served HTML document,
+built-in stylesheet (`/insights/newsnext.css`) into every served HTML document,
 providing the tokens resolved through `light-dark()` plus base styles and
 shared `nn-*` content components—do not redeclare them. For managed rendering,
 import the shared view runtime explicitly as a module,
-`import { createView } from "/widgets/newsnext.js"`, which wires the host
+`import { createView } from "/insights/newsnext.js"`, which wires the host
 protocol and grid-span layout so the view renders from a frame carrying the
 payload, measured box, and grid span instead of handling messages itself.

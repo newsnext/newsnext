@@ -22,7 +22,7 @@ function DemoCard(): React.JSX.Element {
             <WidgetWordCloudContent rows={rows} layout={{ width: 2, height: 1 }} />
           </div>
         </CardShell>
-        <CardShell header={header}><CardBackContent><p className="text-sm text-muted-foreground">View is defined in widget.json.</p></CardBackContent></CardShell>
+        <CardShell header={header}><CardBackContent><p className="text-sm text-muted-foreground">View is defined in insight.json.</p></CardBackContent></CardShell>
       </FlipAnimate>
     </article>
   )

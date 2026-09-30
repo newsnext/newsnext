@@ -20,7 +20,7 @@ function createContext(): BackgroundActionContext {
     boards: { reading: { color: "blue", name: "Reading", createdAt: 1, layer: "now", nowLayer: { liveCards: [] }, nextLayer: { liveWidgets: [] } } },
     liveCards: {},
     liveWidgets: {},
-    version: 12,
+    version: 13,
   }
   return {
     data: vi.fn(async () => storedData),
@@ -66,7 +66,7 @@ function createContext(): BackgroundActionContext {
         state: "disabled" as const,
         workerId: "worker",
       })),
-      getWidgets: vi.fn(async () => []),
+      getInsights: vi.fn(async () => []),
       resolveWorkspace: vi.fn(),
       setEnabled: vi.fn(async () => ({
         capabilities: [],
@@ -140,7 +140,7 @@ describe("action Registry", () => {
       timeoutMs: 10_000,
       url: "https://example.com/api",
     }, "connected", ActionContext)).rejects.toThrow("browser-managed")
-    const data = { boardOrder: [], boards: {}, liveCards: {}, liveWidgets: {}, version: 12 as const }
+    const data = { boardOrder: [], boards: {}, liveCards: {}, liveWidgets: {}, version: 13 as const }
     await expect(executeRegisteredAction("application.replace", data, "connected", ActionContext))
       .resolves
       .toEqual(data)

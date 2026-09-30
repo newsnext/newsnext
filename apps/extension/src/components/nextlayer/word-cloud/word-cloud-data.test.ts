@@ -1,8 +1,8 @@
-import type { WidgetWordCloudView } from "@newsnext/sdk/models"
+import type { InsightWordCloudView } from "@newsnext/sdk/models"
 import { describe, expect, it } from "vitest"
 import { parseWordCloudRows } from "./word-cloud-data"
 
-const view: WidgetWordCloudView = { preset: "word-cloud", query: "observations" }
+const view: InsightWordCloudView = { preset: "word-cloud", query: "observations" }
 
 describe("word cloud rows", () => {
   it("maps labels and values, sorts, and limits the result", () => {

@@ -1,7 +1,7 @@
 import type { Board, LiveWidget } from "./board.js"
 import type { LiveCard } from "./live-card.js"
 
-export const APPLICATION_DATA_VERSION = 12 as const
+export const APPLICATION_DATA_VERSION = 13 as const
 
 export interface StoredBoard extends Omit<Board, "id" | "nowLayer" | "nextLayer"> {
   nowLayer: { liveCards: string[] }

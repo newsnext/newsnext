@@ -1,4 +1,4 @@
-import type { OfflineWorker as NativeOfflineWorker, WidgetCatalogEntry } from "@newsnext/sdk/models"
+import type { InsightCatalogEntry, OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/models"
 import type { NativeIntegrationState, NativeIntegrationStatus, NativePort } from "./types"
 import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
 import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
@@ -17,9 +17,10 @@ export const NATIVE_HOST_NAME = import.meta.env.DEV
 // order and placements carry only sizes.
 // Protocol 31 renames the LiveCard snapshot RPC and Source snapshot Actions,
 // replacing the source-cache terminology on the wire.
-// Protocol 30 carries the Widget catalog inside Ready and every catalog push
+// Protocol 30 carries the Insight catalog inside Ready and every catalog push
 // instead of serving it from the loopback Widget server.
-export const PROTOCOL_VERSION = 36
+// Protocol 37 names data-processing definitions Insights; LiveWidget remains the view instance.
+export const PROTOCOL_VERSION = 37
 export const WORKSPACE_SYNCED_AT_KEY = "newsnext-workspace-synced-at"
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"
@@ -52,8 +53,8 @@ interface NativeIntegrationRuntime {
   port: NativePort | undefined
   reconnectAttempt: number
   reconnectTimer: ReturnType<typeof setTimeout> | undefined
-  widgetCatalog: WidgetCatalogEntry[]
-  widgetServerOrigin: string | undefined
+  insightCatalog: InsightCatalogEntry[]
+  insightServerOrigin: string | undefined
   workerId: string
   workerRoutingRevision: number
   workspace: NativeWorkspace
@@ -76,8 +77,8 @@ export const runtime: NativeIntegrationRuntime = {
   port: undefined,
   reconnectAttempt: 0,
   reconnectTimer: undefined,
-  widgetCatalog: [],
-  widgetServerOrigin: undefined,
+  insightCatalog: [],
+  insightServerOrigin: undefined,
   workerId: getWorkerId(),
   workerRoutingRevision: 0,
   workspace: createInitialWorkspace(),

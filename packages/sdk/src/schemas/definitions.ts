@@ -67,7 +67,7 @@ export const paramsDefinition = Type.Record(identifier(), Type.Union([
   }),
 ]), { additionalProperties: false })
 
-const widgetQuery = Type.Union([
+const insightQuery = Type.Union([
   strictObject({ type: Type.Literal("file"), path: Type.String({ minLength: 1 }) }),
   strictObject({
     type: Type.Literal("latest"),
@@ -93,7 +93,7 @@ const widgetQuery = Type.Union([
   }),
 ])
 
-const widgetView = Type.Union([
+const insightView = Type.Union([
   strictObject({
     preset: Type.Literal("live-card"),
     query: identifier(),
@@ -113,7 +113,7 @@ const widgetView = Type.Union([
   }),
 ])
 
-export const widgetManifestDefinition = strictObject({
+export const insightManifestDefinition = strictObject({
   title: Type.Optional(Type.String()),
   color: Type.Optional(Type.Union(colors.map(color => Type.Literal(color)))),
   width: Type.Optional(Type.Integer({ minimum: 2, maximum: 12 })),
@@ -124,9 +124,9 @@ export const widgetManifestDefinition = strictObject({
     staleTimeMs: Type.Optional(Type.Integer({ minimum: 30_000 })),
   })),
   data: Type.Optional(strictObject({
-    queries: Type.Optional(Type.Record(identifier(), widgetQuery, { additionalProperties: false })),
+    queries: Type.Optional(Type.Record(identifier(), insightQuery, { additionalProperties: false })),
   })),
-  view: Type.Optional(widgetView),
+  view: Type.Optional(insightView),
 })
 
 const sourceMetadata = strictObject({
@@ -246,5 +246,5 @@ export const portableJsonSchemas = {
   params: portableJsonSchema(paramsDefinition),
   plugin: portableJsonSchema(pluginManifestDefinition),
   source: portableJsonSchema(sourceManifestDefinition),
-  widget: portableJsonSchema(widgetManifestDefinition),
+  insight: portableJsonSchema(insightManifestDefinition),
 }

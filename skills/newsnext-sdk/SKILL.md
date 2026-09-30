@@ -1,6 +1,6 @@
 ---
 name: newsnext-sdk
-description: Use the NewsNext CLI and TypeScript SDK to query history, manage Boards and LiveCards, invoke or author Actions and local plugins, and create, validate, or test Sources and Widgets, including discovering a Source from a website URL.
+description: Use the NewsNext CLI and TypeScript SDK to query history, manage Boards and LiveCards, invoke or author Actions and local plugins, and create, validate, or test Sources and Insights, including discovering a Source from a website URL.
 ---
 
 # NewsNext SDK
@@ -29,13 +29,13 @@ before mutating it. Apply the requested change through its Action: mutations
 return the affected entity, so verify the returned value. Update only the
 requested fields.
 
-When authoring a Widget, follow the template and preset contracts in
-[references/widget-authoring.md](references/widget-authoring.md). Validate with
-`newsnext widget validate --run <widgetId>` before installing. Read the generated
-[Widget](references/schemas/widget.json) and
+When authoring an Insight, follow the template and preset contracts in
+[references/insight-authoring.md](references/insight-authoring.md). Validate with
+`newsnext insight validate --run <insightId>` before installing. Read the generated
+[Insight](references/schemas/insight.json) and
 [parameter](references/schemas/params.json) schemas for manifest fields.
 
-Installing a Widget mutates a Board. If the user did not name a target Board,
+Installing an Insight mutates a Board. If the user did not name a target Board,
 list the Boards and ask which one to install into.
 Resolve the chosen Board to a unique ID, install, then assert on the returned
 placement to verify the result.

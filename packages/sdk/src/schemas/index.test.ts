@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest"
 import {
   actionManifestSchema,
   firstJsonSchemaIssue,
+  insightManifestSchema,
   paramsSchema,
   pluginManifestSchema,
   sourceManifestSchema,
-  widgetManifestSchema,
 } from "./index"
 
 describe("portable manifest schemas", () => {
@@ -25,12 +25,12 @@ describe("portable manifest schemas", () => {
       outputSchema: { type: "object" },
     })).toBeDefined()
 
-    expect(firstJsonSchemaIssue(widgetManifestSchema, {
+    expect(firstJsonSchemaIssue(insightManifestSchema, {
       title: "Feed",
       view: { preset: "live-card", query: "feed" },
       data: { queries: { feed: { type: "latest", limit: 20 } } },
     })).toBeUndefined()
-    expect(firstJsonSchemaIssue(widgetManifestSchema, {
+    expect(firstJsonSchemaIssue(insightManifestSchema, {
       data: { queries: { feed: { type: "latest", limit: 0 } } },
     })).toBeDefined()
 
@@ -59,8 +59,8 @@ describe("portable manifest schemas", () => {
       [sourceManifestSchema, "rss-provider/example.json"],
       [sourceManifestSchema, "json-provider/example.json"],
       [sourceManifestSchema, "html-provider/example.json"],
-      [widgetManifestSchema, "word-cloud-widget/widget.json"],
-      [widgetManifestSchema, "custom-html-widget/widget.json"],
+      [insightManifestSchema, "word-cloud-insight/insight.json"],
+      [insightManifestSchema, "custom-html-insight/insight.json"],
     ] as const
 
     for (const [schema, path] of manifests) {

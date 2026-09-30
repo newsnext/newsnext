@@ -12,7 +12,7 @@ import {
 import { normalizeBoardLayer } from "../board"
 import { normalizePersistedSettings } from "./persisted-settings"
 
-export const PERSISTED_DATA_EXPORT_VERSION = 8
+export const PERSISTED_DATA_EXPORT_VERSION = 9
 export const PERSISTED_DATA_EXPORT_KIND = "newsnext-user-data"
 export const PERSISTED_PORTABLE_SLICE_IDS = [
   "settings",
@@ -56,7 +56,7 @@ export interface PersistedDataExport {
 export function normalizeApplicationData(value: unknown): ApplicationData {
   if (value === undefined) return createEmptyApplicationData()
   if (!isRecord(value) || value.version !== APPLICATION_DATA_VERSION) {
-    throw new Error("Unsupported Application data version; stored data must be preserved until a compatible version is available")
+    throw new Error("Unsupported Application data version; stored data must be preserved")
   }
   return normalizeCurrentApplicationData(value)
 }
@@ -96,7 +96,7 @@ function normalizeCurrentApplicationData(value: Record<string, unknown>): Applic
       return true
     })
     const nextLayer = isRecord(candidate.nextLayer) ? candidate.nextLayer : {}
-    const widgetIds = normalizeIdentifierArray(nextLayer.liveWidgets, new Set(Object.keys(liveWidgets))).filter((id) => {
+    const liveWidgetIds = normalizeIdentifierArray(nextLayer.liveWidgets, new Set(Object.keys(liveWidgets))).filter((id) => {
       if (assignedWidgets.has(id)) return false
       const scope = liveWidgets[id]!.dataScope
       if (scope.type === "cards" && scope.cardIds.some(cardId => !cardIds.includes(cardId))) return false
@@ -109,7 +109,7 @@ function normalizeCurrentApplicationData(value: Record<string, unknown>): Applic
       layer: normalizeBoardLayer(candidate.layer),
       name: candidate.name.trim(),
       nowLayer: { liveCards: cardIds },
-      nextLayer: { liveWidgets: widgetIds },
+      nextLayer: { liveWidgets: liveWidgetIds },
     }
   }
   const boardOrder = normalizeIdentifierArray(value.boardOrder, new Set(Object.keys(boards)))
@@ -119,8 +119,8 @@ function normalizeCurrentApplicationData(value: Record<string, unknown>): Applic
   for (const cardId of Object.keys(liveCards)) {
     if (!assignedCards.has(cardId)) delete liveCards[cardId]
   }
-  for (const widgetId of Object.keys(liveWidgets)) {
-    if (!assignedWidgets.has(widgetId)) delete liveWidgets[widgetId]
+  for (const liveWidgetId of Object.keys(liveWidgets)) {
+    if (!assignedWidgets.has(liveWidgetId)) delete liveWidgets[liveWidgetId]
   }
   return { version: APPLICATION_DATA_VERSION, boardOrder, boards, liveCards, liveWidgets }
 }
@@ -129,17 +129,18 @@ function normalizeLiveWidget(
   candidate: unknown,
   boardCardIds: ReadonlySet<string>,
 ): (ApplicationData["liveWidgets"][string] & { liveWidgetId: string }) | undefined {
-  if (!isRecord(candidate)
-    || typeof candidate.liveWidgetId !== "string"
+  if (!isRecord(candidate)) return undefined
+  const insightId = candidate.insightId
+  if (typeof candidate.liveWidgetId !== "string"
     || candidate.liveWidgetId.trim().length === 0
-    || typeof candidate.widgetId !== "string"
-    || candidate.widgetId.trim().length === 0
-    || !/^[\w-]+$/.test(candidate.widgetId)
+    || typeof insightId !== "string"
+    || insightId.trim().length === 0
+    || !/^[\w-]+$/.test(insightId)
     || !isRecord(candidate.layout)) {
     return undefined
   }
   const layout = candidate.layout
-  if (!isIntegerBetween(layout.width, 1, 12)
+  if (!isIntegerBetween(layout.width, MIN_WIDGET_WIDTH, 12)
     || !isIntegerBetween(layout.height, 1, 100)) {
     return undefined
   }
@@ -150,7 +151,7 @@ function normalizeLiveWidget(
     dataScope,
     layout: {
       height: layout.height,
-      width: Math.max(MIN_WIDGET_WIDTH, layout.width),
+      width: layout.width,
     },
     ...((patch.metadata || patch.params)
       ? { patch: {
@@ -170,7 +171,7 @@ function normalizeLiveWidget(
           ...(isRecord(patch.params) ? { params: patch.params } : {}),
         } }
       : {}),
-    widgetId: candidate.widgetId,
+    insightId,
     liveWidgetId: candidate.liveWidgetId,
   }
 }

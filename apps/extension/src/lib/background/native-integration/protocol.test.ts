@@ -34,7 +34,7 @@ describe("parseNativeNotification logsChanged", () => {
   })
 })
 
-describe("parseNativeNotification widgetCatalogChanged", () => {
+describe("parseNativeNotification insightCatalogChanged", () => {
   it("accepts custom entries without view and built-in entries with preset", () => {
     const base = {
       id: "clock",
@@ -51,13 +51,13 @@ describe("parseNativeNotification widgetCatalogChanged", () => {
       hasData: false,
       refreshIntervalMs: 300_000,
     }
-    const widgets = [
-      { ...base, url: "http://127.0.0.1:43121/widgets/clock/index.html" },
+    const insights = [
+      { ...base, url: "http://127.0.0.1:43121/insights/clock/index.html" },
       { ...base, id: "cloud", title: "Cloud", view: { preset: "word-cloud", query: "words" } },
     ]
-    expect(parseNativeNotification("widgetCatalogChanged", { widgets })).toEqual({
-      method: "widgetCatalogChanged",
-      params: { widgets },
+    expect(parseNativeNotification("insightCatalogChanged", { insights })).toEqual({
+      method: "insightCatalogChanged",
+      params: { insights },
     })
   })
 })

@@ -35,13 +35,13 @@ export interface WidgetPatch {
   params?: Record<string, unknown>
 }
 
-/** Installed Widget instance. `widgetId` names the definition; edits target `liveWidgetId` only. */
+/** Configured carrier and view of an Insight. `insightId` names the definition; edits target `liveWidgetId` only. */
 export interface LiveWidget {
   liveWidgetId: string
   patch?: WidgetPatch
   dataScope: LiveWidgetDataScope
   layout: LiveWidgetLayout
-  widgetId: string
+  insightId: string
 }
 
 export interface Board {

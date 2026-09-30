@@ -8,7 +8,7 @@ export const LIVE_WIDGET_SNAPSHOT_QUERY_KEY = ["live-widget-snapshot"] as const
 
 interface WidgetDataInput {
   params: Record<string, unknown>
-  widgetId: string
+  insightId: string
   cardIds: string[]
   dataRevision: string
   refreshIntervalMs: number
@@ -25,10 +25,10 @@ export interface WidgetDataQueryKey {
   cardIds: string[]
   dataRevision: string
   params: Record<string, unknown>
-  widgetId: string
+  insightId: string
 }
 
-// Request identity is widget + scope + data fingerprint + params only: the
+// Request identity is insight + scope + data fingerprint + params only: the
 // daemon ignores boards (its snapshot store keys board_id as ""), and cards
 // belong to exactly one board, so boardId would only partition the cache
 // without changing the data. View configuration must not enter it. A key
@@ -36,7 +36,7 @@ export interface WidgetDataQueryKey {
 export function buildWidgetDataQueryKey(input: WidgetDataQueryKey): readonly unknown[] {
   return [
     ...LIVE_WIDGET_QUERY_KEY,
-    input.widgetId,
+    input.insightId,
     input.cardIds,
     input.dataRevision,
     input.params,
@@ -46,7 +46,7 @@ export function buildWidgetDataQueryKey(input: WidgetDataQueryKey): readonly unk
 export function buildWidgetSnapshotQueryKey(input: WidgetDataQueryKey): readonly unknown[] {
   return [
     ...LIVE_WIDGET_SNAPSHOT_QUERY_KEY,
-    input.widgetId,
+    input.insightId,
     input.cardIds,
     input.dataRevision,
     input.params,
@@ -59,12 +59,12 @@ export function useLiveWidgetData(input: WidgetDataInput, active: boolean): Widg
     cardIds,
     dataRevision: input.dataRevision,
     params: input.params,
-    widgetId: input.widgetId,
+    insightId: input.insightId,
   }
   const snapshotQuery = useQuery({
     queryKey: buildWidgetSnapshotQueryKey(identity),
     queryFn: ({ signal }) => client.liveWidgets.readSnapshot(
-      { widgetId: input.widgetId, cardIds, params: input.params },
+      { insightId: input.insightId, cardIds, params: input.params },
       { signal },
     ),
     enabled: active,
@@ -75,7 +75,7 @@ export function useLiveWidgetData(input: WidgetDataInput, active: boolean): Widg
   const query = useQuery({
     queryKey: buildWidgetDataQueryKey(identity),
     queryFn: ({ signal }) => client.liveWidgets.data(
-      { widgetId: input.widgetId, cardIds, params: input.params },
+      { insightId: input.insightId, cardIds, params: input.params },
       { signal },
     ),
     enabled: active && snapshotQuery.isFetched,

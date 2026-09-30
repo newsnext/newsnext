@@ -2,7 +2,7 @@ import type { ApplicationData, ApplicationNextLayerLiveWidget, ApplicationNowLay
 import Type from "typebox"
 import { CATEGORY_IDS, COLORS, MIN_WIDGET_WIDTH } from "../models/index.js"
 import { defineActionContract } from "./definition.js"
-import { BoardIdParam, CardIdParam, EmptyObject, Identifier, LiveWidgetIdParam, RecordValue, SourceIdParam, stringEnum, TargetBoardIdParam, WidgetIdParam } from "./schema.js"
+import { BoardIdParam, CardIdParam, EmptyObject, Identifier, InsightIdParam, LiveWidgetIdParam, RecordValue, SourceIdParam, stringEnum, TargetBoardIdParam } from "./schema.js"
 
 const IdentifierArray = Type.Array(Identifier, { uniqueItems: true })
 
@@ -88,7 +88,7 @@ const LiveWidgetFields = {
   layout: LiveWidgetLayoutResult,
   liveWidgetId: Identifier,
   patch: Type.Optional(LiveWidgetPatchResult),
-  widgetId: Identifier,
+  insightId: Identifier,
 }
 
 const LiveWidgetResult = Type.Unsafe<LiveWidget>(Type.Object({ ...LiveWidgetFields }))
@@ -205,7 +205,7 @@ const nextLayerSetManualOrderAction = defineActionContract({
   description: "Set the complete manual Widget order for a Board's Next Layer. Returns the ordered widgets so callers can verify without a follow-up query.",
   params: Type.Object({
     boardId: BoardIdParam,
-    widgetIds: IdentifierArray,
+    liveWidgetIds: IdentifierArray,
   }, { additionalProperties: false }),
   result: Type.Array(NextLayerLiveWidgetResult),
 })
@@ -218,7 +218,7 @@ const liveWidgetCreateAction = defineActionContract({
     boardId: BoardIdParam,
     dataScope: WidgetDataScopeParams,
     size: WidgetInstallSizeParams,
-    widgetId: WidgetIdParam,
+    insightId: InsightIdParam,
   }, { additionalProperties: false }),
   result: LiveWidgetCreatedResult,
 })
@@ -260,7 +260,7 @@ const liveWidgetDeleteAction = defineActionContract({
 const liveWidgetConfigureAction = defineActionContract({
   name: "liveWidget.configure",
   kind: "mutation",
-  description: "Merge sparse overrides into a LiveWidget. Null resets a section to widget.json defaults. Returns the updated placement.",
+  description: "Merge sparse overrides into a LiveWidget. Null resets a section to insight.json defaults. Returns the updated placement.",
   params: Type.Object({
     liveWidgetId: LiveWidgetIdParam,
     patch: Type.Object({
