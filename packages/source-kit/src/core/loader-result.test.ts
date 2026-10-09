@@ -29,6 +29,19 @@ describe("source loader result", () => {
     })).toThrowError(`items[0].${field} is not supported`)
   })
 
+  it.each([
+    "https://example.com/embed",
+    { src: "https://example.com/embed" },
+  ])("rejects removed iframe content at the loader boundary", (iframe) => {
+    expect(() => validateSourceLoaderOutput({
+      items: [{
+        title: "Example",
+        url: "https://example.com",
+        content: { text: "Preview", iframe },
+      }],
+    })).toThrowError("items[0].content.iframe is not supported")
+  })
+
   it("limits loader results to the first 50 items", () => {
     const items = Array.from({ length: 51 }, (_, index) => ({
       title: `Item ${index + 1}`,

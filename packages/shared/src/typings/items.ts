@@ -1,4 +1,3 @@
-import type { IframeHTMLAttributes } from "react"
 import type { MaybeArray } from "./util.ts"
 
 export interface SemanticPicture {
@@ -21,18 +20,11 @@ export type NewsItemStats = Partial<Record<NewsItemStatKey, number>>
 
 export type NewsItemAttributeValue = boolean | number | string
 
-export interface AdvancedIframe extends IframeHTMLAttributes<HTMLIFrameElement> {
-  selector?: string
-  blocked?: MaybeArray<string>
-  aspectRatio?: number
-}
-
 export interface NewsItemContent {
   text?: string
   /** Canonical body format; raw HTML is never rendered. */
   markdown?: string
   pictures?: MaybeArray<string>
-  iframe?: string | AdvancedIframe
 }
 
 export interface NewsItem {
@@ -76,6 +68,5 @@ export interface NewsItemInput {
     /** Collector input, converted to Markdown before storage. */
     html?: OptionalValue<string>
     pictures?: OptionalValue<NewsItemContent["pictures"]>
-    iframe?: OptionalValue<NewsItemContent["iframe"]>
   }>
 }

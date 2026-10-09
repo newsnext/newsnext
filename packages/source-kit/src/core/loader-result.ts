@@ -170,7 +170,7 @@ function assertAttributes(value: unknown, location: string): void {
 
 function assertContent(value: unknown, location: string): void {
   if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
-  assertOnlyKeys(value, ["text", "markdown", "pictures", "iframe"], location)
+  assertOnlyKeys(value, ["text", "markdown", "pictures"], location)
   assertOptionalString(value.text, `${location}.text`)
   if (hasContent(value.text) && hasContent(value.markdown)) {
     throwInvalidLoaderResult(`${location} cannot contain both text and markdown`)
@@ -183,11 +183,8 @@ function assertContent(value: unknown, location: string): void {
       assertNonEmptyString(picture, `${location}.pictures[${index}]`)
     })
   }
-  if (value.iframe !== undefined && typeof value.iframe !== "string" && !isRecord(value.iframe)) {
-    throwInvalidLoaderResult(`${location}.iframe must be a string or object`)
-  }
-  if (![value.text, value.markdown, value.pictures, value.iframe].some(hasContent)) {
-    throwInvalidLoaderResult(`${location} must contain text, markdown, pictures, or iframe`)
+  if (![value.text, value.markdown, value.pictures].some(hasContent)) {
+    throwInvalidLoaderResult(`${location} must contain text, markdown, or pictures`)
   }
 }
 

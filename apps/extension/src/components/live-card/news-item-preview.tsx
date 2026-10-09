@@ -1,5 +1,4 @@
-import type { AdvancedIframe } from "@newsnext/shared/types"
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 import type { RankingHistoryData } from "@/lib/background/ranking-history"
 import type { NewsItem } from "@/typings/source"
 import {
@@ -103,7 +102,6 @@ export function NewsItemPreview({
           onPictureOpen={onOpen}
         />
       )}
-      {content?.iframe && <NewsItemPreviewIframe iframe={content.iframe} />}
       {content?.markdown
         ? (
             <div
@@ -296,7 +294,7 @@ export function NewsItemPreviewDialog({
   const pictures = getPictures(item)
   const { content } = item
 
-  const hasMedia = pictures.length > 0 || Boolean(content?.iframe)
+  const hasMedia = pictures.length > 0
   const hasBody = Boolean(content?.markdown || content?.text)
 
   return (
@@ -319,21 +317,13 @@ export function NewsItemPreviewDialog({
         >
           {hasMedia && (
             <div className="min-h-0 bg-neutral-200/50 lg:h-full dark:bg-neutral-800/25">
-              {pictures.length > 0
-                ? (
-                    <NewsItemPictureCarousel
-                      expanded
-                      pictures={pictures}
-                      title={item.title}
-                      index={index}
-                      onIndexChange={onIndexChange}
-                    />
-                  )
-                : content?.iframe && (
-                  <div className="flex size-full items-center">
-                    <NewsItemPreviewIframe iframe={content.iframe} expanded />
-                  </div>
-                )}
+              <NewsItemPictureCarousel
+                expanded
+                pictures={pictures}
+                title={item.title}
+                index={index}
+                onIndexChange={onIndexChange}
+              />
             </div>
           )}
           <section className={cn(
@@ -420,44 +410,5 @@ function ItemNavigationButton({ direction, label, onClick }: {
     >
       <Icon className="size-5" />
     </button>
-  )
-}
-
-function NewsItemPreviewIframe({ iframe, expanded = false }: { iframe: AdvancedIframe | string, expanded?: boolean }) {
-  const { t } = useI18n()
-  const props: AdvancedIframe = typeof iframe === "string" ? { src: iframe } : { ...iframe }
-  delete props.blocked
-  delete props.selector
-  if (!props.src) return null
-
-  const {
-    aspectRatio = 16 / 9,
-    className,
-    height,
-    loading,
-    sandbox,
-    style,
-    title,
-    width,
-    ...rest
-  } = props
-  const useAspectRatio = height == null && style?.height == null && aspectRatio > 0
-  const iframeStyle: CSSProperties | undefined = useAspectRatio
-    ? { ...style, aspectRatio, height: "auto" }
-    : style
-
-  return (
-    <iframe
-      {...rest}
-      src={props.src}
-      width={width ?? "100%"}
-      height={height ?? (useAspectRatio ? undefined : "320")}
-      style={iframeStyle}
-      className={cn("w-full", expanded ? "max-h-full" : "pointer-events-none", className)}
-      tabIndex={expanded ? undefined : -1}
-      loading={loading ?? "lazy"}
-      sandbox={sandbox ?? "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"}
-      title={title ?? t("newsItemPreviewTitle")}
-    />
   )
 }

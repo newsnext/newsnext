@@ -75,10 +75,6 @@ describe("source base URL", () => {
             "/preview.png",
             "/preview-2.png",
           ],
-          iframe: {
-            src: "/embed",
-            title: "Embed",
-          },
         },
       }],
     }, "https://example.com/")
@@ -97,9 +93,6 @@ describe("source base URL", () => {
           "https://example.com/preview.png",
           "https://example.com/preview-2.png",
         ],
-        iframe: {
-          src: "https://example.com/embed",
-        },
       },
     })
   })

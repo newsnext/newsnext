@@ -149,7 +149,6 @@
       "name": "@newsnext/sdk",
       "version": "1.0.0-alpha.1",
       "dependencies": {
-        "@types/react": "^19.2.18",
         "@wxt-dev/browser": "^0.2.9",
         "typebox": "^1.3.29",
       },
@@ -164,7 +163,6 @@
       "name": "@newsnext/shared",
       "devDependencies": {
         "@newsnext/tsconfigs": "workspace:*",
-        "react": "catalog:",
         "vitest": "catalog:",
       },
     },

@@ -157,13 +157,13 @@ LiveCards are the primary surface.
 - Anchored popover after 300ms hover, incl. items without extended content.
   Trigger limited to item's left half (pointer path to left-positioned
   preview). Whole item is the link target; press never opens preview.
-  Shared composition renders text/sanitized HTML/pictures/iframes. Multiple
+  Shared composition renders text/Markdown/pictures. Multiple
   pictures = one stable carousel (wrapping prev/next, active picture kept
   into full-size viewer). Picture + text both enter viewer; title used when no
   actionable content.
 - Expanded: media + text side-by-side wide, stacked narrow. Media region
   neutral: light `bg-neutral-200/50`, dark `bg-neutral-800/25` over dialog
-  `neutral-900` (≈`#1B1B1B`), covering letterbox + iframe gutters. Text region
+  `neutral-900` (≈`#1B1B1B`), covering letterbox gutters. Text region
   `bg-background`; text-only items take full surface (no empty media column).
   Footer actions anchored right so layout shifts never move them. Detail
   column + title stay visible for media previews without body. Expanded media

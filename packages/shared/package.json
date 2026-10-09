@@ -13,7 +13,6 @@
   },
   "devDependencies": {
     "@newsnext/tsconfigs": "workspace:*",
-    "react": "catalog:",
     "vitest": "catalog:"
   }
 }

@@ -94,14 +94,6 @@ function resolveNewsItemUrls(item: NewsItem, baseUrl: string): NewsItem {
         ? item.content.pictures.map(value => resolveSourceUrl(value, baseUrl))
         : resolveSourceUrl(item.content.pictures, baseUrl)
     }
-    if (typeof item.content.iframe === "string") {
-      resolved.content.iframe = resolveSourceUrl(item.content.iframe, baseUrl)
-    } else if (item.content.iframe !== undefined) {
-      resolved.content.iframe = { ...item.content.iframe }
-      if (typeof item.content.iframe.src === "string") {
-        resolved.content.iframe.src = resolveSourceUrl(item.content.iframe.src, baseUrl)
-      }
-    }
   }
 
   return resolved

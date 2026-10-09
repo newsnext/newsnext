@@ -86,7 +86,6 @@ export interface LoaderFields<TField> {
     text?: TField
     html?: TField
     pictures?: TField
-    iframe?: TField
   }
 }
 
