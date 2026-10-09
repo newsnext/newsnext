@@ -118,7 +118,7 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 
 - Use TypeScript, React 19, Tailwind CSS v4, and Bun.
 - Run tests with `bun run test` when verification is needed.
-- Run `bun run typecheck` to type-check all workspaces with TypeScript 7.
+- Run `bun run typecheck` to type-check all workspaces with `bun check`.
 - Components in `ui/*` come from `@base-ui/react`.
 - When a render prop receives an element such as `Link`, the `Button` component injects into that element instead of wrapping it.
 - Prefer functional components and composition; extract reusable behavior into custom hooks when it improves clarity.

@@ -15,7 +15,7 @@
     "build:firefox": "wxt build -b firefox",
     "zip:chrome": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "typecheck": "tsc -b --noEmit",
+    "typecheck": "bun check -b",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

@@ -11,7 +11,7 @@
   "scripts": {
     "build": "bun run build.ts",
     "build:watch": "bun --watch run build.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun check"
   },
   "dependencies": {
     "@newsnext/date-parser": "workspace:*",

@@ -1,7 +1,5 @@
 {
   "extends": "@newsnext/tsconfigs/base.json",
-  "compilerOptions": {
-  },
   "include": [
     "./src"
   ]

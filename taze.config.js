@@ -5,7 +5,7 @@ export default defineConfig({
     // Keep parser internals aligned with the versions used by Cheerio.
     "domhandler",
     "entities",
-    // Keep the compatibility TypeScript toolchain pinned to the selected version.
+    // Keep TypeScript 6 for ESLint's compiler API compatibility.
     "typescript",
   ],
 })

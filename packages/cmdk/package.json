@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "bun run vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun check"
   },
   "dependencies": {
     "react": "catalog:"

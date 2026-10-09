@@ -49,7 +49,7 @@
   "scripts": {
     "lint": "bun run --bun eslint .",
     "test": "vitest",
-    "typecheck": "bun --filter=@newsnext/sdk run schemas:check && tsc -b --noEmit",
+    "typecheck": "bun --filter=@newsnext/sdk run schemas:check && bun check -b",
     "prepare": "simple-git-hooks",
     "dev": "bun --filter=@newsnext/extension run dev",
     "dev:yolo": "bun --filter=@newsnext/extension run dev:yolo",
@@ -73,7 +73,6 @@
     "@types/node": "catalog:",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
-    "@typescript/native": "npm:typescript@^7.0.2",
     "bumpp": "^12.3.0",
     "eslint": "^10.10.0",
     "eslint-plugin-react-hooks": "^7.1.1",

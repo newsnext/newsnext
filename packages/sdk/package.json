@@ -27,7 +27,7 @@
     "build": "bun scripts/generate-json-schemas.ts --check && tsdown && bun scripts/generate-actions-reference.ts && bun scripts/vendor-sdk-bundle.ts",
     "schemas:generate": "bun scripts/generate-json-schemas.ts",
     "schemas:check": "bun scripts/generate-json-schemas.ts --check",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "bun check"
   },
   "dependencies": {
     "@wxt-dev/browser": "^0.2.9",

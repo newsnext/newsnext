@@ -10,7 +10,7 @@
     "./styles/*": "./src/styles/*"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "bun check",
     "tw:themes": "bun run scripts/tw/themes.ts"
   },
   "dependencies": {
