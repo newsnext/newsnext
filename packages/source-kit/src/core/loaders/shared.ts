@@ -82,6 +82,7 @@ export interface LoaderFields<TField> {
     label?: TField
   }
   content?: {
+    markdown?: TField
     text?: TField
     html?: TField
     pictures?: TField

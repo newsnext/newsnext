@@ -36,7 +36,10 @@ beside the implementation — linked below).
    select → traversal → fields), RSS (feed parse → normalize), custom
    (`load(params, ctx)` with `ctx.fetch/secrets/signal/updateSecrets`).
    Details beside `core/loaders/*.ts`.
-6. Output: `validateSourceLoaderOutput` → URL resolution → cap 50, order
+6. Output: `validateSourceLoaderOutput` converts collector `content.html` to
+   `content.markdown`; stored items never contain HTML. Preview renders GFM
+   with embedded HTML disabled (`ui/src/components/markdown.tsx`).
+   URL resolution → cap 50, order
    preserved (`core/loader-result.ts`, `core/base-url.ts`). One-minute
    per-source/params protection interval reuses snapshots
    (`apps/extension/src/lib/source/query-policy.ts`); snapshots are

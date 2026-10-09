@@ -434,7 +434,7 @@ function withValidatedLoaderResult<TParams extends SourceParamSchemaMap>(
   inlineTemplate: CompiledSourceTemplate | undefined,
 ): SourceLoader<TParams> {
   return async (params, context) => {
-    const result = validateSourceLoaderOutput(await loader(params, context))
+    const result = validateSourceLoaderOutput(await loader(params, context), baseUrl)
     const resolvedResult = baseUrl === undefined
       ? result
       : resolveSourceLoaderResultUrls(result, baseUrl)

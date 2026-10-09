@@ -29,7 +29,8 @@ export interface AdvancedIframe extends IframeHTMLAttributes<HTMLIFrameElement> 
 
 export interface NewsItemContent {
   text?: string
-  html?: string
+  /** Canonical body format; raw HTML is never rendered. */
+  markdown?: string
   pictures?: MaybeArray<string>
   iframe?: string | AdvancedIframe
 }
@@ -70,7 +71,9 @@ export interface NewsItemInput {
   icon?: OptionalValue<Omit<Partial<SemanticPicture>, "src"> & { src?: OptionalValue<string> }>
   mark?: OptionalValue<Omit<Partial<SemanticPicture>, "src"> & { src?: OptionalValue<string> }>
   content?: OptionalValue<{
+    markdown?: OptionalValue<string>
     text?: OptionalValue<string>
+    /** Collector input, converted to Markdown before storage. */
     html?: OptionalValue<string>
     pictures?: OptionalValue<NewsItemContent["pictures"]>
     iframe?: OptionalValue<NewsItemContent["iframe"]>

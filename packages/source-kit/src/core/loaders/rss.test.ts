@@ -102,7 +102,7 @@ describe("parseRss", () => {
     })
   })
 
-  it("renders RSS description content as HTML", () => {
+  it("converts RSS description content to Markdown", () => {
     expect(parseRss(`
       <rss version="2.0">
         <channel>
@@ -117,7 +117,7 @@ describe("parseRss", () => {
     `)?.items).toEqual([{
       title: "HTML article",
       url: "https://example.com/html-article",
-      content: { html: "<p>Hello <strong>from RSS</strong>.</p>" },
+      content: { markdown: "Hello **from RSS**." },
     }])
   })
 
@@ -372,7 +372,7 @@ describe("parseRss", () => {
     }, {
       title: "Hello from HTML",
       url: "https://example.com/html",
-      content: { html: "<p>Hello <strong>from HTML</strong></p>" },
+      content: { markdown: "Hello **from HTML**" },
     }])
   })
 

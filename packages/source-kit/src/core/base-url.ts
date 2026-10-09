@@ -87,7 +87,7 @@ function resolveNewsItemUrls(item: NewsItem, baseUrl: string): NewsItem {
     }
   }
   if (item.content !== undefined) {
-    // WHY: resolve only URL-typed fields; free text/HTML is never rewritten here (use absolute_url in templates instead).
+    // WHY: body links resolve during HTML conversion; only structured URL fields are rewritten here.
     resolved.content = { ...item.content }
     if (item.content.pictures !== undefined) {
       resolved.content.pictures = Array.isArray(item.content.pictures)

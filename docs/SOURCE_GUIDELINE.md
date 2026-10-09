@@ -60,7 +60,8 @@ JSON only, watched live, invalid files ignored. Same shape as
 - `baseUrl`: static absolute HTTP(S), no credentials. `/x` anchors at origin
   root, `x` is relative to base directory; keep trailing slash for
   directories. Resolves loader URLs, static/Radar/response `home`/`badge`,
-  and item URLs — never inside `content.html` (use `absolute_url` there).
+  and item URLs. HTML body links resolve during conversion to stored
+  `content.markdown`.
   Multi-origin sources keep secondary URLs absolute + declare capabilities.
 - Static metadata must hold for every param value: generic fallback
   (`User Posts`, `Channel`), no concrete identity, no `|`/`｜` in

@@ -27,7 +27,12 @@
     "jmespath": "^0.16.0",
     "ky": "catalog:",
     "liquidjs": "^10.29.0",
-    "p-queue": "^9.3.3"
+    "p-queue": "^9.3.3",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@newsnext/tsconfigs": "workspace:*",

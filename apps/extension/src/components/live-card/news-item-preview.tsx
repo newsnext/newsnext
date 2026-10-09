@@ -12,8 +12,8 @@ import {
   DialogContent,
   DialogTitle,
 } from "@newsnext/ui/components/dialog"
+import { Markdown } from "@newsnext/ui/components/markdown"
 import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
-import { SafeHtml } from "@newsnext/ui/components/safe-html"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
@@ -84,7 +84,7 @@ export function NewsItemPreview({
 }: NewsItemPreviewProps): ReactNode {
   const { content } = item
   const pictures = getPictures(item)
-  const hasOpenTarget = pictures.length > 0 || Boolean(content?.html || content?.text)
+  const hasOpenTarget = pictures.length > 0 || Boolean(content?.markdown || content?.text)
 
   return (
     <div
@@ -104,7 +104,7 @@ export function NewsItemPreview({
         />
       )}
       {content?.iframe && <NewsItemPreviewIframe iframe={content.iframe} />}
-      {content?.html
+      {content?.markdown
         ? (
             <div
               role="button"
@@ -118,11 +118,7 @@ export function NewsItemPreview({
               }}
             >
               <div inert>
-                <SafeHtml
-                  as="div"
-                  className="whitespace-pre-wrap wrap-break-word"
-                  html={content.html}
-                />
+                <Markdown markdown={content.markdown} />
               </div>
             </div>
           )
@@ -301,7 +297,7 @@ export function NewsItemPreviewDialog({
   const { content } = item
 
   const hasMedia = pictures.length > 0 || Boolean(content?.iframe)
-  const hasBody = Boolean(content?.html || content?.text)
+  const hasBody = Boolean(content?.markdown || content?.text)
 
   return (
     <Dialog
@@ -355,15 +351,9 @@ export function NewsItemPreviewDialog({
                 </DialogTitle>
                 {currentPosition !== undefined && <RankingHistory history={rankingHistory} currentPosition={currentPosition} />}
                 {hasBody && (
-                  <div className="mt-4 text-justify text-[16px] text-foreground/90 [&_a]:underline [&_a]:underline-offset-3 [&_p]:mb-4 [&_p:last-child]:mb-0">
-                    {content?.html
-                      ? (
-                          <SafeHtml
-                            as="div"
-                            className="whitespace-pre-wrap wrap-break-word"
-                            html={content.html}
-                          />
-                        )
+                  <div className="mt-4 text-justify text-[16px] text-foreground/90">
+                    {content?.markdown
+                      ? <Markdown markdown={content.markdown} />
                       : <p className="whitespace-pre-wrap wrap-break-word">{content?.text}</p>}
                   </div>
                 )}

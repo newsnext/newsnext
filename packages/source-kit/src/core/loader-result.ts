@@ -2,6 +2,7 @@ import type { NewsItem, SourceLoaderResult } from "../types"
 import type { CompiledSourceTemplate } from "./template"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
+import { htmlToMarkdown } from "./content-markdown"
 import {
   createSourceTemplateScope,
   reportTemplateError,
@@ -9,8 +10,8 @@ import {
 
 const SOURCE_LOADER_RESULT_MAX_ITEMS = 50
 
-export function validateSourceLoaderOutput(value: unknown): SourceLoaderResult {
-  const normalized = normalizeSourceLoaderOutput(value)
+export function validateSourceLoaderOutput(value: unknown, baseUrl?: string): SourceLoaderResult {
+  const normalized = normalizeSourceLoaderOutput(value, baseUrl)
   assertSourceLoaderOutput(normalized)
   if (normalized.items.length <= SOURCE_LOADER_RESULT_MAX_ITEMS) return normalized
   // WHY: truncate instead of throwing; one oversized feed must not fail the whole load.
@@ -49,12 +50,26 @@ export function renderSourceLoaderResult(
   }
 }
 
-function normalizeSourceLoaderOutput(value: unknown): unknown {
+function normalizeSourceLoaderOutput(value: unknown, baseUrl?: string): unknown {
   if (!isRecord(value) || !Array.isArray(value.items)) return value
   return {
     ...value,
-    items: value.items.map(normalizeNewsItem),
+    items: value.items.map(item => normalizeCollectedNewsItem(item, baseUrl)),
   }
+}
+
+// Keep collection conversion separate so final-item consumers do not bundle the HTML pipeline.
+function normalizeCollectedNewsItem(value: unknown, baseUrl?: string): unknown {
+  if (!isRecord(value) || !isRecord(value.content)) return normalizeNewsItem(value)
+  const content = withoutEmptyValues(value.content)
+  const bodies = ["markdown", "text", "html"].filter(key => content[key] !== undefined)
+  if (bodies.length > 1) throwInvalidLoaderResult("content must contain only one of markdown, text, or html")
+  assertOptionalString(content.html, "content.html")
+  if (typeof content.html === "string") {
+    content.markdown = htmlToMarkdown(content.html, baseUrl ?? (typeof value.url === "string" ? value.url : undefined))
+  }
+  delete content.html
+  return normalizeNewsItem({ ...value, content })
 }
 
 function normalizeNewsItem(value: unknown): unknown {
@@ -155,13 +170,12 @@ function assertAttributes(value: unknown, location: string): void {
 
 function assertContent(value: unknown, location: string): void {
   if (!isRecord(value)) throwInvalidLoaderResult(`${location} must be an object`)
-  assertOnlyKeys(value, ["text", "html", "pictures", "iframe"], location)
+  assertOnlyKeys(value, ["text", "markdown", "pictures", "iframe"], location)
   assertOptionalString(value.text, `${location}.text`)
-  assertOptionalString(value.html, `${location}.html`)
-  if (hasContent(value.text) && hasContent(value.html)) {
-    // WHY: renderers pick one body format; accepting both would silently drop one downstream.
-    throwInvalidLoaderResult(`${location} cannot contain both text and html`)
+  if (hasContent(value.text) && hasContent(value.markdown)) {
+    throwInvalidLoaderResult(`${location} cannot contain both text and markdown`)
   }
+  assertOptionalString(value.markdown, `${location}.markdown`)
   if (value.pictures !== undefined) {
     const pictures = Array.isArray(value.pictures) ? value.pictures : [value.pictures]
     if (pictures.length === 0) throwInvalidLoaderResult(`${location}.pictures must not be empty`)
@@ -172,8 +186,8 @@ function assertContent(value: unknown, location: string): void {
   if (value.iframe !== undefined && typeof value.iframe !== "string" && !isRecord(value.iframe)) {
     throwInvalidLoaderResult(`${location}.iframe must be a string or object`)
   }
-  if (![value.text, value.html, value.pictures, value.iframe].some(hasContent)) {
-    throwInvalidLoaderResult(`${location} must contain text, html, pictures, or iframe`)
+  if (![value.text, value.markdown, value.pictures, value.iframe].some(hasContent)) {
+    throwInvalidLoaderResult(`${location} must contain text, markdown, pictures, or iframe`)
   }
 }
 

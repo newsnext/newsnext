@@ -21,11 +21,12 @@
     "@tanstack/react-virtual": "catalog:",
     "class-variance-authority": "^0.7.1",
     "cn": "catalog:",
-    "dompurify": "^3.4.15",
     "es-toolkit": "catalog:",
     "motion": "catalog:",
     "overlayscrollbars": "^2.16.0",
-    "react": "catalog:"
+    "react": "catalog:",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "tailwindcss": "catalog:",

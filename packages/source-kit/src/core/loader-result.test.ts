@@ -79,7 +79,7 @@ describe("source loader result", () => {
         url: "https://example.com",
         content: { text: "Text", html: "<p>Text</p>" },
       }],
-    })).toThrowError("items[0].content cannot contain both text and html")
+    })).toThrowError("content must contain only one of markdown, text, or html")
   })
 
   it("rejects source-controlled picture presentation", () => {
