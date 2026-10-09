@@ -6,6 +6,7 @@ export {
   matchesCapabilityHost,
   validateSourceRequestRules,
 } from "./capabilities"
+export { parseEmbeddedJson } from "./embedded-json"
 export {
   validateNewsItems,
   validateSourceLoaderOutput,

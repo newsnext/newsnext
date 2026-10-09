@@ -96,6 +96,674 @@
           }
         }
       }
+    },
+    "issues": {
+      "metadata": {
+        "title": "Issues"
+      },
+      "params": {
+        "owner": {
+          "type": "text",
+          "title": "Owner",
+          "default": "microsoft",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          }
+        },
+        "repo": {
+          "type": "text",
+          "title": "Repository",
+          "default": "vscode",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_.-]+$"
+          }
+        },
+        "query": {
+          "type": "text",
+          "title": "Search query",
+          "description": "GitHub search filters, such as is:open label:bug sort:updated-desc.",
+          "default": "is:issue is:open sort:updated-desc"
+        }
+      },
+      "radar": [
+        {
+          "id": "github-issues",
+          "match": {
+            "hosts": [
+              "github.com"
+            ],
+            "paths": [
+              "/:owner/:repo/issues"
+            ]
+          },
+          "patch": {
+            "params": {
+              "owner": "{{ scope.path.owner }}",
+              "repo": "{{ scope.path.repo }}",
+              "query": "{{ scope.query.q | default: \"is:issue is:open\" }}"
+            },
+            "metadata": {
+              "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Issues"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues?q={{ scope.params.query | url_query }}",
+        "items": "payload.issuesIndexContentRoute.results[].issue",
+        "metadata": {
+          "title": {
+            "template": "{{ scope.params.owner }}/{{ scope.params.repo }} | Issues"
+          },
+          "home": {
+            "template": "{{ scope.request.url }}"
+          }
+        },
+        "fields": {
+          "title": "title",
+          "url": "permalink",
+          "publishedAt": {
+            "select": "createdAt",
+            "template": "{{ scope.value | date_to_ms }}"
+          },
+          "author": {
+            "name": "author.login",
+            "home": "author.resourcePath"
+          },
+          "stats": {
+            "comments": "commentCount"
+          },
+          "attributes": {
+            "state": {
+              "select": "state",
+              "template": "{{ scope.value | remove: 'REPO_ISSUE_STATE_' | downcase }}"
+            },
+            "stateReason": "stateReason"
+          },
+          "icon": {
+            "src": "author.avatarUrl",
+            "kind": {
+              "template": "author"
+            },
+            "label": "author.login"
+          }
+        },
+        "embeddedJson": {
+          "select": "script[data-target=\"react-app.embeddedData\"]"
+        }
+      },
+      "version": 6
+    },
+    "pulls": {
+      "metadata": {
+        "title": "Pull requests"
+      },
+      "params": {
+        "owner": {
+          "type": "text",
+          "title": "Owner",
+          "default": "microsoft",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          }
+        },
+        "repo": {
+          "type": "text",
+          "title": "Repository",
+          "default": "vscode",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_.-]+$"
+          }
+        },
+        "query": {
+          "type": "text",
+          "title": "Search query",
+          "description": "GitHub search filters, such as is:open label:bug sort:updated-desc.",
+          "default": "is:pr is:open sort:updated-desc"
+        }
+      },
+      "radar": [
+        {
+          "id": "github-pulls",
+          "match": {
+            "hosts": [
+              "github.com"
+            ],
+            "paths": [
+              "/:owner/:repo/pulls"
+            ]
+          },
+          "patch": {
+            "params": {
+              "owner": "{{ scope.path.owner }}",
+              "repo": "{{ scope.path.repo }}",
+              "query": "{{ scope.query.q | default: \"is:pr is:open\" }}"
+            },
+            "metadata": {
+              "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Pull requests"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pulls?q={{ scope.params.query | url_query }}",
+        "items": "payload.repoPullsDashboardContentRoute.results",
+        "metadata": {
+          "title": {
+            "template": "{{ scope.params.owner }}/{{ scope.params.repo }} | Pull requests"
+          },
+          "home": {
+            "template": "{{ scope.request.url }}"
+          }
+        },
+        "fields": {
+          "title": "title",
+          "url": "permalink",
+          "publishedAt": {
+            "select": "createdAt",
+            "template": "{{ scope.value | date_to_ms }}"
+          },
+          "author": {
+            "name": "author.displayName || author.displayLogin"
+          },
+          "stats": {
+            "comments": "commentCount"
+          },
+          "attributes": {
+            "state": {
+              "select": "displayState",
+              "template": "{{ scope.value | remove: 'REPO_PULL_REQUEST_DISPLAY_STATE_' | downcase }}"
+            }
+          },
+          "icon": {
+            "src": {
+              "select": "author.avatarUrl",
+              "template": "{% if scope.value != blank %}{{ scope.value }}{% elsif scope.item.author.displayLogin != blank %}https://avatars.githubusercontent.com/{{ scope.item.author.displayLogin | url_path }}?s=64{% endif %}"
+            },
+            "kind": {
+              "template": "author"
+            },
+            "label": "author.displayName || author.displayLogin"
+          }
+        },
+        "embeddedJson": {
+          "select": "script[data-target=\"react-app.embeddedData\"]"
+        }
+      },
+      "version": 7
+    },
+    "issue-comments": {
+      "metadata": {
+        "title": "Issue comments",
+        "desc": "Comments included in the page HTML. GitHub may collapse older comments and review threads."
+      },
+      "params": {
+        "owner": {
+          "type": "text",
+          "title": "Owner",
+          "default": "microsoft",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          }
+        },
+        "repo": {
+          "type": "text",
+          "title": "Repository",
+          "default": "vscode",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_.-]+$"
+          }
+        },
+        "number": {
+          "type": "text",
+          "title": "Number",
+          "default": "1",
+          "required": true,
+          "validate": {
+            "regex": "^[1-9][0-9]*$"
+          }
+        }
+      },
+      "radar": [
+        {
+          "id": "github-issue-comments",
+          "match": {
+            "hosts": [
+              "github.com"
+            ],
+            "paths": [
+              "/:owner/:repo/issues/:number"
+            ]
+          },
+          "patch": {
+            "params": {
+              "owner": "{{ scope.path.owner }}",
+              "repo": "{{ scope.path.repo }}",
+              "number": "{{ scope.path.number }}"
+            },
+            "metadata": {
+              "title": "{{ scope.params.owner }}/{{ scope.params.repo }} #{{ scope.params.number }} | Issue comments"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues/{{ scope.params.number | url_path }}",
+        "items": "payload.issueViewerRoute.data.repository.issue.timelineItems.edges[].node | [?__typename == `\"IssueComment\"`]",
+        "metadata": {
+          "title": {
+            "template": "{{ scope.params.owner }}/{{ scope.params.repo }} #{{ scope.params.number }} | Issue comments"
+          },
+          "home": {
+            "template": "{{ scope.request.url }}"
+          }
+        },
+        "fields": {
+          "title": {
+            "select": "body",
+            "template": "{{ scope.value | normalize_whitespace | default: scope.item.author.login | default: 'Comment' | truncate: 160, '…' }}"
+          },
+          "url": "url",
+          "publishedAt": {
+            "select": "createdAt",
+            "template": "{{ scope.value | date_to_ms }}"
+          },
+          "author": {
+            "name": "author.login",
+            "home": "author.profileUrl"
+          },
+          "content": {
+            "markdown": "body"
+          },
+          "icon": {
+            "src": "author.avatarUrl",
+            "kind": {
+              "template": "author"
+            },
+            "label": "author.login"
+          }
+        },
+        "embeddedJson": {
+          "select": "script[data-target=\"react-app.embeddedData\"]"
+        }
+      },
+      "version": 6
+    },
+    "pull-comments": {
+      "metadata": {
+        "title": "Pull request comments",
+        "desc": "Comments included in the page HTML. GitHub may collapse older comments and review threads."
+      },
+      "params": {
+        "owner": {
+          "type": "text",
+          "title": "Owner",
+          "default": "microsoft",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          }
+        },
+        "repo": {
+          "type": "text",
+          "title": "Repository",
+          "default": "vscode",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_.-]+$"
+          }
+        },
+        "number": {
+          "type": "text",
+          "title": "Number",
+          "default": "340709",
+          "required": true,
+          "validate": {
+            "regex": "^[1-9][0-9]*$"
+          }
+        }
+      },
+      "radar": [
+        {
+          "id": "github-pull-comments",
+          "match": {
+            "hosts": [
+              "github.com"
+            ],
+            "paths": [
+              "/:owner/:repo/pull/:number"
+            ]
+          },
+          "patch": {
+            "params": {
+              "owner": "{{ scope.path.owner }}",
+              "repo": "{{ scope.path.repo }}",
+              "number": "{{ scope.path.number }}"
+            },
+            "metadata": {
+              "title": "{{ scope.params.owner }}/{{ scope.params.repo }} #{{ scope.params.number }} | Pull request comments"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "html",
+        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pull/{{ scope.params.number | url_path }}",
+        "items": ".timeline-comment-group[id^=\"issuecomment-\"], .timeline-comment[id^=\"pullrequestreview-\"], .review-comment[id^=\"discussion_r\"]",
+        "metadata": {
+          "title": {
+            "template": "{{ scope.params.owner }}/{{ scope.params.repo }} #{{ scope.params.number }} | Pull request comments"
+          },
+          "home": {
+            "template": "{{ scope.request.url }}"
+          }
+        },
+        "fields": {
+          "title": {
+            "select": ".comment-body",
+            "template": "{{ scope.value | normalize_whitespace | default: scope.item.author.name | default: 'Comment' | truncate: 160, '…' }}"
+          },
+          "url": {
+            "select": "",
+            "attr": "id",
+            "template": "{{ scope.request.url }}#{{ scope.value }}"
+          },
+          "publishedAt": {
+            "select": "relative-time[datetime]",
+            "attr": "datetime",
+            "template": "{{ scope.value | date_to_ms }}",
+            "traverse": {
+              "type": "closest",
+              "selector": ".js-comment-container, .js-timeline-item, .review-comment"
+            }
+          },
+          "author": {
+            "name": ".author",
+            "home": {
+              "select": ".author",
+              "attr": "href"
+            }
+          },
+          "content": {
+            "html": {
+              "select": ".comment-body",
+              "content": "html"
+            }
+          },
+          "icon": {
+            "src": {
+              "traverse": {
+                "type": "closest",
+                "selector": ".js-comment-container, .js-timeline-item, .review-comment"
+              },
+              "select": "img.avatar",
+              "attr": "src"
+            },
+            "kind": {
+              "template": "author"
+            },
+            "label": ".author"
+          }
+        }
+      },
+      "version": 4
+    },
+    "releases": {
+      "metadata": {
+        "title": "Releases"
+      },
+      "params": {
+        "owner": {
+          "type": "text",
+          "title": "Owner",
+          "default": "openclaw",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          }
+        },
+        "repo": {
+          "type": "text",
+          "title": "Repository",
+          "default": "openclaw",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_.-]+$"
+          }
+        },
+        "query": {
+          "type": "text",
+          "title": "Search query",
+          "description": "Find releases by version or title.",
+          "default": ""
+        },
+        "page": {
+          "type": "number",
+          "title": "Page",
+          "default": 1,
+          "min": 1
+        }
+      },
+      "radar": [
+        {
+          "id": "github-releases",
+          "match": {
+            "hosts": [
+              "github.com"
+            ],
+            "paths": [
+              "/:owner/:repo/releases"
+            ]
+          },
+          "patch": {
+            "params": {
+              "owner": "{{ scope.path.owner }}",
+              "repo": "{{ scope.path.repo }}",
+              "query": "{{ scope.query.q }}",
+              "page": "{{ scope.query.page | default: 1 }}"
+            },
+            "metadata": {
+              "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Releases"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "html",
+        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/releases?page={{ scope.params.page }}&q={{ scope.params.query | url_query }}",
+        "items": "section[data-release-anchor]",
+        "metadata": {
+          "title": {
+            "template": "{{ scope.params.owner }}/{{ scope.params.repo }} | Releases"
+          },
+          "home": {
+            "template": "{{ scope.request.url }}"
+          }
+        },
+        "fields": {
+          "title": {
+            "select": "a.Link--primary[href*=\"/releases/tag/\"]",
+            "template": "{{ scope.value | normalize_whitespace }}"
+          },
+          "url": {
+            "select": "a.Link--primary[href*=\"/releases/tag/\"]",
+            "attr": "href"
+          },
+          "publishedAt": {
+            "select": "relative-time[datetime][prefix]",
+            "attr": "datetime",
+            "template": "{{ scope.value | date_to_ms }}"
+          },
+          "author": {
+            "name": "div:has(> relative-time[datetime][prefix]) > a",
+            "home": {
+              "select": "div:has(> relative-time[datetime][prefix]) > a",
+              "attr": "href"
+            }
+          },
+          "attributes": {
+            "tag": {
+              "select": "",
+              "attr": "data-release-anchor",
+              "template": "{{ scope.value | remove_first: 'release-' }}"
+            }
+          },
+          "content": {
+            "html": {
+              "select": ".markdown-body",
+              "content": "html"
+            }
+          },
+          "icon": {
+            "src": {
+              "select": "div:has(> relative-time[datetime][prefix]) > img",
+              "attr": "src"
+            },
+            "kind": {
+              "template": "author"
+            },
+            "label": "div:has(> relative-time[datetime][prefix]) > a"
+          }
+        }
+      },
+      "version": 3
+    },
+    "commits": {
+      "metadata": {
+        "title": "Commits"
+      },
+      "params": {
+        "owner": {
+          "type": "text",
+          "title": "Owner",
+          "default": "openclaw",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9][A-Za-z0-9-]*$"
+          }
+        },
+        "repo": {
+          "type": "text",
+          "title": "Repository",
+          "default": "openclaw",
+          "required": true,
+          "validate": {
+            "regex": "^[A-Za-z0-9_.-]+$"
+          }
+        },
+        "ref": {
+          "type": "text",
+          "title": "Ref",
+          "description": "Branch, tag, or commit SHA, such as main or v1.0.0.",
+          "default": "main",
+          "required": true
+        },
+        "author": {
+          "type": "text",
+          "title": "Author",
+          "description": "Filter by GitHub login or commit author email.",
+          "default": ""
+        },
+        "since": {
+          "type": "text",
+          "title": "Since",
+          "description": "Start of the date range, such as 2026-01-01.",
+          "default": ""
+        },
+        "until": {
+          "type": "text",
+          "title": "Until",
+          "description": "End of the date range, such as 2026-12-31.",
+          "default": ""
+        },
+        "after": {
+          "type": "text",
+          "title": "After cursor",
+          "description": "GitHub pagination cursor from the page URL; leave empty for the latest commits.",
+          "default": ""
+        }
+      },
+      "radar": [
+        {
+          "id": "github-commits",
+          "match": {
+            "hosts": [
+              "github.com"
+            ],
+            "paths": [
+              "/:owner/:repo/commits/:ref"
+            ]
+          },
+          "patch": {
+            "params": {
+              "owner": "{{ scope.path.owner }}",
+              "repo": "{{ scope.path.repo }}",
+              "ref": "{{ scope.path.ref }}",
+              "author": "{{ scope.query.author }}",
+              "since": "{{ scope.query.since }}",
+              "until": "{{ scope.query.until }}",
+              "after": "{{ scope.query.after }}"
+            },
+            "metadata": {
+              "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Commits {{ scope.params.ref }}"
+            }
+          }
+        }
+      ],
+      "loader": {
+        "type": "json",
+        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/commits/{{ scope.params.ref | url_path }}/{% assign keys = \"author,since,until,after\" | split: \",\" %}{% assign separator = \"?\" %}{% for key in keys %}{% assign value = scope.params[key] %}{% if value != blank %}{{ separator }}{{ key }}={{ value | url_query }}{% assign separator = \"&\" %}{% endif %}{% endfor %}",
+        "embeddedJson": {
+          "select": "script[data-target=\"react-app.embeddedData\"]"
+        },
+        "items": "payload.commitsRefRoute.commitGroups[].commits[]",
+        "metadata": {
+          "title": {
+            "template": "{{ scope.params.owner }}/{{ scope.params.repo }} | Commits {{ scope.params.ref }}"
+          },
+          "home": {
+            "template": "{{ scope.request.url }}"
+          }
+        },
+        "fields": {
+          "title": "shortMessage",
+          "url": "url",
+          "publishedAt": {
+            "select": "committedDate",
+            "template": "{{ scope.value | date_to_ms }}"
+          },
+          "author": {
+            "name": "authors[0].login || authors[0].displayName",
+            "home": "authors[0].path"
+          },
+          "attributes": {
+            "sha": {
+              "select": "oid",
+              "template": "{{ scope.value | slice: 0, 7 }}"
+            }
+          },
+          "content": {
+            "html": "bodyMessageHtml"
+          },
+          "icon": {
+            "src": "authors[0].avatarUrl",
+            "kind": {
+              "template": "author"
+            },
+            "label": "authors[0].login || authors[0].displayName"
+          }
+        }
+      },
+      "version": 4
     }
   }
 }

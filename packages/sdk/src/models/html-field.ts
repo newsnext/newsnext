@@ -18,3 +18,11 @@ export interface HtmlFieldConfig {
 }
 
 export type HtmlField = string | HtmlFieldConfig
+
+/** Extract strict JSON from the first matching HTML element, without executing scripts. */
+export interface EmbeddedJsonOptions {
+  /** CSS selector, such as `script#__NEXT_DATA__` or `script[type="application/ld+json"]`. */
+  select: string
+  /** Read a JSON-valued attribute instead of the element's text content. */
+  attr?: string
+}

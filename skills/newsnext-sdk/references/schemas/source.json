@@ -597,6 +597,23 @@
             "decoding": {
               "type": "string"
             },
+            "embeddedJson": {
+              "type": "object",
+              "required": [
+                "select"
+              ],
+              "properties": {
+                "select": {
+                  "type": "string",
+                  "pattern": "\\S"
+                },
+                "attr": {
+                  "type": "string",
+                  "pattern": "\\S"
+                }
+              },
+              "additionalProperties": false
+            },
             "fetchOptions": {
               "type": "object",
               "properties": {},
@@ -1256,6 +1273,23 @@
                 },
                 "decoding": {
                   "type": "string"
+                },
+                "embeddedJson": {
+                  "type": "object",
+                  "required": [
+                    "select"
+                  ],
+                  "properties": {
+                    "select": {
+                      "type": "string",
+                      "pattern": "\\S"
+                    },
+                    "attr": {
+                      "type": "string",
+                      "pattern": "\\S"
+                    }
+                  },
+                  "additionalProperties": false
                 },
                 "fetchOptions": {
                   "type": "object",

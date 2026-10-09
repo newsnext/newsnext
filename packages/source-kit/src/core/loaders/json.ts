@@ -1,3 +1,4 @@
+import type { EmbeddedJsonOptions } from "@newsnext/sdk/models"
 import type {
   NewsItem,
   SourceLoaderOutput,
@@ -12,6 +13,7 @@ import type {
   TimestampSortableLoaderOptions,
 } from "./shared"
 import * as jmespath from "jmespath"
+import { parseEmbeddedJson } from "../embedded-json"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -58,6 +60,12 @@ interface JsonFieldEntry {
 
 interface JsonLoaderBaseOptions extends TimestampSortableLoaderOptions {
   url: string
+  /**
+   * Fetch HTML and parse its selected JSON element once, then use the usual
+   * JMESPath items/fields/metadata and scope.response.json. Only strict JSON is
+   * accepted; script assignments and JavaScript expressions are never evaluated.
+   */
+  embeddedJson?: EmbeddedJsonOptions
   /**
    * JMESPath to the item array (e.g. "data.items"); omitted means the
    * response itself is the array. Non-arrays yield empty items.
@@ -226,7 +234,9 @@ export async function loadJson(
 ): Promise<SourceLoaderOutput> {
   const { url, items: itemsSelect, fields, metadata } = options
   const response = await requestLoaderResponse(options, loaderContext)
-  const json: unknown = await response.json()
+  const json: unknown = options.embeddedJson
+    ? parseEmbeddedJson(await response.text(), options.embeddedJson)
+    : await response.json()
 
   const metadataContext: JsonFieldContext = {
     vars: loaderContext.vars ?? {},

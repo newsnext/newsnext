@@ -151,6 +151,10 @@ const sourceLoader = strictObject({
   metadata: Type.Optional(Type.Object({}, { additionalProperties: true })),
   sortByTimestamp: Type.Optional(Type.Boolean()),
   decoding: Type.Optional(Type.String()),
+  embeddedJson: Type.Optional(strictObject({
+    select: nonBlank(),
+    attr: Type.Optional(nonBlank()),
+  })),
   fetchOptions: Type.Optional(Type.Object({}, { additionalProperties: true })),
 })
 const radarMatch = strictObject({
