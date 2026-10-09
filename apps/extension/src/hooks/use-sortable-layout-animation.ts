@@ -1,5 +1,5 @@
 import type { RefObject } from "react"
-import { useCallback, useEffect, useLayoutEffect, useRef } from "react"
+import { useEffect, useEffectEvent, useLayoutEffect, useRef } from "react"
 
 interface Position {
   x: number
@@ -16,16 +16,14 @@ export function useSortableLayoutAnimation(
   const orderKey = JSON.stringify(order)
   const positionsRef = useRef(new Map<HTMLElement, Position>())
   const animationsRef = useRef(new Map<HTMLElement, Animation>())
-  const enabledRef = useRef(enabled)
-  enabledRef.current = enabled
 
-  const animateLayout = useCallback((columnChangesOnly: boolean) => {
+  const animateLayout = useEffectEvent((columnChangesOnly: boolean) => {
     const list = listRef.current
     if (!list) return
     const animations = animationsRef.current
     const positions = new Map<HTMLElement, Position>()
     const movements: { element: HTMLElement, x: number, y: number }[] = []
-    const shouldAnimate = enabledRef.current && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const shouldAnimate = enabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     let rowTop: number | undefined
     let column = 0
 
@@ -61,9 +59,9 @@ export function useSortableLayoutAnimation(
         if (animations.get(element) === animation) animations.delete(element)
       }
     }
-  }, [listRef])
+  })
 
-  useLayoutEffect(() => animateLayout(false), [animateLayout, enabled, orderKey])
+  useLayoutEffect(() => animateLayout(false), [listRef, enabled, orderKey])
 
   useEffect(() => {
     const list = listRef.current
@@ -78,5 +76,5 @@ export function useSortableLayoutAnimation(
       animations.clear()
       positionsRef.current.clear()
     }
-  }, [animateLayout, listRef])
+  }, [listRef])
 }

@@ -1,5 +1,5 @@
 import type { AllEventName, EventPayload } from "@newsnext/sdk/actions"
-import { useEffect, useRef } from "react"
+import { useEffect, useEffectEvent } from "react"
 import { browser } from "#imports"
 import {
   isBackgroundEventMessage,
@@ -11,14 +11,13 @@ export function useBackgroundEvent<Name extends AllEventName>(
   handler: (payload: EventPayload<Name>) => void,
   enabled = true,
 ): void {
-  const handlerRef = useRef(handler)
-  handlerRef.current = handler
+  const onEvent = useEffectEvent(handler)
   useEffect(() => {
     if (!enabled) return
     const handleMessage = (message: unknown): void => {
       if (!isBackgroundEventMessage(message) || message.name !== name) return
       try {
-        handlerRef.current(parseBackgroundEventPayload(name, message.payload))
+        onEvent(parseBackgroundEventPayload(name, message.payload))
       } catch (error) {
         console.error(`Invalid background event '${name}' payload`, error)
       }
