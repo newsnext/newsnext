@@ -1,12 +1,15 @@
 import { cn } from "@newsnext/ui/lib/utils"
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { memo } from "react"
+import { memo, useCallback } from "react"
 
 export interface VirtualListProps<T> {
   items: T[]
   /** Committed scroll element (state-backed), never a bare mutable ref. */
   scrollElement: HTMLElement | null
   estimateSize?: number
+  getItemKey?: (item: T, index: number) => string | number
+  /** Keep the visible item in place when entries are prepended or trimmed. */
+  preserveScrollPosition?: boolean
   className?: string
   itemClassName?: string
   renderItem: (item: T, index: number) => React.ReactNode
@@ -50,16 +53,24 @@ export function VirtualList<T>({
   items,
   scrollElement,
   estimateSize = 50,
+  getItemKey,
+  preserveScrollPosition = false,
   className,
   itemClassName,
   renderItem,
 }: VirtualListProps<T>): React.JSX.Element {
+  const getKey = useCallback((index: number) => {
+    const item = items[index]
+    return item === undefined ? index : getItemKey?.(item, index) ?? index
+  }, [getItemKey, items])
   // TanStack Virtual returns unstable functions by design, so React Compiler must skip this boundary.
   // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
-    count: items?.length ?? 0,
+    count: items.length,
     getScrollElement: () => scrollElement,
     estimateSize: () => estimateSize,
+    getItemKey: getKey,
+    anchorTo: preserveScrollPosition ? "end" : "start",
     overscan: 5,
   })
 

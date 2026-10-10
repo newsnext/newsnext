@@ -14,6 +14,10 @@ interface Props {
   times: readonly number[]
 }
 
+function getItemKey(item: NewsItem): string {
+  return item.url
+}
+
 export function Timeline({ items, inlinePresentation, markScale, scrollElement, times }: Props) {
   const gradientId = useId().replace(/:/g, "")
   const timeLabels = useRelativeTimes(times)
@@ -60,10 +64,10 @@ export function Timeline({ items, inlinePresentation, markScale, scrollElement, 
   return (
     <VirtualList
       items={items}
+      getItemKey={getItemKey}
+      preserveScrollPosition
       scrollElement={scrollElement}
-      estimateSize={50}
       className="relative z-0"
-      itemClassName=""
       renderItem={renderItem}
     />
   )
