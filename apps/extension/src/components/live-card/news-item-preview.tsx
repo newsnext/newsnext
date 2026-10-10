@@ -87,7 +87,7 @@ export function NewsItemPreview({
 
   return (
     <div
-      className="flex cursor-zoom-in flex-col gap-2 select-none"
+      className="flex cursor-zoom-in flex-col gap-2 select-none [text-autospace:normal]"
       onClick={(event) => {
         event.preventDefault()
         onOpen()
@@ -306,7 +306,7 @@ export function NewsItemPreviewDialog({
     >
       <DialogContent
         variant="bare"
-        className="h-[calc(100dvh-3rem)] w-[calc(100%-3rem)] sm:max-w-6xl lg:w-[calc(100%-11rem)]"
+        className="h-[calc(100dvh-3rem)] w-[calc(100%-3rem)] [text-autospace:normal] sm:max-w-6xl lg:w-[calc(100%-11rem)]"
         surfaceClassName="overflow-hidden bg-background shadow-2xl"
       >
         <div

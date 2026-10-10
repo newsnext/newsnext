@@ -5,7 +5,7 @@ import { CardSurface } from "@/components/card-shell/card-surface"
 
 export function CardShell({ header, children, className }: { header: ReactNode, children: ReactNode, className?: string }): React.JSX.Element {
   return (
-    <div className={cn("relative h-full min-h-0 **:scrollbar-hidden", className)}>
+    <div className={cn("relative h-full min-h-0 [text-autospace:normal] **:scrollbar-hidden", className)}>
       <CardSurface className="transition-colors duration-300" />
       <div className="relative flex h-full min-h-0 flex-col p-2.5 transition-colors duration-300">
         {header}
