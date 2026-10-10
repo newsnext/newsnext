@@ -19,7 +19,6 @@ const RANK_CHANGE_VISIBLE_MS = 3000
 interface RankChangeState {
   items: NewsItem[]
   changes: Record<string, number>
-  version: number
 }
 
 function getRankChanges(previousItems: NewsItem[], items: NewsItem[]): Record<string, number> {
@@ -29,14 +28,11 @@ function getRankChanges(previousItems: NewsItem[], items: NewsItem[]): Record<st
 
   const previousIndexByUrl = new Map(previousItems.map((item, index) => [item.url, index]))
   const rankChanges: Record<string, number> = {}
-  // Newcomers rank just past the last familiar item, so their arrival reads as a climb.
-  let freshSeen = 0
-
   items.forEach((item, index) => {
-    let previousIndex = previousIndexByUrl.get(item.url)
+    const previousIndex = previousIndexByUrl.get(item.url)
+    // New arrivals have no previous rank; avoid a burst of artificial climbs on refresh.
     if (previousIndex === undefined) {
-      previousIndex = previousItems.length + freshSeen
-      freshSeen += 1
+      return
     }
 
     const diff = previousIndex - index
@@ -52,14 +48,12 @@ function useRankChanges(items: NewsItem[]): Record<string, number> {
   const [rankChangeState, setRankChangeState] = useState<RankChangeState>(() => ({
     items,
     changes: {},
-    version: 0,
   }))
 
   if (rankChangeState.items !== items) {
     setRankChangeState({
       items,
       changes: getRankChanges(rankChangeState.items, items),
-      version: rankChangeState.version + 1,
     })
   }
 
@@ -76,7 +70,7 @@ function useRankChanges(items: NewsItem[]): Record<string, number> {
     }, RANK_CHANGE_VISIBLE_MS)
 
     return () => window.clearTimeout(timer)
-  }, [rankChangeState.changes, rankChangeState.version])
+  }, [rankChangeState.changes])
 
   return rankChangeState.changes
 }
