@@ -61,12 +61,12 @@ export function CardHeader({
           variant="transparent"
           size="icon-sm"
           className="shrink-0 cursor-auto rounded-full transition-transform hover:scale-105"
-          title={desc || providerTitle}
+          title={providerTitle}
           onClick={home ? () => window.open(home, "_blank") : undefined}
         >
           <SourceIcon avatarSeed={avatarSeed ?? providerTitle} badge={badge} icon={icon} size="default" title={displayTitle} />
         </Button>
-        <span className="min-w-0 flex-1 truncate text-base font-bold">{displayTitle}</span>
+        <span title={desc} className="min-w-0 flex-1 truncate text-base font-bold">{displayTitle}</span>
       </div>
       <div data-card-drag-excluded className="flex shrink-0 cursor-auto items-center gap-1 text-theme-400" onClick={event => event.stopPropagation()}>
         {actions}
