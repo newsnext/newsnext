@@ -15,9 +15,10 @@ export function ProxiedImage({ src, className, onLoad, onError, ...props }: Prox
       alt=""
       src={src}
       loading="lazy"
+      decoding="async"
       className={cn(
-        "transition-[opacity,background-color] duration-200",
-        settled ? "opacity-100" : "animate-pulse bg-muted opacity-60",
+        "transition-opacity duration-200 motion-reduce:transition-none",
+        settled ? "opacity-100" : "bg-muted opacity-60",
         className,
       )}
       onLoad={(event) => {

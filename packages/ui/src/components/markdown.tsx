@@ -1,3 +1,4 @@
+import type { Components } from "react-markdown"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { cn } from "../lib/utils"
@@ -5,6 +6,10 @@ import { cn } from "../lib/utils"
 export interface MarkdownProps {
   className?: string
   markdown: string
+}
+
+const components: Components = {
+  img: ({ node: _node, ...props }) => <img {...props} loading="lazy" decoding="async" />,
 }
 
 /** Render GFM as React elements; embedded HTML is always discarded. */
@@ -15,7 +20,7 @@ export function Markdown({ className, markdown }: MarkdownProps): React.JSX.Elem
       className,
     )}
     >
-      <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+      <ReactMarkdown skipHtml remarkPlugins={[remarkGfm]} components={components}>{markdown}</ReactMarkdown>
     </div>
   )
 }
