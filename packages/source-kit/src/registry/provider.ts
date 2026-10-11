@@ -3,10 +3,10 @@ import type { ProviderDefinition, RuntimeSource, SourceProvider } from "../types
 import type { ProviderConfig, SourceRegistry } from "./types"
 import {
   assignSourceDefaults,
+  compileSourceTemplates,
   mergeSourceVars,
   resolveRuntimeSource,
   resolveSourceVersion,
-  validateSourceTemplates,
 } from "../core/resolver"
 import {
   hasValidSourceProviderMetadata,
@@ -109,7 +109,7 @@ function expandProviderSources(
         throw new Error(`Source "${fullSourceId}" is missing a valid loader`)
       }
       resolveSourceVersion(defaultedSource.version, `${fullSourceId}.version`)
-      validateSourceTemplates(fullSourceId, defaultedSource as SourceConfig)
+      compileSourceTemplates(fullSourceId, defaultedSource as SourceConfig)
       return [sourceId, {
         ...defaultedSource,
         vars: mergeSourceVars(provider.defaults?.vars, source.vars),

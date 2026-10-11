@@ -12,6 +12,8 @@ export type FieldTransform
     | "css_url"
     | "favicon_url"
     | "absolute_url"
+    | "lowercase"
+    | { op: "timestamp_precision", milliseconds: number }
     | { op: "normalize_lines", spacing?: number }
     | { op: "truncate", length: number, suffix?: string }
     | { op: "replace", search: string, replacement: string }

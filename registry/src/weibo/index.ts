@@ -175,7 +175,7 @@ export default {
           },
           patch: {
             params: {
-              keyword: "{{ scope.query.q | default: scope.query.keyword }}",
+              keyword: "{{ scope.query.q ?? scope.query.keyword }}",
             },
             metadata: {
               title: "{{ scope.params.keyword }}",

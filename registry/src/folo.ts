@@ -88,7 +88,7 @@ async function loadFoloEntries(
   }
 }
 
-const FOLO_ANNOTATION_TEMPLATE = "{{ scope.item.author.name | default: scope.item.attributes.source }}"
+const FOLO_ANNOTATION_TEMPLATE = "{{ scope.item.author.name ?? scope.item.attributes.source }}"
 
 export default {
   title: "Folo",
@@ -132,7 +132,10 @@ export default {
               feedId: "{{ scope.path.feedId }}",
             },
             metadata: {
-              title: "{{ scope.page.title | replace: ' | Folo', '' }}",
+              title: {
+                select: "title",
+                transform: { op: "replace", search: " | Folo", replacement: "" },
+              },
               home: "https://app.folo.is/timeline/all/{{ scope.params.feedId }}/pending",
             },
           },
@@ -168,7 +171,10 @@ export default {
               listId: "{{ scope.path.listId }}",
             },
             metadata: {
-              title: "{{ scope.page.title | replace: ' | Folo', '' }}",
+              title: {
+                select: "title",
+                transform: { op: "replace", search: " | Folo", replacement: "" },
+              },
               home: "https://app.folo.is/timeline/all/list-{{ scope.params.listId }}/pending",
             },
           },

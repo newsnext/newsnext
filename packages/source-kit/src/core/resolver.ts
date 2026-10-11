@@ -17,6 +17,8 @@ import type {
 } from "../types"
 import type { HtmlLoaderOptions } from "./loaders/html"
 import type { JsonLoaderOptions } from "./loaders/json"
+import type { LoaderContext, LoaderRequestOptions } from "./loaders/shared"
+import type { CompiledSourceRequest } from "./request-templates"
 import type { CompiledSourceTemplate } from "./template"
 
 import { createDefu } from "defu"
@@ -25,8 +27,6 @@ import {
   parseSourceBaseUrl,
   resolveSourceLoaderResultUrls,
   resolveSourceMetadataUrls,
-  resolveSourceQuery,
-  resolveSourceUrl,
 } from "./base-url"
 import { assertNetworkCapability, validateSourceRequestRules } from "./capabilities"
 import {
@@ -46,9 +46,9 @@ import { loadRss } from "./loaders/rss"
 import { validateSortByTimestamp } from "./loaders/shared"
 import { parseSourceParamValue, validateSourceParamDefinitions } from "./params"
 import { validateRadarRules } from "./radar"
+import { compileSourceRequest } from "./request-templates"
 import {
   compileSourceTemplate,
-  compileSourceTemplateValue,
   createSourceTemplateScope,
   isTemplate,
 } from "./template"
@@ -77,7 +77,7 @@ type CustomLoaderFunction<TParams extends SourceParamSchemaMap>
     : SourceLoaderDefinition<TParams>
 
 interface AnnotationConfig {
-  /** String template for JSON/TS Sources, or a synchronous formatter for TS Sources. */
+  /** Optional presentation: missing template inputs omit the whole annotation. Use ?? for explicit fallback text. */
   annotation?: string | SourceAnnotationFormatter
 }
 
@@ -94,7 +94,7 @@ type StructuredLoaderConfig
       url: string
     }
   ) & {
-    /** Query values are encoded once; null/empty values are omitted. */
+    /** Query values are encoded once; missing, null, and empty values are omitted. */
     query?: Record<string, string | number | boolean | null>
   } & AnnotationConfig
 
@@ -129,10 +129,15 @@ export type ProviderSourceConfig<TParams extends SourceParamSchemaMap = any> = O
   metadata?: SourcePresentationMetadata
 }
 
-export function validateSourceTemplates(
+interface CompiledSourceTemplates {
+  annotation: CompiledSourceTemplate | SourceAnnotationFormatter | undefined
+  request: CompiledSourceRequest | undefined
+}
+
+export function compileSourceTemplates(
   sourceId: string,
   config: SourceConfig,
-): CompiledSourceTemplate | SourceAnnotationFormatter | undefined {
+): CompiledSourceTemplates {
   if (config.baseUrl !== undefined) {
     parseSourceBaseUrl(config.baseUrl, `${sourceId}.baseUrl`)
   }
@@ -141,23 +146,9 @@ export function validateSourceTemplates(
   const annotation = compileSourceAnnotation(sourceId, config.loader.annotation)
 
   const { loader } = config
-  if (loader.type !== "custom" && typeof loader.url === "string") {
-    compileSourceTemplateValue(loader.url, {
-      location: `${sourceId}.loader.url`,
-      slot: "request",
-    })
-    validateSourceQuery(loader.query, `${sourceId}.loader.query`)
-    compileSourceTemplateValue(loader.query, { location: `${sourceId}.loader.query`, slot: "request" })
-    if (loader.type === "json" || loader.type === "html") {
-      compileSourceTemplateValue(
-        loader.fetchOptions,
-        {
-          location: `${sourceId}.loader.fetchOptions`,
-          slot: "request",
-        },
-      )
-    }
-  }
+  const request = loader.type === "custom"
+    ? undefined
+    : compileSourceRequest(loader, `${sourceId}.loader`)
 
   if (loader.type === "json") {
     validateSortByTimestamp(
@@ -179,17 +170,7 @@ export function validateSourceTemplates(
   }
 
   validateRadarRules(config.radar, `${sourceId}.radar`)
-  return annotation
-}
-
-function validateSourceQuery(value: unknown, location: string): void {
-  if (value === undefined) return
-  if (!isRecord(value) || Object.values(value).some(item =>
-    item !== null && typeof item !== "string" && typeof item !== "boolean"
-    && !(typeof item === "number" && Number.isFinite(item)),
-  )) {
-    throw new TypeError(`${location} must contain string, finite number, boolean, or null values`)
-  }
+  return { annotation, request }
 }
 
 function compileSourceAnnotation(
@@ -220,7 +201,7 @@ function validateSourceMetadata(
     }
     if (typeof value === "string" && isTemplate(value)) {
       throw new TypeError(
-        `Liquid templates are not allowed at ${location}.${key}; use a Radar metadata patch for dynamic values`,
+        `Source templates are not allowed at ${location}.${key}; use a Radar metadata patch for dynamic values`,
       )
     }
   }
@@ -301,7 +282,7 @@ type ResolvedSource<TParams extends SourceParamSchemaMap> = Omit<
 function resolveSource<const TParams extends SourceParamSchemaMap = Record<string, never>>(
   sourceId: string,
   config: SourceConfig<TParams>,
-  annotation: CompiledSourceTemplate | SourceAnnotationFormatter | undefined,
+  templates: CompiledSourceTemplates,
 ): ResolvedSource<TParams> {
   const {
     version: versionInput,
@@ -321,8 +302,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     : parseSourceBaseUrl(baseUrlInput, `${sourceId}.baseUrl`)
   const resolvedMetadata = resolveSourceMetadataUrls(metadata, baseUrl)
   const capabilities = resolveSourceCapabilities(
-    sourceId,
-    loader,
+    templates.request,
     params,
     vars,
     baseUrl,
@@ -331,97 +311,46 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
   validateSourceRequestRules(sourceId, requestRules, capabilities.network)
   const version = resolveSourceVersion(versionInput, `${sourceId}.version`)
   let resolvedLoader: SourceLoaderDefinition<TParams>
-  switch (loader.type) {
-    case "json": {
-      const { type: _type, url, query, fetchOptions, request, annotation: _annotation, ...options } = loader
-      const urlTemplate = compileSourceTemplateValue(url, {
-        location: `${sourceId}.loader.url`,
-        slot: "request",
+  if (loader.type === "custom") {
+    resolvedLoader = loader.load
+  } else {
+    const requestTemplates = templates.request
+    if (!requestTemplates) throw new Error(`Missing compiled request for ${sourceId}`)
+    const customRequest = "request" in loader ? loader.request : undefined
+    const withRequest = (
+      load: (options: { url: string } & LoaderRequestOptions, context: LoaderContext) => Promise<SourceLoaderOutput>,
+    ): SourceLoaderDefinition<TParams> => async (loaderParams, context) => {
+      const scope = createSourceTemplateScope(vars, { params: loaderParams })
+      const url = requestTemplates.renderRequestUrl(scope, baseUrl)
+      assertNetworkCapability(sourceId, url, capabilities.network)
+      const requestOptions = customRequest
+        ? { url, request: customRequest }
+        : { url, fetchOptions: requestTemplates.renderFetchOptions(scope) }
+      return load(requestOptions, {
+        fetch: context.fetch,
+        vars,
+        params: loaderParams,
+        signal: context.signal,
       })
-      const queryTemplate = compileSourceTemplateValue(query, { location: `${sourceId}.loader.query`, slot: "request" })
-      const fetchOptionsTemplate = fetchOptions === undefined
-        ? undefined
-        : compileSourceTemplateValue(fetchOptions, {
-            location: `${sourceId}.loader.fetchOptions`,
-            slot: "request",
-          })
-      resolvedLoader = async (loaderParams, context) => {
-        const scope = createSourceTemplateScope(vars, { params: loaderParams })
-        const resolvedUrl = resolveSourceQuery(resolveSourceUrl(urlTemplate.render(scope), baseUrl), queryTemplate.render(scope))
-        assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
-        const loaderOptions: JsonLoaderOptions = request
-          ? { ...options, url: resolvedUrl, request }
-          : {
-              ...options,
-              url: resolvedUrl,
-              fetchOptions: fetchOptionsTemplate?.render(scope),
-            }
-        return loadJson(loaderOptions, {
-          fetch: context.fetch,
-          vars,
-          params: loaderParams,
-          signal: context.signal,
-        })
+    }
+    switch (loader.type) {
+      case "json": {
+        const { type: _type, url: _url, query: _query, fetchOptions: _fetchOptions, request: _request, annotation: _annotation, ...options } = loader
+        resolvedLoader = withRequest((requestOptions, context) => loadJson({ ...options, ...requestOptions }, context))
+        break
       }
-      break
-    }
-    case "html": {
-      const { type: _type, url, query, fetchOptions, request, annotation: _annotation, ...options } = loader
-      const urlTemplate = compileSourceTemplateValue(url, {
-        location: `${sourceId}.loader.url`,
-        slot: "request",
-      })
-      const queryTemplate = compileSourceTemplateValue(query, { location: `${sourceId}.loader.query`, slot: "request" })
-      const fetchOptionsTemplate = fetchOptions === undefined
-        ? undefined
-        : compileSourceTemplateValue(fetchOptions, {
-            location: `${sourceId}.loader.fetchOptions`,
-            slot: "request",
-          })
-      resolvedLoader = async (loaderParams, context) => {
-        const scope = createSourceTemplateScope(vars, { params: loaderParams })
-        const resolvedUrl = resolveSourceQuery(resolveSourceUrl(urlTemplate.render(scope), baseUrl), queryTemplate.render(scope))
-        assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
-        const loaderOptions: HtmlLoaderOptions = request
-          ? { ...options, url: resolvedUrl, request }
-          : {
-              ...options,
-              url: resolvedUrl,
-              fetchOptions: fetchOptionsTemplate?.render(scope),
-            }
-        return loadHtml(loaderOptions, {
-          fetch: context.fetch,
-          vars,
-          params: loaderParams,
-          signal: context.signal,
-        })
+      case "html": {
+        const { type: _type, url: _url, query: _query, fetchOptions: _fetchOptions, request: _request, annotation: _annotation, ...options } = loader
+        resolvedLoader = withRequest((requestOptions, context) => loadHtml({ ...options, ...requestOptions }, context))
+        break
       }
-      break
-    }
-    case "rss": {
-      const { url, query } = loader
-      const urlTemplate = compileSourceTemplateValue(url, {
-        location: `${sourceId}.loader.url`,
-        slot: "request",
-      })
-      const queryTemplate = compileSourceTemplateValue(query, { location: `${sourceId}.loader.query`, slot: "request" })
-      resolvedLoader = async (loaderParams, context) => {
-        const scope = createSourceTemplateScope(vars, { params: loaderParams })
-        const resolvedUrl = resolveSourceQuery(resolveSourceUrl(urlTemplate.render(scope), baseUrl), queryTemplate.render(scope))
-        assertNetworkCapability(sourceId, resolvedUrl, capabilities.network)
-        return loadRss({ url: resolvedUrl }, {
-          fetch: context.fetch,
-          signal: context.signal,
-        })
+      case "rss": {
+        resolvedLoader = withRequest(({ url }, context) => loadRss({ url }, context))
+        break
       }
-      break
+      default:
+        throw new Error(`Unsupported source loader: ${(loader as { type?: unknown }).type}`)
     }
-    case "custom": {
-      resolvedLoader = loader.load
-      break
-    }
-    default:
-      throw new Error(`Unsupported source loader: ${(loader as { type?: unknown }).type}`)
   }
 
   return {
@@ -434,7 +363,7 @@ function resolveSource<const TParams extends SourceParamSchemaMap = Record<strin
     requestRules,
     secrets,
     capabilities,
-    loader: withValidatedLoaderResult(resolvedLoader, baseUrl, annotation),
+    loader: withValidatedLoaderResult(resolvedLoader, baseUrl, templates.annotation),
   }
 }
 
@@ -516,8 +445,8 @@ export function resolveRuntimeSource(
   if (Object.hasOwn(config, "cache")) {
     throw new Error(`${sourceId}.cache is not supported`)
   }
-  const annotation = validateSourceTemplates(sourceId, config)
-  const source = resolveSource(sourceId, config, annotation)
+  const templates = compileSourceTemplates(sourceId, config)
+  const source = resolveSource(sourceId, config, templates)
 
   const secrets = source.secrets
   const cookieHosts = (secrets ?? [])
@@ -535,18 +464,6 @@ export function resolveRuntimeSource(
   }
 }
 
-function resolveSourceTemplates<TParams extends SourceParamSchemaMap, TValue>(
-  option: TValue,
-  params: InferSourceParams<TParams>,
-  location: string,
-  vars?: SourceTemplateVars,
-): TValue {
-  return compileSourceTemplateValue(option, {
-    location,
-    slot: "request",
-  }).render(createSourceTemplateScope(vars, { params }))
-}
-
 function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
   params: TParams | undefined,
 ): InferSourceParams<TParams> {
@@ -559,8 +476,7 @@ function resolveDefaultParams<TParams extends SourceParamSchemaMap>(
 }
 
 function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
-  sourceId: string,
-  loader: StructuredLoaderConfig | { type: "custom", load: SourceLoaderDefinition<TParams> },
+  request: CompiledSourceRequest | undefined,
   params: TParams | undefined,
   vars: SourceTemplateVars | undefined,
   baseUrl: string | undefined,
@@ -568,17 +484,9 @@ function resolveSourceCapabilities<TParams extends SourceParamSchemaMap>(
 ): SourceCapabilities {
   const inferredNetworkHosts: string[] = []
 
-  if (loader.type !== "custom") {
+  if (request) {
     const defaultParams = resolveDefaultParams(params)
-    const requestUrl = resolveSourceUrl(
-      resolveSourceTemplates(
-        loader.url,
-        defaultParams,
-        `${sourceId}.loader.url`,
-        vars,
-      ),
-      baseUrl,
-    )
+    const requestUrl = request.renderUrl(createSourceTemplateScope(vars, { params: defaultParams }), baseUrl)
 
     inferredNetworkHosts.push(new URL(requestUrl).hostname)
   }

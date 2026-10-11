@@ -1538,6 +1538,28 @@
               "const": "absolute_url"
             },
             {
+              "type": "string",
+              "const": "lowercase"
+            },
+            {
+              "type": "object",
+              "required": [
+                "op",
+                "milliseconds"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "timestamp_precision"
+                },
+                "milliseconds": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            {
               "type": "object",
               "required": [
                 "op"
@@ -1718,6 +1740,28 @@
               {
                 "type": "string",
                 "const": "absolute_url"
+              },
+              {
+                "type": "string",
+                "const": "lowercase"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op",
+                  "milliseconds"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "timestamp_precision"
+                  },
+                  "milliseconds": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
               },
               {
                 "type": "object",

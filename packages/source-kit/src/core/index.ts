@@ -40,6 +40,7 @@ export {
 export type {
   CompiledSourceTemplate,
   CompiledSourceTemplateValue,
+  InterpolatedValue,
   SourceTemplateCompileOptions,
   SourceTemplateSlot,
   TemplateOutput,

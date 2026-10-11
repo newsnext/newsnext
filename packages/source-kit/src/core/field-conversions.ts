@@ -5,38 +5,16 @@ import { compileSourceRegex, validateSourceRegexInput } from "./regex"
 const CACHE_LIMIT = 256
 const regexCache = new Map<string, RegExp>()
 
-// Shared by field transforms and the remaining templates; conversions have one implementation.
-export const sourceFilters = {
-  required: (value: unknown) => {
-    if (value === undefined || value === null || value === "") {
-      throw new Error("Required template value is missing")
-    }
-    return value
-  },
-  absolute_url: (value: unknown, base: unknown) => {
-    return resolveUrl(value, base)
-  },
-  css_url: (value: unknown) => {
-    return extractCssUrl(value)
-  },
-  compact_number: (value: unknown) => {
-    const number = Number(value)
-    if (!Number.isFinite(number)) return ""
-    return new Intl.NumberFormat("en-US", {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(number)
-  },
-  parse_compact_number: (value: unknown) => {
-    return parseCompactNumber(value)
-  },
+// Conversions used by field transforms.
+export const fieldConversions = {
+  absolute_url: resolveUrl,
+  css_url: extractCssUrl,
+  parse_compact_number: parseCompactNumber,
   date_to_ms: (value: unknown) => {
     const timestamp = Date.parse(stringify(value))
     return Number.isFinite(timestamp) ? timestamp : undefined
   },
-  first_line: (value: unknown) => {
-    return firstLine(value)
-  },
+  first_line: firstLine,
   favicon_url: (value: unknown) => {
     return getFavicon(stringify(value))
   },
@@ -72,8 +50,6 @@ export const sourceFilters = {
     const timestamp = date.getTime()
     return Number.isFinite(timestamp) ? timestamp : undefined
   },
-  url_path: encodeUrlComponent,
-  url_query: encodeUrlComponent,
 }
 
 function parseCompactNumber(value: unknown): number | undefined {
@@ -91,10 +67,6 @@ function parseCompactNumber(value: unknown): number | undefined {
   }[match[2]?.toUpperCase() ?? ""] ?? 1
   const result = number * multiplier
   return Number.isFinite(result) ? result : undefined
-}
-
-function encodeUrlComponent(value: unknown): string {
-  return encodeURIComponent(String(value ?? ""))
 }
 
 function extractCssUrl(value: unknown): string | undefined {
@@ -134,7 +106,7 @@ function resolveUrl(value: unknown, base: unknown): string | undefined {
 
   const baseUrl = stringify(base)
   if (!baseUrl) {
-    throw new Error("The absolute_url filter requires a base URL")
+    throw new Error("The absolute_url transform requires a base URL")
   }
   return new URL(url, baseUrl).href
 }

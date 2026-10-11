@@ -1,7 +1,7 @@
 import type { FieldTransform, FieldTransforms } from "@newsnext/sdk/models"
 import { fieldTransformsDefinition, firstJsonSchemaIssue } from "@newsnext/sdk/schemas"
+import { fieldConversions } from "./field-conversions"
 import { compileSourceRegex } from "./regex"
-import { sourceFilters } from "./source-filters"
 
 export function validateFieldTransforms(value: unknown, location: string): void {
   if (value === undefined) return
@@ -30,18 +30,24 @@ function transformSteps(transforms: FieldTransforms): readonly FieldTransform[] 
 function applyTransform(value: unknown, step: FieldTransform, requestUrl: string | undefined): unknown {
   if (typeof step === "string") {
     switch (step) {
-      case "absolute_url": return sourceFilters.absolute_url(value, requestUrl)
+      case "absolute_url": return fieldConversions.absolute_url(value, requestUrl)
       case "strip_html": return stripHtml(String(value ?? ""))
+      case "lowercase": return String(value ?? "").toLowerCase()
       case "seconds_to_ms": {
         if (value === undefined || value === null || value === "") return undefined
         const timestamp = Number(value) * 1000
         return Number.isFinite(timestamp) ? timestamp : undefined
       }
-      default: return sourceFilters[step](value)
+      default: return fieldConversions[step](value)
     }
   }
   switch (step.op) {
-    case "normalize_lines": return sourceFilters.normalize_lines(value, step.spacing)
+    case "timestamp_precision": {
+      if (value === undefined || value === null || value === "") return undefined
+      const timestamp = Number(value)
+      return Number.isFinite(timestamp) ? Math.floor(timestamp / step.milliseconds) * step.milliseconds : undefined
+    }
+    case "normalize_lines": return fieldConversions.normalize_lines(value, step.spacing)
     case "truncate": {
       const text = String(value ?? "")
       const suffix = step.suffix ?? "..."
@@ -49,13 +55,13 @@ function applyTransform(value: unknown, step: FieldTransform, requestUrl: string
     }
     case "replace": return String(value ?? "").split(step.search).join(step.replacement)
     case "append": return String(value ?? "") + step.value
-    case "regex_extract": return sourceFilters.regex_extract(value, step.pattern, step.group)
-    case "regex_replace": return sourceFilters.regex_replace(value, step.pattern, step.replacement)
-    case "relative_date_to_ms": return sourceFilters.relative_date_to_ms(value, step.timezone)
+    case "regex_extract": return fieldConversions.regex_extract(value, step.pattern, step.group)
+    case "regex_replace": return fieldConversions.regex_replace(value, step.pattern, step.replacement)
+    case "relative_date_to_ms": return fieldConversions.relative_date_to_ms(value, step.timezone)
   }
 }
 
-// Linear scan preserves Liquid's text cleanup semantics, including unclosed markup.
+// Linear scan tolerates unclosed markup without a backtracking regular expression.
 function stripHtml(text: string): string {
   const blocks = new Map([["<script", "</script>"], ["<style", "</style>"], ["<!--", "-->"], ["<", ">"]])
   let result = ""

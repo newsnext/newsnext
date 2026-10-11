@@ -1,4 +1,5 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
+import type { SourceRadarRule } from "@newsnext/source-kit/types"
 import { requestXueqiuJson } from "./shared"
 
 const stockStatusTitle = {
@@ -32,7 +33,7 @@ const stockParam = {
   },
 } as const
 
-function stockRadar(id: string, title: string) {
+function stockRadar(id: string, title: string): SourceRadarRule[] {
   return [{
     id,
     match: {
@@ -46,7 +47,8 @@ function stockRadar(id: string, title: string) {
       metadata: {
         title: {
           select: "title",
-          template: `{{ scope.value | split: "(" | first | normalize_whitespace }} | ${title}`,
+          transform: [{ op: "regex_extract", pattern: "^([^(]*)", group: 1 }, "normalize_whitespace"],
+          template: `{{ scope.value }} | ${title}`,
         },
         home: "/S/{{ scope.params.symbol | url_path }}",
       },
@@ -104,7 +106,8 @@ export const stockSources = {
         metadata: {
           title: {
             select: "title",
-            template: "{{ scope.value | split: \"(\" | first | normalize_whitespace }} | {{ source.vars.sortLabels[scope.params.sort] }}",
+            transform: [{ op: "regex_extract", pattern: "^([^(]*)", group: 1 }, "normalize_whitespace"],
+            template: "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}",
           },
           home: "/S/{{ scope.params.symbol | url_path }}",
         },

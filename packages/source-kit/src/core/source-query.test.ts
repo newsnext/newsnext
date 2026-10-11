@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { resolveSourceQuery } from "./base-url"
+import { compileSourceTemplateValue, createSourceTemplateScope } from "./template"
 
 describe("source query parameters", () => {
   it("encodes values once and preserves unrelated query parameters and fragments", () => {
@@ -19,5 +20,18 @@ describe("source query parameters", () => {
   it("removes blank optional keys without leaving a trailing query separator", () => {
     expect(resolveSourceQuery("https://example.com/path?author=old", { author: "", since: null }))
       .toBe("https://example.com/path")
+  })
+
+  it("omits missing query values and preserves false and zero", () => {
+    const query = compileSourceTemplateValue({
+      author: "{{ scope.params.author }}",
+      enabled: "{{ scope.params.enabled ?? true }}",
+      count: "{{ scope.params.count ?? 10 }}",
+    }, { location: "test.loader.query", slot: "request" })
+    const rendered = query.render(createSourceTemplateScope(undefined, { params: { enabled: false, count: 0 } }))
+    const url = new URL(resolveSourceQuery("https://example.com/path?author=old", rendered))
+    expect(url.searchParams.has("author")).toBe(false)
+    expect(url.searchParams.get("enabled")).toBe("false")
+    expect(url.searchParams.get("count")).toBe("0")
   })
 })

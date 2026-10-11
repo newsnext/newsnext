@@ -12,13 +12,14 @@ export interface HtmlFieldConfig {
   scope?: "document" | "item"
   traverse?: HtmlTraversal | readonly HtmlTraversal[]
   attr?: string
+  /** Text is trimmed; empty extracted text is absent. HTML modes preserve markup. */
   content?: "html" | "outerHtml" | "text"
   brSeparator?: string
   all?: boolean
   separator?: string
   /** Conversions on the extracted value, before string composition. */
   transform?: FieldTransforms
-  /** String composition with interpolation and filters; template tags are rejected. */
+  /** String interpolation with ??/|| fallback and url_path/url_query encoding. Missing inputs omit the whole text. ?? replaces nullish values; || replaces falsy values. */
   template?: string
 }
 

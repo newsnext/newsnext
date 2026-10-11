@@ -94,6 +94,7 @@ const providerConfigs: Record<string, ProviderConfig> = {
   "xueqiu": {
     ...provider_8,
     sources: {
+      "hot-fund": provider_8.sources["hot-fund"],
       "hot-stock": provider_8.sources["hot-stock"],
       "market-movers": provider_8.sources["market-movers"],
       "following": provider_8.sources["following"],

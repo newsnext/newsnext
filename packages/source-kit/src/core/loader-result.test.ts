@@ -163,12 +163,12 @@ describe("source loader result", () => {
     }
   })
 
-  it("lets one item fall back when its presentation template cannot render", () => {
+  it("omits an annotation when optional item information is missing", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
     })
-    const template = compileSourceTemplate("{{ scope.item.author.name }}", {
+    const template = compileSourceTemplate("By {{ scope.item.author.name }} · News", {
       location: "example.annotation",
       slot: "annotation",
     })
@@ -176,7 +176,7 @@ describe("source loader result", () => {
       items: [{ title: "Example", url: "https://example.com" }],
       annotations: [""],
     })
-    expect(consoleError).toHaveBeenCalledOnce()
+    expect(consoleError).not.toHaveBeenCalled()
     consoleError.mockRestore()
   })
 
@@ -184,7 +184,7 @@ describe("source loader result", () => {
     const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
     })
-    const template = compileSourceTemplate("{{ scope.item.attributes.label | default: '' }}", {
+    const template = compileSourceTemplate("{{ scope.item.attributes.label ?? '' }}", {
       location: "example.annotation",
       slot: "annotation",
     })

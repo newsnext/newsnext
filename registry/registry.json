@@ -271,7 +271,7 @@
             "category": "{{ scope.path.type }}"
           },
           "metadata": {
-            "title": "快讯 | {{ source.vars.newsflashCategories[scope.params.category] | default: '全部' }}"
+            "title": "快讯 | {{ source.vars.newsflashCategories[scope.params.category] ?? '全部' }}"
           }
         }
       }
@@ -459,7 +459,11 @@
         "attributes": {
           "sha": {
             "select": "oid",
-            "template": "{{ scope.value | slice: 0, 7 }}"
+            "transform": {
+              "op": "truncate",
+              "length": 7,
+              "suffix": ""
+            }
           }
         },
         "content": {
@@ -561,8 +565,15 @@
       "fields": {
         "title": {
           "select": "body",
-          "template": "{{ scope.value | default: scope.item.author.login | default: 'Comment' | truncate: 160, '…' }}",
-          "transform": "normalize_whitespace"
+          "template": "{{ scope.value || scope.item.author.login || 'Comment' }}",
+          "transform": [
+            "normalize_whitespace",
+            {
+              "op": "truncate",
+              "length": 160,
+              "suffix": "…"
+            }
+          ]
         },
         "url": "url",
         "publishedAt": {
@@ -642,7 +653,7 @@
           "params": {
             "owner": "{{ scope.path.owner }}",
             "repo": "{{ scope.path.repo }}",
-            "query": "{{ scope.query.q | default: \"is:issue is:open\" }}"
+            "query": "{{ scope.query.q ?? \"is:issue is:open\" }}"
           },
           "metadata": {
             "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Issues"
@@ -679,12 +690,14 @@
         "attributes": {
           "state": {
             "select": "state",
-            "template": "{{ scope.value | downcase }}",
-            "transform": {
-              "op": "replace",
-              "search": "REPO_ISSUE_STATE_",
-              "replacement": ""
-            }
+            "transform": [
+              {
+                "op": "replace",
+                "search": "REPO_ISSUE_STATE_",
+                "replacement": ""
+              },
+              "lowercase"
+            ]
           },
           "stateReason": "stateReason"
         },
@@ -784,8 +797,15 @@
       "fields": {
         "title": {
           "select": ".comment-body",
-          "template": "{{ scope.value | default: scope.item.author.name | default: 'Comment' | truncate: 160, '…' }}",
-          "transform": "normalize_whitespace"
+          "template": "{{ scope.value || scope.item.author.name || 'Comment' }}",
+          "transform": [
+            "normalize_whitespace",
+            {
+              "op": "truncate",
+              "length": 160,
+              "suffix": "…"
+            }
+          ]
         },
         "url": {
           "select": "",
@@ -884,7 +904,7 @@
           "params": {
             "owner": "{{ scope.path.owner }}",
             "repo": "{{ scope.path.repo }}",
-            "query": "{{ scope.query.q | default: \"is:pr is:open\" }}"
+            "query": "{{ scope.query.q ?? \"is:pr is:open\" }}"
           },
           "metadata": {
             "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Pull requests"
@@ -920,12 +940,14 @@
         "attributes": {
           "state": {
             "select": "displayState",
-            "template": "{{ scope.value | downcase }}",
-            "transform": {
-              "op": "replace",
-              "search": "REPO_PULL_REQUEST_DISPLAY_STATE_",
-              "replacement": ""
-            }
+            "transform": [
+              {
+                "op": "replace",
+                "search": "REPO_PULL_REQUEST_DISPLAY_STATE_",
+                "replacement": ""
+              },
+              "lowercase"
+            ]
           }
         },
         "icon": {
@@ -1004,7 +1026,7 @@
             "owner": "{{ scope.path.owner }}",
             "repo": "{{ scope.path.repo }}",
             "query": "{{ scope.query.q }}",
-            "page": "{{ scope.query.page | default: 1 }}"
+            "page": "{{ scope.query.page ?? 1 }}"
           },
           "metadata": {
             "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Releases"
@@ -1049,7 +1071,11 @@
           "tag": {
             "select": "",
             "attr": "data-release-anchor",
-            "template": "{{ scope.value | remove_first: 'release-' }}"
+            "transform": {
+              "op": "regex_replace",
+              "pattern": "^release-",
+              "replacement": ""
+            }
           }
         },
         "content": {
@@ -1148,7 +1174,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "{{ scope.params.language | url_path | prepend: '/trending/' | regex_replace: '/$', '' }}",
+      "url": "/trending/{{ scope.params.language | url_path }}",
       "items": "main .Box div[data-hpc] > article",
       "fields": {
         "title": {
@@ -1204,7 +1230,14 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
+          "transform": [
+            {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)$",
+              "group": 1
+            },
+            "seconds_to_ms"
+          ]
         },
         "author": {
           "name": {
@@ -1242,7 +1275,7 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | default: 0 }}",
+            "template": "{{ scope.value ?? 0 }}",
             "transform": {
               "op": "regex_extract",
               "pattern": "([0-9]+)",
@@ -1315,7 +1348,14 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
+          "transform": [
+            {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)$",
+              "group": 1
+            },
+            "seconds_to_ms"
+          ]
         },
         "author": {
           "name": {
@@ -1353,7 +1393,7 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | default: 0 }}",
+            "template": "{{ scope.value ?? 0 }}",
             "transform": {
               "op": "regex_extract",
               "pattern": "([0-9]+)",
@@ -1424,7 +1464,14 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
+          "transform": [
+            {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)$",
+              "group": 1
+            },
+            "seconds_to_ms"
+          ]
         },
         "author": {
           "name": {
@@ -1462,7 +1509,7 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | default: 0 }}",
+            "template": "{{ scope.value ?? 0 }}",
             "transform": {
               "op": "regex_extract",
               "pattern": "([0-9]+)",
@@ -1535,7 +1582,14 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
+          "transform": [
+            {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)$",
+              "group": 1
+            },
+            "seconds_to_ms"
+          ]
         },
         "author": {
           "name": {
@@ -1573,7 +1627,7 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | default: 0 }}",
+            "template": "{{ scope.value ?? 0 }}",
             "transform": {
               "op": "regex_extract",
               "pattern": "([0-9]+)",
@@ -1651,7 +1705,6 @@
             ".story-meta > span:first-child",
             ".brief-meta"
           ],
-          "template": "{{ scope.value | divided_by: 60000 | floor | times: 60000 }}",
           "transform": [
             {
               "op": "regex_extract",
@@ -1661,6 +1714,10 @@
             {
               "op": "relative_date_to_ms",
               "timezone": "Asia/Shanghai"
+            },
+            {
+              "op": "timestamp_precision",
+              "milliseconds": 60000
             }
           ]
         },
@@ -1772,7 +1829,7 @@
                 "pattern": "^(.+?)\\s*-\\s*歌单\\s*-\\s*网易云音乐$",
                 "group": 1
               },
-              "template": "{{ scope.value | default: '歌单' }}"
+              "template": "{{ scope.value || '歌单' }}"
             }
           }
         }
@@ -1867,7 +1924,7 @@
                 "pattern": "^(.+?)\\s*-\\s*排行榜\\s*-\\s*网易云音乐$",
                 "group": 1
               },
-              "template": "{{ scope.value | default: '排行榜' }}"
+              "template": "{{ scope.value || '排行榜' }}"
             }
           }
         }
@@ -2137,56 +2194,6 @@
     "provider": {
       "title": "百度贴吧",
       "category": "forum",
-      "color": "blue"
-    }
-  },
-  "xueqiu:hot-fund": {
-    "baseUrl": "https://xueqiu.com/",
-    "metadata": {
-      "title": "热门基金",
-      "home": "/",
-      "type": "ranking"
-    },
-    "loader": {
-      "type": "json",
-      "url": "/snb/dj/fundx/activity/x/web/searchFund",
-      "query": {
-        "fund_type": "0",
-        "business_code": "20"
-      },
-      "items": "data.public_fund",
-      "fields": {
-        "url": {
-          "select": "fund_code",
-          "template": "/S/{{ scope.value | url_path }}"
-        },
-        "title": "fund_name",
-        "attributes": {
-          "returnPeriod": "profit_desc",
-          "returnRate": {
-            "select": "profit_rate",
-            "template": "{{ scope.value | times: 100 | round: 2 }}"
-          }
-        }
-      },
-      "annotation": "{{ scope.item.attributes.returnPeriod }} · {{ scope.item.attributes.returnRate }}%"
-    },
-    "radar": [
-      {
-        "id": "xueqiu-hot-fund",
-        "match": {
-          "hosts": [
-            "xueqiu.com"
-          ],
-          "paths": [
-            "/"
-          ]
-        }
-      }
-    ],
-    "provider": {
-      "title": "雪球",
-      "category": "finance",
       "color": "blue"
     }
   },

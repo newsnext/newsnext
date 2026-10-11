@@ -28,8 +28,12 @@ beside the implementation — linked below).
    validate/coerce (`core/params.ts`) → Radar matches page → patch applies
    (`core/radar.ts`). Radar `priority` breaks equal-specificity ties only;
    it never overrides a structurally more specific match.
-4. Request: template slots compile once with cache keys
-   (`core/template.ts`) → fetch through queue with retry/credentials
+4. Request: resolution compiles URL, query, and fetch options into a request
+   program (`core/request-templates.ts`); capability inference and execution
+   reuse it. Interpolation syntax (`core/interpolation.ts`) is separate from
+   Source scope rules (`core/template-policy.ts`) and typed JSON bodies
+   (`core/template-json.ts`). Execution supplies parameters → fetch through
+   queue with retry/credentials
    (`utils/request/`) → capabilities + secrets + requestRules enforced
    (`core/capabilities.ts`).
 5. Loaders: JSON (JMESPath select → fields → timestamp sort), HTML (CSS
@@ -63,6 +67,6 @@ beside the implementation — linked below).
 - Request rules bounded (`limits.ts`: ≤10 rules/source, ≤20 domains,
   ≤5 headers). JMESPath length-capped (2000), `__proto__`/constructor
   rejected (`loaders/json.ts`). Template slots whitelisted
-  (`core/template.ts`). Registry capped (2MB, ≤1000 sources).
+  (`core/template-policy.ts`). Registry capped (2MB, ≤1000 sources).
 - Extension enforces permissions at execution; CLI mirrors them natively.
   Never log secret values.

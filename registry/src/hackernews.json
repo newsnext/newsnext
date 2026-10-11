@@ -22,7 +22,14 @@
           },
           "select": ".age",
           "attr": "title",
-          "template": "{{ scope.value | split: ' ' | last | times: 1000 }}"
+          "transform": [
+            {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)$",
+              "group": 1
+            },
+            "seconds_to_ms"
+          ]
         },
         "author": {
           "name": {
@@ -60,7 +67,7 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | default: 0 }}",
+            "template": "{{ scope.value ?? 0 }}",
             "transform": {
               "op": "regex_extract",
               "pattern": "([0-9]+)",

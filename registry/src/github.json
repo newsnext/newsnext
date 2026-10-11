@@ -74,7 +74,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "{{ scope.params.language | url_path | prepend: '/trending/' | regex_replace: '/$', '' }}",
+        "url": "/trending/{{ scope.params.language | url_path }}",
         "items": "main .Box div[data-hpc] > article",
         "fields": {
           "title": {
@@ -150,7 +150,7 @@
             "params": {
               "owner": "{{ scope.path.owner }}",
               "repo": "{{ scope.path.repo }}",
-              "query": "{{ scope.query.q | default: \"is:issue is:open\" }}"
+              "query": "{{ scope.query.q ?? \"is:issue is:open\" }}"
             },
             "metadata": {
               "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Issues"
@@ -187,12 +187,14 @@
           "attributes": {
             "state": {
               "select": "state",
-              "template": "{{ scope.value | downcase }}",
-              "transform": {
-                "op": "replace",
-                "search": "REPO_ISSUE_STATE_",
-                "replacement": ""
-              }
+              "transform": [
+                {
+                  "op": "replace",
+                  "search": "REPO_ISSUE_STATE_",
+                  "replacement": ""
+                },
+                "lowercase"
+              ]
             },
             "stateReason": "stateReason"
           },
@@ -258,7 +260,7 @@
             "params": {
               "owner": "{{ scope.path.owner }}",
               "repo": "{{ scope.path.repo }}",
-              "query": "{{ scope.query.q | default: \"is:pr is:open\" }}"
+              "query": "{{ scope.query.q ?? \"is:pr is:open\" }}"
             },
             "metadata": {
               "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Pull requests"
@@ -294,12 +296,14 @@
           "attributes": {
             "state": {
               "select": "displayState",
-              "template": "{{ scope.value | downcase }}",
-              "transform": {
-                "op": "replace",
-                "search": "REPO_PULL_REQUEST_DISPLAY_STATE_",
-                "replacement": ""
-              }
+              "transform": [
+                {
+                  "op": "replace",
+                  "search": "REPO_PULL_REQUEST_DISPLAY_STATE_",
+                  "replacement": ""
+                },
+                "lowercase"
+              ]
             }
           },
           "icon": {
@@ -391,8 +395,15 @@
         "fields": {
           "title": {
             "select": "body",
-            "template": "{{ scope.value | default: scope.item.author.login | default: 'Comment' | truncate: 160, '…' }}",
-            "transform": "normalize_whitespace"
+            "template": "{{ scope.value || scope.item.author.login || 'Comment' }}",
+            "transform": [
+              "normalize_whitespace",
+              {
+                "op": "truncate",
+                "length": 160,
+                "suffix": "…"
+              }
+            ]
           },
           "url": "url",
           "publishedAt": {
@@ -492,8 +503,15 @@
         "fields": {
           "title": {
             "select": ".comment-body",
-            "template": "{{ scope.value | default: scope.item.author.name | default: 'Comment' | truncate: 160, '…' }}",
-            "transform": "normalize_whitespace"
+            "template": "{{ scope.value || scope.item.author.name || 'Comment' }}",
+            "transform": [
+              "normalize_whitespace",
+              {
+                "op": "truncate",
+                "length": 160,
+                "suffix": "…"
+              }
+            ]
           },
           "url": {
             "select": "",
@@ -592,7 +610,7 @@
               "owner": "{{ scope.path.owner }}",
               "repo": "{{ scope.path.repo }}",
               "query": "{{ scope.query.q }}",
-              "page": "{{ scope.query.page | default: 1 }}"
+              "page": "{{ scope.query.page ?? 1 }}"
             },
             "metadata": {
               "title": "{{ scope.params.owner }}/{{ scope.params.repo }} | Releases"
@@ -637,7 +655,11 @@
             "tag": {
               "select": "",
               "attr": "data-release-anchor",
-              "template": "{{ scope.value | remove_first: 'release-' }}"
+              "transform": {
+                "op": "regex_replace",
+                "pattern": "^release-",
+                "replacement": ""
+              }
             }
           },
           "content": {
@@ -775,7 +797,11 @@
           "attributes": {
             "sha": {
               "select": "oid",
-              "template": "{{ scope.value | slice: 0, 7 }}"
+              "transform": {
+                "op": "truncate",
+                "length": 7,
+                "suffix": ""
+              }
             }
           },
           "content": {

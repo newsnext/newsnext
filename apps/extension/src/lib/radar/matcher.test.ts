@@ -160,6 +160,13 @@ describe("getRadarSuggestions", () => {
     }])
   })
 
+  it("uses nullish query fallbacks for absent and blank URL values", () => {
+    for (const suffix of ["", "?q=", "?q=%20%20", "?q=ignored&q="]) {
+      expect(getSuggestions({ url: `https://github.com/openai/openai-python/issues${suffix}` }))
+        .toMatchObject([{ sourceId: "github:issues", patch: { params: { query: "is:issue is:open" } } }])
+    }
+  })
+
   it("omits mapped parameters missing from a sparse Radar patch", () => {
     expect(getSuggestions({
       url: "https://github.com/trending",
@@ -173,12 +180,12 @@ describe("getRadarSuggestions", () => {
     ])
   })
 
-  it("renders Radar parameters from URL Liquid variables", () => {
+  it("renders Radar parameters from URL interpolation values", () => {
     expect(getRadarSuggestions(
       { url: "https://example.com/#/topics/path-value?value=hash-value" },
       [
         {
-          id: "test:liquid-params",
+          id: "test:template-params",
           params: {
             value: {
               type: "text",
@@ -188,7 +195,7 @@ describe("getRadarSuggestions", () => {
           },
           radar: [
             {
-              id: "liquid-params",
+              id: "template-params",
               match: {
                 hosts: ["example.com"],
                 location: "hash",
@@ -196,7 +203,7 @@ describe("getRadarSuggestions", () => {
               },
               patch: {
                 params: {
-                  value: "{{ scope.query.value | default: scope.path.topic }}",
+                  value: "{{ scope.query.value ?? scope.path.topic }}",
                 },
               },
             },
@@ -339,7 +346,7 @@ describe("getRadarSuggestions", () => {
                 badge: {
                   select: ".profile img",
                   attr: "src",
-                  template: "{{ scope.value | absolute_url: scope.request.url }}",
+                  transform: "absolute_url",
                 },
                 desc: {
                   select: [".profile .bio", ".bio"],
@@ -555,6 +562,7 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://app.folo.is/timeline/all/70006270320504832/pending",
       title: "AI News | Folo",
+      pageSelections: selectPageField("title", "AI News | Folo"),
     })).toMatchObject([
       {
         sourceId: "folo:feed",
@@ -573,6 +581,7 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://app.folo.is/timeline/all/list-178752152055448576/pending",
       title: "Developer Reading | Folo",
+      pageSelections: selectPageField("title", "Developer Reading | Folo"),
     })).toMatchObject([
       {
         sourceId: "folo:list",
@@ -591,6 +600,7 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://app.folo.is/timeline/all/list-69107368310609920/pending",
       title: "AI资讯 | Folo",
+      pageSelections: selectPageField("title", "AI资讯 | Folo"),
     })).toMatchObject([
       {
         sourceId: "folo:list",
@@ -609,6 +619,7 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://app.folo.is/timeline/all/70006270320504832/1223093117926813696",
       title: "AI News | Folo",
+      pageSelections: selectPageField("title", "AI News | Folo"),
     })).toMatchObject([
       {
         sourceId: "folo:feed",
@@ -627,6 +638,7 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://app.folo.is/timeline/all/list-68649150114432000/1223093117926813696",
       title: "Developer Reading | Folo",
+      pageSelections: selectPageField("title", "Developer Reading | Folo"),
     })).toMatchObject([
       {
         sourceId: "folo:list",
@@ -1211,7 +1223,7 @@ describe("getRadarSuggestions", () => {
           },
           patch: {
             params: {
-              value: "{{ scope.path.topic | default: 'exact' }}",
+              value: "{{ scope.path.topic ?? 'exact' }}",
             },
           },
         }],

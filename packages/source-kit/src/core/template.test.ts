@@ -4,109 +4,15 @@ import {
   compileSourceTemplateValue,
   createSourceTemplateScope,
   isTemplate,
-  renderHtmlTemplate,
-  renderTemplate,
 } from "./template"
 
 describe("source templates", () => {
-  it("renders plain text without HTML escaping", () => {
-    expect(renderTemplate(
-      "https://example.com/{{ topic }}?tag={{ tag }}",
-      { topic: "news", tag: "a&b" },
-    )).toBe("https://example.com/news?tag=a&b")
-  })
-
-  it("provides source-oriented Liquid filters", () => {
-    expect(renderTemplate(
-      "{{ value | normalize_whitespace }}",
-      { value: "  Hello \n world  " },
-    )).toBe("Hello world")
-
-    expect(renderTemplate(
-      "{{ value | normalize_lines: 2 }}",
-      { value: " First \n\n Second " },
-    )).toBe("First\n\nSecond")
-
-    expect(renderTemplate(
-      "{{ value | first_line | truncate: 8, '…' }}",
-      { value: "\nTelegram message\nSecond" },
-    )).toBe("Telegra…")
-
-    expect(renderTemplate(
-      "{{ value | absolute_url: requestUrl }}",
-      {
-        requestUrl: "https://example.com/news/",
-        value: "../article/1",
-      },
-    )).toBe("https://example.com/article/1")
-
-    expect(renderTemplate(
-      "{{ value | css_url }}",
-      { value: "background-image: url('https://example.com/image.jpg')" },
-    )).toBe("https://example.com/image.jpg")
-
-    expect(renderTemplate(
-      "{{ value | compact_number }}",
-      { value: 12_300 },
-    )).toBe("12.3K")
-
-    expect(renderTemplate(
-      "{{ value | parse_compact_number }}",
-      { value: "1.2k" },
-    )).toBe("1200")
-
-    expect(renderTemplate(
-      "{{ value | parse_compact_number }}",
-      { value: "2.5M" },
-    )).toBe("2500000")
-
-    expect(renderTemplate(
-      "{{ value | date_to_ms }}",
-      { value: "2024-01-01T00:00:00Z" },
-    )).toBe("1704067200000")
-
-    expect(renderTemplate(
-      "{{ value | absolute_url: requestUrl | favicon_url }}",
-      {
-        requestUrl: "https://news.ycombinator.com/",
-        value: "https://example.com/article",
-      },
-    )).toBe("https://favicon.im/example.com?larger=true")
-
-    expect(renderTemplate(
-      "{{ value | regex_replace: '\\\\s*[–-]\\\\s*Telegram$', '' }}",
-      { value: "News – Telegram" },
-    )).toBe("News")
-
-    expect(renderTemplate(
-      "{{ value | regex_extract: '^.*[>›]\\\\s*(.+)$', 1 }}",
-      { value: "V2EX › 分享发现" },
-    )).toBe("分享发现")
-  })
-
-  it("allows source-oriented filters to receive null values", () => {
-    expect(renderTemplate("{{ value | css_url }}", { value: null })).toBe("")
-    expect(renderTemplate("{{ value | date_to_ms }}", { value: null })).toBe("")
-  })
-
-  it("supports URL encoding helpers without template tags", () => {
-    expect(renderTemplate(
-      "{{ language | strip | url_path | prepend: '/trending/' | regex_replace: '/$', '' }}",
-      { language: " c++ " },
-    )).toBe("/trending/c%2B%2B")
-
-    expect(renderTemplate(
-      "/{{ item.path | url_path }}?query={{ item.query | url_query }}",
-      { item: { path: "a/b", query: "a&b" } },
-    )).toBe("/a%2Fb?query=a%26b")
-  })
-
   it("renders templates recursively in plain objects and arrays", () => {
     const templates = compileSourceTemplateValue({
       headers: {
         authorization: "Bearer {{ scope.params.token }}",
       },
-      tags: ["static", "{{ scope.params.tag | upcase }}"],
+      tags: ["static", "{{ scope.params.tag }}"],
     }, {
       location: "test.loader.fetchOptions",
       slot: "request",
@@ -118,7 +24,7 @@ describe("source templates", () => {
       headers: {
         authorization: "Bearer secret",
       },
-      tags: ["static", "NEWS"],
+      tags: ["static", "news"],
     })
   })
 
@@ -155,28 +61,33 @@ describe("source templates", () => {
     )).toThrow("Template path \"scope.params.value\" is not available")
   })
 
-  it("reports source locations for runtime render failures", () => {
+  it("returns missing values and reports source locations for actual render failures", () => {
     const template = compileSourceTemplate(
-      "{{ scope.value | required }}",
+      "{{ scope.value }}",
       { location: "test.loader.fields.title.template", slot: "field" },
     )
 
-    expect(() => template.render(createSourceTemplateScope(undefined, { value: "" })))
-      .toThrow("Failed to render Liquid template at test.loader.fields.title.template")
+    expect(template.render(createSourceTemplateScope(undefined, {}))).toBeUndefined()
+    expect(() => template.render(createSourceTemplateScope(undefined, { value: {} })))
+      .toThrow("Failed to render source template at test.loader.fields.title.template")
   })
 
-  it("escapes inserted values in HTML templates", () => {
-    expect(renderHtmlTemplate(
-      "<strong>{{ item.title }}</strong>",
-      { item: { title: "<script>alert(1)</script>" } },
-    )).toBe("<strong>&lt;script&gt;alert(1)&lt;/script&gt;</strong>")
+  it("returns undefined for sparse Radar parameters and honors explicit fallbacks", () => {
+    const template = compileSourceTemplate("{{ scope.query.optional }}", { location: "test.radar.patch.params.value", slot: "radarParams" })
+    expect(template.render(createSourceTemplateScope(undefined, { query: {} }))).toBeUndefined()
+    const fallback = compileSourceTemplate("{{ scope.query.optional ?? 'News' }}", { location: "test.radar.patch.params.value", slot: "radarParams" })
+    expect(fallback.render(createSourceTemplateScope(undefined, { query: {} }))).toBe("News")
   })
 
-  it("rejects the raw filter in HTML templates", () => {
-    expect(() => renderHtmlTemplate(
-      "<strong>{{ item.title | raw }}</strong>",
-      { item: { title: "<em>unsafe</em>" } },
-    )).toThrow("The raw filter is not allowed")
+  it("omits mixed text with missing inputs and honors explicit fallbacks", () => {
+    const template = compileSourceTemplate("By {{ scope.item.author.name }} · {{ scope.item.attributes.topic }}", {
+      location: "test.loader.annotation",
+      slot: "annotation",
+    })
+    expect(template.render(createSourceTemplateScope(undefined, { item: { author: { name: "Author" } } }))).toBeUndefined()
+    expect(template.render(createSourceTemplateScope(undefined, { item: { author: { name: "Author" }, attributes: { topic: "News" } } }))).toBe("By Author · News")
+    const fallback = compileSourceTemplate("{{ scope.item.author.name ?? 'Anonymous' }}", { location: "test.loader.annotation", slot: "annotation" })
+    expect(fallback.render(createSourceTemplateScope(undefined, { item: {} }))).toBe("Anonymous")
   })
 
   it("only identifies strings containing template expressions", () => {
@@ -198,7 +109,7 @@ describe("source templates", () => {
     expect(() => compileSourceTemplate(
       "{{ scope.params.id | unknown_filter }}",
       { location: "test:source.loader.url", slot: "request" },
-    )).toThrow("Invalid Liquid template at test:source.loader.url")
+    )).toThrow("Invalid source template at test:source.loader.url")
   })
 
   it("validates available template paths", () => {
@@ -235,22 +146,9 @@ describe("source templates", () => {
     "{% raw %}{{ unsafe }}{% endraw %}",
     "{% liquid\ninclude 'secret'\n%}",
   ])("rejects template tags: %s", (template) => {
-    expect(() => renderTemplate(template, {})).toThrow("Template tags are not allowed")
     expect(() => compileSourceTemplate(template, {
       location: "test.loader.url",
       slot: "request",
-    })).toThrow("Invalid Liquid template at test.loader.url: Template tags are not allowed")
-  })
-
-  it("bounds regular expression filters", () => {
-    expect(() => renderTemplate(
-      "{{ value | regex_extract: '(a+)+$' }}",
-      { value: "a".repeat(100) },
-    )).toThrow("Nested quantified groups are not allowed")
-
-    expect(() => renderTemplate(
-      "{{ value | regex_replace: pattern, '' }}",
-      { pattern: "a".repeat(501), value: "a" },
-    )).toThrow("cannot exceed 500 characters")
+    })).toThrow("Invalid source template at test.loader.url: Template tags are not allowed")
   })
 })

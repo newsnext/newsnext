@@ -190,7 +190,7 @@
               "category": "{{ scope.path.type }}"
             },
             "metadata": {
-              "title": "快讯 | {{ source.vars.newsflashCategories[scope.params.category] | default: '全部' }}"
+              "title": "快讯 | {{ source.vars.newsflashCategories[scope.params.category] ?? '全部' }}"
             }
           }
         }

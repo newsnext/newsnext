@@ -415,7 +415,7 @@ describe("source template vars", () => {
           metadata: {
             desc: {
               select: [".profile .bio", ".bio"],
-              template: "{{ scope.value | normalize_whitespace }}",
+              transform: "normalize_whitespace",
             },
           },
         },
@@ -478,7 +478,7 @@ describe("source template vars", () => {
     })).toThrow("test:test.params.id.validate.regex is invalid")
   })
 
-  it("does not compile Liquid syntax in non-template source fields", () => {
+  it("does not compile template syntax in non-template source fields", () => {
     expect(() => resolveTestSource({
       ...createSourceConfig([]),
       params: {
@@ -520,14 +520,14 @@ describe("source template vars", () => {
         match: { hosts: ["example.com"] },
         patch: {
           params: {
-            value: "{{ scope.query.value | default: scope.path.value }}",
+            value: "{{ scope.query.value ?? scope.path.value }}",
           },
           metadata: {
             desc: {
               select: ".bio",
               template: "{{ scope.value }}",
             },
-            title: "{{ scope.page.title | default: scope.params.value }}",
+            title: "{{ scope.page.title ?? scope.params.value }}",
           },
         },
       },

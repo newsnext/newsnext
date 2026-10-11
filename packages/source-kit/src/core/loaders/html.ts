@@ -223,7 +223,7 @@ function extractNodeValue(
     case "text":
     case undefined:
       if (config.brSeparator === undefined) {
-        return target.text().trim()
+        return target.text().trim() || undefined
       }
       return target
         .clone()
@@ -231,7 +231,7 @@ function extractNodeValue(
         .replaceWith(config.brSeparator)
         .end()
         .text()
-        .trim()
+        .trim() || undefined
   }
 }
 

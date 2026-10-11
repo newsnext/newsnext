@@ -46,6 +46,7 @@ export function renderSourceLoaderResult(
           : annotation.render(createSourceTemplateScope(undefined, { item }))
         return (text ?? "").trim()
       } catch (error) {
+        // Presentation failures must not discard otherwise valid item data.
         if (typeof annotation === "function") console.error("Source annotation formatter failed", error)
         else reportTemplateError(error)
         return ""

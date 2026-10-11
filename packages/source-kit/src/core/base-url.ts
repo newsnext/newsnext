@@ -105,12 +105,12 @@ function resolveNewsItemUrls(item: NewsItem, baseUrl: string): NewsItem {
  */
 export function resolveSourceQuery(
   value: string,
-  query: Record<string, string | number | boolean | null> | undefined,
+  query: Record<string, string | number | boolean | null | undefined> | undefined,
 ): string {
   if (query === undefined) return value
   const url = new URL(value)
   for (const [key, item] of Object.entries(query)) {
-    if (item === null || item === "") url.searchParams.delete(key)
+    if (item === undefined || item === null || item === "") url.searchParams.delete(key)
     else url.searchParams.set(key, String(item))
   }
   return url.href

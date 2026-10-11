@@ -58,6 +58,7 @@ export interface SourceRadarMatch {
 
 export type SourceRadarParamScript = () => unknown | Promise<unknown>
 
+/** Missing inputs omit the parameter patch; use ?? for explicit fallback values. */
 export type SourceRadarParam = string | SourceRadarParamScript
 
 export type SourceRadarParams = Record<string, SourceRadarParam>

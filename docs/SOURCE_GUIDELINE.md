@@ -90,7 +90,7 @@ JSON only, watched live, invalid files ignored. Same shape as
   `content.text`.
 - Verify with registry build + typecheck + tests; error codes live beside
   `registry/validation.ts` and `core/source-error.ts`.
-- Keep templates for interpolation and filters only; tags are rejected. Use `loader.query`
+- Keep templates for interpolation and `??`/`||` fallback and `url_path`/`url_query` encoding; tags are rejected. Use `loader.query`
   for query parameters and field `transform` for value conversion; use JMESPath
   for JSON fallbacks and array operations, and TypeScript for conditional logic.
   Transform regex patterns have only JSON escaping; avoid regex string parsing

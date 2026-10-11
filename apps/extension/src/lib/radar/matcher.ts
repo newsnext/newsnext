@@ -190,28 +190,8 @@ function normalizeHostname(host: string): string {
 
 function createTemplateRecord<T>(
   entries: Iterable<readonly [string, T]>,
-): Record<string, T | ""> {
-  const values = Object.fromEntries(
-    [...entries].map(([key, value]) => [
-      key,
-      typeof value === "string" ? value.trim() : value,
-    ]),
-  ) as Record<string, T>
-
-  return new Proxy(values, {
-    get(target, property) {
-      if (typeof property !== "string") {
-        return Reflect.get(target, property)
-      }
-      return Object.hasOwn(target, property) ? target[property] : ""
-    },
-    getOwnPropertyDescriptor(target, property) {
-      return Reflect.getOwnPropertyDescriptor(target, property)
-        ?? (typeof property === "string"
-          ? { configurable: true, enumerable: false, value: "", writable: false }
-          : undefined)
-    },
-  })
+): Record<string, T | string> {
+  return Object.fromEntries([...entries].map(([key, value]) => [key, typeof value === "string" ? value.trim() : value]))
 }
 
 interface ParsedRadarLocation {
@@ -381,7 +361,7 @@ function compileLocationMatcher(matchSpec: SourceRadarMatch): LocationMatcher {
 
     return {
       pathParams: pathMatch.params,
-      queryParams: createTemplateRecord(location.searchParams),
+      queryParams: Object.fromEntries(Object.entries(createTemplateRecord(location.searchParams)).filter(([, value]) => value !== "")),
       specificity: addQuerySpecificity(pathMatch.specificity, queryKeys.length),
     }
   }

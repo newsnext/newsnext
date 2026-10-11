@@ -22,6 +22,7 @@ export interface LoaderRequestContext extends LoaderFetchContext {
 }
 
 interface DefaultLoaderRequest {
+  /** Text options use string interpolation; json keeps whole-expression value types and requires complete JSON. */
   fetchOptions?: Options
   request?: never
 }

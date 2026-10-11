@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest"
 import { applyFieldTransforms, validateFieldTransforms } from "./field-transforms"
-import { renderTemplate } from "./template"
 
 describe("field transforms", () => {
   it("matches existing text-cleanup pipelines, including malformed markup", () => {
     const transforms = ["strip_html", "normalize_whitespace", { op: "truncate", length: 12, suffix: "…" }] as const
-    for (const value of ["<b>Hello</b>\n world and more", "<script>x</script>visible", "<!-- comment -->Hello", "<unclosed", "<script>unclosed <b>text</b>", "<STYLE>x</STYLE>", "", null]) {
-      expect(applyFieldTransforms(value, transforms)).toBe(renderTemplate(
-        "{{ value | strip_html | normalize_whitespace | truncate: 12, '…' }}",
-        { value },
-      ))
+    const examples = [
+      ["<b>Hello</b>\n world and more", "Hello world…"],
+      ["<script>x</script>visible", "visible"],
+      ["<!-- comment -->Hello", "Hello"],
+      ["<unclosed", "<unclosed"],
+      ["<script>unclosed <b>text</b>", "unclosed te…"],
+      ["<STYLE>x</STYLE>", "x"],
+      ["", ""],
+      [null, ""],
+    ]
+    for (const [value, expected] of examples) {
+      expect(applyFieldTransforms(value, transforms)).toBe(expected)
     }
   })
 
@@ -21,6 +27,23 @@ describe("field transforms", () => {
       expect(applyFieldTransforms(value, "seconds_to_ms")).toBeUndefined()
       expect(applyFieldTransforms(value, "date_to_ms")).toBeUndefined()
     }
+  })
+
+  it("cleans selected text before composing it", () => {
+    expect(applyFieldTransforms(" First \n\n Second ", { op: "normalize_lines", spacing: 2 })).toBe("First\n\nSecond")
+    expect(applyFieldTransforms("\nTelegram message\nSecond", ["first_line", { op: "truncate", length: 8, suffix: "…" }])).toBe("Telegra…")
+    expect(applyFieldTransforms("background-image: url('https://example.com/image.jpg')", "css_url")).toBe("https://example.com/image.jpg")
+    expect(applyFieldTransforms("2.5M", "parse_compact_number")).toBe(2500000)
+    expect(applyFieldTransforms("OPEN", "lowercase")).toBe("open")
+    expect(applyFieldTransforms("abcdef12345", { op: "truncate", length: 7, suffix: "" })).toBe("abcdef1")
+  })
+
+  it("reduces timestamp precision without inventing missing dates", () => {
+    const step = { op: "timestamp_precision", milliseconds: 60_000 } as const
+    expect(applyFieldTransforms(1704067212345, step)).toBe(1704067200000)
+    expect(applyFieldTransforms(0, step)).toBe(0)
+    for (const value of [undefined, null, "", "invalid"]) expect(applyFieldTransforms(value, step)).toBeUndefined()
+    expect(() => validateFieldTransforms({ ...step, milliseconds: 0 }, "source.time")).toThrow("source.time")
   })
 
   it("uses direct regex patterns and retains regex safety limits", () => {

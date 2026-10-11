@@ -31,7 +31,6 @@
               ".story-meta > span:first-child",
               ".brief-meta"
             ],
-            "template": "{{ scope.value | divided_by: 60000 | floor | times: 60000 }}",
             "transform": [
               {
                 "op": "regex_extract",
@@ -41,6 +40,10 @@
               {
                 "op": "relative_date_to_ms",
                 "timezone": "Asia/Shanghai"
+              },
+              {
+                "op": "timestamp_precision",
+                "milliseconds": 60000
               }
             ]
           },
