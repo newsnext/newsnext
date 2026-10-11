@@ -7,7 +7,7 @@ import { UnorderedList } from "./unordered-list"
 
 interface LiveCardItemsProps {
   items: NewsItem[]
-  inlinePresentation?: string[]
+  annotations?: string[]
   rankingHistory?: RankingHistorySource
   markScale?: number
   presentationType?: LiveCardViewModel["metadata"]["type"]

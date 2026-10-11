@@ -95,7 +95,7 @@ export function useLiveCardRenderModel({ cardId, source }: UseLiveCardRenderMode
   return {
     source: displaySource,
     items: isDefinitionMissing ? EMPTY_ITEMS : query.result?.items ?? EMPTY_ITEMS,
-    inlinePresentation: isDefinitionMissing ? undefined : query.result?.inlinePresentation,
+    annotations: isDefinitionMissing ? undefined : query.result?.annotations,
     historyParams: query.historyParams,
     isContentFetching: !isDefinitionMissing && query.isLoading,
     sourceErrorMessage,

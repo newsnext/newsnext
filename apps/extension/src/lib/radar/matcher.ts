@@ -1,4 +1,4 @@
-import type { RadarSuggestion } from "@newsnext/sdk/models"
+import type { FieldTransforms, RadarSuggestion } from "@newsnext/sdk/models"
 import type { CompiledSourceTemplate } from "@newsnext/source-kit/core"
 import type {
   HtmlField,
@@ -12,6 +12,7 @@ import type {
 import type { RadarPageQuery } from "./page-query"
 import type { LiveCardMetadata } from "@/lib/source"
 import {
+  applyFieldTransforms,
   compileSourceTemplate,
   createSourceTemplateScope,
   parseSourceParams,
@@ -135,6 +136,7 @@ type CompiledRadarMetadata
   = {
     kind: "field"
     query: RadarPageQuery
+    transform?: FieldTransforms
     template?: CompiledSourceTemplate
   }
   | {
@@ -412,6 +414,7 @@ function compileRadarMetadata(
   return {
     kind: "field",
     query: createRadarPageQuery(field),
+    transform: field.transform,
     ...(field.template
       ? {
           template: compileSourceTemplate(field.template, {
@@ -534,7 +537,7 @@ function resolveMetaPatchValue(
     return metadata.template.render(createTemplateVariables(context))
   }
 
-  const value = extractedItem[key] ?? ""
+  const value = applyFieldTransforms(extractedItem[key] ?? "", metadata.transform, context.url.toString())
   return metadata.template
     ? metadata.template.render(createSourceTemplateScope(context.source.vars, {
         index: 0,

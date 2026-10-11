@@ -5,7 +5,7 @@ const postFields = {
   url: "target",
   title: {
     select: "title || description || text",
-    template: "{{ scope.value | strip_html | normalize_whitespace | truncate: 120, \"…\" }}",
+    transform: ["strip_html", "normalize_whitespace", { op: "truncate", length: 120, suffix: "…" }],
   },
   publishedAt: "created_at",
   author: {
@@ -21,7 +21,7 @@ const postFields = {
   content: {
     text: {
       select: "description || text",
-      template: "{{ scope.value | strip_html | normalize_whitespace }}",
+      transform: ["strip_html", "normalize_whitespace"],
     },
     pictures: "firstImg",
   },
@@ -31,7 +31,7 @@ const watchlistPostFields = {
   ...postFields,
   title: {
     select: "title || description || text",
-    template: "{{ scope.value | strip_html | remove: \"网页链接\" | normalize_whitespace | truncate: 120, \"…\" }}",
+    transform: ["strip_html", { op: "replace", search: "网页链接", replacement: "" }, "normalize_whitespace", { op: "truncate", length: 120, suffix: "…" }],
   },
 } as const
 
@@ -43,7 +43,8 @@ export const feedSources = {
     },
     loader: {
       type: "json",
-      url: "https://api.xueqiu.com/v4/statuses/home_timeline.json?source=user",
+      url: "https://api.xueqiu.com/v4/statuses/home_timeline.json",
+      query: { source: "user" },
       request: requestXueqiuJson,
       items: "home_timeline",
       fields: postFields,
@@ -67,7 +68,8 @@ export const feedSources = {
     },
     loader: {
       type: "json",
-      url: "https://api.xueqiu.com/statuses/hot/listV3.json?source=hot&page=1",
+      url: "https://api.xueqiu.com/statuses/hot/listV3.json",
+      query: { source: "hot", page: "1" },
       request: requestXueqiuJson,
       items: "list",
       fields: postFields,
@@ -90,22 +92,23 @@ export const feedSources = {
     },
     loader: {
       type: "json",
-      url: "/statuses/livenews/list.json?category=6&since_id=-1&count=30",
+      url: "/statuses/livenews/list.json",
+      query: { category: "6", since_id: "-1", count: "30" },
       items: "items",
       fields: {
         url: {
           select: "target",
-          template: "{{ scope.value | regex_replace: \"^http:\", \"https:\" }}",
+          transform: { op: "regex_replace", pattern: "^http:", replacement: "https:" },
         },
         title: {
           select: "text",
-          template: "{{ scope.value | strip_html | normalize_whitespace | truncate: 120, \"…\" }}",
+          transform: ["strip_html", "normalize_whitespace", { op: "truncate", length: 120, suffix: "…" }],
         },
         publishedAt: "created_at",
         content: {
           text: {
             select: "text",
-            template: "{{ scope.value | strip_html | normalize_whitespace }}",
+            transform: ["strip_html", "normalize_whitespace"],
           },
         },
       },
@@ -149,7 +152,8 @@ export const feedSources = {
     },
     loader: {
       type: "json",
-      url: "https://api.xueqiu.com/v4/statuses/home_timeline.json?source={{ source.vars.source[scope.params.filter] | url_query }}",
+      url: "https://api.xueqiu.com/v4/statuses/home_timeline.json",
+      query: { source: "{{ source.vars.source[scope.params.filter] }}" },
       request: requestXueqiuJson,
       items: "home_timeline",
       fields: watchlistPostFields,

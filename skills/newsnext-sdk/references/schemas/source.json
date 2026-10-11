@@ -575,21 +575,43 @@
             "url": {
               "type": "string"
             },
-            "inlineTemplate": {
+            "query": {
+              "type": "object",
+              "patternProperties": {
+                "^.*$": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            "annotation": {
               "type": "string"
             },
             "items": {
               "type": "string"
             },
             "fields": {
-              "type": "object",
-              "properties": {},
-              "additionalProperties": true
+              "$ref": "#/$defs/sourceFields"
             },
             "metadata": {
               "type": "object",
-              "properties": {},
-              "additionalProperties": true
+              "patternProperties": {
+                "^.*$": {
+                  "$ref": "#/$defs/sourceField"
+                }
+              }
             },
             "sortByTimestamp": {
               "type": "boolean"
@@ -1252,21 +1274,43 @@
                 "url": {
                   "type": "string"
                 },
-                "inlineTemplate": {
+                "query": {
+                  "type": "object",
+                  "patternProperties": {
+                    "^.*$": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "annotation": {
                   "type": "string"
                 },
                 "items": {
                   "type": "string"
                 },
                 "fields": {
-                  "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "$ref": "#/$defs/sourceFields"
                 },
                 "metadata": {
                   "type": "object",
-                  "properties": {},
-                  "additionalProperties": true
+                  "patternProperties": {
+                    "^.*$": {
+                      "$ref": "#/$defs/sourceField"
+                    }
+                  }
                 },
                 "sortByTimestamp": {
                   "type": "boolean"
@@ -1452,6 +1496,456 @@
     }
   },
   "additionalProperties": false,
+  "$defs": {
+    "fieldTransforms": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string",
+              "const": "strip_html"
+            },
+            {
+              "type": "string",
+              "const": "normalize_whitespace"
+            },
+            {
+              "type": "string",
+              "const": "first_line"
+            },
+            {
+              "type": "string",
+              "const": "date_to_ms"
+            },
+            {
+              "type": "string",
+              "const": "seconds_to_ms"
+            },
+            {
+              "type": "string",
+              "const": "parse_compact_number"
+            },
+            {
+              "type": "string",
+              "const": "css_url"
+            },
+            {
+              "type": "string",
+              "const": "favicon_url"
+            },
+            {
+              "type": "string",
+              "const": "absolute_url"
+            },
+            {
+              "type": "object",
+              "required": [
+                "op"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "normalize_lines"
+                },
+                "spacing": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 4
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "op",
+                "length"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "truncate"
+                },
+                "length": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "suffix": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "op",
+                "search",
+                "replacement"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "replace"
+                },
+                "search": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "replacement": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "op",
+                "value"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "append"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "op",
+                "pattern"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "regex_extract"
+                },
+                "pattern": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "group": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 99
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "op",
+                "pattern"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "regex_replace"
+                },
+                "pattern": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "replacement": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "op"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "relative_date_to_ms"
+                },
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "strip_html"
+              },
+              {
+                "type": "string",
+                "const": "normalize_whitespace"
+              },
+              {
+                "type": "string",
+                "const": "first_line"
+              },
+              {
+                "type": "string",
+                "const": "date_to_ms"
+              },
+              {
+                "type": "string",
+                "const": "seconds_to_ms"
+              },
+              {
+                "type": "string",
+                "const": "parse_compact_number"
+              },
+              {
+                "type": "string",
+                "const": "css_url"
+              },
+              {
+                "type": "string",
+                "const": "favicon_url"
+              },
+              {
+                "type": "string",
+                "const": "absolute_url"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "normalize_lines"
+                  },
+                  "spacing": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 4
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op",
+                  "length"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "truncate"
+                  },
+                  "length": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "suffix": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op",
+                  "search",
+                  "replacement"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "replace"
+                  },
+                  "search": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "replacement": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op",
+                  "value"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "append"
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op",
+                  "pattern"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "regex_extract"
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "group": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 99
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op",
+                  "pattern"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "regex_replace"
+                  },
+                  "pattern": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "replacement": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "relative_date_to_ms"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 16
+        }
+      ]
+    },
+    "sourceField": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "transform": {
+              "$ref": "#/$defs/fieldTransforms"
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "sourceFields": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/sourceField"
+        },
+        "url": {
+          "$ref": "#/$defs/sourceField"
+        },
+        "publishedAt": {
+          "$ref": "#/$defs/sourceField"
+        },
+        "author": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/sourceField"
+            }
+          }
+        },
+        "stats": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/sourceField"
+            }
+          }
+        },
+        "attributes": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/sourceField"
+            }
+          }
+        },
+        "icon": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/sourceField"
+            }
+          }
+        },
+        "mark": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/sourceField"
+            }
+          }
+        },
+        "content": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": {
+              "$ref": "#/$defs/sourceField"
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
   "if": {
     "properties": {
       "defaults": {

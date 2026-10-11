@@ -26,7 +26,18 @@
           },
           "publishedAt": {
             "select": ".pdt10",
-            "template": "{{ scope.value | replace: '- ', 'T' | append: '+08:00' | date_to_ms }}"
+            "transform": [
+              {
+                "op": "replace",
+                "search": "- ",
+                "replacement": "T"
+              },
+              {
+                "op": "append",
+                "value": "+08:00"
+              },
+              "date_to_ms"
+            ]
           }
         },
         "sortByTimestamp": true

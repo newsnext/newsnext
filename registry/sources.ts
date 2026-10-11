@@ -16,6 +16,7 @@ import provider_5 from "./src/weibo/index"
 import provider_6 from "./src/x/index"
 import provider_7 from "./src/xiaohongshu/index"
 import provider_8 from "./src/xueqiu/index"
+import provider_9 from "./src/zhihu/index"
 
 const providerConfigs: Record<string, ProviderConfig> = {
   "bilibili": {
@@ -67,6 +68,7 @@ const providerConfigs: Record<string, ProviderConfig> = {
   "weibo": {
     ...provider_5,
     sources: {
+      "hot-search": provider_5.sources["hot-search"],
       "user": provider_5.sources["user"],
       "keyword": provider_5.sources["keyword"],
       "super-topic": provider_5.sources["super-topic"],
@@ -100,6 +102,13 @@ const providerConfigs: Record<string, ProviderConfig> = {
       "stock-discussions": provider_8.sources["stock-discussions"],
       "stock-news": provider_8.sources["stock-news"],
       "stock-announcements": provider_8.sources["stock-announcements"]
+    },
+  },
+  "zhihu": {
+    ...provider_9,
+    sources: {
+      "column": provider_9.sources["column"],
+      "following": provider_9.sources["following"]
     },
   }
 }

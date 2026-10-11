@@ -9,7 +9,8 @@ export const rankingSources = {
     },
     loader: {
       type: "json",
-      url: "/hot_event/list.json?count=10",
+      url: "/hot_event/list.json",
+      query: { count: "10" },
       items: "list",
       fields: {
         url: {
@@ -18,7 +19,7 @@ export const rankingSources = {
         },
         title: {
           select: "tag",
-          template: "{{ scope.value | remove: \"#\" }}",
+          transform: { op: "replace", search: "#", replacement: "" },
         },
         content: {
           pictures: "pic",
@@ -41,7 +42,8 @@ export const rankingSources = {
     },
     loader: {
       type: "json",
-      url: "/snb/dj/fundx/activity/x/web/searchFund?fund_type=0&business_code=20",
+      url: "/snb/dj/fundx/activity/x/web/searchFund",
+      query: { fund_type: "0", business_code: "20" },
       items: "data.public_fund",
       fields: {
         url: {
@@ -57,7 +59,7 @@ export const rankingSources = {
           },
         },
       },
-      inlineTemplate: "{{ scope.item.attributes.returnPeriod }} · {{ scope.item.attributes.returnRate }}%",
+      annotation: "{{ scope.item.attributes.returnPeriod }} · {{ scope.item.attributes.returnRate }}%",
     },
     radar: [{
       id: "xueqiu-hot-fund",

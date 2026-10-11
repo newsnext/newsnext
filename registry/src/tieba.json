@@ -23,11 +23,15 @@
           "title": "topic_name",
           "url": {
             "select": "topic_url",
-            "template": "{{ scope.value | replace: '&amp;', '&' }}"
+            "transform": {
+              "op": "replace",
+              "search": "&amp;",
+              "replacement": "&"
+            }
           },
           "publishedAt": {
             "select": "create_time",
-            "template": "{{ scope.value | times: 1000 }}"
+            "transform": "seconds_to_ms"
           }
         }
       }

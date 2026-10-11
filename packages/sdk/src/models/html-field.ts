@@ -1,3 +1,5 @@
+import type { FieldTransforms } from "./field-transform.js"
+
 export type HtmlTraversal
   = { type: "closest", selector: string }
     | { type: "next", selector?: string }
@@ -14,6 +16,9 @@ export interface HtmlFieldConfig {
   brSeparator?: string
   all?: boolean
   separator?: string
+  /** Conversions on the extracted value, before string composition. */
+  transform?: FieldTransforms
+  /** String composition with interpolation and filters; template tags are rejected. */
   template?: string
 }
 

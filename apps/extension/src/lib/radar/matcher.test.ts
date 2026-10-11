@@ -459,6 +459,7 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://music.163.com/#/playlist?id=19723756",
       title: "飙升榜 - 歌单 - 网易云音乐",
+      pageSelections: selectPageField("title", "飙升榜 - 歌单 - 网易云音乐"),
     })).toMatchObject([
       {
         sourceId: "netease-music:playlist",
@@ -472,6 +473,7 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://music.163.com/#/discover/toplist?id=71384707",
       title: "网易云古典榜 - 排行榜 - 网易云音乐",
+      pageSelections: selectPageField("title", "网易云古典榜 - 排行榜 - 网易云音乐"),
     })).toMatchObject([
       {
         sourceId: "netease-music:ranking",
@@ -485,11 +487,12 @@ describe("getRadarSuggestions", () => {
     expect(getSuggestions({
       url: "https://music.163.com/#/discover/toplist?id=71384707",
       title: "网易云音乐",
+      pageSelections: selectPageField("title", "网易云音乐"),
     })).toMatchObject([
       {
         sourceId: "netease-music:ranking",
         patch: {
-          metadata: { title: "排行榜 71384707" },
+          metadata: { title: "排行榜" },
         },
       },
     ])
@@ -499,6 +502,7 @@ describe("getRadarSuggestions", () => {
     const suggestion = getSuggestions({
       url: "https://www.zhihu.com/ring/host/1913608407048511547",
       title: "(44 封私信) ourongxing - 知乎",
+      pageSelections: selectPageField("title", "(44 封私信) ourongxing - 知乎"),
     }).find(candidate => candidate.sourceId === "zhihu:ring")
 
     expect(suggestion).toMatchObject({

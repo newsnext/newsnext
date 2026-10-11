@@ -277,7 +277,7 @@
             "pictures": "widgetImage"
           }
         },
-        "inlineTemplate": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
+        "annotation": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
       }
     }
   }

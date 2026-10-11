@@ -8,7 +8,7 @@ import { TimelineRail } from "./timeline-rail"
 
 interface Props {
   items: NewsItem[]
-  inlinePresentation?: string[]
+  annotations?: string[]
   markScale?: number
   scrollElement: HTMLDivElement | null
   times: readonly number[]
@@ -18,7 +18,7 @@ function getItemKey(item: NewsItem): string {
   return item.url
 }
 
-export function Timeline({ items, inlinePresentation, markScale, scrollElement, times }: Props) {
+export function Timeline({ items, annotations, markScale, scrollElement, times }: Props) {
   const gradientId = useId().replace(/:/g, "")
   const timeLabels = useRelativeTimes(times)
   const renderItem = useCallback((item: NewsItem, index: number) => {
@@ -34,11 +34,11 @@ export function Timeline({ items, inlinePresentation, markScale, scrollElement, 
         />
         <NewsItemLink
           item={item}
-          inlineText={inlinePresentation?.[index]}
+          annotation={annotations?.[index]}
           markScale={markScale}
           previewItems={items}
           previewIndex={index}
-          previewInlinePresentation={inlinePresentation}
+          previewAnnotations={annotations}
           className="flex min-w-0 rounded-xl transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-theme-400"
         >
           <div className="w-5 shrink-0" aria-hidden />
@@ -52,14 +52,14 @@ export function Timeline({ items, inlinePresentation, markScale, scrollElement, 
             )}
             <NewsItemSummary
               item={item}
-              inlineText={inlinePresentation?.[index]}
+              annotation={annotations?.[index]}
               markScale={markScale}
             />
           </div>
         </NewsItemLink>
       </div>
     )
-  }, [gradientId, inlinePresentation, items, markScale, timeLabels])
+  }, [gradientId, annotations, items, markScale, timeLabels])
 
   return (
     <VirtualList

@@ -47,7 +47,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
   const {
     source: displaySource,
     items,
-    inlinePresentation,
+    annotations,
     historyParams,
     isContentFetching,
     sourceErrorMessage,
@@ -118,7 +118,7 @@ function LiveCardContent({ source, target, dragHandleRef }: LiveCardProps) {
       <LiveCardFront
         source={displaySource}
         items={items}
-        inlinePresentation={inlinePresentation}
+        annotations={annotations}
         rankingHistory={cardId && historyParams
           ? {
               cardId,

@@ -11,14 +11,17 @@
         "userId": {
           "type": "number",
           "title": "User ID",
-          "description": "Only return posts by this author ID. Zero returns every post.",
-          "default": 0,
-          "min": 0
+          "description": "Only return posts by this author ID.",
+          "default": 1,
+          "min": 1
         }
       },
       "loader": {
         "type": "json",
-        "url": "https://jsonplaceholder.typicode.com/posts{% if scope.params.userId %}?userId={{ scope.params.userId }}{% endif %}",
+        "url": "https://jsonplaceholder.typicode.com/posts",
+        "query": {
+          "userId": "{{ scope.params.userId }}"
+        },
         "items": "[*]",
         "fields": {
           "title": "title",

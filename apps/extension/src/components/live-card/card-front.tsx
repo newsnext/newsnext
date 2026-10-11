@@ -29,7 +29,7 @@ import { SourcePermissionDetails } from "./source-permission-details"
 interface LiveCardFrontProps {
   source: LiveCardViewModel
   items: NewsItem[]
-  inlinePresentation?: string[]
+  annotations?: string[]
   rankingHistory?: RankingHistorySource
   isContentFetching: boolean
   sourceErrorMessage?: string
@@ -49,7 +49,7 @@ interface LiveCardFrontProps {
 
 interface LiveCardFrontContentProps {
   items: NewsItem[]
-  inlinePresentation?: string[]
+  annotations?: string[]
   rankingHistory?: LiveCardFrontProps["rankingHistory"]
   markScale?: number
   providerTitle: string
@@ -65,7 +65,7 @@ interface LiveCardFrontContentProps {
 
 function LiveCardFrontContent({
   items,
-  inlinePresentation,
+  annotations,
   rankingHistory,
   markScale,
   providerTitle,
@@ -115,7 +115,7 @@ function LiveCardFrontContent({
   return (
     <LiveCardItems
       items={items}
-      inlinePresentation={inlinePresentation}
+      annotations={annotations}
       rankingHistory={rankingHistory}
       markScale={markScale}
       presentationType={presentationType}
@@ -127,7 +127,7 @@ function LiveCardFrontContent({
 export function LiveCardFront({
   source,
   items,
-  inlinePresentation,
+  annotations,
   rankingHistory,
   isContentFetching,
   sourceErrorMessage,
@@ -211,7 +211,7 @@ export function LiveCardFront({
             <LiveCardIdentityContext value={identity}>
               <LiveCardFrontContent
                 items={items}
-                inlinePresentation={inlinePresentation}
+                annotations={annotations}
                 rankingHistory={rankingHistory}
                 markScale={markScale}
                 providerTitle={provider.title}

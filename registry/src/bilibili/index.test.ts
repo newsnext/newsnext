@@ -1,7 +1,8 @@
+import { validateNewsItems } from "@newsnext/source-kit/core"
 import { describe, expect, it } from "vitest"
 import { dynamicItemsToNewsItems, followingDynamicItemsToNewsItems } from "./dynamics"
 import { favoriteMediaToNewsItem } from "./favorites"
-import { pgcRankingItemToNewsItem, videoRankingItemToNewsItem } from "./ranking"
+import { formatBilibiliPgcAnnotation, pgcRankingItemToNewsItem, videoRankingItemToNewsItem } from "./ranking"
 import {
   getBilibiliSearchDateRange,
   searchVideoItemToNewsItem,
@@ -58,6 +59,19 @@ describe("bilibili search", () => {
 })
 
 describe("bilibili video items", () => {
+  it("joins episode and rating labels without orphan separators", () => {
+    for (const [episode, rating, expected] of [
+      ["Episode 1", "9.5", "Episode 1 · 9.5 rating"],
+      [undefined, "9.5", "9.5 rating"],
+      ["Episode 1", undefined, "Episode 1"],
+      [undefined, undefined, ""],
+    ] as const) {
+      const item = pgcRankingItemToNewsItem({ title: "Series", season_id: 1, new_ep: { index_show: episode }, rating })
+      const [normalized] = validateNewsItems([item])
+      expect(formatBilibiliPgcAnnotation(normalized!)).toBe(expected)
+    }
+  })
+
   it("maps favorites and uses the selected ordering timestamp", () => {
     const media = {
       bvid: "BV1favorite",

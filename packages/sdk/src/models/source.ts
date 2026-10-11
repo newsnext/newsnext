@@ -108,7 +108,8 @@ export function isSourcePresentationType(value: unknown): value is SourcePresent
 
 export interface SourceLoaderResult {
   items: NewsItem[]
-  inlinePresentation?: string[]
+  /** Display annotations aligned with items; empty entries use the default item presentation. */
+  annotations?: string[]
   metadata?: SourcePresentationMetadata
 }
 

@@ -5,12 +5,12 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
-  inlinePresentation?: string[]
+  annotations?: string[]
   markScale?: number
   scrollElement: HTMLDivElement | null
 }
 
-export function UnorderedList({ items, inlinePresentation, markScale, scrollElement }: Props) {
+export function UnorderedList({ items, annotations, markScale, scrollElement }: Props) {
   return (
     <VirtualList
       items={items}
@@ -19,16 +19,16 @@ export function UnorderedList({ items, inlinePresentation, markScale, scrollElem
       itemClassName="pb-2 last:pb-0"
       renderItem={(item, index) => {
         const time = item.publishedAt
-        const inlineSuffix = time === undefined ? undefined : <RelativeTime date={time} />
+        const annotationSuffix = time === undefined ? undefined : <RelativeTime date={time} />
         return (
           <NewsItemLink
             item={item}
-            inlineText={inlinePresentation?.[index]}
-            inlineSuffix={inlineSuffix}
+            annotation={annotations?.[index]}
+            annotationSuffix={annotationSuffix}
             markScale={markScale}
             previewItems={items}
             previewIndex={index}
-            previewInlinePresentation={inlinePresentation}
+            previewAnnotations={annotations}
             showPreviewTime
             className="flex items-center gap-2 rounded-xl transition-colors outline-none hover:bg-muted focus-visible:bg-muted focus-visible:ring-2 focus-visible:ring-theme-400"
           >
@@ -37,8 +37,8 @@ export function UnorderedList({ items, inlinePresentation, markScale, scrollElem
             </span>
             <NewsItemSummary
               item={item}
-              inlineText={inlinePresentation?.[index]}
-              inlineSuffix={inlineSuffix}
+              annotation={annotations?.[index]}
+              annotationSuffix={annotationSuffix}
               markScale={markScale}
             />
           </NewsItemLink>

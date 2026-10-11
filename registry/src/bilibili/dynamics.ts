@@ -1,5 +1,5 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
-import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
+import type { NewsItem, NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
 import {
   BILIBILI_WEB_LOCATION,
   bilibiliApiCapabilities,
@@ -35,7 +35,11 @@ const DYNAMIC_FEED_FEATURES = [
   "eva3CardVote",
   "eva3CardUser",
 ]
-const BILIBILI_FOLLOWING_INLINE_TEMPLATE = "{% unless scope.item.icon.kind == 'author' %}{% if scope.item.author %}{{ scope.item.author.name }}{% if scope.item.attributes.type %} · {% endif %}{% endif %}{% endunless %}{% if scope.item.attributes.type %}{{ scope.item.attributes.type }}{% endif %}"
+export function formatBilibiliFollowingAnnotation(item: Readonly<NewsItem>): string {
+  return [item.icon?.kind === "author" ? undefined : item.author?.name, item.attributes?.type]
+    .filter(Boolean)
+    .join(" · ")
+}
 
 interface DynamicFeedItem {
   id_str?: string
@@ -343,6 +347,7 @@ async function fetchBilibiliUserDynamics(
 }
 
 export const followingSource = {
+  version: 3,
   metadata: {
     title: "关注动态",
     desc: "已关注 UP 主发布的最新动态",
@@ -377,12 +382,13 @@ export const followingSource = {
   loader: {
     type: "custom",
     load: fetchBilibiliFollowing,
-    inlineTemplate: BILIBILI_FOLLOWING_INLINE_TEMPLATE,
+    annotation: formatBilibiliFollowingAnnotation,
   },
   capabilities: bilibiliApiCapabilities,
 } satisfies ProviderSourceConfig
 
 export const userDynamicsSource = {
+  version: 3,
   metadata: {
     title: "用户动态",
     desc: "指定用户发布的动态",
@@ -414,7 +420,7 @@ export const userDynamicsSource = {
   loader: {
     type: "custom",
     load: fetchBilibiliUserDynamics,
-    inlineTemplate: "{{ scope.item.attributes.type }}",
+    annotation: "{{ scope.item.attributes.type }}",
   },
   capabilities: bilibiliApiCapabilities,
 } satisfies ProviderSourceConfig

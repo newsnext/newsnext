@@ -8,7 +8,7 @@ import { NewsItemLink, NewsItemSummary } from "./news-item-common"
 
 interface Props {
   items: NewsItem[]
-  inlinePresentation?: string[]
+  annotations?: string[]
   rankingHistory?: RankingHistorySource
   markScale?: number
   scrollElement: HTMLDivElement | null
@@ -97,7 +97,7 @@ function RankChangeBadge({ diff }: { diff?: number }) {
   )
 }
 
-export function Ranking({ items, inlinePresentation, rankingHistory, markScale, scrollElement }: Props) {
+export function Ranking({ items, annotations, rankingHistory, markScale, scrollElement }: Props) {
   const rankChanges = useRankChanges(items)
 
   return (
@@ -109,11 +109,11 @@ export function Ranking({ items, inlinePresentation, rankingHistory, markScale, 
       renderItem={(item, index) => (
         <NewsItemLink
           item={item}
-          inlineText={inlinePresentation?.[index]}
+          annotation={annotations?.[index]}
           markScale={markScale}
           previewItems={items}
           previewIndex={index}
-          previewInlinePresentation={inlinePresentation}
+          previewAnnotations={annotations}
           rankingHistory={rankingHistory}
           className="relative flex items-center gap-2 rounded-xl transition-colors hover:bg-muted"
         >
@@ -123,7 +123,7 @@ export function Ranking({ items, inlinePresentation, rankingHistory, markScale, 
           <RankChangeBadge diff={rankChanges[item.url]} />
           <NewsItemSummary
             item={item}
-            inlineText={inlinePresentation?.[index]}
+            annotation={annotations?.[index]}
             markScale={markScale}
           />
         </NewsItemLink>

@@ -74,7 +74,7 @@ function createRunOutput(
       sourceVersion,
     },
     ...(fetches ? { fetches } : {}),
-    inlinePresentation: result.inlinePresentation,
+    annotations: result.annotations,
     metadata: result.metadata,
   }
 }

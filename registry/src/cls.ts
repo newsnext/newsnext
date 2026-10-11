@@ -38,7 +38,7 @@ export default {
         },
         publishedAt: {
           select: "ctime",
-          template: "{{ scope.value | times: 1000 }}",
+          transform: "seconds_to_ms",
         },
       },
     },

@@ -55,7 +55,14 @@
           "title": {
             "select": ".tgme_widget_message_text:not(.js-message_reply_text)",
             "brSeparator": "\n",
-            "template": "{{ scope.value | first_line | truncate: 160, '…' }}"
+            "transform": [
+              "first_line",
+              {
+                "op": "truncate",
+                "length": 160,
+                "suffix": "…"
+              }
+            ]
           },
           "url": {
             "select": ".tgme_widget_message_date",
@@ -64,12 +71,12 @@
           "publishedAt": {
             "select": ".tgme_widget_message_date time",
             "attr": "datetime",
-            "template": "{{ scope.value | date_to_ms }}"
+            "transform": "date_to_ms"
           },
           "stats": {
             "views": {
               "select": ".tgme_widget_message_views",
-              "template": "{{ scope.value | parse_compact_number }}"
+              "transform": "parse_compact_number"
             }
           },
           "content": {
@@ -79,12 +86,15 @@
                 ".tgme_widget_message_text:not(.js-message_reply_text)"
               ],
               "brSeparator": "\n",
-              "template": "{{ scope.value | normalize_lines: 2 }}"
+              "transform": {
+                "op": "normalize_lines",
+                "spacing": 2
+              }
             },
             "pictures": {
               "select": ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
               "attr": "style",
-              "template": "{{ scope.value | css_url }}"
+              "transform": "css_url"
             }
           }
         },

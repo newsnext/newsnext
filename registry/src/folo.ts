@@ -88,7 +88,7 @@ async function loadFoloEntries(
   }
 }
 
-const FOLO_INLINE_TEMPLATE = "{% if scope.item.author %}{{ scope.item.author.name }}{% else %}{{ scope.item.attributes.source }}{% endif %}"
+const FOLO_ANNOTATION_TEMPLATE = "{{ scope.item.author.name | default: scope.item.attributes.source }}"
 
 export default {
   title: "Folo",
@@ -140,7 +140,7 @@ export default {
       ],
       loader: {
         load: loadFoloEntries,
-        inlineTemplate: FOLO_INLINE_TEMPLATE,
+        annotation: FOLO_ANNOTATION_TEMPLATE,
       },
     },
     list: {
@@ -176,7 +176,7 @@ export default {
       ],
       loader: {
         load: loadFoloEntries,
-        inlineTemplate: FOLO_INLINE_TEMPLATE,
+        annotation: FOLO_ANNOTATION_TEMPLATE,
       },
     },
   },

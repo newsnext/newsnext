@@ -20,3 +20,5 @@ export function firstJsonSchemaIssue(
     ? undefined
     : { instancePath: issue.instancePath, message: issue.message }
 }
+
+export { fieldTransformsDefinition } from "./definitions"

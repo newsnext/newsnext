@@ -42,6 +42,21 @@ class SourceSnapshotDatabase extends Dexie {
       liveCardSnapshots: "cardId, fetchedAt, resultKey",
       sourceResultSnapshots: "key, fetchedAt",
     })
+    this.version(10).stores({
+      liveCardSnapshots: "cardId, fetchedAt, resultKey",
+      sourceResultSnapshots: "key, fetchedAt",
+    }).upgrade(async (transaction) => {
+      // Rename persisted presentation once, keeping cached items and metadata intact.
+      await transaction.table<{ result: Record<string, unknown> }, string>("sourceResultSnapshots")
+        .toCollection()
+        .modify(({ result }) => {
+          if (!isRecord(result)) return
+          if (result.annotations === undefined && Array.isArray(result.inlinePresentation)) {
+            result.annotations = result.inlinePresentation
+          }
+          delete result.inlinePresentation
+        })
+    })
   }
 }
 
@@ -51,7 +66,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-function isValidInlinePresentation(value: unknown, itemCount: number): boolean {
+function isValidAnnotations(value: unknown, itemCount: number): boolean {
   if (value === undefined) return true
   return Array.isArray(value)
     && value.length === itemCount
@@ -72,7 +87,7 @@ function isValidSourceResultSnapshot(
     && Number.isFinite(value.fetchedAt)
     && value.fetchedAt > 0
     && Array.isArray(value.result.items)
-    && isValidInlinePresentation(value.result.inlinePresentation, value.result.items.length)
+    && isValidAnnotations(value.result.annotations, value.result.items.length)
 }
 
 function isValidLiveCardSnapshot(

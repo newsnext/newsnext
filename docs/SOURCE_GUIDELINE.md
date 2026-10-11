@@ -90,8 +90,11 @@ JSON only, watched live, invalid files ignored. Same shape as
   `content.text`.
 - Verify with registry build + typecheck + tests; error codes live beside
   `registry/validation.ts` and `core/source-error.ts`.
-- In JSON providers, write four backslashes for one regex backslash
-  (source file + Liquid string parsing both consume one layer).
+- Keep templates for interpolation and filters only; tags are rejected. Use `loader.query`
+  for query parameters and field `transform` for value conversion; use JMESPath
+  for JSON fallbacks and array operations, and TypeScript for conditional logic.
+  Transform regex patterns have only JSON escaping; avoid regex string parsing
+  inside templates.
 - Keep opaque numeric IDs as `text` params with string defaults (they can
   exceed safe-integer range); quote them as JSON strings in CLI runs.
 - Radar JS param functions must be closure-free (serialized into the page);

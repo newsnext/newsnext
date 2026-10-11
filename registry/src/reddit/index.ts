@@ -7,8 +7,8 @@ import type {
 import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils"
 
 const REDDIT_LISTING_LIMIT = 50
-const REDDIT_USER_INLINE_TEMPLATE = "{{ scope.item.attributes.community }}"
-const REDDIT_SUBREDDIT_INLINE_TEMPLATE = "{{ scope.item.author.name }}"
+const REDDIT_USER_ANNOTATION_TEMPLATE = "{{ scope.item.attributes.community }}"
+const REDDIT_SUBREDDIT_ANNOTATION_TEMPLATE = "{{ scope.item.author.name }}"
 const REDDIT_RADAR_HOSTS = ["reddit.com", "old.reddit.com", "new.reddit.com"]
 const SUBREDDIT_SORT_OPTIONS = [
   { label: "Best", value: "best" },
@@ -224,7 +224,7 @@ export default {
       ],
       loader: {
         load: fetchRedditUserPosts,
-        inlineTemplate: REDDIT_USER_INLINE_TEMPLATE,
+        annotation: REDDIT_USER_ANNOTATION_TEMPLATE,
       },
     },
     "subreddit": {
@@ -245,7 +245,7 @@ export default {
       radar: subredditRadarRules,
       loader: {
         load: fetchSubredditPosts,
-        inlineTemplate: REDDIT_SUBREDDIT_INLINE_TEMPLATE,
+        annotation: REDDIT_SUBREDDIT_ANNOTATION_TEMPLATE,
       },
     },
     "subreddit-top": {
@@ -287,7 +287,7 @@ export default {
       ],
       loader: {
         load: fetchSubredditTopPosts,
-        inlineTemplate: REDDIT_SUBREDDIT_INLINE_TEMPLATE,
+        annotation: REDDIT_SUBREDDIT_ANNOTATION_TEMPLATE,
       },
     },
   },

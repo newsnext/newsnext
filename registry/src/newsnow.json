@@ -76,7 +76,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
+        "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}",
         "items": ".newsfeed .article",
         "fields": {
           "title": ".article-card__headline",
@@ -87,13 +87,16 @@
           "publishedAt": {
             "select": "[data-timestamp]",
             "attr": "data-timestamp",
-            "template": "{{ scope.value | times: 1000 }}"
+            "transform": "seconds_to_ms"
           },
           "attributes": {
             "publisher": ".article-publisher__name"
           }
         },
-        "inlineTemplate": "{{ scope.item.attributes.publisher }}"
+        "annotation": "{{ scope.item.attributes.publisher }}",
+        "query": {
+          "type": "ln"
+        }
       }
     }
   }

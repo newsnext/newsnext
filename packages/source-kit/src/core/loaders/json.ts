@@ -1,4 +1,4 @@
-import type { EmbeddedJsonOptions } from "@newsnext/sdk/models"
+import type { EmbeddedJsonOptions, FieldTransforms } from "@newsnext/sdk/models"
 import type {
   NewsItem,
   SourceLoaderOutput,
@@ -14,6 +14,7 @@ import type {
 } from "./shared"
 import * as jmespath from "jmespath"
 import { parseEmbeddedJson } from "../embedded-json"
+import { applyFieldTransforms, validateFieldTransforms } from "../field-transforms"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -46,8 +47,10 @@ interface JsonFieldContext {
 export interface JsonFieldConfig {
   /** JMESPath against the item; omitted selects the whole item. */
   select?: string
-  /** Liquid template; scope exposes value/item/response/params/index/request. */
+  /** Interpolation and filters only; scope exposes value/item/response/params/index/request. */
   template?: string
+  /** Conversions on the selected value, before string composition. */
+  transform?: FieldTransforms
 }
 
 export type JsonField = string | JsonFieldConfig
@@ -87,7 +90,9 @@ export function compileJsonLoaderTemplates(
 
 function compileJsonTemplates(entries: readonly JsonFieldEntry[], location: string): void {
   for (const { field, htmlOutput, path } of entries) {
-    if (typeof field === "string" || !field.template) continue
+    if (typeof field === "string") continue
+    validateFieldTransforms(field.transform, `${location}.${path.join(".")}.transform`)
+    if (!field.template) continue
     fieldTemplates.set(field, compileSourceTemplate(field.template, {
       location: `${location}.${path.join(".")}.template`,
       output: htmlOutput ? "html" : "plain",
@@ -148,9 +153,11 @@ function resolveValue(
     return selectJson(item, field)
   }
 
-  const selected = field.select === undefined
-    ? item
-    : selectJson(item, field.select)
+  const selected = applyFieldTransforms(
+    field.select === undefined ? item : selectJson(item, field.select),
+    field.transform,
+    context.requestUrl,
+  )
   if (!field.template) {
     return selected
   }

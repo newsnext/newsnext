@@ -1,13 +1,33 @@
 import type { JikePost } from "./types"
 import { validateSourceLoaderOutput } from "@newsnext/source-kit/core"
 import { describe, expect, it } from "vitest"
-import { jikePostsToNewsItems } from "./utils"
+import { formatJikeAnnotation, jikePostsToNewsItems } from "./utils"
 
 function normalize(posts: JikePost[]) {
   return validateSourceLoaderOutput({ items: jikePostsToNewsItems(posts) }).items
 }
 
 describe("jikePostsToNewsItems", () => {
+  it("composes annotation text without repeated authors or orphan separators", () => {
+    for (const [avatar, authorName, topic, expected] of [
+      ["https://example.com/avatar.png", "Author", "Topic", "#Topic"],
+      [undefined, "Author", "Topic", "Author · #Topic"],
+      [undefined, undefined, "Topic", "#Topic"],
+      [undefined, "Author", undefined, "Author"],
+    ] as const) {
+      const [item] = jikePostsToNewsItems([{
+        id: "post",
+        type: "ORIGINAL_POST",
+        content: "Post",
+        user: { screenName: authorName, profileImageUrl: avatar },
+        topic: { content: topic },
+      }])
+      if (!item) throw new Error("Missing post")
+      const [normalized] = validateSourceLoaderOutput({ items: [item] }).items
+      expect(formatJikeAnnotation(normalized!)).toBe(expected)
+    }
+  })
+
   it("maps semantic post fields from the Jike feed", () => {
     expect(normalize([
       {

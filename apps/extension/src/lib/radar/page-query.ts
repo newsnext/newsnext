@@ -1,9 +1,9 @@
 import type { HtmlFieldConfig } from "@newsnext/source-kit/types"
 
-export type RadarPageQuery = Omit<HtmlFieldConfig, "template">
+export type RadarPageQuery = Omit<HtmlFieldConfig, "template" | "transform">
 
 export function createRadarPageQuery(field: HtmlFieldConfig): RadarPageQuery {
-  const { template: _template, ...query } = field
+  const { template: _template, transform: _transform, ...query } = field
   return query
 }
 

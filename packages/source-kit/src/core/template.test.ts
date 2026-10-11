@@ -89,9 +89,9 @@ describe("source templates", () => {
     expect(renderTemplate("{{ value | date_to_ms }}", { value: null })).toBe("")
   })
 
-  it("supports conditions and URL encoding helpers", () => {
+  it("supports URL encoding helpers without template tags", () => {
     expect(renderTemplate(
-      "{% assign normalized = language | strip %}/trending{% if normalized %}/{{ normalized | url_path }}{% endif %}",
+      "{{ language | strip | url_path | prepend: '/trending/' | regex_replace: '/$', '' }}",
       { language: " c++ " },
     )).toBe("/trending/c%2B%2B")
 
@@ -224,16 +224,22 @@ describe("source templates", () => {
       .toBe("<strong>&lt;em&gt;unsafe&lt;/em&gt;</strong>")
   })
 
-  it("rejects file-backed and raw tags", () => {
-    expect(() => renderTemplate("{% include 'secret' %}", {})).toThrow(
-      "File inclusion, layouts, and raw blocks are not allowed",
-    )
-    expect(() => renderTemplate("{% raw %}{{ unsafe }}{% endraw %}", {})).toThrow(
-      "File inclusion, layouts, and raw blocks are not allowed",
-    )
-    expect(() => renderTemplate("{% liquid\ninclude 'secret'\n%}", {})).toThrow(
-      "File inclusion, layouts, and raw blocks are not allowed",
-    )
+  it.each([
+    "{% if scope.params.id %}yes{% endif %}",
+    "{%- unless scope.params.id -%}yes{%- endunless -%}",
+    "{% case scope.params.id %}{% when 1 %}yes{% endcase %}",
+    "{% assign value = 1 %}{{ value }}",
+    "{% capture value %}yes{% endcapture %}",
+    "{% for value in scope.params.values %}{{ value }}{% endfor %}",
+    "{% include 'secret' %}",
+    "{% raw %}{{ unsafe }}{% endraw %}",
+    "{% liquid\ninclude 'secret'\n%}",
+  ])("rejects template tags: %s", (template) => {
+    expect(() => renderTemplate(template, {})).toThrow("Template tags are not allowed")
+    expect(() => compileSourceTemplate(template, {
+      location: "test.loader.url",
+      slot: "request",
+    })).toThrow("Invalid Liquid template at test.loader.url: Template tags are not allowed")
   })
 
   it("bounds regular expression filters", () => {

@@ -3,6 +3,7 @@ import type {
   SourceRadarRule,
 } from "../types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
+import { validateFieldTransforms } from "./field-transforms"
 import { SOURCE_REGISTRY_LIMITS } from "./limits"
 import { compileSourceTemplate, isTemplate } from "./template"
 
@@ -128,6 +129,7 @@ function validateRadarHtmlField(
     "all",
     "separator",
     "template",
+    "transform",
   ]
   if (
     !isRecord(value)
@@ -183,6 +185,7 @@ function validateRadarHtmlField(
   if (field.separator !== undefined && typeof field.separator !== "string") {
     throw new TypeError(`${location}.separator must be a string`)
   }
+  validateFieldTransforms(field.transform, `${location}.transform`)
   if (field.template !== undefined) {
     if (typeof field.template !== "string") {
       throw new TypeError(`${location}.template must be a string`)

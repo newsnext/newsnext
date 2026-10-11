@@ -1,10 +1,13 @@
-import type { InferSourceParams, SourceDescriptor, SourceLoaderOutput, SourceLoaderResult, SourceParamSchemaMap, SourceSecrets } from "@newsnext/sdk/models"
+import type { InferSourceParams, NewsItem, SourceDescriptor, SourceLoaderOutput, SourceLoaderResult, SourceParamSchemaMap, SourceSecrets } from "@newsnext/sdk/models"
 import type { KyInstance } from "ky"
 
 export type { CategoryId, SourceCapabilities, SourceCookieSecretDefinition, SourceDescriptor, SourceLoaderOutput, SourceLoaderResult, SourceLocalStorageSecretDefinition, SourcePatch, SourcePresentationMetadata, SourcePresentationType, SourceProvider, SourceRadarMatch, SourceRadarMetadata, SourceRadarParam, SourceRadarParams, SourceRadarParamScript, SourceRadarPatch, SourceRadarPaths, SourceRadarRule, SourceRequestRule, SourceSecretBaseDefinition, SourceSecretDefinition, SourceSecrets, SourceTemplateVars, SourceTemplateVarValue } from "@newsnext/sdk/models"
 export { CATEGORY_IDS, isSourcePresentationMetadataKey, isSourcePresentationType, SOURCE_PRESENTATION_METADATA_KEYS, SOURCE_PRESENTATION_TYPES } from "@newsnext/sdk/models"
 
 export type SourceFetch = KyInstance
+
+/** Synchronous TS-only presentation, evaluated after item normalization and URL resolution. */
+export type SourceAnnotationFormatter = (item: Readonly<NewsItem>) => string | undefined
 
 export interface SourceLoaderContext {
   // WHY: always use this bound client; ky.create()/global fetch would lose the abort signal, host queue, and capability checks.

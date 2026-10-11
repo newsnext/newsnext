@@ -22,34 +22,34 @@ export function SemanticImage({ picture, className, scale }: {
   )
 }
 
-function getDefaultInlineText(item: NewsItem): string {
+function getDefaultAnnotation(item: NewsItem): string {
   const values: string[] = []
   if (item.author && item.icon?.kind !== "author") values.push(item.author.name)
   if (item.attributes) values.push(...Object.values(item.attributes).map(String))
   return values.join(" · ")
 }
 
-interface NewsItemInlineProps {
+interface NewsItemAnnotationProps {
   item: NewsItem
-  inlineText?: string
-  inlineSuffix?: ReactNode
+  annotation?: string
+  annotationSuffix?: ReactNode
   markScale?: number
   className?: string
   truncate?: boolean
   size?: "default" | "large"
 }
 
-export function NewsItemInline({
+export function NewsItemAnnotation({
   item,
-  inlineText: renderedInlineText,
-  inlineSuffix,
+  annotation: renderedAnnotation,
+  annotationSuffix,
   markScale,
   className,
   truncate = true,
   size = "default",
-}: NewsItemInlineProps): ReactNode {
-  const inlineText = renderedInlineText || getDefaultInlineText(item)
-  if (!item.mark && !inlineText && !inlineSuffix && !item.stats) return null
+}: NewsItemAnnotationProps): ReactNode {
+  const annotation = renderedAnnotation || getDefaultAnnotation(item)
+  if (!item.mark && !annotation && !annotationSuffix && !item.stats) return null
 
   return (
     <span className={cn("inline-flex max-w-full items-center gap-1 align-middle leading-none text-neutral-400/80", className)}>
@@ -60,16 +60,16 @@ export function NewsItemInline({
           className={size === "large" ? "h-5" : undefined}
         />
       )}
-      {(inlineText || inlineSuffix) && (
+      {(annotation || annotationSuffix) && (
         <span className={cn(
           "inline-flex min-w-0 self-center items-center",
           size === "large" ? "h-5 text-sm leading-5" : "h-3.5 text-xs leading-3.5",
           truncate ? "max-w-80 truncate" : "whitespace-normal wrap-break-word",
         )}
         >
-          {inlineText}
-          {inlineText && inlineSuffix && <span className="mx-1">·</span>}
-          {inlineSuffix}
+          {annotation}
+          {annotation && annotationSuffix && <span className="mx-1">·</span>}
+          {annotationSuffix}
         </span>
       )}
       <NewsItemStats item={item} size={size} />

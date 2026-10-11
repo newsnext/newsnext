@@ -22,7 +22,7 @@ import { SourceIcon } from "@/components/card-shell/source-icon"
 import { useI18n } from "@/hooks/use-i18n"
 import { useLiveCardIdentity } from "./live-card-identity-context"
 import { getTitleStartRect } from "./news-item-animation"
-import { NewsItemInline } from "./news-item-inline"
+import { NewsItemAnnotation } from "./news-item-annotation"
 import { RankingHistory } from "./ranking-history"
 
 interface NewsItemPreviewProps {
@@ -271,8 +271,8 @@ interface NewsItemPreviewDialogProps {
   index: number
   onIndexChange: (index: number) => void
   onClose: (origin: DOMRect | undefined) => void
-  inlineText?: string
-  inlineSuffix?: ReactNode
+  annotation?: string
+  annotationSuffix?: ReactNode
   markScale?: number
   onPreviousItem?: () => void
   onNextItem?: () => void
@@ -286,8 +286,8 @@ export function NewsItemPreviewDialog({
   index,
   onIndexChange,
   onClose,
-  inlineText,
-  inlineSuffix,
+  annotation,
+  annotationSuffix,
   markScale,
   onPreviousItem,
   onNextItem,
@@ -353,10 +353,10 @@ export function NewsItemPreviewDialog({
               </div>
             </article>
             <footer className="flex min-h-16 shrink-0 items-center justify-between gap-4 border-t border-border/60 py-4 pr-4 pl-6">
-              <NewsItemInline
+              <NewsItemAnnotation
                 item={item}
-                inlineText={inlineText}
-                inlineSuffix={inlineSuffix}
+                annotation={annotation}
+                annotationSuffix={annotationSuffix}
                 markScale={markScale}
                 truncate={false}
                 size="large"

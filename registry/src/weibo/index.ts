@@ -1,5 +1,6 @@
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceRequestRule } from "@newsnext/source-kit/types"
+import { fetchWeiboHotSearch } from "./hot-search"
 import {
   fetchWeiboFollowingTimeline,
   fetchWeiboKeywordPosts,
@@ -72,18 +73,6 @@ export default {
         title: "热搜",
         type: "ranking",
       },
-      vars: {
-        endpoint: {
-          search: "side/hotSearch",
-          mine: "statuses/mineBand",
-          entertainment: "statuses/entertainment",
-          social: "statuses/social",
-          tech: "statuses/technology",
-          life: "statuses/life",
-          sports: "statuses/sport",
-          acg: "statuses/acg",
-        },
-      },
       params: {
         type: {
           type: "select",
@@ -121,24 +110,8 @@ export default {
           },
         },
       ],
-      loader: {
-        type: "json",
-        url: "/ajax/{{ source.vars.endpoint[scope.params.type] }}",
-        items: "(data.realtime || data.band_list)[?is_ad != `1` && (rank != `null` || realpos != `null`)]",
-        fields: {
-          title: "note || word || name",
-          url: {
-            select: "url || word_scheme || word",
-            template: "{% if scope.item.url %}{{ scope.value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ scope.value | url_query }}{% endif %}",
-          },
-          mark: {
-            src: "icon || icon_url",
-            kind: { template: "trend" },
-            label: "word",
-          },
-        },
-      },
-      version: 6,
+      loader: { load: fetchWeiboHotSearch },
+      version: 7,
     },
     "user": {
       metadata: {

@@ -129,6 +129,35 @@ export const insightManifestDefinition = strictObject({
   view: Type.Optional(insightView),
 })
 
+const fieldTransformDefinition = Type.Union([
+  ...["strip_html", "normalize_whitespace", "first_line", "date_to_ms", "seconds_to_ms", "parse_compact_number", "css_url", "favicon_url", "absolute_url"].map(name => Type.Literal(name)),
+  strictObject({ op: Type.Literal("normalize_lines"), spacing: Type.Optional(Type.Integer({ minimum: 1, maximum: 4 })) }),
+  strictObject({ op: Type.Literal("truncate"), length: Type.Integer({ minimum: 0 }), suffix: Type.Optional(Type.String()) }),
+  strictObject({ op: Type.Literal("replace"), search: Type.String({ minLength: 1 }), replacement: Type.String() }),
+  strictObject({ op: Type.Literal("append"), value: Type.String() }),
+  strictObject({ op: Type.Literal("regex_extract"), pattern: Type.String({ minLength: 1, maxLength: 500 }), group: Type.Optional(Type.Integer({ minimum: 0, maximum: 99 })) }),
+  strictObject({ op: Type.Literal("regex_replace"), pattern: Type.String({ minLength: 1, maxLength: 500 }), replacement: Type.Optional(Type.String()) }),
+  strictObject({ op: Type.Literal("relative_date_to_ms"), timezone: Type.Optional(Type.String()) }),
+])
+export const fieldTransformsDefinition = Type.Union([
+  fieldTransformDefinition,
+  Type.Array(fieldTransformDefinition, { minItems: 1, maxItems: 16 }),
+])
+const sourceField = Type.Union([
+  Type.String(),
+  Type.Object({ transform: Type.Optional(Type.Unsafe({ $ref: "#/$defs/fieldTransforms" })) }, { additionalProperties: true }),
+])
+const sourceFieldReference = Type.Unsafe({ $ref: "#/$defs/sourceField" })
+const sourceFields = Type.Object({
+  title: Type.Optional(sourceFieldReference),
+  url: Type.Optional(sourceFieldReference),
+  publishedAt: Type.Optional(sourceFieldReference),
+  ...Object.fromEntries(["author", "stats", "attributes", "icon", "mark", "content"].map(group => [
+    group,
+    Type.Optional(Type.Record(Type.String(), sourceFieldReference)),
+  ])),
+}, { additionalProperties: true })
+
 const sourceMetadata = strictObject({
   title: Type.Optional(Type.String()),
   badge: Type.Optional(Type.String()),
@@ -145,10 +174,11 @@ const sourceLoader = strictObject({
     Type.Literal("rss"),
   ])),
   url: Type.Optional(Type.String()),
-  inlineTemplate: Type.Optional(Type.String()),
+  query: Type.Optional(Type.Record(Type.String(), Type.Union([Type.String(), Type.Number(), Type.Boolean(), Type.Null()]))),
+  annotation: Type.Optional(Type.String()),
   items: Type.Optional(Type.String()),
-  fields: Type.Optional(Type.Object({}, { additionalProperties: true })),
-  metadata: Type.Optional(Type.Object({}, { additionalProperties: true })),
+  fields: Type.Optional(Type.Unsafe({ $ref: "#/$defs/sourceFields" })),
+  metadata: Type.Optional(Type.Record(Type.String(), sourceFieldReference)),
   sortByTimestamp: Type.Optional(Type.Boolean()),
   decoding: Type.Optional(Type.String()),
   embeddedJson: Type.Optional(strictObject({
@@ -213,6 +243,7 @@ const sourceManifestBase = strictObject({
 // when the provider defaults do not provide one.
 export const sourceManifestDefinition = Type.Unsafe({
   ...sourceManifestBase,
+  $defs: { fieldTransforms: fieldTransformsDefinition, sourceField, sourceFields },
   if: {
     properties: {
       defaults: {

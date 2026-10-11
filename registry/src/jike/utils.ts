@@ -1,4 +1,4 @@
-import type { NewsItemInput } from "@newsnext/source-kit/types"
+import type { NewsItem, NewsItemInput } from "@newsnext/source-kit/types"
 import type { JikePicture, JikePost, JikeUser, TopicFeedOrder } from "./types"
 
 export const JIKE_WEB_ORIGIN = "https://web.okjike.com"
@@ -92,4 +92,13 @@ export function createJikeHeaders(accessToken: string): Record<string, string> {
 export function buildJikeTopicFeedUrl(order: TopicFeedOrder): string {
   const tab = order === "recent" ? "square" : "selected"
   return `${TOPIC_FEED_BASE_URL}/${tab}/feed`
+}
+
+export function formatJikeAuthorAnnotation(item: Readonly<NewsItem>): string | undefined {
+  return item.icon?.kind === "author" ? undefined : item.author?.name
+}
+
+export function formatJikeAnnotation(item: Readonly<NewsItem>): string {
+  const topic = item.attributes?.topic
+  return [formatJikeAuthorAnnotation(item), topic ? `#${topic}` : undefined].filter(Boolean).join(" · ")
 }

@@ -1,16 +1,14 @@
 import type { Template } from "liquidjs"
 import type { SourceTemplateVars } from "../types"
-import { parseRelativeDate } from "@newsnext/date-parser"
-import { getFavicon } from "@newsnext/shared/utils"
 import { Liquid } from "liquidjs"
-import { compileSourceRegex, validateSourceRegexInput } from "./regex"
+import { sourceFilters } from "./source-filters"
 
 type TemplateRenderer = (context: object) => string
 export type TemplateOutput = "html" | "plain"
 
 export type SourceTemplateSlot
   = | "field"
-    | "inline"
+    | "annotation"
     | "jsonField"
     | "radarMetadata"
     | "radarParams"
@@ -38,9 +36,7 @@ const RENDER_LIMIT_MS = 50
 const MEMORY_LIMIT = 100_000
 const TEMPLATE_LIMIT = 10_000
 const CACHE_LIMIT = 256
-const blockedTags = /\{%-?\s*(?:include|layout|liquid|raw|render)\b/i
 const blockedRawFilter = /\|\s*raw\b/i
-const regexCache = new Map<string, RegExp>()
 const reportedTemplateErrors = new Map<string, true>()
 
 export class TemplateValidationError extends Error {
@@ -80,7 +76,6 @@ export function reportTemplateError(error: unknown): void {
 function createEngine(output: TemplateOutput): Liquid {
   const engine = new Liquid({
     cache: 256,
-    lenientIf: true,
     memoryLimit: MEMORY_LIMIT,
     outputEscape: output === "html" ? "escape" : undefined,
     ownPropertyOnly: true,
@@ -90,92 +85,11 @@ function createEngine(output: TemplateOutput): Liquid {
     strictVariables: true,
   })
 
-  engine.registerFilter("required", (value: unknown) => {
-    if (value === undefined || value === null || value === "") {
-      throw new Error("Required template value is missing")
-    }
-    return value
-  })
-  engine.registerFilter("absolute_url", (value: unknown, base: unknown) => {
-    return resolveUrl(value, base)
-  })
-  engine.registerFilter("css_url", (value: unknown) => {
-    return extractCssUrl(value)
-  })
-  engine.registerFilter("compact_number", (value: unknown) => {
-    const number = Number(value)
-    if (!Number.isFinite(number)) return ""
-    return new Intl.NumberFormat("en-US", {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(number)
-  })
-  engine.registerFilter("parse_compact_number", (value: unknown) => {
-    return parseCompactNumber(value)
-  })
-  engine.registerFilter("date_to_ms", (value: unknown) => {
-    const timestamp = Date.parse(stringify(value))
-    return Number.isFinite(timestamp) ? timestamp : undefined
-  })
-  engine.registerFilter("first_line", (value: unknown) => {
-    return firstLine(value)
-  })
-  engine.registerFilter("favicon_url", (value: unknown) => {
-    return getFavicon(stringify(value))
-  })
-  engine.registerFilter("normalize_lines", (value: unknown, spacing: unknown = 1) => {
-    const lineSpacing = Number(spacing)
-    if (!Number.isInteger(lineSpacing) || lineSpacing < 1 || lineSpacing > 4) {
-      throw new Error("The normalize_lines spacing must be an integer from 1 through 4")
-    }
-    return normalizeLines(value, "\n".repeat(lineSpacing))
-  })
-  engine.registerFilter("normalize_whitespace", (value: unknown) => {
-    return stringify(value).replace(/\s+/g, " ").trim()
-  })
-  engine.registerFilter("regex_extract", (value: unknown, pattern: unknown, group: unknown = 1) => {
-    const input = getRegexInput(value)
-    const match = getRegex(pattern).exec(input)
-    if (!match) return ""
-
-    const groupIndex = Number(group)
-    if (!Number.isInteger(groupIndex) || groupIndex < 0 || groupIndex > 99) {
-      throw new Error("The regex_extract group must be an integer from 0 through 99")
-    }
-    return match[groupIndex] ?? ""
-  })
-  engine.registerFilter("regex_replace", (value: unknown, pattern: unknown, replacement: unknown = "") => {
-    return getRegexInput(value).replace(getRegex(pattern, true), stringify(replacement))
-  })
-  engine.registerFilter("relative_date_to_ms", (value: unknown, timezone: unknown = undefined) => {
-    const date = parseRelativeDate(
-      stringify(value),
-      timezone === undefined ? undefined : stringify(timezone),
-    )
-    const timestamp = date.getTime()
-    return Number.isFinite(timestamp) ? timestamp : undefined
-  })
-  engine.registerFilter("url_path", encodeUrlComponent)
-  engine.registerFilter("url_query", encodeUrlComponent)
+  for (const [name, filter] of Object.entries(sourceFilters)) {
+    engine.registerFilter(name, filter)
+  }
 
   return engine
-}
-
-function parseCompactNumber(value: unknown): number | undefined {
-  if (typeof value === "number") return Number.isFinite(value) ? value : undefined
-
-  const match = stringify(value).trim().match(/^([+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?)\s*([KMBT])?$/i)
-  if (!match) return undefined
-
-  const number = Number(match[1]?.replaceAll(",", ""))
-  const multiplier = {
-    K: 1_000,
-    M: 1_000_000,
-    B: 1_000_000_000,
-    T: 1_000_000_000_000,
-  }[match[2]?.toUpperCase() ?? ""] ?? 1
-  const result = number * multiplier
-  return Number.isFinite(result) ? result : undefined
 }
 
 const engines: Partial<Record<TemplateOutput, Liquid>> = {}
@@ -200,7 +114,7 @@ const sourceTemplatePaths = {
     "scope.value",
     "source.vars",
   ],
-  inline: [
+  annotation: [
     "scope.item",
   ],
   jsonField: [
@@ -402,75 +316,12 @@ function isAllowedTemplatePath(path: string, allowedPath: string): boolean {
 }
 
 function assertSafeTemplate(template: string): void {
-  if (blockedTags.test(template)) {
-    throw new Error("File inclusion, layouts, and raw blocks are not allowed")
+  if (template.includes("{%")) {
+    throw new Error("Template tags are not allowed; use interpolation or TypeScript")
   }
   if (blockedRawFilter.test(template)) {
     throw new Error("The raw filter is not allowed")
   }
-}
-
-function encodeUrlComponent(value: unknown): string {
-  return encodeURIComponent(String(value ?? ""))
-}
-
-function extractCssUrl(value: unknown): string | undefined {
-  const css = stringify(value)
-  const start = css.toLowerCase().indexOf("url(")
-  if (start === -1) return undefined
-
-  const content = css.slice(start + 4).trimStart()
-  const quote = content[0]
-  if (quote === "\"" || quote === "'") {
-    const end = content.indexOf(quote, 1)
-    return end === -1 ? undefined : content.slice(1, end) || undefined
-  }
-
-  const end = content.indexOf(")")
-  return end === -1 ? undefined : content.slice(0, end).trim() || undefined
-}
-
-function firstLine(value: unknown): string | undefined {
-  return stringify(value)
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .find(Boolean)
-}
-
-function normalizeLines(value: unknown, separator: string): string {
-  return stringify(value)
-    .split(/\r?\n/)
-    .map(line => line.trim())
-    .filter(Boolean)
-    .join(separator)
-}
-
-function resolveUrl(value: unknown, base: unknown): string | undefined {
-  const url = stringify(value)
-  if (!url) return undefined
-
-  const baseUrl = stringify(base)
-  if (!baseUrl) {
-    throw new Error("The absolute_url filter requires a base URL")
-  }
-  return new URL(url, baseUrl).href
-}
-
-function getRegexInput(value: unknown): string {
-  const input = stringify(value)
-  validateSourceRegexInput(input)
-  return input
-}
-
-function getRegex(patternValue: unknown, global = false): RegExp {
-  const pattern = stringify(patternValue)
-  const key = `${global ? "g" : ""}:${pattern}`
-  const cached = regexCache.get(key)
-  if (cached) return cached
-
-  const regex = compileSourceRegex(pattern, global ? "g" : "")
-  setCached(regexCache, key, regex)
-  return regex
 }
 
 function setCached<T>(cache: Map<string, T>, key: string, value: T): void {
@@ -481,8 +332,4 @@ function setCached<T>(cache: Map<string, T>, key: string, value: T): void {
     }
   }
   cache.set(key, value)
-}
-
-function stringify(value: unknown): string {
-  return value === undefined || value === null ? "" : String(value)
 }

@@ -98,3 +98,20 @@ function resolveNewsItemUrls(item: NewsItem, baseUrl: string): NewsItem {
 
   return resolved
 }
+
+/**
+ * Build the actual request URL before fetching, so metadata sees the same URL.
+ * Explicit query keys replace existing values; blank/null values remove them.
+ */
+export function resolveSourceQuery(
+  value: string,
+  query: Record<string, string | number | boolean | null> | undefined,
+): string {
+  if (query === undefined) return value
+  const url = new URL(value)
+  for (const [key, item] of Object.entries(query)) {
+    if (item === null || item === "") url.searchParams.delete(key)
+    else url.searchParams.set(key, String(item))
+  }
+  return url.href
+}

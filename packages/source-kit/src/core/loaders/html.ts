@@ -17,6 +17,7 @@ import type {
   TimestampSortableLoaderOptions,
 } from "./shared"
 import { load } from "cheerio/slim"
+import { applyFieldTransforms, validateFieldTransforms } from "../field-transforms"
 import {
   compileSourceTemplate,
   createSourceTemplateScope,
@@ -85,6 +86,7 @@ function compileHtmlTemplates(
   location: string,
 ): void {
   for (const entry of entries) {
+    validateFieldTransforms(entry.config.transform, `${location}.${entry.path.join(".")}.transform`)
     if (!entry.config.template) continue
     fieldTemplates.set(entry.config, compileSourceTemplate(entry.config.template, {
       location: `${location}.${entry.path.join(".")}.template`,
@@ -238,7 +240,7 @@ function resolveField(
   extractedFields: Record<string, unknown>,
   context: HtmlFieldContext,
 ): unknown {
-  const value = getPath(extractedFields, entry.path)
+  const value = applyFieldTransforms(getPath(extractedFields, entry.path), entry.config.transform, context.requestUrl)
   if (!entry.config.template) return value
 
   return getHtmlFieldTemplate(entry).render(

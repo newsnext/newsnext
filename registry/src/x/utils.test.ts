@@ -3,6 +3,7 @@ import { validateSourceLoaderOutput } from "@newsnext/source-kit/core"
 import { describe, expect, it } from "vitest"
 import {
   entriesToNewsItems,
+  formatXAnnotation,
   getTimelineEntries,
 } from "./utils"
 
@@ -42,6 +43,15 @@ function normalize(items: ReturnType<typeof entriesToNewsItems>) {
 }
 
 describe("getTimelineEntries", () => {
+  it("shows the annotation author when the avatar is missing or omitted", () => {
+    const tweet = createTweet("1", "author")
+    const entries = [{ content: { itemContent: { tweet_results: { result: tweet } } } }]
+    expect(formatXAnnotation(normalize(entriesToNewsItems(entries))[0]!)).toBeUndefined()
+    expect(formatXAnnotation(normalize(entriesToNewsItems(entries, { includeIcon: false }))[0]!)).toBe("@author")
+    if (tweet.core?.user_results?.result) tweet.core.user_results.result.avatar = undefined
+    expect(formatXAnnotation(normalize(entriesToNewsItems(entries))[0]!)).toBe("@author")
+  })
+
   it("parses direct tweets with the current X user shape", () => {
     const entries = getTimelineEntries([
       {

@@ -40,7 +40,7 @@ Transport choice and source-file format are separate decisions. Prefer a JSON pr
 Before writing a new provider, inspect `registry/src` and select the closest existing Source by transport, parameter shape, metadata, and discovery behavior. Prefer JSON examples:
 
 - RSS: `registry/src/rss.json`
-- Public JSON API: `registry/src/36kr.json`, `registry/src/zhihu.json`, or `registry/src/netease-music.json`
+- Public JSON API: `registry/src/36kr.json` or `registry/src/netease-music.json`
 - HTML: `registry/src/hackernews.json`, `registry/src/github.json`, or `registry/src/telegram.json`
 - Authenticated custom API, only when required: `registry/src/x/index.ts`, `registry/src/jike/index.ts`, or the relevant nested TypeScript provider
 
@@ -57,7 +57,9 @@ Keep the configuration focused:
 - Keep a Source's static default `metadata.title` generic and do not include either the ASCII `|` or full-width `｜` separator. For a LiveCard title, prefer ASCII ` | ` between its resolved identity or query and the selected variant, such as `NewsNext | Latest`.
 - Model user choices as validated parameters. Prefer one parameterized Source over duplicated variants when their loader and output shape are shared.
 - Add Radar rules when a page URL or page state can fully configure a Source. A suggestion must capture all meaningful state already expressed by the page.
-- For JSON loaders, use bounded JMESPath expressions and Liquid templates. For HTML loaders, use stable CSS selectors and ordered fallbacks.
+- For JSON loaders, use bounded JMESPath expressions for selection, fallbacks, and array projection/join. For HTML loaders, use stable CSS selectors and ordered fallbacks.
+- Use `loader.query` for query parameters (values are encoded once; empty/null values are omitted), and field `transform` for text, number, date, and regex conversions. A transform can be one operation or an ordered array; it runs before `template`. Templates support interpolation and filters only; `{% ... %}` tags are rejected. Use TypeScript for conditional logic.
+- Use `loader.annotation` for presentation: a template string in JSON/TS Sources, or a synchronous `(item) => string | undefined` formatter in TS Sources. Formatters receive the normalized `NewsItem` and produce `annotations` separately from item data. Keep `attributes` semantic; do not store formatted display text there.
 - Every item must produce a non-empty `title` and `url`. Use milliseconds for `publishedAt`; keep semantic author, stats, attributes, icon, mark, and content fields separate.
 - Preserve meaningful upstream order. Use `metadata.type: "ranking"` for ranked results and `sortByTimestamp` only when grouped chronological items need normalization.
 - Declare every possible network hostname. Keep request options minimal and never add a request solely to enrich metadata.
@@ -65,7 +67,7 @@ Keep the configuration focused:
 
 Runnable provider examples live at `references/examples/`: `rss-provider`
 (minimal RSS feed), `json-provider` (JSON API with a `number` parameter,
-JMESPath fields, and a Liquid-conditional URL), and `html-provider` (HTML
+JMESPath fields, and structured query parameters), and `html-provider` (HTML
 scraping with CSS selectors and ranking metadata). Copy the closest example to
 `registry/src/<provider-id>.json`, substitute a real stream, and run it after
 every meaningful change with the script under **Validate Sources**.
@@ -137,7 +139,8 @@ the `client.run` input.
 If a run requires authentication, open its login URL and rerun the script.
 Pass large numeric identifiers as strings in `params` to preserve every digit.
 
-Pass `{ workerId }` with the full ID from `client.status()` when browser choice
+Pass `{ workerId }` as the second options argument to `client.run` or
+`client.fetch`, using the full ID from `client.status()`, when browser choice
 matters. Set `debug: true` in `client.run` while diagnosing requests; its
 `fetches` can contain sensitive headers and response bodies.
 

@@ -1,4 +1,4 @@
-import type { NewsItemInput, SourceLoaderContext } from "@newsnext/source-kit/types"
+import type { NewsItem, NewsItemInput, SourceLoaderContext } from "@newsnext/source-kit/types"
 import type {
   XTimelineEntry,
   XTimelineInstruction,
@@ -8,7 +8,9 @@ import type {
 } from "./types"
 
 export const X_ORIGIN = "https://x.com"
-export const X_INLINE_TEMPLATE = "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% endunless %}"
+export function formatXAnnotation(item: Readonly<NewsItem>): string | undefined {
+  return item.icon?.kind === "author" ? undefined : item.author?.name
+}
 export const PLACE_TRENDS_URL = "https://api.x.com/1.1/trends/place.json"
 export const HOME_LATEST_TIMELINE_QUERY_ID = "BLQWpfVqtgBqAqwRRJcJjA"
 export const HOME_LATEST_TIMELINE_URL = `${X_ORIGIN}/i/api/graphql/${HOME_LATEST_TIMELINE_QUERY_ID}/HomeLatestTimeline`

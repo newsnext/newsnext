@@ -8,6 +8,8 @@ import { isJwtExpired } from "@newsnext/source-kit/utils"
 import {
   buildJikeTopicFeedUrl,
   createJikeHeaders,
+  formatJikeAnnotation,
+  formatJikeAuthorAnnotation,
   getJikeUserAvatar,
   isPinnedPersonalUpdate,
   JIKE_WEB_ORIGIN,
@@ -30,9 +32,7 @@ const JIKE_SEARCH_SORT_LABELS: Record<JikeSearchSort, string> = {
 }
 const JIKE_ACCESS_TOKEN_SECRET_KEY = "accessToken"
 const JIKE_REFRESH_TOKEN_SECRET_KEY = "refreshToken"
-const JIKE_INLINE_TEMPLATE = "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% if scope.item.attributes.topic %} · {% endif %}{% endunless %}{% if scope.item.attributes.topic %}#{{ scope.item.attributes.topic }}{% endif %}"
-const JIKE_USER_INLINE_TEMPLATE = "#{{ scope.item.attributes.topic }}"
-const JIKE_TOPIC_INLINE_TEMPLATE = "{% unless scope.item.icon.kind == 'author' %}{{ scope.item.author.name }}{% endunless %}"
+const JIKE_USER_ANNOTATION_TEMPLATE = "#{{ scope.item.attributes.topic }}"
 const JIKE_ACCESS_TOKEN_EXPIRY_BUFFER_SECONDS = 30
 
 async function refreshJikeAccessToken(
@@ -270,6 +270,7 @@ export default {
   },
   sources: {
     "following-updates": {
+      version: 3,
       metadata: {
         title: "关注动态",
         desc: "已关注即刻用户发布的动态",
@@ -285,7 +286,7 @@ export default {
       ],
       loader: {
         load: fetchJikeFollowingUpdates,
-        inlineTemplate: JIKE_INLINE_TEMPLATE,
+        annotation: formatJikeAnnotation,
       },
     },
     "user-updates": {
@@ -307,7 +308,7 @@ export default {
             metadata: {
               desc: {
                 select: "section[class^=\"_bio_\"]",
-                template: "{{ scope.value | normalize_whitespace }}",
+                transform: "normalize_whitespace",
               },
               title: {
                 select: "[class*=\"_nameRow_\"] a[aria-current=\"page\"]",
@@ -326,12 +327,12 @@ export default {
       },
       loader: {
         load: fetchJikeUserUpdates,
-        inlineTemplate: JIKE_USER_INLINE_TEMPLATE,
+        annotation: JIKE_USER_ANNOTATION_TEMPLATE,
       },
-      version: 3,
+      version: 5,
     },
     "search": {
-      version: 3,
+      version: 5,
       metadata: {
         title: "动态搜索",
         desc: "按最新或最热排序显示匹配关键词的即刻动态",
@@ -359,11 +360,11 @@ export default {
       },
       loader: {
         load: fetchJikeSearch,
-        inlineTemplate: JIKE_INLINE_TEMPLATE,
+        annotation: formatJikeAnnotation,
       },
     },
     "topic": {
-      version: 3,
+      version: 5,
       metadata: {
         title: "主题动态",
         desc: "指定即刻主题的动态",
@@ -407,7 +408,7 @@ export default {
       },
       loader: {
         load: fetchJikeTopicFeed,
-        inlineTemplate: JIKE_TOPIC_INLINE_TEMPLATE,
+        annotation: formatJikeAuthorAnnotation,
       },
     },
   },

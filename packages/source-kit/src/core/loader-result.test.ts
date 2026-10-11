@@ -71,8 +71,8 @@ describe("source loader result", () => {
   it("rejects loader configuration in execution output", () => {
     expect(() => validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
-      inlineTemplate: "{{ scope.item.author.name }}",
-    })).toThrowError("source loader output.inlineTemplate is not supported")
+      annotation: "{{ scope.item.author.name }}",
+    })).toThrowError("source loader output.annotation is not supported")
   })
 
   it("rejects invalid news items", () => {
@@ -115,23 +115,52 @@ describe("source loader result", () => {
     })).toThrowError("items[0].content.pictures[0] must be a non-empty string")
   })
 
-  it("renders a compiled loader inline template", () => {
+  it("renders a compiled loader annotation template", () => {
     const result = {
       items: [{ title: "Example", url: "https://example.com", stats: { likes: 0 } }],
     }
     const template = compileSourceTemplate("  {{ scope.item.stats.likes }} likes  ", {
-      location: "example.inlineTemplate",
-      slot: "inline",
+      location: "example.annotation",
+      slot: "annotation",
     })
     expect(renderSourceLoaderResult(validateSourceLoaderOutput(result), template)).toEqual({
       items: result.items,
-      inlinePresentation: ["0 likes"],
+      annotations: ["0 likes"],
     })
 
     expect(() => compileSourceTemplate("{{ scope.params.secret }}", {
-      location: "example.inlineTemplate",
-      slot: "inline",
+      location: "example.annotation",
+      slot: "annotation",
     })).toThrowError("expected one of: scope.item")
+  })
+
+  it("formats normalized items without adding presentation fields to their data", () => {
+    const result = validateSourceLoaderOutput({ items: [
+      { title: "First", url: "https://example.com/1", icon: { kind: "author", src: "" }, author: { name: "Author" } },
+      { title: "Second", url: "https://example.com/2" },
+    ] })
+    const formatted = renderSourceLoaderResult(result, item => item.icon ? undefined : item.author?.name)
+    expect(formatted.annotations).toEqual(["Author", ""])
+    expect(formatted.items).toBe(result.items)
+    expect(formatted.items[0]).not.toHaveProperty("attributes")
+    expect(renderSourceLoaderResult(result, () => "  Label  ").annotations).toEqual(["Label", "Label"])
+  })
+
+  it("keeps formatter failures isolated to the affected item", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+    try {
+      const result = validateSourceLoaderOutput({ items: [
+        { title: "Broken", url: "https://example.com/1" },
+        { title: "Working", url: "https://example.com/2" },
+      ] })
+      expect(renderSourceLoaderResult(result, (item) => {
+        if (item.title === "Broken") throw new Error("Invalid presentation")
+        return item.title
+      }).annotations).toEqual(["", "Working"])
+      expect(consoleError).toHaveBeenCalledOnce()
+    } finally {
+      consoleError.mockRestore()
+    }
   })
 
   it("lets one item fall back when its presentation template cannot render", () => {
@@ -140,12 +169,12 @@ describe("source loader result", () => {
       items: [{ title: "Example", url: "https://example.com" }],
     })
     const template = compileSourceTemplate("{{ scope.item.author.name }}", {
-      location: "example.inlineTemplate",
-      slot: "inline",
+      location: "example.annotation",
+      slot: "annotation",
     })
     expect(renderSourceLoaderResult(result, template)).toEqual({
       items: [{ title: "Example", url: "https://example.com" }],
-      inlinePresentation: [""],
+      annotations: [""],
     })
     expect(consoleError).toHaveBeenCalledOnce()
     consoleError.mockRestore()
@@ -155,14 +184,14 @@ describe("source loader result", () => {
     const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
     })
-    const template = compileSourceTemplate("{% if scope.item.attributes %}label{% endif %}", {
-      location: "example.inlineTemplate",
-      slot: "inline",
+    const template = compileSourceTemplate("{{ scope.item.attributes.label | default: '' }}", {
+      location: "example.annotation",
+      slot: "annotation",
     })
 
     expect(renderSourceLoaderResult(result, template)).toEqual({
       items: result.items,
-      inlinePresentation: [""],
+      annotations: [""],
     })
   })
 

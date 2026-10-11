@@ -1,5 +1,13 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
+import type { NewsItem } from "@newsnext/source-kit/types"
 import { requestXueqiuJson } from "./shared"
+
+export function formatXueqiuPriceAnnotation(item: Readonly<NewsItem>, includeExchange = false): string {
+  const { changePercent, current, exchange } = item.attributes ?? {}
+  const percent = changePercent === undefined ? "--" : `${changePercent}%`
+  const price = current || current === 0 ? current : "--"
+  return [percent, price, includeExchange ? exchange : undefined].filter(value => value !== undefined && value !== "").join(" · ")
+}
 
 const hotStockTitleTemplate = "热股榜 | {{ source.vars.marketTitle[scope.params.market] }}"
 const marketMoversTitleTemplate = "{{ source.vars.directionTitle[scope.params.direction] }} | {{ source.vars.marketTitle[scope.params.market] }}"
@@ -19,7 +27,7 @@ const marketParams = {
 
 export const marketSources = {
   "hot-stock": {
-    version: 5,
+    version: 7,
     metadata: {
       title: "热股榜",
       home: "/hq#hot",
@@ -123,7 +131,8 @@ export const marketSources = {
     }],
     loader: {
       type: "json",
-      url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json?size=30&_type={{ source.vars.marketType[scope.params.market] }}&type={{ source.vars.rankingType[scope.params.period][scope.params.market] }}",
+      url: "https://stock.xueqiu.com/v5/stock/hot_stock/list.json",
+      query: { size: "30", _type: "{{ source.vars.marketType[scope.params.market] }}", type: "{{ source.vars.rankingType[scope.params.period][scope.params.market] }}" },
       request: requestXueqiuJson,
       items: "data.items[?ad == `0` || ad == `null`]",
       fields: {
@@ -144,14 +153,14 @@ export const marketSources = {
           template: hotStockTitleTemplate,
         },
       },
-      inlineTemplate: "{% if scope.item.attributes.changePercent == nil %}--{% else %}{{ scope.item.attributes.changePercent }}%{% endif %} · {{ scope.item.attributes.current | default: \"--\" }} · {{ scope.item.attributes.exchange }}",
+      annotation: item => formatXueqiuPriceAnnotation(item, true),
     },
     capabilities: {
       network: ["xueqiu.com"],
     },
   },
   "market-movers": {
-    version: 2,
+    version: 4,
     metadata: {
       title: "涨跌幅榜",
       home: "/hq",
@@ -237,7 +246,8 @@ export const marketSources = {
     }],
     loader: {
       type: "json",
-      url: "https://stock.xueqiu.com/v5/stock/screener/quote/list.json?page=1&size=30&type={{ source.vars.marketType[scope.params.market] }}&order_by=percent&order={{ source.vars.directionOrder[scope.params.direction] }}",
+      url: "https://stock.xueqiu.com/v5/stock/screener/quote/list.json",
+      query: { page: "1", size: "30", type: "{{ source.vars.marketType[scope.params.market] }}", order_by: "percent", order: "{{ source.vars.directionOrder[scope.params.direction] }}" },
       request: requestXueqiuJson,
       items: "data.list",
       fields: {
@@ -259,7 +269,7 @@ export const marketSources = {
           template: marketMoversTitleTemplate,
         },
       },
-      inlineTemplate: "{% if scope.item.attributes.changePercent == nil %}--{% else %}{{ scope.item.attributes.changePercent }}%{% endif %} · {{ scope.item.attributes.current | default: \"--\" }}",
+      annotation: formatXueqiuPriceAnnotation,
     },
     capabilities: {
       network: ["xueqiu.com"],

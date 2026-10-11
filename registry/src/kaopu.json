@@ -31,7 +31,18 @@
               ".story-meta > span:first-child",
               ".brief-meta"
             ],
-            "template": "{{ scope.value | regex_extract: '^[^·]+', 0 | relative_date_to_ms: 'Asia/Shanghai' | divided_by: 60000 | floor | times: 60000 }}"
+            "template": "{{ scope.value | divided_by: 60000 | floor | times: 60000 }}",
+            "transform": [
+              {
+                "op": "regex_extract",
+                "pattern": "^[^·]+",
+                "group": 0
+              },
+              {
+                "op": "relative_date_to_ms",
+                "timezone": "Asia/Shanghai"
+              }
+            ]
           },
           "attributes": {
             "publisher": {
@@ -39,7 +50,11 @@
                 ".story-provenance",
                 ".brief-meta"
               ],
-              "template": "{{ scope.value | regex_replace: '^(?:刚刚|半小时前|几分钟前|[0-9]+(?:秒|分钟|小时|天|周|个月|月|年)前) · ', '' }}"
+              "transform": {
+                "op": "regex_replace",
+                "pattern": "^(?:刚刚|半小时前|几分钟前|[0-9]+(?:秒|分钟|小时|天|周|个月|月|年)前) · ",
+                "replacement": ""
+              }
             }
           },
           "content": {

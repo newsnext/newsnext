@@ -1,11 +1,14 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
-import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
+import type { NewsItem, NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
 import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliCount } from "./shared"
 
 const BILIBILI_RANKING_URL = "https://api.bilibili.com/x/web-interface/ranking/v2"
 const BILIBILI_ANIME_RANKING_URL = "https://api.bilibili.com/pgc/web/rank/list"
 const BILIBILI_PGC_RANKING_URL = "https://api.bilibili.com/pgc/season/rank/web/list"
-const BILIBILI_PGC_INLINE_TEMPLATE = "{% if scope.item.attributes.episode %}{{ scope.item.attributes.episode }}{% endif %}{% if scope.item.attributes.rating %} · {{ scope.item.attributes.rating }} rating{% endif %}"
+export function formatBilibiliPgcAnnotation(item: Readonly<NewsItem>): string {
+  const { episode, rating } = item.attributes ?? {}
+  return [episode, rating ? `${rating} rating` : undefined].filter(Boolean).join(" · ")
+}
 const RANKING_REGIONS = [
   { apiRid: 0, label: "全部", slug: "all", value: "0" },
   { label: "番剧", pgcUrl: BILIBILI_ANIME_RANKING_URL, seasonType: 1, slug: "anime", value: "13" },
@@ -232,8 +235,8 @@ export const rankingSource = {
   loader: {
     type: "custom",
     load: fetchBilibiliRanking,
-    inlineTemplate: BILIBILI_PGC_INLINE_TEMPLATE,
+    annotation: formatBilibiliPgcAnnotation,
   },
   capabilities: bilibiliApiCapabilities,
-  version: 4,
+  version: 6,
 } satisfies ProviderSourceConfig

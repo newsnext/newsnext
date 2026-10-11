@@ -53,6 +53,24 @@ describe("portable manifest schemas", () => {
     })).toBeDefined()
   })
 
+  it("validates transforms in scalar and grouped fields", () => {
+    const provider = (fields: object) => ({
+      title: "Feed",
+      color: "slate",
+      sources: { latest: { loader: { type: "json", url: "https://example.com", fields } } },
+    })
+    expect(firstJsonSchemaIssue(sourceManifestSchema, provider({
+      title: { select: "title", transform: ["strip_html", { op: "truncate", length: 80 }] },
+      stats: { views: { select: "views", transform: "parse_compact_number" } },
+    }))).toBeUndefined()
+    for (const fields of [
+      { title: { transform: "unknown" } },
+      { stats: { views: { transform: { op: "truncate", length: -1 } } } },
+    ]) {
+      expect(firstJsonSchemaIssue(sourceManifestSchema, provider(fields))).toBeDefined()
+    }
+  })
+
   it("keeps skill examples compatible with their published schemas", async () => {
     const examples = new URL("../../../../skills/newsnext-sdk/references/examples/", import.meta.url)
     const manifests = [

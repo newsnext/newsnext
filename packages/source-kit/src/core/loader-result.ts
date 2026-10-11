@@ -1,4 +1,4 @@
-import type { NewsItem, SourceLoaderResult } from "../types"
+import type { NewsItem, SourceAnnotationFormatter, SourceLoaderResult } from "../types"
 import type { CompiledSourceTemplate } from "./template"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
@@ -33,17 +33,21 @@ export function validateNewsItems(value: unknown): NewsItem[] {
 
 export function renderSourceLoaderResult(
   result: SourceLoaderResult,
-  inlineTemplate: CompiledSourceTemplate | undefined,
+  annotation: CompiledSourceTemplate | SourceAnnotationFormatter | undefined,
 ): SourceLoaderResult {
-  if (inlineTemplate === undefined) return result
+  if (annotation === undefined) return result
 
   return {
     ...result,
-    inlinePresentation: result.items.map((item) => {
+    annotations: result.items.map((item) => {
       try {
-        return inlineTemplate.render(createSourceTemplateScope(undefined, { item })).trim()
+        const text = typeof annotation === "function"
+          ? annotation(item)
+          : annotation.render(createSourceTemplateScope(undefined, { item }))
+        return (text ?? "").trim()
       } catch (error) {
-        reportTemplateError(error)
+        if (typeof annotation === "function") console.error("Source annotation formatter failed", error)
+        else reportTemplateError(error)
         return ""
       }
     }),

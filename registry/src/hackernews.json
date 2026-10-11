@@ -48,7 +48,11 @@
               "selector": "tr"
             },
             "select": ".score",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "comments": {
             "traverse": {
@@ -56,32 +60,46 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 | default: 0 }}"
+            "template": "{{ scope.value | default: 0 }}",
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           }
         },
         "attributes": {
           "rank": {
             "select": ".rank",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "site": ".sitestr",
           "externalUrl": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "transform": "absolute_url"
           }
         },
         "icon": {
           "src": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
+            "transform": [
+              "absolute_url",
+              "favicon_url"
+            ]
           },
-          "kind": { "template": "site" },
+          "kind": {
+            "template": "site"
+          },
           "label": ".sitestr"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/"

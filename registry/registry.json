@@ -62,7 +62,7 @@
           "pictures": "widgetImage"
         }
       },
-      "inlineTemplate": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.attributes.heat }}w heat · {{ scope.item.author.name }}"
     },
     "provider": {
       "title": "36氪",
@@ -432,7 +432,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/commits/{{ scope.params.ref | url_path }}/{% assign keys = \"author,since,until,after\" | split: \",\" %}{% assign separator = \"?\" %}{% for key in keys %}{% assign value = scope.params[key] %}{% if value != blank %}{{ separator }}{{ key }}={{ value | url_query }}{% assign separator = \"&\" %}{% endif %}{% endfor %}",
+      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/commits/{{ scope.params.ref | url_path }}/",
       "embeddedJson": {
         "select": "script[data-target=\"react-app.embeddedData\"]"
       },
@@ -450,7 +450,7 @@
         "url": "url",
         "publishedAt": {
           "select": "committedDate",
-          "template": "{{ scope.value | date_to_ms }}"
+          "transform": "date_to_ms"
         },
         "author": {
           "name": "authors[0].login || authors[0].displayName",
@@ -472,6 +472,12 @@
           },
           "label": "authors[0].login || authors[0].displayName"
         }
+      },
+      "query": {
+        "author": "{{ scope.params.author }}",
+        "since": "{{ scope.params.since }}",
+        "until": "{{ scope.params.until }}",
+        "after": "{{ scope.params.after }}"
       }
     },
     "version": 4,
@@ -555,12 +561,13 @@
       "fields": {
         "title": {
           "select": "body",
-          "template": "{{ scope.value | normalize_whitespace | default: scope.item.author.login | default: 'Comment' | truncate: 160, '…' }}"
+          "template": "{{ scope.value | default: scope.item.author.login | default: 'Comment' | truncate: 160, '…' }}",
+          "transform": "normalize_whitespace"
         },
         "url": "url",
         "publishedAt": {
           "select": "createdAt",
-          "template": "{{ scope.value | date_to_ms }}"
+          "transform": "date_to_ms"
         },
         "author": {
           "name": "author.login",
@@ -645,7 +652,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues?q={{ scope.params.query | url_query }}",
+      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues",
       "items": "payload.issuesIndexContentRoute.results[].issue",
       "metadata": {
         "title": {
@@ -660,7 +667,7 @@
         "url": "permalink",
         "publishedAt": {
           "select": "createdAt",
-          "template": "{{ scope.value | date_to_ms }}"
+          "transform": "date_to_ms"
         },
         "author": {
           "name": "author.login",
@@ -672,7 +679,12 @@
         "attributes": {
           "state": {
             "select": "state",
-            "template": "{{ scope.value | remove: 'REPO_ISSUE_STATE_' | downcase }}"
+            "template": "{{ scope.value | downcase }}",
+            "transform": {
+              "op": "replace",
+              "search": "REPO_ISSUE_STATE_",
+              "replacement": ""
+            }
           },
           "stateReason": "stateReason"
         },
@@ -686,6 +698,9 @@
       },
       "embeddedJson": {
         "select": "script[data-target=\"react-app.embeddedData\"]"
+      },
+      "query": {
+        "q": "{{ scope.params.query }}"
       }
     },
     "version": 6,
@@ -769,7 +784,8 @@
       "fields": {
         "title": {
           "select": ".comment-body",
-          "template": "{{ scope.value | normalize_whitespace | default: scope.item.author.name | default: 'Comment' | truncate: 160, '…' }}"
+          "template": "{{ scope.value | default: scope.item.author.name | default: 'Comment' | truncate: 160, '…' }}",
+          "transform": "normalize_whitespace"
         },
         "url": {
           "select": "",
@@ -779,11 +795,11 @@
         "publishedAt": {
           "select": "relative-time[datetime]",
           "attr": "datetime",
-          "template": "{{ scope.value | date_to_ms }}",
           "traverse": {
             "type": "closest",
             "selector": ".js-comment-container, .js-timeline-item, .review-comment"
-          }
+          },
+          "transform": "date_to_ms"
         },
         "author": {
           "name": ".author",
@@ -878,7 +894,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pulls?q={{ scope.params.query | url_query }}",
+      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pulls",
       "items": "payload.repoPullsDashboardContentRoute.results",
       "metadata": {
         "title": {
@@ -893,7 +909,7 @@
         "url": "permalink",
         "publishedAt": {
           "select": "createdAt",
-          "template": "{{ scope.value | date_to_ms }}"
+          "transform": "date_to_ms"
         },
         "author": {
           "name": "author.displayName || author.displayLogin"
@@ -904,14 +920,16 @@
         "attributes": {
           "state": {
             "select": "displayState",
-            "template": "{{ scope.value | remove: 'REPO_PULL_REQUEST_DISPLAY_STATE_' | downcase }}"
+            "template": "{{ scope.value | downcase }}",
+            "transform": {
+              "op": "replace",
+              "search": "REPO_PULL_REQUEST_DISPLAY_STATE_",
+              "replacement": ""
+            }
           }
         },
         "icon": {
-          "src": {
-            "select": "author.avatarUrl",
-            "template": "{% if scope.value != blank %}{{ scope.value }}{% elsif scope.item.author.displayLogin != blank %}https://avatars.githubusercontent.com/{{ scope.item.author.displayLogin | url_path }}?s=64{% endif %}"
-          },
+          "src": "author.avatarUrl || ([author][?displayLogin].join('', ['https://avatars.githubusercontent.com/', displayLogin, '?s=64']) | [0])",
           "kind": {
             "template": "author"
           },
@@ -920,9 +938,12 @@
       },
       "embeddedJson": {
         "select": "script[data-target=\"react-app.embeddedData\"]"
+      },
+      "query": {
+        "q": "{{ scope.params.query }}"
       }
     },
-    "version": 7,
+    "version": 8,
     "provider": {
       "title": "GitHub",
       "category": "developer",
@@ -993,7 +1014,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/releases?page={{ scope.params.page }}&q={{ scope.params.query | url_query }}",
+      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/releases",
       "items": "section[data-release-anchor]",
       "metadata": {
         "title": {
@@ -1006,7 +1027,7 @@
       "fields": {
         "title": {
           "select": "a.Link--primary[href*=\"/releases/tag/\"]",
-          "template": "{{ scope.value | normalize_whitespace }}"
+          "transform": "normalize_whitespace"
         },
         "url": {
           "select": "a.Link--primary[href*=\"/releases/tag/\"]",
@@ -1015,7 +1036,7 @@
         "publishedAt": {
           "select": "relative-time[datetime][prefix]",
           "attr": "datetime",
-          "template": "{{ scope.value | date_to_ms }}"
+          "transform": "date_to_ms"
         },
         "author": {
           "name": "div:has(> relative-time[datetime][prefix]) > a",
@@ -1047,6 +1068,10 @@
           },
           "label": "div:has(> relative-time[datetime][prefix]) > a"
         }
+      },
+      "query": {
+        "page": "{{ scope.params.page }}",
+        "q": "{{ scope.params.query }}"
       }
     },
     "version": 3,
@@ -1063,7 +1088,7 @@
       "title": "Trending",
       "type": "ranking"
     },
-    "version": 3,
+    "version": 4,
     "params": {
       "language": {
         "type": "text",
@@ -1123,12 +1148,12 @@
     ],
     "loader": {
       "type": "html",
-      "url": "/trending{% if scope.params.language %}/{{ scope.params.language | url_path }}{% endif %}?since={{ scope.params.dateRange | url_query }}{% if scope.params.spokenLanguage %}&spoken_language_code={{ scope.params.spokenLanguage | url_query }}{% endif %}",
+      "url": "{{ scope.params.language | url_path | prepend: '/trending/' | regex_replace: '/$', '' }}",
       "items": "main .Box div[data-hpc] > article",
       "fields": {
         "title": {
           "select": ">h2 a",
-          "template": "{{ scope.value | normalize_whitespace }}"
+          "transform": "normalize_whitespace"
         },
         "url": {
           "select": ">h2 a",
@@ -1137,12 +1162,20 @@
         "stats": {
           "stars": {
             "select": "[href$=stargazers]",
-            "template": "{{ scope.value | replace: ',', '' }}"
+            "transform": {
+              "op": "replace",
+              "search": ",",
+              "replacement": ""
+            }
           }
         },
         "content": {
           "text": ">p"
         }
+      },
+      "query": {
+        "since": "{{ scope.params.dateRange }}",
+        "spoken_language_code": "{{ scope.params.spokenLanguage }}"
       }
     },
     "provider": {
@@ -1197,7 +1230,11 @@
               "selector": "tr"
             },
             "select": ".score",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "comments": {
             "traverse": {
@@ -1205,26 +1242,38 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 | default: 0 }}"
+            "template": "{{ scope.value | default: 0 }}",
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           }
         },
         "attributes": {
           "rank": {
             "select": ".rank",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "site": ".sitestr",
           "externalUrl": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "transform": "absolute_url"
           }
         },
         "icon": {
           "src": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
+            "transform": [
+              "absolute_url",
+              "favicon_url"
+            ]
           },
           "kind": {
             "template": "site"
@@ -1232,7 +1281,7 @@
           "label": ".sitestr"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/ask",
@@ -1292,7 +1341,11 @@
               "selector": "tr"
             },
             "select": ".score",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "comments": {
             "traverse": {
@@ -1300,26 +1353,38 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 | default: 0 }}"
+            "template": "{{ scope.value | default: 0 }}",
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           }
         },
         "attributes": {
           "rank": {
             "select": ".rank",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "site": ".sitestr",
           "externalUrl": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "transform": "absolute_url"
           }
         },
         "icon": {
           "src": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
+            "transform": [
+              "absolute_url",
+              "favicon_url"
+            ]
           },
           "kind": {
             "template": "site"
@@ -1327,7 +1392,7 @@
           "label": ".sitestr"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/newest",
@@ -1385,7 +1450,11 @@
               "selector": "tr"
             },
             "select": ".score",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "comments": {
             "traverse": {
@@ -1393,26 +1462,38 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 | default: 0 }}"
+            "template": "{{ scope.value | default: 0 }}",
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           }
         },
         "attributes": {
           "rank": {
             "select": ".rank",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "site": ".sitestr",
           "externalUrl": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "transform": "absolute_url"
           }
         },
         "icon": {
           "src": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
+            "transform": [
+              "absolute_url",
+              "favicon_url"
+            ]
           },
           "kind": {
             "template": "site"
@@ -1420,7 +1501,7 @@
           "label": ".sitestr"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/show",
@@ -1480,7 +1561,11 @@
               "selector": "tr"
             },
             "select": ".score",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "comments": {
             "traverse": {
@@ -1488,26 +1573,38 @@
               "selector": "tr"
             },
             "select": ".subline > a:last-child",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 | default: 0 }}"
+            "template": "{{ scope.value | default: 0 }}",
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           }
         },
         "attributes": {
           "rank": {
             "select": ".rank",
-            "template": "{{ scope.value | regex_extract: '([0-9]+)', 1 }}"
+            "transform": {
+              "op": "regex_extract",
+              "pattern": "([0-9]+)",
+              "group": 1
+            }
           },
           "site": ".sitestr",
           "externalUrl": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url }}"
+            "transform": "absolute_url"
           }
         },
         "icon": {
           "src": {
             "select": ".titleline>a",
             "attr": "href",
-            "template": "{{ scope.value | absolute_url: scope.request.url | favicon_url }}"
+            "transform": [
+              "absolute_url",
+              "favicon_url"
+            ]
           },
           "kind": {
             "template": "site"
@@ -1515,7 +1612,7 @@
           "label": ".sitestr"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}"
     },
     "metadata": {
       "home": "/",
@@ -1554,7 +1651,18 @@
             ".story-meta > span:first-child",
             ".brief-meta"
           ],
-          "template": "{{ scope.value | regex_extract: '^[^·]+', 0 | relative_date_to_ms: 'Asia/Shanghai' | divided_by: 60000 | floor | times: 60000 }}"
+          "template": "{{ scope.value | divided_by: 60000 | floor | times: 60000 }}",
+          "transform": [
+            {
+              "op": "regex_extract",
+              "pattern": "^[^·]+",
+              "group": 0
+            },
+            {
+              "op": "relative_date_to_ms",
+              "timezone": "Asia/Shanghai"
+            }
+          ]
         },
         "attributes": {
           "publisher": {
@@ -1562,7 +1670,11 @@
               ".story-provenance",
               ".brief-meta"
             ],
-            "template": "{{ scope.value | regex_replace: '^(?:刚刚|半小时前|几分钟前|[0-9]+(?:秒|分钟|小时|天|周|个月|月|年)前) · ', '' }}"
+            "transform": {
+              "op": "regex_replace",
+              "pattern": "^(?:刚刚|半小时前|几分钟前|[0-9]+(?:秒|分钟|小时|天|周|个月|月|年)前) · ",
+              "replacement": ""
+            }
           }
         },
         "content": {
@@ -1580,14 +1692,14 @@
   },
   "netease-music:playlist": {
     "baseUrl": "https://music.163.com/",
-    "version": 3,
+    "version": 4,
     "metadata": {
       "home": "/",
       "title": "歌单"
     },
     "loader": {
       "type": "json",
-      "url": "/api/playlist/detail?id={{ scope.params.id | url_query }}",
+      "url": "/api/playlist/detail",
       "items": "(result.tracks || playlist.tracks)[:100]",
       "metadata": {
         "badge": "result.coverImgUrl",
@@ -1604,9 +1716,7 @@
           "template": "/song?id={{ scope.value | url_query }}"
         },
         "attributes": {
-          "artists": {
-            "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
-          }
+          "artists": "[join(' / ', (ar || artists || `[]`)[].name), al.name || album.name] | [?@ != `null` && @ != ''] | join(' · ', @)"
         },
         "icon": {
           "src": "al.picUrl || album.picUrl",
@@ -1619,7 +1729,10 @@
           "pictures": "al.picUrl || album.picUrl"
         }
       },
-      "inlineTemplate": "{{ scope.item.attributes.artists }}"
+      "annotation": "{{ scope.item.attributes.artists }}",
+      "query": {
+        "id": "{{ scope.params.id }}"
+      }
     },
     "params": {
       "id": {
@@ -1652,7 +1765,15 @@
             "id": "{{ scope.query.id }}"
           },
           "metadata": {
-            "title": "{% assign title = scope.page.title | regex_extract: '^(.+?)\\\\s*-\\\\s*歌单\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}歌单 {{ scope.params.id }}{% endif %}"
+            "title": {
+              "select": "title",
+              "transform": {
+                "op": "regex_extract",
+                "pattern": "^(.+?)\\s*-\\s*歌单\\s*-\\s*网易云音乐$",
+                "group": 1
+              },
+              "template": "{{ scope.value | default: '歌单' }}"
+            }
           }
         }
       }
@@ -1673,7 +1794,7 @@
     },
     "loader": {
       "type": "json",
-      "url": "/api/playlist/detail?id={{ scope.params.id | url_query }}",
+      "url": "/api/playlist/detail",
       "items": "(result.tracks || playlist.tracks)[:100]",
       "metadata": {
         "badge": "result.coverImgUrl",
@@ -1690,9 +1811,7 @@
           "template": "/song?id={{ scope.value | url_query }}"
         },
         "attributes": {
-          "artists": {
-            "template": "{% assign artists = scope.item.ar | default: scope.item.artists %}{% for artist in artists %}{% unless forloop.first %} / {% endunless %}{{ artist.name }}{% endfor %}{% assign album = scope.item.al.name | default: scope.item.album.name %}{% if artists and album %} · {% endif %}{{ album | default: '' }}"
-          }
+          "artists": "[join(' / ', (ar || artists || `[]`)[].name), al.name || album.name] | [?@ != `null` && @ != ''] | join(' · ', @)"
         },
         "icon": {
           "src": "al.picUrl || album.picUrl",
@@ -1705,7 +1824,10 @@
           "pictures": "al.picUrl || album.picUrl"
         }
       },
-      "inlineTemplate": "{{ scope.item.attributes.artists }}"
+      "annotation": "{{ scope.item.attributes.artists }}",
+      "query": {
+        "id": "{{ scope.params.id }}"
+      }
     },
     "params": {
       "id": {
@@ -1738,7 +1860,15 @@
             "id": "{{ scope.query.id }}"
           },
           "metadata": {
-            "title": "{% assign title = scope.page.title | regex_extract: '^(.+?)\\\\s*-\\\\s*排行榜\\\\s*-\\\\s*网易云音乐$', 1 %}{% if title != empty %}{{ title }}{% else %}排行榜 {{ scope.params.id }}{% endif %}"
+            "title": {
+              "select": "title",
+              "transform": {
+                "op": "regex_extract",
+                "pattern": "^(.+?)\\s*-\\s*排行榜\\s*-\\s*网易云音乐$",
+                "group": 1
+              },
+              "template": "{{ scope.value | default: '排行榜' }}"
+            }
           }
         }
       }
@@ -1820,7 +1950,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}?type=ln",
+      "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}",
       "items": ".newsfeed .article",
       "fields": {
         "title": ".article-card__headline",
@@ -1831,13 +1961,16 @@
         "publishedAt": {
           "select": "[data-timestamp]",
           "attr": "data-timestamp",
-          "template": "{{ scope.value | times: 1000 }}"
+          "transform": "seconds_to_ms"
         },
         "attributes": {
           "publisher": ".article-publisher__name"
         }
       },
-      "inlineTemplate": "{{ scope.item.attributes.publisher }}"
+      "annotation": "{{ scope.item.attributes.publisher }}",
+      "query": {
+        "type": "ln"
+      }
     },
     "provider": {
       "title": "NEWS NOW",
@@ -1922,7 +2055,14 @@
         "title": {
           "select": ".tgme_widget_message_text:not(.js-message_reply_text)",
           "brSeparator": "\n",
-          "template": "{{ scope.value | first_line | truncate: 160, '…' }}"
+          "transform": [
+            "first_line",
+            {
+              "op": "truncate",
+              "length": 160,
+              "suffix": "…"
+            }
+          ]
         },
         "url": {
           "select": ".tgme_widget_message_date",
@@ -1931,12 +2071,12 @@
         "publishedAt": {
           "select": ".tgme_widget_message_date time",
           "attr": "datetime",
-          "template": "{{ scope.value | date_to_ms }}"
+          "transform": "date_to_ms"
         },
         "stats": {
           "views": {
             "select": ".tgme_widget_message_views",
-            "template": "{{ scope.value | parse_compact_number }}"
+            "transform": "parse_compact_number"
           }
         },
         "content": {
@@ -1946,12 +2086,15 @@
               ".tgme_widget_message_text:not(.js-message_reply_text)"
             ],
             "brSeparator": "\n",
-            "template": "{{ scope.value | normalize_lines: 2 }}"
+            "transform": {
+              "op": "normalize_lines",
+              "spacing": 2
+            }
           },
           "pictures": {
             "select": ".tgme_widget_message_photo_wrap, .tgme_widget_message_video_thumb",
             "attr": "style",
-            "template": "{{ scope.value | css_url }}"
+            "transform": "css_url"
           }
         }
       },
@@ -1979,11 +2122,15 @@
         "title": "topic_name",
         "url": {
           "select": "topic_url",
-          "template": "{{ scope.value | replace: '&amp;', '&' }}"
+          "transform": {
+            "op": "replace",
+            "search": "&amp;",
+            "replacement": "&"
+          }
         },
         "publishedAt": {
           "select": "create_time",
-          "template": "{{ scope.value | times: 1000 }}"
+          "transform": "seconds_to_ms"
         }
       }
     },
@@ -1991,146 +2138,6 @@
       "title": "百度贴吧",
       "category": "forum",
       "color": "blue"
-    }
-  },
-  "weibo:hot-search": {
-    "baseUrl": "https://weibo.com/",
-    "capabilities": {
-      "network": [
-        "weibo.com",
-        "*.sinaimg.cn"
-      ]
-    },
-    "requestRules": [
-      {
-        "action": {
-          "type": "modifyHeaders",
-          "requestHeaders": [
-            {
-              "header": "Referer",
-              "operation": "set",
-              "value": "https://weibo.com/"
-            }
-          ]
-        },
-        "condition": {
-          "requestDomains": [
-            "weibo.com",
-            "sinaimg.cn"
-          ],
-          "resourceTypes": [
-            "image",
-            "xmlhttprequest"
-          ]
-        }
-      }
-    ],
-    "loader": {
-      "type": "json",
-      "url": "/ajax/{{ source.vars.endpoint[scope.params.type] }}",
-      "items": "(data.realtime || data.band_list)[?is_ad != `1` && (rank != `null` || realpos != `null`)]",
-      "fields": {
-        "title": "note || word || name",
-        "url": {
-          "select": "url || word_scheme || word",
-          "template": "{% if scope.item.url %}{{ scope.value | replace: 'http://', 'https://' }}{% else %}https://s.weibo.com/weibo?q={{ scope.value | url_query }}{% endif %}"
-        },
-        "mark": {
-          "src": "icon || icon_url",
-          "kind": {
-            "template": "trend"
-          },
-          "label": "word"
-        }
-      }
-    },
-    "metadata": {
-      "title": "热搜",
-      "type": "ranking"
-    },
-    "vars": {
-      "endpoint": {
-        "search": "side/hotSearch",
-        "mine": "statuses/mineBand",
-        "entertainment": "statuses/entertainment",
-        "social": "statuses/social",
-        "tech": "statuses/technology",
-        "life": "statuses/life",
-        "sports": "statuses/sport",
-        "acg": "statuses/acg"
-      }
-    },
-    "params": {
-      "type": {
-        "type": "select",
-        "title": "类别",
-        "values": [
-          {
-            "label": "热搜",
-            "value": "search"
-          },
-          {
-            "label": "好友热搜",
-            "value": "mine"
-          },
-          {
-            "label": "文娱",
-            "value": "entertainment"
-          },
-          {
-            "label": "要闻",
-            "value": "social"
-          },
-          {
-            "label": "科技",
-            "value": "tech"
-          },
-          {
-            "label": "生活",
-            "value": "life"
-          },
-          {
-            "label": "体育",
-            "value": "sports"
-          },
-          {
-            "label": "ACG",
-            "value": "acg"
-          }
-        ],
-        "default": "search"
-      }
-    },
-    "radar": [
-      {
-        "id": "weibo-hot-search",
-        "match": {
-          "hosts": [
-            "weibo.com"
-          ],
-          "paths": [
-            "/hot/:type"
-          ]
-        },
-        "patch": {
-          "params": {
-            "type": "{{ scope.path.type }}"
-          },
-          "metadata": {
-            "title": {
-              "select": "a[aria-current=\"page\"] [title]"
-            },
-            "home": "/hot/{{ scope.path.type }}"
-          }
-        }
-      }
-    ],
-    "version": 6,
-    "provider": {
-      "title": "微博",
-      "category": "social",
-      "icon": "https://weibo.com/favicon.ico",
-      "color": "red"
     }
   },
   "xueqiu:hot-fund": {
@@ -2142,7 +2149,11 @@
     },
     "loader": {
       "type": "json",
-      "url": "/snb/dj/fundx/activity/x/web/searchFund?fund_type=0&business_code=20",
+      "url": "/snb/dj/fundx/activity/x/web/searchFund",
+      "query": {
+        "fund_type": "0",
+        "business_code": "20"
+      },
       "items": "data.public_fund",
       "fields": {
         "url": {
@@ -2158,7 +2169,7 @@
           }
         }
       },
-      "inlineTemplate": "{{ scope.item.attributes.returnPeriod }} · {{ scope.item.attributes.returnRate }}%"
+      "annotation": "{{ scope.item.attributes.returnPeriod }} · {{ scope.item.attributes.returnRate }}%"
     },
     "radar": [
       {
@@ -2188,7 +2199,10 @@
     },
     "loader": {
       "type": "json",
-      "url": "/hot_event/list.json?count=10",
+      "url": "/hot_event/list.json",
+      "query": {
+        "count": "10"
+      },
       "items": "list",
       "fields": {
         "url": {
@@ -2197,7 +2211,11 @@
         },
         "title": {
           "select": "tag",
-          "template": "{{ scope.value | remove: \"#\" }}"
+          "transform": {
+            "op": "replace",
+            "search": "#",
+            "replacement": ""
+          }
         },
         "content": {
           "pictures": "pic"
@@ -2231,22 +2249,42 @@
     },
     "loader": {
       "type": "json",
-      "url": "/statuses/livenews/list.json?category=6&since_id=-1&count=30",
+      "url": "/statuses/livenews/list.json",
+      "query": {
+        "category": "6",
+        "since_id": "-1",
+        "count": "30"
+      },
       "items": "items",
       "fields": {
         "url": {
           "select": "target",
-          "template": "{{ scope.value | regex_replace: \"^http:\", \"https:\" }}"
+          "transform": {
+            "op": "regex_replace",
+            "pattern": "^http:",
+            "replacement": "https:"
+          }
         },
         "title": {
           "select": "text",
-          "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 120, \"…\" }}"
+          "transform": [
+            "strip_html",
+            "normalize_whitespace",
+            {
+              "op": "truncate",
+              "length": 120,
+              "suffix": "…"
+            }
+          ]
         },
         "publishedAt": "created_at",
         "content": {
           "text": {
             "select": "text",
-            "template": "{{ scope.value | strip_html | normalize_whitespace }}"
+            "transform": [
+              "strip_html",
+              "normalize_whitespace"
+            ]
           }
         }
       }
@@ -2288,7 +2326,18 @@
         },
         "publishedAt": {
           "select": ".pdt10",
-          "template": "{{ scope.value | replace: '- ', 'T' | append: '+08:00' | date_to_ms }}"
+          "transform": [
+            {
+              "op": "replace",
+              "search": "- ",
+              "replacement": "T"
+            },
+            {
+              "op": "append",
+              "value": "+08:00"
+            },
+            "date_to_ms"
+          ]
         }
       },
       "sortByTimestamp": true
@@ -2297,189 +2346,6 @@
       "title": "早晨报",
       "category": "news",
       "color": "red"
-    }
-  },
-  "zhihu:column": {
-    "baseUrl": "https://www.zhihu.com/",
-    "vars": {
-      "ringSortLabels": {
-        "new": "最新",
-        "hot": "最热"
-      }
-    },
-    "metadata": {
-      "home": "/",
-      "title": "专栏"
-    },
-    "version": 2,
-    "params": {
-      "columnId": {
-        "type": "text",
-        "title": "专栏 ID",
-        "default": "c_155611518",
-        "required": true,
-        "validate": {
-          "regex": "^[A-Za-z0-9_-]{1,100}$"
-        }
-      }
-    },
-    "radar": [
-      {
-        "id": "zhihu-column",
-        "match": {
-          "hosts": [
-            "zhihu.com"
-          ],
-          "paths": [
-            "/column/:columnId"
-          ]
-        },
-        "patch": {
-          "params": {
-            "columnId": "{{ scope.path.columnId }}"
-          },
-          "metadata": {
-            "title": {
-              "select": "meta[property='og:title']",
-              "attr": "content"
-            },
-            "home": "/column/{{ scope.params.columnId | url_path }}"
-          }
-        }
-      },
-      {
-        "id": "zhihu-column-short",
-        "match": {
-          "hosts": [
-            "zhuanlan.zhihu.com"
-          ],
-          "paths": [
-            "/:columnId"
-          ]
-        },
-        "patch": {
-          "params": {
-            "columnId": "{{ scope.path.columnId }}"
-          },
-          "metadata": {
-            "title": {
-              "select": "meta[property='og:title']",
-              "attr": "content"
-            },
-            "home": "https://zhuanlan.zhihu.com/{{ scope.params.columnId | url_path }}"
-          }
-        }
-      }
-    ],
-    "loader": {
-      "type": "json",
-      "url": "/api/v4/columns/{{ scope.params.columnId | url_path }}/items?limit=50",
-      "items": "data",
-      "metadata": {
-        "home": {
-          "template": "/column/{{ scope.params.columnId | url_path }}"
-        }
-      },
-      "fields": {
-        "title": "question.title || title || excerpt_title",
-        "url": {
-          "select": "id",
-          "template": "{% if scope.item.type == 'answer' %}/question/{{ scope.item.question.id }}/answer/{{ scope.value }}{% elsif scope.item.type == 'article' %}https://zhuanlan.zhihu.com/p/{{ scope.value }}{% else %}{{ scope.item.url }}{% endif %}"
-        },
-        "publishedAt": {
-          "select": "created_time || created",
-          "template": "{{ scope.value | times: 1000 }}"
-        },
-        "author": {
-          "name": "author.name"
-        },
-        "stats": {
-          "score": "voteup_count",
-          "comments": "comment_count"
-        },
-        "icon": {
-          "src": "author.avatar_url",
-          "kind": {
-            "template": "author"
-          },
-          "label": "author.name"
-        },
-        "content": {
-          "text": "excerpt",
-          "pictures": "image_url"
-        }
-      },
-      "inlineTemplate": "{{ scope.item.author.name }}"
-    },
-    "provider": {
-      "title": "知乎",
-      "category": "forum",
-      "color": "blue"
-    }
-  },
-  "zhihu:following": {
-    "baseUrl": "https://www.zhihu.com/",
-    "vars": {
-      "ringSortLabels": {
-        "new": "最新",
-        "hot": "最热"
-      }
-    },
-    "metadata": {
-      "home": "/follow",
-      "title": "关注动态"
-    },
-    "version": 2,
-    "loader": {
-      "type": "json",
-      "url": "/api/v3/moments?limit=50&desktop=true",
-      "items": "[data[?type == 'feed'], data[?type == 'feed_group'].list[]][]",
-      "fields": {
-        "title": {
-          "select": "target.question.title || target.title || target.excerpt_title || target.excerpt",
-          "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
-        },
-        "url": {
-          "select": "target.id",
-          "template": "{% if scope.item.target.type == 'answer' %}/question/{{ scope.item.target.question.id }}/answer/{{ scope.value }}{% elsif scope.item.target.type == 'article' %}https://zhuanlan.zhihu.com/p/{{ scope.value }}{% elsif scope.item.target.type == 'pin' %}/pin/{{ scope.value }}{% elsif scope.item.target.type == 'question' %}/question/{{ scope.value }}{% elsif scope.item.target.type == 'zvideo' %}/zvideo/{{ scope.value }}{% else %}{{ scope.item.target.url }}{% endif %}"
-        },
-        "publishedAt": {
-          "select": "created_time",
-          "template": "{{ scope.value | times: 1000 }}"
-        },
-        "author": {
-          "name": "target.author.name"
-        },
-        "stats": {
-          "score": "target.reaction.statistics.applaud_count || target.voteup_count || target.like_count",
-          "comments": "target.reaction.statistics.comment_count || target.comment_count",
-          "stars": "target.reaction.statistics.favorites || target.favorite_count || target.favlists_count",
-          "likes": "target.reaction.statistics.like_count"
-        },
-        "attributes": {
-          "activity": "action_text"
-        },
-        "icon": {
-          "src": "target.author.avatar_url",
-          "kind": {
-            "template": "author"
-          },
-          "label": "target.author.name"
-        },
-        "content": {
-          "text": {
-            "select": "target.excerpt || target.excerpt_title",
-            "template": "{{ scope.value | strip_html | normalize_whitespace }}"
-          },
-          "pictures": "target.image_url"
-        }
-      },
-      "inlineTemplate": "{{ scope.item.attributes.activity }}"
-    },
-    "provider": {
-      "title": "知乎",
-      "category": "forum",
-      "color": "blue"
     }
   },
   "zhihu:hot-list": {
@@ -2498,7 +2364,7 @@
     "version": 3,
     "loader": {
       "type": "json",
-      "url": "/api/v3/feed/topstory/hot-list-web?limit=50&desktop=true",
+      "url": "/api/v3/feed/topstory/hot-list-web",
       "items": "data",
       "fields": {
         "title": "target.title_area.text",
@@ -2514,6 +2380,10 @@
           "text": "target.excerpt_area.text",
           "pictures": "target.image_area.url"
         }
+      },
+      "query": {
+        "limit": "50",
+        "desktop": "true"
       }
     },
     "provider": {
@@ -2577,7 +2447,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/api/v4/members/{{ scope.params.userId | url_path }}/answers?limit=50&sort_by=created&include=data%5B*%5D.excerpt%2Cvoteup_count%2Ccomment_count",
+      "url": "/api/v4/members/{{ scope.params.userId | url_path }}/answers",
       "items": "data",
       "metadata": {
         "title": {
@@ -2592,7 +2462,15 @@
       "fields": {
         "title": {
           "select": "excerpt || question.title",
-          "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
+          "transform": [
+            "strip_html",
+            "normalize_whitespace",
+            {
+              "op": "truncate",
+              "length": 160,
+              "suffix": "…"
+            }
+          ]
         },
         "url": {
           "select": "id",
@@ -2600,7 +2478,7 @@
         },
         "publishedAt": {
           "select": "created_time",
-          "template": "{{ scope.value | times: 1000 }}"
+          "transform": "seconds_to_ms"
         },
         "author": {
           "name": "author.name"
@@ -2620,7 +2498,12 @@
           "text": "excerpt"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}",
+      "query": {
+        "limit": "50",
+        "sort_by": "created",
+        "include": "data[*].excerpt,voteup_count,comment_count"
+      }
     },
     "provider": {
       "title": "知乎",
@@ -2634,13 +2517,21 @@
       "ringSortLabels": {
         "new": "最新",
         "hot": "最热"
+      },
+      "sortLabels": {
+        "default": "回答",
+        "created": "最新回答"
+      },
+      "sortTypes": {
+        "default": "ranking",
+        "created": "list"
       }
     },
     "metadata": {
       "home": "/",
       "title": "问题回答"
     },
-    "version": 4,
+    "version": 5,
     "params": {
       "questionId": {
         "type": "text",
@@ -2690,10 +2581,10 @@
           "metadata": {
             "title": {
               "select": ".QuestionHeader-title",
-              "template": "{{ scope.value }} | {% if scope.params.sort == 'created' %}最新回答{% else %}回答{% endif %}"
+              "template": "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}"
             },
             "home": "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}",
-            "type": "{% if scope.params.sort == 'default' %}ranking{% else %}list{% endif %}"
+            "type": "{{ source.vars.sortTypes[scope.params.sort] }}"
           }
         }
       },
@@ -2725,24 +2616,32 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/api/v4/questions/{{ scope.params.questionId | url_path }}/answers?limit=20&sort_by={{ scope.params.sort | url_query }}&include=data%5B*%5D.excerpt%2Cvoteup_count%2Ccomment_count",
+      "url": "/api/v4/questions/{{ scope.params.questionId | url_path }}/answers",
       "items": "data",
       "metadata": {
         "title": {
           "select": "data[0].question.title",
-          "template": "{{ scope.value }} | {% if scope.params.sort == 'created' %}最新回答{% else %}回答{% endif %}"
+          "template": "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}"
         },
         "home": {
           "template": "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}"
         },
         "type": {
-          "template": "{% if scope.params.sort == 'default' %}ranking{% else %}list{% endif %}"
+          "template": "{{ source.vars.sortTypes[scope.params.sort] }}"
         }
       },
       "fields": {
         "title": {
           "select": "excerpt || question.title",
-          "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
+          "transform": [
+            "strip_html",
+            "normalize_whitespace",
+            {
+              "op": "truncate",
+              "length": 160,
+              "suffix": "…"
+            }
+          ]
         },
         "url": {
           "select": "id",
@@ -2750,7 +2649,7 @@
         },
         "publishedAt": {
           "select": "created_time",
-          "template": "{{ scope.value | times: 1000 }}"
+          "transform": "seconds_to_ms"
         },
         "author": {
           "name": "author.name"
@@ -2770,7 +2669,12 @@
           "text": "excerpt"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}",
+      "query": {
+        "limit": "20",
+        "sort_by": "{{ scope.params.sort }}",
+        "include": "data[*].excerpt,voteup_count,comment_count"
+      }
     },
     "provider": {
       "title": "知乎",
@@ -2838,7 +2742,22 @@
             "sort": "{{ scope.query.tab }}"
           },
           "metadata": {
-            "title": "{{ scope.page.title | regex_replace: '^\\\\([^)]*封私信\\\\)\\\\s*', '' | regex_replace: '\\\\s*-\\\\s*知乎$', '' }} | {{ source.vars.ringSortLabels[scope.params.sort] }}",
+            "title": {
+              "select": "title",
+              "transform": [
+                {
+                  "op": "regex_replace",
+                  "pattern": "^\\([^)]*封私信\\)\\s*",
+                  "replacement": ""
+                },
+                {
+                  "op": "regex_replace",
+                  "pattern": "\\s*-\\s*知乎$",
+                  "replacement": ""
+                }
+              ],
+              "template": "{{ scope.value }} | {{ source.vars.ringSortLabels[scope.params.sort] }}"
+            },
             "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0"
           }
         }
@@ -2858,7 +2777,22 @@
             "ringId": "{{ scope.path.ringId }}"
           },
           "metadata": {
-            "title": "{{ scope.page.title | regex_replace: '^\\\\([^)]*封私信\\\\)\\\\s*', '' | regex_replace: '\\\\s*-\\\\s*知乎$', '' }} | 最新",
+            "title": {
+              "select": "title",
+              "transform": [
+                {
+                  "op": "regex_replace",
+                  "pattern": "^\\([^)]*封私信\\)\\s*",
+                  "replacement": ""
+                },
+                {
+                  "op": "regex_replace",
+                  "pattern": "\\s*-\\s*知乎$",
+                  "replacement": ""
+                }
+              ],
+              "template": "{{ scope.value }} | 最新"
+            },
             "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab=new&tab_id=0"
           }
         }
@@ -2866,7 +2800,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/api/v4/rings/v1/{{ scope.params.ringId | url_path }}/feeds/{{ scope.params.sort | url_path }}/pc?limit=10&offset=0",
+      "url": "/api/v4/rings/v1/{{ scope.params.ringId | url_path }}/feeds/{{ scope.params.sort | url_path }}/pc",
       "items": "data[?ring_biz_data.is_topping != `true`]",
       "metadata": {
         "home": {
@@ -2876,7 +2810,15 @@
       "fields": {
         "title": {
           "select": "excerpt_title",
-          "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 160, '…' }}"
+          "transform": [
+            "strip_html",
+            "normalize_whitespace",
+            {
+              "op": "truncate",
+              "length": 160,
+              "suffix": "…"
+            }
+          ]
         },
         "url": {
           "select": "id",
@@ -2884,7 +2826,7 @@
         },
         "publishedAt": {
           "select": "created",
-          "template": "{{ scope.value | times: 1000 }}"
+          "transform": "seconds_to_ms"
         },
         "author": {
           "name": "author.name"
@@ -2905,12 +2847,24 @@
         "content": {
           "text": {
             "select": "excerpt_title",
-            "template": "{{ scope.value | strip_html | normalize_whitespace | truncate: 500, '…' }}"
+            "transform": [
+              "strip_html",
+              "normalize_whitespace",
+              {
+                "op": "truncate",
+                "length": 500,
+                "suffix": "…"
+              }
+            ]
           },
           "pictures": "content[?type == 'image'].url"
         }
       },
-      "inlineTemplate": "{{ scope.item.author.name }}"
+      "annotation": "{{ scope.item.author.name }}",
+      "query": {
+        "limit": "10",
+        "offset": "0"
+      }
     },
     "provider": {
       "title": "知乎",

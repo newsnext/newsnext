@@ -16,6 +16,7 @@ import { LOCATION_OPTIONS } from "./types"
 import {
   createXLoggedInHeaders,
   entriesToNewsItems,
+  formatXAnnotation,
   getTimelineEntries,
   getXUserTimelineUrl,
   HOME_LATEST_TIMELINE_QUERY_ID,
@@ -26,7 +27,6 @@ import {
   sortNewsItemsByNewest,
   USER_BY_SCREEN_NAME_URL,
   X_CSRF_TOKEN_SECRET_KEY,
-  X_INLINE_TEMPLATE,
   X_ORIGIN,
   X_TIMELINE_COUNT,
   X_TIMELINE_FEATURES,
@@ -251,6 +251,7 @@ export default {
       },
     },
     "following": {
+      version: 3,
       metadata: {
         title: "Following",
       },
@@ -268,10 +269,11 @@ export default {
       },
       loader: {
         load: fetchXFollowing,
-        inlineTemplate: X_INLINE_TEMPLATE,
+        annotation: formatXAnnotation,
       },
     },
     "list": {
+      version: 3,
       metadata: {
         title: "List",
       },
@@ -309,7 +311,7 @@ export default {
       },
       loader: {
         load: fetchXListTweets,
-        inlineTemplate: X_INLINE_TEMPLATE,
+        annotation: formatXAnnotation,
       },
     },
     "user": {
@@ -390,7 +392,7 @@ export default {
       loader: {
         load: fetchXUserTimeline,
       },
-      version: 4,
+      version: 6,
     },
   },
 } satisfies ProviderConfig

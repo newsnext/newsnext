@@ -3,7 +3,7 @@ import { requestXueqiuJson } from "./shared"
 
 const stockStatusTitle = {
   select: "title || description || text",
-  template: "{{ scope.value | strip_html | remove: \"网页链接\" | normalize_whitespace | truncate: 120, \"…\" }}",
+  transform: ["strip_html", { op: "replace", search: "网页链接", replacement: "" }, "normalize_whitespace", { op: "truncate", length: 120, suffix: "…" }],
 } as const
 
 const stockTimelineFields = {
@@ -56,6 +56,12 @@ function stockRadar(id: string, title: string) {
 
 export const stockSources = {
   "stock-discussions": {
+    version: 2,
+    vars: {
+      sortLabels: { hot: "热门讨论", latest: "最新讨论" },
+      sortQuery: { hot: "alpha", latest: "time" },
+      sortTypes: { hot: "ranking", latest: "" },
+    },
     metadata: {
       title: "股票讨论",
     },
@@ -98,7 +104,7 @@ export const stockSources = {
         metadata: {
           title: {
             select: "title",
-            template: "{{ scope.value | split: \"(\" | first | normalize_whitespace }} | {% if scope.params.sort == \"hot\" %}热门讨论{% else %}最新讨论{% endif %}",
+            template: "{{ scope.value | split: \"(\" | first | normalize_whitespace }} | {{ source.vars.sortLabels[scope.params.sort] }}",
           },
           home: "/S/{{ scope.params.symbol | url_path }}",
         },
@@ -106,7 +112,8 @@ export const stockSources = {
     }],
     loader: {
       type: "json",
-      url: "https://api.xueqiu.com/query/v1/symbol/search/status.json?count=20&comment=0&symbol={{ scope.params.symbol | url_query }}&hl=0&source=user&sort={% if scope.params.sort == \"hot\" %}alpha{% else %}time{% endif %}&page=1&q=",
+      url: "https://api.xueqiu.com/query/v1/symbol/search/status.json?q=",
+      query: { count: "20", comment: "0", symbol: "{{ scope.params.symbol }}", hl: "0", source: "user", sort: "{{ source.vars.sortQuery[scope.params.sort] }}", page: "1" },
       request: requestXueqiuJson,
       items: "list",
       fields: {
@@ -124,7 +131,7 @@ export const stockSources = {
         content: {
           text: {
             select: "description || text",
-            template: "{{ scope.value | strip_html | normalize_whitespace }}",
+            transform: ["strip_html", "normalize_whitespace"],
           },
           pictures: "firstImg",
         },
@@ -132,7 +139,7 @@ export const stockSources = {
       metadata: {
         ...stockHomeMetadata,
         type: {
-          template: "{% if scope.params.sort == \"hot\" %}ranking{% endif %}",
+          template: "{{ source.vars.sortTypes[scope.params.sort] }}",
         },
       },
     },
@@ -150,7 +157,8 @@ export const stockSources = {
     radar: stockRadar("xueqiu-stock-news", "资讯"),
     loader: {
       type: "json",
-      url: "https://api.xueqiu.com/statuses/stock_timeline.json?symbol_id={{ scope.params.symbol | url_query }}&count=20&source={{ \"自选股新闻\" | url_query }}&page=1",
+      url: "https://api.xueqiu.com/statuses/stock_timeline.json",
+      query: { symbol_id: "{{ scope.params.symbol }}", count: "20", source: "自选股新闻", page: "1" },
       request: requestXueqiuJson,
       items: "list",
       fields: stockTimelineFields,
@@ -170,7 +178,8 @@ export const stockSources = {
     radar: stockRadar("xueqiu-stock-announcements", "公告"),
     loader: {
       type: "json",
-      url: "https://api.xueqiu.com/statuses/stock_timeline.json?symbol_id={{ scope.params.symbol | url_query }}&count=20&source={{ \"公告\" | url_query }}&page=1",
+      url: "https://api.xueqiu.com/statuses/stock_timeline.json",
+      query: { symbol_id: "{{ scope.params.symbol }}", count: "20", source: "公告", page: "1" },
       request: requestXueqiuJson,
       items: "list",
       fields: stockTimelineFields,
