@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest"
-import { parseNativeNotification } from "./protocol"
+import { parseNativeHostValue, parseNativeNotification } from "./protocol"
 
 vi.mock("#imports", () => ({ browser: {} }))
 
@@ -59,5 +59,21 @@ describe("parseNativeNotification insightCatalogChanged", () => {
       method: "insightCatalogChanged",
       params: { insights },
     })
+  })
+})
+
+describe("startup progress frames", () => {
+  const progress = { id: "index", label: "Indexing", stage: "Building titles", completedSteps: 0, totalSteps: 3, startedAt: 1000, elapsedMs: 120000 }
+  const frame = { type: "initializing", protocolVersion: 38, daemonVersion: "1.0.0", pid: 42, progress, logs: [entry] }
+
+  it("accepts long-running progress and startup log snapshots", () => {
+    expect(parseNativeHostValue(frame)).toEqual(frame)
+    expect(parseNativeHostValue({ ...frame, progress: null })).toEqual({ ...frame, progress: null })
+  })
+
+  it("rejects impossible progress counts and malformed timestamps", () => {
+    for (const changes of [{ completedSteps: 4 }, { totalSteps: 0 }, { elapsedMs: -1 }, { startedAt: 1.5 }, { stage: 42 }]) {
+      expect(() => parseNativeHostValue({ ...frame, progress: { ...progress, ...changes } })).toThrow()
+    }
   })
 })

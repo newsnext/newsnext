@@ -42,6 +42,16 @@ const InsightCatalogEntryResult = Type.Unsafe<InsightCatalogEntry>(Type.Object({
 }, { additionalProperties: false }))
 
 const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.Object({
+  ready: Type.Boolean(),
+  initialization: Type.Optional(Type.Object({
+    id: Identifier,
+    label: Type.String(),
+    stage: Type.String(),
+    completedSteps: Type.Integer({ minimum: 0 }),
+    totalSteps: Type.Integer({ minimum: 1 }),
+    startedAt: Type.Integer({ minimum: 0 }),
+    elapsedMs: Type.Integer({ minimum: 0 }),
+  }, { additionalProperties: false })),
   workspaceConflict: Type.Optional(Type.Object({
     revision: Type.Integer({ minimum: 0 }),
     local: WorkspaceSummaryResult,
@@ -62,7 +72,6 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
     "connected",
     "connecting",
     "workspaceConflict",
-    "daemonOutdated",
     "hostNotInstalled",
     "protocolIncompatible",
     "serviceNotRunning",

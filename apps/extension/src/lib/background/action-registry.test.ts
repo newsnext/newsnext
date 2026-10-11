@@ -63,6 +63,7 @@ function createContext(): BackgroundActionContext {
       getStatus: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
+        ready: false,
         state: "disabled" as const,
         workerId: "worker",
       })),
@@ -71,6 +72,7 @@ function createContext(): BackgroundActionContext {
       setEnabled: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
+        ready: false,
         state: "disabled" as const,
         workerId: "worker",
       })),
@@ -80,12 +82,14 @@ function createContext(): BackgroundActionContext {
       regenerateIdentity: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
+        ready: false,
         state: "connecting" as const,
         workerId: "new-worker",
       })),
       takeOver: vi.fn(async () => ({
         capabilities: [],
         offlineWorkers: [],
+        ready: false,
         state: "disabled" as const,
         workerId: "worker",
       })),

@@ -9,14 +9,7 @@ import { parseInsightCatalog, parseLocalCardIds, parseLogs, parseRevision } from
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./workspace-data"
 
-type ReadyHostMessage = Extract<HostToExtension, { type: "ready" }> & {
-  capabilities: string[]
-  localSources: Record<string, unknown>
-}
-
-type ParsedHostMessage
-  = | Exclude<HostToExtension, { type: "chunk" | "ready" }>
-    | ReadyHostMessage
+type ParsedHostMessage = Exclude<HostToExtension, { type: "chunk" }>
 
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 
@@ -37,15 +30,14 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
     value.type === "ready"
     && typeof value.protocolVersion === "number"
     && typeof value.daemonVersion === "string"
+    && Array.isArray(value.capabilities)
+    && value.capabilities.every(capability => typeof capability === "string")
   ) {
     return {
       type: "ready",
       protocolVersion: value.protocolVersion,
       daemonVersion: value.daemonVersion,
-      capabilities: Array.isArray(value.capabilities)
-        && value.capabilities.every(capability => typeof capability === "string")
-        ? value.capabilities
-        : [],
+      capabilities: value.capabilities,
       insightServerUrl: parseInsightServerOrigin(value.insightServerUrl),
       insights: parseInsightCatalog(value.insights),
       workspace: parseWorkspace(value.workspace),
@@ -53,6 +45,37 @@ function parseHostMessage(value: unknown): ParsedHostMessage {
       workerRoutingRevision: parseRevision(value.workerRoutingRevision, "Worker routing"),
       offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
       localSources: parseLocalProviders(value.localSources),
+    }
+  }
+  if (value.type === "initializing" && typeof value.protocolVersion === "number"
+    && typeof value.daemonVersion === "string" && Number.isSafeInteger(value.pid) && Number(value.pid) > 0) {
+    const progress = value.progress
+    if (progress !== null && (!isRecord(progress)
+      || typeof progress.id !== "string" || typeof progress.label !== "string" || typeof progress.stage !== "string"
+      || !Number.isSafeInteger(progress.completedSteps) || Number(progress.completedSteps) < 0
+      || !Number.isSafeInteger(progress.totalSteps) || Number(progress.totalSteps) < 1
+      || Number(progress.completedSteps) > Number(progress.totalSteps)
+      || !Number.isSafeInteger(progress.startedAt) || Number(progress.startedAt) < 0
+      || !Number.isSafeInteger(progress.elapsedMs) || Number(progress.elapsedMs) < 0)) {
+      throw new Error("The native host returned invalid task progress")
+    }
+    return {
+      type: "initializing",
+      protocolVersion: value.protocolVersion,
+      daemonVersion: value.daemonVersion,
+      pid: Number(value.pid),
+      logs: parseLogs(value.logs),
+      progress: progress === null
+        ? null
+        : {
+            id: String(progress.id),
+            label: String(progress.label),
+            stage: String(progress.stage),
+            completedSteps: Number(progress.completedSteps),
+            totalSteps: Number(progress.totalSteps),
+            startedAt: Number(progress.startedAt),
+            elapsedMs: Number(progress.elapsedMs),
+          },
     }
   }
   if (value.type === "rpc" && "message" in value) return { type: "rpc", message: value.message }
@@ -146,7 +169,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function parseLocalProviders(value: unknown): Record<string, unknown> {
-  if (value === undefined) return {}
   if (!isRecord(value) || Object.values(value).some(provider => !isRecord(provider))) {
     throw new Error("The native host returned invalid local Sources")
   }

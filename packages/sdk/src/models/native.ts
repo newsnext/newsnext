@@ -1,8 +1,10 @@
+import type { LongTaskProgress } from "../protocol/LongTaskProgress.js"
 import type { OfflineWorker } from "../protocol/OfflineWorker.js"
 
+export type { LongTaskProgress } from "../protocol/LongTaskProgress.js"
+
 export type NativeIntegrationFailureState
-  = | "daemonOutdated"
-    | "hostNotInstalled"
+  = | "hostNotInstalled"
     | "protocolIncompatible"
     | "serviceNotRunning"
     | "daemonStartFailed"
@@ -24,6 +26,9 @@ export interface WorkspaceSummary {
 }
 
 export interface NativeIntegrationStatus {
+  /** Transport can be connected while daemon initialization is still running. */
+  ready: boolean
+  initialization?: LongTaskProgress
   workspaceConflict?: {
     revision: number
     local: WorkspaceSummary

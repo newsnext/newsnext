@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import {
   classifyNativeIntegrationFailure,
   getNativeIntegrationReconnectDelay,
-  isVersionAtLeast,
 } from "./connection"
 
 describe("native integration connection", () => {
@@ -10,8 +9,6 @@ describe("native integration connection", () => {
     ["Specified native messaging host not found.", "hostNotInstalled"],
     ["Access to the specified native messaging host is forbidden.", "hostNotInstalled"],
     ["No such native application app.newsnext.host", "hostNotInstalled"],
-    ["Unsupported protocol version 16; expected 17", "protocolIncompatible"],
-    ["The NewsNext Worker is already connected", "workerConflict"],
     ["Native host has exited.", "serviceNotRunning"],
     [undefined, "serviceNotRunning"],
   ] as const)("classifies %s", (message, expected) => {
@@ -32,20 +29,9 @@ describe("native integration connection", () => {
   })
 
   it.each([
-    ["0.9.0", "1.0.0-alpha.1", false],
-    ["1.0.0-alpha.1", "1.0.0-alpha.1", true],
-    ["1.0.0-alpha.1+build.1", "1.0.0-alpha.1", true],
-    ["1.1.0", "1.0.0-alpha.1", true],
-    ["invalid", "1.0.0-alpha.1", false],
-  ] as const)("compares daemon version %s against %s", (actual, minimum, expected) => {
-    expect(isVersionAtLeast(actual, minimum)).toBe(expected)
-  })
-
-  it.each([
     ["HOST_MISSING", "hostNotInstalled"],
     ["PROTOCOL_INCOMPATIBLE", "protocolIncompatible"],
     ["WORKER_ALREADY_CONNECTED", "workerConflict"],
-    ["DAEMON_OUTDATED", "daemonOutdated"],
     ["DAEMON_START_FAILED", "daemonStartFailed"],
   ] as const)("prefers structured error code %s", (code, expected) => {
     const message = "unclassified message"

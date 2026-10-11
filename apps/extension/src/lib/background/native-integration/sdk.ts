@@ -3,7 +3,6 @@ import { browser } from "#imports"
 import { isWidgetSdkControl, isWidgetSdkRequest, sdkErrorFrame, WIDGET_SDK_PORT } from "@/lib/widget-host"
 import { nativeRpc } from "./rpc"
 import { NativeRequestNotSentError } from "./rpc-client"
-import { runtime } from "./state"
 
 export function registerSdkBridge(requireConnection: RequireNativeConnection): void {
   browser.runtime.onConnect.addListener((port) => {
@@ -45,9 +44,6 @@ export function registerSdkBridge(requireConnection: RequireNativeConnection): v
         started = (async () => {
           connection = await requireConnection()
           if (closed) return
-          if (!runtime.capabilities.includes("sdk")) {
-            throw new Error("Update the NewsNext native host and reconnect the extension to use the Widget SDK")
-          }
           connection.onDisconnect.addListener(disconnected)
           const request = message.request
           if (typeof request.timeoutMs === "number") pullTimeoutMs = request.timeoutMs + 3000

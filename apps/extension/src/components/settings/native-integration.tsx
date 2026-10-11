@@ -27,7 +27,6 @@ const STATUS_PRESENTATION: Record<NativeIntegrationStatus["state"], StatusPresen
   connected: { dotClassName: "bg-emerald-500", labelKey: "connected" },
   workspaceConflict: { dotClassName: "bg-amber-500", labelKey: "workspaceChoiceRequired" },
   connecting: { dotClassName: "bg-amber-500", labelKey: "connecting" },
-  daemonOutdated: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
   hostNotInstalled: { dotClassName: "bg-destructive", labelKey: "nativeHostNotInstalled" },
   protocolIncompatible: { dotClassName: "bg-destructive", labelKey: "updateRequired" },
   daemonStartFailed: { dotClassName: "bg-destructive", labelKey: "daemonStartFailed" },
@@ -85,7 +84,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
   const logsEnabled = useAtomValueRawSync(logsEnabledAtom)
   const setLogsEnabled = useSetAtom(logsEnabledAtom)
   const hasConnectionGuidance = state !== undefined
-    && ["workerConflict", "hostNotInstalled", "protocolIncompatible", "daemonOutdated", "serviceNotRunning"].includes(state)
+    && ["workerConflict", "hostNotInstalled", "protocolIncompatible", "serviceNotRunning"].includes(state)
   const presentation = state ? STATUS_PRESENTATION[state] : CHECKING_PRESENTATION
 
   const refreshStatus = useCallback(async (): Promise<void> => {
@@ -119,7 +118,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
   useEffect(() => {
     void refreshStatus()
     if (logsEnabled) void refreshLogs()
-  }, [logsEnabled, refreshLogs, refreshStatus])
+  }, [logsEnabled, refreshLogs, refreshStatus, state, status?.ready])
 
   useEffect(() => {
     if (state !== "connected" || !logsEnabled) return
@@ -220,6 +219,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
               </span>
             )}
           </div>
+
           <Switch
             checked={isEnabled}
             disabled={toggling}
@@ -227,6 +227,13 @@ export function NativeIntegrationSettings(): React.JSX.Element {
             onCheckedChange={enabled => void handleEnabledChange(enabled)}
           />
         </div>
+        {state === "connected" && status && !status.ready && (
+          <div className="text-xs text-muted-foreground" role="status" aria-live="polite">
+            {status.initialization
+              ? `${status.initialization.stage} · ${status.initialization.completedSteps}/${status.initialization.totalSteps} stages completed · ${Math.floor(status.initialization.elapsedMs / 1000)}s`
+              : "Initializing NewsNext…"}
+          </div>
+        )}
 
         {isEnabled && status?.workspaceConflict && (
           <div className="space-y-3 border-t pt-3">
@@ -339,9 +346,7 @@ export function NativeIntegrationSettings(): React.JSX.Element {
                     )
                   : state === "protocolIncompatible"
                     ? t("protocolIncompatibleDescription")
-                    : state === "daemonOutdated"
-                      ? t("daemonOutdatedDescription")
-                      : t("serviceNotRunningDescription")}
+                    : t("serviceNotRunningDescription")}
             </p>
             {state === "workerConflict" && (
               <Button

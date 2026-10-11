@@ -10,6 +10,7 @@ if (!getInsights) throw new Error("nativeIntegration.getInsights contract is mis
 
 function status(): Record<string, unknown> {
   return {
+    ready: true,
     capabilities: [],
     offlineWorkers: [],
     state: "connected",

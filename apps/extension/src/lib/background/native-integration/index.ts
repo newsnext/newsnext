@@ -19,10 +19,8 @@ import { summarizeWorkspace } from "../workspace-resolution"
 import {
   classifyNativeIntegrationFailure,
   getNativeIntegrationReconnectDelay,
-  isVersionAtLeast,
-  MINIMUM_DAEMON_VERSION,
 } from "./connection"
-import { rejectNativeConnection, resolveNativeConnection, waitForNativeConnection } from "./connection-ready"
+import { holdNativeConnection, rejectNativeConnection, resolveNativeConnection, waitForNativeConnection } from "./connection-ready"
 import { serializeNativeIntegrationError } from "./error"
 import {
   loadRoutedLiveCard,
@@ -70,8 +68,9 @@ const workerConnectionControls = {
 
 export const backgroundActionDependencies: BackgroundActionDependencies = {
   rankingHistory: async (input) => {
-    if (!runtime.enabled || !runtime.capabilities.includes("rankingHistory")) return []
-    return await nativeRpc(await requireNativeConnection()).request("rankingPositionsGet", input)
+    if (!runtime.enabled) return []
+    const connection = await requireNativeConnection()
+    return await nativeRpc(connection).request("rankingPositionsGet", input)
   },
   liveCardRouter: {
     load: input => loadRoutedLiveCard(
@@ -86,20 +85,21 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
     ),
   },
   nativeIntegration: {
-    getLogs: async () => nativeRpc(await requireNativeConnection()).request("logsGet", {}),
+    getLogs: async () => runtime.ready && runtime.port
+      ? nativeRpc(runtime.port).request("logsGet", {})
+      : [...runtime.startupLogs],
     setLogLevel: async ({ level }) => {
       const connection = await requireNativeConnection()
-      if (!runtime.capabilities.includes("logsPush")) return
-      // Best-effort: a level mismatch must never drop the connection.
+      // Logging preference failures do not reset the connection.
       await nativeRpc(connection).request("logsSetLevel", { level }).catch((error) => {
         console.error("Failed to set the NewsNext CLI log level", error)
       })
     },
     getCollectionStatus: async () => {
-      if (!runtime.capabilities.includes("collectionStatusPush")) throw new Error("This NewsNext CLI does not support live stream diagnostics. Update and restart NewsNext CLI.")
+      const connection = await requireNativeConnection()
       const cached = runtime.collectionStatus
       if (cached) return cached
-      const snapshot = await nativeRpc(await requireNativeConnection()).request("collectionStatusGet", {})
+      const snapshot = await nativeRpc(connection).request("collectionStatusGet", {})
       if (runtime.collectionSubscribed) runtime.collectionStatus ??= snapshot
       return runtime.collectionStatus ?? snapshot
     },
@@ -121,9 +121,6 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
     setEnabled: ({ enabled }) => setNativeIntegrationEnabled(enabled),
     restart: async () => {
       const connection = await requireNativeConnection()
-      if (!runtime.capabilities.includes("restart")) {
-        throw new Error("This NewsNext CLI does not support restart. Update NewsNext CLI.")
-      }
       await nativeRpc(connection).request("restart", {})
     },
   },
@@ -136,7 +133,7 @@ export const backgroundActionDependencies: BackgroundActionDependencies = {
 }
 
 function sendCollectionSubscription(): void {
-  if (runtime.connectionState === "connected" && runtime.port && runtime.capabilities.includes("collectionStatusPush")) {
+  if (runtime.ready && runtime.connectionState === "connected" && runtime.port) {
     const connection = runtime.port
     void nativeRpc(connection).request("collectionStatusSubscribe", { enabled: runtime.collectionSubscribed }).catch((error) => {
       failConnection(connection, error instanceof Error ? error.message : "Failed to subscribe to collection status")
@@ -145,7 +142,7 @@ function sendCollectionSubscription(): void {
 }
 
 function sendLogsSubscription(): void {
-  if (runtime.connectionState === "connected" && runtime.port && runtime.capabilities.includes("logsPush")) {
+  if (runtime.ready && runtime.connectionState === "connected" && runtime.port) {
     const connection = runtime.port
     void nativeRpc(connection).request("logsSubscribe", { enabled: runtime.logsSubscribed }).catch((error) => {
       failConnection(connection, error instanceof Error ? error.message : "Failed to subscribe to CLI logs")
@@ -155,10 +152,9 @@ function sendLogsSubscription(): void {
 
 export const BACKGROUND_LOGS_PORT = "newsnext.background-logs.subscription"
 
-// Pushes the persisted log switch/level to the daemon. Best-effort like the
-// action above: older daemons without `logsSetLevel` just keep their default.
+// Pushes the persisted log switch/level to the daemon.
 async function sendLogLevel(): Promise<void> {
-  if (runtime.connectionState !== "connected" || !runtime.port || !runtime.capabilities.includes("logsPush")) return
+  if (!runtime.ready || runtime.connectionState !== "connected" || !runtime.port) return
   const connection = runtime.port
   try {
     const stored = await browser.storage.local.get(PERSISTED_DATA_SLICES.settings.key)
@@ -207,6 +203,8 @@ function getConnectedActionContext(): BackgroundActionContext {
 
 function getNativeIntegrationStatus(): NativeIntegrationStatus {
   return {
+    ready: runtime.ready,
+    initialization: runtime.initialization,
     workspaceConflict: runtime.pendingWorkspace
       ? {
           revision: runtime.pendingWorkspace.revision,
@@ -282,6 +280,9 @@ function resetConnectionState(
 ): void {
   if (runtime.port) closeNativeRpc(runtime.port, error?.message ?? "NewsNext CLI disconnected")
   runtime.port = undefined
+  runtime.ready = false
+  runtime.initialization = undefined
+  runtime.startupLogs = []
   runtime.pendingWorkspace = undefined
   runtime.collectionStatus = undefined
   runtime.daemonVersion = undefined
@@ -341,7 +342,6 @@ function createConnectionError(
 ): NativeIntegrationConnectionError | undefined {
   if (!message) return undefined
   const normalizedCode = code ?? {
-    daemonOutdated: "DAEMON_OUTDATED",
     hostNotInstalled: "HOST_MISSING",
     protocolIncompatible: "PROTOCOL_INCOMPATIBLE",
     serviceNotRunning: "NATIVE_HOST_DISCONNECTED",
@@ -360,7 +360,9 @@ function runtimeLastErrorMessage(): string | undefined {
 
 async function requireNativeConnection(): Promise<NativePort> {
   if (!runtime.enabled) throw new Error("NewsNext CLI integration is disabled")
-  if (runtime.connectionState === "connected" && runtime.port) return runtime.port
+  if (runtime.connectionState === "connected" && runtime.port) {
+    return runtime.ready ? runtime.port : await waitForNativeConnection(true)
+  }
   if (isRetryableConnectionState() && runtime.reconnectTimer === undefined) connect()
   if (runtime.connectionState !== "connecting" || !runtime.port) {
     throw new Error("NewsNext CLI is not connected")
@@ -427,20 +429,30 @@ function handleMessage(connection: NativePort, value: unknown): void {
   try {
     const message = parseNativeHostValue(value)
     if (!message) return
+    if (message.type === "initializing") {
+      if (message.protocolVersion !== PROTOCOL_VERSION) {
+        failConnection(connection, `Unsupported native protocol version ${message.protocolVersion}; expected ${PROTOCOL_VERSION}`, "PROTOCOL_INCOMPATIBLE")
+        return
+      }
+      clearReconnectBackoff()
+      runtime.connectionState = "connected"
+      runtime.ready = false
+      runtime.initialization = message.progress ?? undefined
+      runtime.daemonVersion = message.daemonVersion
+      runtime.connectionError = undefined
+      runtime.startupLogs = message.logs
+      holdNativeConnection()
+      emitBackgroundEvent("nativeIntegration.statusChanged", {})
+      if (runtime.logsSubscribed) emitBackgroundEvent("nativeIntegration.logsChanged", { entries: message.logs })
+      return
+    }
     if (message.type === "ready") {
+      runtime.initialization = undefined
       if (message.protocolVersion !== PROTOCOL_VERSION) {
         failConnection(
           connection,
           `Unsupported native protocol version ${message.protocolVersion}; expected ${PROTOCOL_VERSION}`,
           "PROTOCOL_INCOMPATIBLE",
-        )
-        return
-      }
-      if (!isVersionAtLeast(message.daemonVersion, MINIMUM_DAEMON_VERSION)) {
-        failConnection(
-          connection,
-          `NewsNext daemon ${message.daemonVersion} is older than required ${MINIMUM_DAEMON_VERSION}`,
-          "DAEMON_OUTDATED",
         )
         return
       }
@@ -455,6 +467,8 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.connectionError = undefined
       void initializeSharedWorkspace(connection, message.workspace, message.localCardIds).then(() => {
         if (runtime.port !== connection) return
+        runtime.ready = true
+        runtime.startupLogs = []
         if (runtime.connectionState === "connected") {
           resolveNativeConnection(connection)
           sendCollectionSubscription()

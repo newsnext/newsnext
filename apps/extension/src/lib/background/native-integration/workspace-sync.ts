@@ -217,7 +217,9 @@ export function applyWorkspaceChangePatch(patch: Parameters<typeof applyWorkspac
 }
 
 function assertWorkspaceConnected(): void {
-  if (incomingWorkspaces > 0 || runtime.connectionState !== "connected" || runtime.pendingWorkspace) {
+  // Mutations own the application queue that initial synchronization also needs.
+  // They must not hold that queue while waiting for initialization to finish.
+  if (!runtime.ready || incomingWorkspaces > 0 || runtime.connectionState !== "connected" || runtime.pendingWorkspace) {
     throw new Error("Connect and resolve the Workspace in Settings before making changes")
   }
 }
