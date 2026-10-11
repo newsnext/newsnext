@@ -78,7 +78,7 @@ Use `client.fetch` to verify the feed, API, or HTML request through a connected
 browser:
 
 ```sh
-newsnext eval -e '
+newsnext eval '
 const response = await client.fetch({
   url: "https://jsonplaceholder.typicode.com/posts/1",
   headers: [["Accept", "application/json"]]
@@ -100,7 +100,7 @@ capabilities, secrets, and result normalization with `client.run`.
 For a feed candidate, test the standard parser before building a dedicated provider:
 
 ```sh
-newsnext eval -e '
+newsnext eval '
 const result = await client.run({
   sourceId: "rss:feed",
   params: { url: "https://news.ycombinator.com/rss" }
@@ -116,7 +116,7 @@ the provider defines more than one and exercise representative non-default
 parameter values:
 
 ```sh
-newsnext eval -e '
+newsnext eval '
 const { readFile } = await import("node:fs/promises")
 const provider = JSON.parse(await readFile("/absolute/path/to/registry/src/<provider-id>.json", "utf8"))
 const result = await client.run({

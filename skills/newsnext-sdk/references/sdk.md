@@ -5,7 +5,7 @@ a preconfigured `client` variable. Return a value to print it as JSON; an
 undefined return prints nothing:
 
 ```sh
-newsnext eval -e '
+newsnext eval '
 const status = await client.status()
 return status.workers.length
 '
@@ -134,7 +134,7 @@ take effect without restarting the daemon. Invalid plugins are omitted from
 - Query the smallest scope needed: one `liveCard.get` instead of `board.get`,
   or `liveWidget.list` instead of one `board.listLiveWidgets` per Board.
 - If an Action fails, inspect `NewsNextError.code` before retrying.
-- Quote `eval -e` scripts with single quotes and use double quotes inside
+- Quote `eval` scripts with single quotes and use double quotes inside
   the JavaScript. Prefer stdin (`newsnext eval < script.js`) for long scripts.
 
 ## LiveCard and LiveWidget data
