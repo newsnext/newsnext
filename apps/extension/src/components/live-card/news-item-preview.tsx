@@ -16,10 +16,12 @@ import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
+import { useRef } from "react"
 import { CardAvatar } from "@/components/card-shell/card-avatar"
 import { SourceIcon } from "@/components/card-shell/source-icon"
 import { useI18n } from "@/hooks/use-i18n"
 import { useLiveCardIdentity } from "./live-card-identity-context"
+import { getTitleStartRect } from "./news-item-animation"
 import { NewsItemInline } from "./news-item-inline"
 import { RankingHistory } from "./ranking-history"
 
@@ -268,7 +270,7 @@ interface NewsItemPreviewDialogProps {
   open: boolean
   index: number
   onIndexChange: (index: number) => void
-  onClose: () => void
+  onClose: (origin: DOMRect | undefined) => void
   inlineText?: string
   inlineSuffix?: ReactNode
   markScale?: number
@@ -291,6 +293,7 @@ export function NewsItemPreviewDialog({
   onNextItem,
 }: NewsItemPreviewDialogProps): ReactNode {
   const { t } = useI18n()
+  const previewTitleRef = useRef<HTMLHeadingElement>(null)
   const pictures = getPictures(item)
   const { content } = item
 
@@ -301,7 +304,7 @@ export function NewsItemPreviewDialog({
     <Dialog
       open={open}
       onOpenChange={(open) => {
-        if (!open) onClose()
+        if (!open) onClose(previewTitleRef.current ? getTitleStartRect(previewTitleRef.current) : undefined)
       }}
     >
       <DialogContent
@@ -336,7 +339,7 @@ export function NewsItemPreviewDialog({
             </header>
             <article ref={overlayScrollbarsRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-10">
               <div className={cn(!hasMedia && "mx-auto w-full max-w-3xl")}>
-                <DialogTitle className="text-lg text-justify">
+                <DialogTitle ref={previewTitleRef} className="text-lg text-justify">
                   {item.title}
                 </DialogTitle>
                 {currentPosition !== undefined && <RankingHistory history={rankingHistory} currentPosition={currentPosition} />}

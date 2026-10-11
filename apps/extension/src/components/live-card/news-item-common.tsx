@@ -8,9 +8,10 @@ import {
 } from "@newsnext/ui/components/popover"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { RelativeTime } from "@/hooks/useRelativeTime"
 import { createBackgroundClient } from "@/lib/background"
+import { animateNewsItemReturn } from "./news-item-animation"
 import { NewsItemInline, SemanticImage } from "./news-item-inline"
 import { NewsItemPreview, NewsItemPreviewDialog } from "./news-item-preview"
 
@@ -42,6 +43,8 @@ export function NewsItemLink({
   rankingHistory,
 }: NewsItemLinkProps): ReactNode {
   const [pictureIndex, setPictureIndex] = useState(0)
+  const itemLinkRef = useRef<HTMLAnchorElement>(null)
+  const entranceAnimationsRef = useRef<Animation[]>([])
   const [popoverOpen, setPopoverOpen] = useState(false)
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const [activePreviewIndex, setActivePreviewIndex] = useState(previewIndex)
@@ -58,6 +61,8 @@ export function NewsItemLink({
   const historyCardId = rankingHistory?.cardId
   const historyVersion = rankingHistory?.sourceVersion
   const historyParams = rankingHistory?.params
+
+  useEffect(() => () => entranceAnimationsRef.current.forEach(animation => animation.cancel()), [])
 
   useEffect(() => {
     if (!historyUrl || !historyCardId || historyVersion === undefined || !historyParams) return
@@ -76,6 +81,7 @@ export function NewsItemLink({
   }, [historyUrl, historyCardId, historyVersion, historyParams])
 
   const openPreviewDialog = (): void => {
+    entranceAnimationsRef.current.forEach(animation => animation.cancel())
     setActivePreviewIndex(previewIndex)
     // Same reset as item navigation: never inherit another item's carousel position.
     setPictureIndex(0)
@@ -104,6 +110,7 @@ export function NewsItemLink({
         }}
       >
         <a
+          ref={itemLinkRef}
           data-news-item
           href={item.url}
           target="_blank"
@@ -155,7 +162,18 @@ export function NewsItemLink({
         open={previewDialogOpen}
         index={pictureIndex}
         onIndexChange={setPictureIndex}
-        onClose={() => setPreviewDialogOpen(false)}
+        onClose={(origin) => {
+          setPreviewDialogOpen(false)
+          entranceAnimationsRef.current.forEach(animation => animation.cancel())
+          entranceAnimationsRef.current = []
+          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+          const link = activeItem.url === item.url
+            ? itemLinkRef.current
+            : itemLinkRef.current?.closest("[data-live-card-id]")
+                ?.querySelector<HTMLAnchorElement>(`a[data-news-item][href="${CSS.escape(activeItem.url)}"]`)
+          const content = link?.querySelector<HTMLElement>("[data-news-item-content]")
+          if (content && origin) entranceAnimationsRef.current = animateNewsItemReturn(content, origin)
+        }}
         inlineText={activeInlineText}
         inlineSuffix={activeInlineSuffix}
         markScale={markScale}
@@ -180,14 +198,14 @@ interface NewsItemSummaryProps {
 
 export function NewsItemSummary({ item, inlineText, className, inlineSuffix, markScale }: NewsItemSummaryProps) {
   return (
-    <span className={cn("leading-none line-clamp-3", className)}>
+    <span data-news-item-content className={cn("leading-none line-clamp-3", className)}>
       {item.icon && (
         <SemanticImage
           picture={item.icon}
           className="mr-1 rounded"
         />
       )}
-      <span className="mr-1 text-base align-middle">
+      <span data-news-item-title className="mr-1 text-base align-middle">
         {item.title}
       </span>
       <NewsItemInline
