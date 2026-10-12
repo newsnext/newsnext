@@ -55,13 +55,13 @@ describe("bounded interpolation", () => {
     expect(render({ value: false })).toBe("false")
     expect(() => render({ value: [] })).toThrow("output must be")
     expect(render({})).toBe("empty")
-    expect(compileInterpolation("{{ value }}").render({ value: null })).toBeUndefined()
-    expect(compileInterpolation("{{ value }}").render({})).toBeUndefined()
+    expect(compileInterpolation("{{ value }}").render({ value: null })).toBe("")
+    expect(compileInterpolation("{{ value }}").render({})).toBe("")
   })
 
   it("reports complete paths and expression offsets without exposing computed keys", () => {
     const program = compileInterpolation("Title: {{ scope.item.author.name }}")
-    expect(program.render({ scope: { item: {} } })).toBeUndefined()
+    expect(program.render({ scope: { item: {} } })).toBe("Title: ")
     expect(() => program.render({ scope: { item: { author: { name: {} } } } }))
       .toThrow("in {{ scope.item.author.name }} at offset 7")
     try {
@@ -86,7 +86,7 @@ describe("bounded interpolation", () => {
     for (const value of ["", false, 0, null]) {
       expect(compileInterpolation("{{ missing || value }}").renderValue({ value })).toBe(value)
     }
-    expect(compileInterpolation("{{ missing || absent }}").render({})).toBeUndefined()
+    expect(compileInterpolation("{{ missing || absent }}").render({})).toBe("")
     expect(compileInterpolation("{{ value||'a&b' | url_query }}").render({ value: "" })).toBe("a%26b")
     expect(compileInterpolation("{{ value || '<b>' }}", true).render({})).toBe("&lt;b&gt;")
     expect(compileInterpolation("{{ value || 'a || b ?? c' }}").render({})).toBe("a || b ?? c")
@@ -98,13 +98,13 @@ describe("bounded interpolation", () => {
     expect(() => compileInterpolation(template)).toThrow("Cannot mix ?? and ||")
   })
 
-  it("omits the whole text when any insertion is missing, while preserving falsy values", () => {
+  it("renders missing insertions as empty text while preserving falsy values", () => {
     const program = compileInterpolation("{{ author }} · {{ count }}")
-    expect(program.render({ count: 0 })).toBeUndefined()
-    expect(program.render({ author: "News", count: null })).toBeUndefined()
+    expect(program.render({ count: 0 })).toBe(" · 0")
+    expect(program.render({ author: "News", count: null })).toBe("News · ")
     expect(program.render({ author: "", count: false })).toBe(" · false")
     expect(program.render({ author: "News", count: 0 })).toBe("News · 0")
-    expect(compileInterpolation("{{ labels[key] }}").render({ labels: {} })).toBeUndefined()
+    expect(compileInterpolation("{{ labels[key] }}").render({ labels: {} })).toBe("")
     expect(compileInterpolation("{{ value }}").renderValue({})).toBeUndefined()
   })
 
@@ -122,7 +122,7 @@ describe("bounded interpolation", () => {
   })
 
   it("rejects inherited and forbidden properties, including computed keys", () => {
-    expect(compileInterpolation("{{ item.name }}").render({ item: Object.create({ name: "News" }) })).toBeUndefined()
+    expect(compileInterpolation("{{ item.name }}").render({ item: Object.create({ name: "News" }) })).toBe("")
     for (const key of ["__proto__", "constructor", "prototype"]) {
       expect(() => compileInterpolation(`{{ item.${key} }}`)).toThrow("not allowed")
       expect(() => compileInterpolation(`{{ item['${key}'] }}`)).toThrow("not allowed")

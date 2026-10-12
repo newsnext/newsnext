@@ -13,15 +13,15 @@ export type TemplateOutput = "html" | "plain"
 export interface CompiledSourceTemplate {
   readonly location: string
   readonly output: TemplateOutput
-  readonly render: (context: object) => string | undefined
+  readonly render: (context: object) => string
   readonly slot: SourceTemplateSlot
 }
 
 export type CompiledSourceTemplateValue<T> = CompiledTemplateValue<T>
 
-/** Text leaves can be absent; arrays and objects preserve their structure. */
+/** Text leaves render as strings; arrays and objects preserve their structure. */
 export type InterpolatedValue<T>
-  = T extends string ? string | undefined
+  = T extends string ? string
     : T extends (...args: never[]) => unknown ? T
       : T extends object ? { [K in keyof T]: InterpolatedValue<T[K]> } : T
 
@@ -88,7 +88,7 @@ export function compileSourceTemplate(
   const compiled = Object.freeze({
     location,
     output,
-    render(context: object): string | undefined {
+    render(context: object): string {
       try {
         return program.render(context)
       } catch (error) {

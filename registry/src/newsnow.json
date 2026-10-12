@@ -76,7 +76,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}",
+        "url": "/{{ scope.params.locale }}/{{ scope.params.topic | url_path }}",
         "items": ".newsfeed .article",
         "fields": {
           "title": ".article-card__headline",

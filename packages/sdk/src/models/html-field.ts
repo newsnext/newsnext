@@ -19,7 +19,7 @@ export interface HtmlFieldConfig {
   separator?: string
   /** Conversions on the extracted value, before string composition. */
   transform?: FieldTransforms
-  /** String interpolation with ??/|| fallback and url_path/url_query encoding. Missing inputs omit the whole text. ?? replaces nullish values; || replaces falsy values. */
+  /** String interpolation with ??/|| fallback and url_path/url_query encoding. Missing inputs render as empty text. ?? replaces nullish values; || replaces falsy values. */
   template?: string
 }
 

@@ -19,7 +19,7 @@ const stockTimelineFields = {
 
 const stockHomeMetadata = {
   home: {
-    template: "/S/{{ scope.params.symbol | url_path }}",
+    template: "/S/{{ scope.params.symbol }}",
   },
 } as const
 
@@ -50,7 +50,7 @@ function stockRadar(id: string, title: string): SourceRadarRule[] {
           transform: [{ op: "regex_extract", pattern: "^([^(]*)", group: 1 }, "normalize_whitespace"],
           template: `{{ scope.value }} | ${title}`,
         },
-        home: "/S/{{ scope.params.symbol | url_path }}",
+        home: "/S/{{ scope.params.symbol }}",
       },
     },
   }]
@@ -109,7 +109,7 @@ export const stockSources = {
             transform: [{ op: "regex_extract", pattern: "^([^(]*)", group: 1 }, "normalize_whitespace"],
             template: "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}",
           },
-          home: "/S/{{ scope.params.symbol | url_path }}",
+          home: "/S/{{ scope.params.symbol }}",
         },
       },
     }],

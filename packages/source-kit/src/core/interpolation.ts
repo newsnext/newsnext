@@ -13,7 +13,7 @@ const MAX_PATH_DEPTH = 16
 const forbiddenKeys = new Set(["__proto__", "prototype", "constructor"])
 
 export interface CompiledInterpolation {
-  render: (context: object) => string | undefined
+  render: (context: object) => string
   /** A whole-expression template keeps its value type; mixed text stays text. */
   renderValue: (context: object) => unknown
 }
@@ -35,7 +35,7 @@ export function compileInterpolation(template: string, html = false, allowedPath
     tokens.push(parser.parse())
     cursor = parser.position
   }
-  const render = (context: object): string | undefined => {
+  const render = (context: object): string => {
     let output = ""
     for (const token of tokens) {
       if (typeof token === "string") {
@@ -43,11 +43,10 @@ export function compileInterpolation(template: string, html = false, allowedPath
       } else {
         const text = renderExpression(token, () => {
           const value = evaluate(token, context)
-          if (value === null || value === undefined) return undefined
+          if (value === null || value === undefined) return ""
           const text = stringify(value)
           return html ? escape(text) : text
         })
-        if (text === undefined) return undefined
         output += text
       }
       if (output.length > MAX_OUTPUT_LENGTH) throw new Error("Template output cannot exceed 100000 characters")

@@ -141,7 +141,7 @@ const subredditRadarRules = [
       },
       metadata: {
         title: "r/{{ scope.params.subreddit }}",
-        home: "/r/{{ scope.params.subreddit | url_path }}/hot/",
+        home: "/r/{{ scope.params.subreddit }}/hot/",
       },
     },
   },
@@ -161,7 +161,7 @@ const subredditRadarRules = [
       },
       metadata: {
         title: "r/{{ scope.params.subreddit }}",
-        home: `/r/{{ scope.params.subreddit | url_path }}/${value}/`,
+        home: `/r/{{ scope.params.subreddit }}/${value}/`,
       },
     },
   })),
@@ -217,7 +217,7 @@ export default {
             },
             metadata: {
               title: "u/{{ scope.params.username }}",
-              home: "/user/{{ scope.params.username | url_path }}/submitted/",
+              home: "/user/{{ scope.params.username }}/submitted/",
             },
           },
         },
@@ -280,7 +280,7 @@ export default {
             },
             metadata: {
               title: "r/{{ scope.params.subreddit }} Top",
-              home: "/r/{{ scope.params.subreddit | url_path }}/top/?t={{ scope.params.period | url_query }}",
+              home: "/r/{{ scope.params.subreddit }}/top/?t={{ scope.params.period }}",
             },
           },
         },

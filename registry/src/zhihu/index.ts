@@ -57,7 +57,7 @@ export default {
                 select: "meta[property='og:title']",
                 attr: "content",
               },
-              home: "/column/{{ scope.params.columnId | url_path }}",
+              home: "/column/{{ scope.params.columnId }}",
             },
           },
         },
@@ -80,7 +80,7 @@ export default {
                 select: "meta[property='og:title']",
                 attr: "content",
               },
-              home: "https://zhuanlan.zhihu.com/{{ scope.params.columnId | url_path }}",
+              home: "https://zhuanlan.zhihu.com/{{ scope.params.columnId }}",
             },
           },
         },
@@ -157,14 +157,14 @@ export default {
                 select: ".UserAvatar-inner",
                 attr: "src",
               },
-              home: "/people/{{ scope.params.userId | url_path }}/answers",
+              home: "/people/{{ scope.params.userId }}/answers",
             },
           },
         },
       ],
       loader: {
         type: "json",
-        url: "/api/v4/members/{{ scope.params.userId | url_path }}/answers",
+        url: "/api/v4/members/{{ scope.params.userId }}/answers",
         items: "data",
         metadata: {
           title: {
@@ -173,7 +173,7 @@ export default {
           },
           badge: "data[0].author.avatar_url",
           home: {
-            template: "/people/{{ scope.params.userId | url_path }}/answers",
+            template: "/people/{{ scope.params.userId }}/answers",
           },
         },
         fields: {
@@ -283,7 +283,7 @@ export default {
                 select: ".QuestionHeader-title",
                 template: "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}",
               },
-              home: "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}",
+              home: "/question/{{ scope.params.questionId }}?sort_by={{ scope.params.sort }}",
               type: "{{ source.vars.sortTypes[scope.params.sort] }}",
             },
           },
@@ -308,7 +308,7 @@ export default {
                 select: ".QuestionHeader-title",
                 template: "{{ scope.value }} | 回答",
               },
-              home: "/question/{{ scope.params.questionId | url_path }}?sort_by=default",
+              home: "/question/{{ scope.params.questionId }}?sort_by=default",
               type: "ranking",
             },
           },
@@ -316,7 +316,7 @@ export default {
       ],
       loader: {
         type: "json",
-        url: "/api/v4/questions/{{ scope.params.questionId | url_path }}/answers",
+        url: "/api/v4/questions/{{ scope.params.questionId }}/answers",
         items: "data",
         metadata: {
           title: {
@@ -324,7 +324,7 @@ export default {
             template: "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}",
           },
           home: {
-            template: "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}",
+            template: "/question/{{ scope.params.questionId }}?sort_by={{ scope.params.sort }}",
           },
           type: {
             template: "{{ source.vars.sortTypes[scope.params.sort] }}",
@@ -445,7 +445,7 @@ export default {
                 ],
                 template: "{{ scope.value }} | {{ source.vars.ringSortLabels[scope.params.sort] }}",
               },
-              home: "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0",
+              home: "/ring/host/{{ scope.params.ringId }}?tab={{ scope.params.sort }}&tab_id=0",
             },
           },
         },
@@ -480,18 +480,18 @@ export default {
                 ],
                 template: "{{ scope.value }} | 最新",
               },
-              home: "/ring/host/{{ scope.params.ringId | url_path }}?tab=new&tab_id=0",
+              home: "/ring/host/{{ scope.params.ringId }}?tab=new&tab_id=0",
             },
           },
         },
       ],
       loader: {
         type: "json",
-        url: "/api/v4/rings/v1/{{ scope.params.ringId | url_path }}/feeds/{{ scope.params.sort | url_path }}/pc",
+        url: "/api/v4/rings/v1/{{ scope.params.ringId }}/feeds/{{ scope.params.sort }}/pc",
         items: "data[?ring_biz_data.is_topping != `true`]",
         metadata: {
           home: {
-            template: "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0",
+            template: "/ring/host/{{ scope.params.ringId }}?tab={{ scope.params.sort }}&tab_id=0",
           },
         },
         fields: {

@@ -13,7 +13,7 @@
         "url": {
           "select": "",
           "attr": "id",
-          "template": "/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value }}"
         },
         "publishedAt": {
           "traverse": {

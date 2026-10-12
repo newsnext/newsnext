@@ -47,7 +47,7 @@ interface JsonFieldContext {
 export interface JsonFieldConfig {
   /** JMESPath against the item; omitted selects the whole item. */
   select?: string
-  /** String interpolation with ??/|| fallback and url_path/url_query encoding. Missing inputs omit the whole text. */
+  /** String interpolation with ??/|| fallback and url_path/url_query encoding. Missing inputs render as empty text. */
   template?: string
   /** Conversions on the selected value, before string composition. */
   transform?: FieldTransforms

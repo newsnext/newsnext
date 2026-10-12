@@ -61,30 +61,30 @@ describe("source templates", () => {
     )).toThrow("Template path \"scope.params.value\" is not available")
   })
 
-  it("returns missing values and reports source locations for actual render failures", () => {
+  it("renders missing values as empty text and reports actual render failures", () => {
     const template = compileSourceTemplate(
       "{{ scope.value }}",
       { location: "test.loader.fields.title.template", slot: "field" },
     )
 
-    expect(template.render(createSourceTemplateScope(undefined, {}))).toBeUndefined()
+    expect(template.render(createSourceTemplateScope(undefined, {}))).toBe("")
     expect(() => template.render(createSourceTemplateScope(undefined, { value: {} })))
       .toThrow("Failed to render source template at test.loader.fields.title.template")
   })
 
-  it("returns undefined for sparse Radar parameters and honors explicit fallbacks", () => {
+  it("renders empty text for sparse Radar parameters and honors explicit fallbacks", () => {
     const template = compileSourceTemplate("{{ scope.query.optional }}", { location: "test.radar.patch.params.value", slot: "radarParams" })
-    expect(template.render(createSourceTemplateScope(undefined, { query: {} }))).toBeUndefined()
+    expect(template.render(createSourceTemplateScope(undefined, { query: {} }))).toBe("")
     const fallback = compileSourceTemplate("{{ scope.query.optional ?? 'News' }}", { location: "test.radar.patch.params.value", slot: "radarParams" })
     expect(fallback.render(createSourceTemplateScope(undefined, { query: {} }))).toBe("News")
   })
 
-  it("omits mixed text with missing inputs and honors explicit fallbacks", () => {
+  it("preserves mixed text with missing inputs and honors explicit fallbacks", () => {
     const template = compileSourceTemplate("By {{ scope.item.author.name }} · {{ scope.item.attributes.topic }}", {
       location: "test.loader.annotation",
       slot: "annotation",
     })
-    expect(template.render(createSourceTemplateScope(undefined, { item: { author: { name: "Author" } } }))).toBeUndefined()
+    expect(template.render(createSourceTemplateScope(undefined, { item: { author: { name: "Author" } } }))).toBe("By Author · ")
     expect(template.render(createSourceTemplateScope(undefined, { item: { author: { name: "Author" }, attributes: { topic: "News" } } }))).toBe("By Author · News")
     const fallback = compileSourceTemplate("{{ scope.item.author.name ?? 'Anonymous' }}", { location: "test.loader.annotation", slot: "annotation" })
     expect(fallback.render(createSourceTemplateScope(undefined, { item: {} }))).toBe("Anonymous")

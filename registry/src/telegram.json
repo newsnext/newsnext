@@ -41,7 +41,7 @@
               "title": {
                 "select": ".tgme_channel_info_header_title"
               },
-              "badge": "/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
+              "badge": "/i/userpic/320/{{ scope.params.channel }}.jpg",
               "home": "/s/{{ scope.params.channel }}"
             }
           }
@@ -49,7 +49,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "/s/{{ scope.params.channel | url_path }}",
+        "url": "/s/{{ scope.params.channel }}",
         "items": ".tgme_widget_message:has(.tgme_widget_message_text)",
         "fields": {
           "title": {

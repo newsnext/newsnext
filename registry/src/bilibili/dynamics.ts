@@ -412,7 +412,7 @@ export const userDynamicsSource = {
             select: ".nickname",
             template: "{{ scope.value }} | 动态",
           },
-          home: "https://space.bilibili.com/{{ scope.params.mid | url_path }}/dynamic",
+          home: "https://space.bilibili.com/{{ scope.params.mid }}/dynamic",
         },
       },
     },

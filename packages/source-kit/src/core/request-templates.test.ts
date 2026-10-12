@@ -57,7 +57,7 @@ describe("source request templates", () => {
       .toThrow("test.loader.fetchOptions.json.nested.id: JSON request value is missing")
   })
 
-  it("validates required URLs and configured request text at their field locations", () => {
+  it("rejects empty request URLs and renders missing request text as empty strings", () => {
     const scope = createSourceTemplateScope(undefined, { params: {} })
     for (const url of ["{{ scope.params.url }}", " "]) {
       const request = compileSourceRequest({ url }, "test.loader")
@@ -65,11 +65,9 @@ describe("source request templates", () => {
         .toThrow("test.loader.url: Request URL is missing")
     }
     const headers = compileSourceFetchOptions({ headers: { authorization: "Bearer {{ scope.params.token }}" } }, "test.loader.fetchOptions")
-    expect(() => headers.render(scope))
-      .toThrow("test.loader.fetchOptions.headers.authorization: Request option value is missing")
+    expect(headers.render(scope)).toEqual({ headers: { authorization: "Bearer " } })
     const body = compileSourceFetchOptions({ body: "{{ scope.params.body }}" }, "test.loader.fetchOptions")
-    expect(() => body.render(scope))
-      .toThrow("test.loader.fetchOptions.body: Request option value is missing")
+    expect(body.render(scope)).toEqual({ body: "" })
     expect(body.render(createSourceTemplateScope(undefined, { params: { body: "" } })))
       .toEqual({ body: "" })
   })

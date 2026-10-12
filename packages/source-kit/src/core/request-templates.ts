@@ -16,18 +16,8 @@ export function compileSourceFetchOptions(value: Options | undefined, location: 
   }
 }
 
-/** Configured request text must resolve; fail here rather than sending incomplete headers/body. */
 function compileRequestOptions<T>(value: T, location: string): CompiledSourceTemplateValue<T> {
-  const tree = compileTemplateTree(value, { location, slot: "request" as const }, (template, options) => {
-    const compiled = compileSourceTemplate(template, options)
-    return {
-      render(context: object): string {
-        const value = compiled.render(context)
-        if (value === undefined) throw new TemplateRenderError(options.location, "request", new Error("Request option value is missing"))
-        return value
-      },
-    }
-  })
+  const tree = compileTemplateTree(value, { location, slot: "request" as const }, compileSourceTemplate)
   return tree as CompiledSourceTemplateValue<T>
 }
 
@@ -52,7 +42,7 @@ export function compileSourceRequest(config: SourceRequestConfig, location: stri
   const fetchOptions = compileSourceFetchOptions(config.fetchOptions, `${location}.fetchOptions`)
   const renderUrl = (context: object, baseUrl: string | undefined): string => {
     const value = url.render(context)
-    if (value === undefined || value.trim() === "") throw new TemplateRenderError(`${location}.url`, "request", new Error("Request URL is missing"))
+    if (value.trim() === "") throw new TemplateRenderError(`${location}.url`, "request", new Error("Request URL is missing"))
     return resolveSourceUrl(value, baseUrl)
   }
   return {

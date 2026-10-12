@@ -77,7 +77,7 @@ type CustomLoaderFunction<TParams extends SourceParamSchemaMap>
     : SourceLoaderDefinition<TParams>
 
 interface AnnotationConfig {
-  /** Optional presentation: missing template inputs omit the whole annotation. Use ?? for explicit fallback text. */
+  /** Optional presentation: missing template inputs render as empty text. Use ?? for explicit fallback text. */
   annotation?: string | SourceAnnotationFormatter
 }
 

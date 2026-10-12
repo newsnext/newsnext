@@ -320,7 +320,7 @@ export const favoriteSources = {
             seasonId: "{{ scope.query.fid }}",
           },
           metadata: {
-            home: "https://space.bilibili.com/{{ scope.path.mid | url_path }}/favlist?fid={{ scope.params.seasonId | url_query }}&ftype=collect&ctype=21",
+            home: "https://space.bilibili.com/{{ scope.path.mid }}/favlist?fid={{ scope.params.seasonId }}&ftype=collect&ctype=21",
           },
         },
       },
@@ -335,7 +335,7 @@ export const favoriteSources = {
             seasonId: "{{ scope.path.seasonId }}",
           },
           metadata: {
-            home: "https://space.bilibili.com/{{ scope.path.mid | url_path }}/lists/{{ scope.params.seasonId | url_path }}?type=season",
+            home: "https://space.bilibili.com/{{ scope.path.mid }}/lists/{{ scope.params.seasonId }}?type=season",
           },
         },
       },

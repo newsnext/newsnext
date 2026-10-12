@@ -34,7 +34,7 @@ export default {
         title: "title || brief",
         url: {
           select: "id",
-          template: "/detail/{{ scope.value | url_path }}",
+          template: "/detail/{{ scope.value }}",
         },
         publishedAt: {
           select: "ctime",

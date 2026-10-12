@@ -138,7 +138,7 @@ export const marketSources = {
       fields: {
         url: {
           select: "code",
-          template: "/S/{{ scope.value | url_path }}",
+          template: "/S/{{ scope.value }}",
         },
         title: "name",
         attributes: {
@@ -253,7 +253,7 @@ export const marketSources = {
       fields: {
         url: {
           select: "symbol",
-          template: "/S/{{ scope.value | url_path }}",
+          template: "/S/{{ scope.value }}",
         },
         title: "name",
         attributes: {

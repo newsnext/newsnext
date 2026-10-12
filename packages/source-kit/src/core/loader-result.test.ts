@@ -163,7 +163,7 @@ describe("source loader result", () => {
     }
   })
 
-  it("omits an annotation when optional item information is missing", () => {
+  it("preserves annotation text when optional item information is missing", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
@@ -174,17 +174,17 @@ describe("source loader result", () => {
     })
     expect(renderSourceLoaderResult(result, template)).toEqual({
       items: [{ title: "Example", url: "https://example.com" }],
-      annotations: [""],
+      annotations: ["By  · News"],
     })
     expect(consoleError).not.toHaveBeenCalled()
     consoleError.mockRestore()
   })
 
-  it("uses fallback presentation when a template renders empty text", () => {
+  it("renders empty annotation text for a missing value", () => {
     const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
     })
-    const template = compileSourceTemplate("{{ scope.item.attributes.label ?? '' }}", {
+    const template = compileSourceTemplate("{{ scope.item.attributes.label }}", {
       location: "example.annotation",
       slot: "annotation",
     })

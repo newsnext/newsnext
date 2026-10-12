@@ -160,7 +160,7 @@
       ],
       "loader": {
         "type": "json",
-        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues",
+        "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/issues",
         "items": "payload.issuesIndexContentRoute.results[].issue",
         "metadata": {
           "title": {
@@ -270,7 +270,7 @@
       ],
       "loader": {
         "type": "json",
-        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pulls",
+        "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/pulls",
         "items": "payload.repoPullsDashboardContentRoute.results",
         "metadata": {
           "title": {
@@ -382,7 +382,7 @@
       ],
       "loader": {
         "type": "json",
-        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues/{{ scope.params.number | url_path }}",
+        "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/issues/{{ scope.params.number }}",
         "items": "payload.issueViewerRoute.data.repository.issue.timelineItems.edges[].node | [?__typename == `\"IssueComment\"`]",
         "metadata": {
           "title": {
@@ -490,7 +490,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pull/{{ scope.params.number | url_path }}",
+        "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/pull/{{ scope.params.number }}",
         "items": ".timeline-comment-group[id^=\"issuecomment-\"], .timeline-comment[id^=\"pullrequestreview-\"], .review-comment[id^=\"discussion_r\"]",
         "metadata": {
           "title": {
@@ -620,7 +620,7 @@
       ],
       "loader": {
         "type": "html",
-        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/releases",
+        "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/releases",
         "items": "section[data-release-anchor]",
         "metadata": {
           "title": {
@@ -770,7 +770,7 @@
       ],
       "loader": {
         "type": "json",
-        "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/commits/{{ scope.params.ref | url_path }}/",
+        "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/commits/{{ scope.params.ref | url_path }}/",
         "embeddedJson": {
           "select": "script[data-target=\"react-app.embeddedData\"]"
         },

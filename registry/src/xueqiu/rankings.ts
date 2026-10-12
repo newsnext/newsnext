@@ -58,7 +58,7 @@ export const rankingSources = {
       fields: {
         url: {
           select: "fund_code",
-          template: "/S/{{ scope.value | url_path }}",
+          template: "/S/{{ scope.value }}",
         },
         title: "fund_name",
         attributes: {

@@ -99,7 +99,7 @@ export default {
               attr: "src",
             },
             desc: { select: ".user-desc" },
-            home: `${XIAOHONGSHU_ORIGIN}/user/profile/{{ scope.params.userId | url_path }}`,
+            home: `${XIAOHONGSHU_ORIGIN}/user/profile/{{ scope.params.userId }}`,
           },
         },
       }],

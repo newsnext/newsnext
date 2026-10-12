@@ -432,7 +432,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/commits/{{ scope.params.ref | url_path }}/",
+      "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/commits/{{ scope.params.ref | url_path }}/",
       "embeddedJson": {
         "select": "script[data-target=\"react-app.embeddedData\"]"
       },
@@ -552,7 +552,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues/{{ scope.params.number | url_path }}",
+      "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/issues/{{ scope.params.number }}",
       "items": "payload.issueViewerRoute.data.repository.issue.timelineItems.edges[].node | [?__typename == `\"IssueComment\"`]",
       "metadata": {
         "title": {
@@ -663,7 +663,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/issues",
+      "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/issues",
       "items": "payload.issuesIndexContentRoute.results[].issue",
       "metadata": {
         "title": {
@@ -784,7 +784,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pull/{{ scope.params.number | url_path }}",
+      "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/pull/{{ scope.params.number }}",
       "items": ".timeline-comment-group[id^=\"issuecomment-\"], .timeline-comment[id^=\"pullrequestreview-\"], .review-comment[id^=\"discussion_r\"]",
       "metadata": {
         "title": {
@@ -914,7 +914,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/pulls",
+      "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/pulls",
       "items": "payload.repoPullsDashboardContentRoute.results",
       "metadata": {
         "title": {
@@ -1036,7 +1036,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "/{{ scope.params.owner | url_path }}/{{ scope.params.repo | url_path }}/releases",
+      "url": "/{{ scope.params.owner }}/{{ scope.params.repo }}/releases",
       "items": "section[data-release-anchor]",
       "metadata": {
         "title": {
@@ -1221,7 +1221,7 @@
         "url": {
           "select": "",
           "attr": "id",
-          "template": "/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value }}"
         },
         "publishedAt": {
           "traverse": {
@@ -1339,7 +1339,7 @@
         "url": {
           "select": "",
           "attr": "id",
-          "template": "/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value }}"
         },
         "publishedAt": {
           "traverse": {
@@ -1455,7 +1455,7 @@
         "url": {
           "select": "",
           "attr": "id",
-          "template": "/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value }}"
         },
         "publishedAt": {
           "traverse": {
@@ -1573,7 +1573,7 @@
         "url": {
           "select": "",
           "attr": "id",
-          "template": "/item?id={{ scope.value | url_query }}"
+          "template": "/item?id={{ scope.value }}"
         },
         "publishedAt": {
           "traverse": {
@@ -1749,7 +1749,7 @@
   },
   "netease-music:playlist": {
     "baseUrl": "https://music.163.com/",
-    "version": 4,
+    "version": 5,
     "metadata": {
       "home": "/",
       "title": "歌单"
@@ -1763,17 +1763,20 @@
         "desc": "result.description",
         "title": "result.name",
         "home": {
-          "template": "/#/playlist?id={{ scope.params.id | url_query }}"
+          "template": "/#/playlist?id={{ scope.params.id }}"
         }
       },
       "fields": {
         "title": "name",
         "url": {
           "select": "id",
-          "template": "/song?id={{ scope.value | url_query }}"
+          "template": "/song?id={{ scope.value }}"
+        },
+        "author": {
+          "name": "join(' / ', (ar || artists || `[]`)[].name)"
         },
         "attributes": {
-          "artists": "[join(' / ', (ar || artists || `[]`)[].name), al.name || album.name] | [?@ != `null` && @ != ''] | join(' · ', @)"
+          "album": "al.name || album.name"
         },
         "icon": {
           "src": "al.picUrl || album.picUrl",
@@ -1786,7 +1789,7 @@
           "pictures": "al.picUrl || album.picUrl"
         }
       },
-      "annotation": "{{ scope.item.attributes.artists }}",
+      "annotation": "{{ scope.item.author.name }} · {{ scope.item.attributes.album }}",
       "query": {
         "id": "{{ scope.params.id }}"
       }
@@ -1843,7 +1846,7 @@
   },
   "netease-music:ranking": {
     "baseUrl": "https://music.163.com/",
-    "version": 4,
+    "version": 5,
     "metadata": {
       "home": "/",
       "title": "排行榜",
@@ -1858,17 +1861,20 @@
         "desc": "result.description",
         "title": "result.name",
         "home": {
-          "template": "/#/discover/toplist?id={{ scope.params.id | url_query }}"
+          "template": "/#/discover/toplist?id={{ scope.params.id }}"
         }
       },
       "fields": {
         "title": "name",
         "url": {
           "select": "id",
-          "template": "/song?id={{ scope.value | url_query }}"
+          "template": "/song?id={{ scope.value }}"
+        },
+        "author": {
+          "name": "join(' / ', (ar || artists || `[]`)[].name)"
         },
         "attributes": {
-          "artists": "[join(' / ', (ar || artists || `[]`)[].name), al.name || album.name] | [?@ != `null` && @ != ''] | join(' · ', @)"
+          "album": "al.name || album.name"
         },
         "icon": {
           "src": "al.picUrl || album.picUrl",
@@ -1881,7 +1887,7 @@
           "pictures": "al.picUrl || album.picUrl"
         }
       },
-      "annotation": "{{ scope.item.attributes.artists }}",
+      "annotation": "{{ scope.item.author.name }} · {{ scope.item.attributes.album }}",
       "query": {
         "id": "{{ scope.params.id }}"
       }
@@ -2007,7 +2013,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "/{{ scope.params.locale | url_path }}/{{ scope.params.topic | url_path }}",
+      "url": "/{{ scope.params.locale }}/{{ scope.params.topic | url_path }}",
       "items": ".newsfeed .article",
       "fields": {
         "title": ".article-card__headline",
@@ -2098,7 +2104,7 @@
             "title": {
               "select": ".tgme_channel_info_header_title"
             },
-            "badge": "/i/userpic/320/{{ scope.params.channel | url_path }}.jpg",
+            "badge": "/i/userpic/320/{{ scope.params.channel }}.jpg",
             "home": "/s/{{ scope.params.channel }}"
           }
         }
@@ -2106,7 +2112,7 @@
     ],
     "loader": {
       "type": "html",
-      "url": "/s/{{ scope.params.channel | url_path }}",
+      "url": "/s/{{ scope.params.channel }}",
       "items": ".tgme_widget_message:has(.tgme_widget_message_text)",
       "fields": {
         "title": {
@@ -2447,14 +2453,14 @@
               "select": ".UserAvatar-inner",
               "attr": "src"
             },
-            "home": "/people/{{ scope.params.userId | url_path }}/answers"
+            "home": "/people/{{ scope.params.userId }}/answers"
           }
         }
       }
     ],
     "loader": {
       "type": "json",
-      "url": "/api/v4/members/{{ scope.params.userId | url_path }}/answers",
+      "url": "/api/v4/members/{{ scope.params.userId }}/answers",
       "items": "data",
       "metadata": {
         "title": {
@@ -2463,7 +2469,7 @@
         },
         "badge": "data[0].author.avatar_url",
         "home": {
-          "template": "/people/{{ scope.params.userId | url_path }}/answers"
+          "template": "/people/{{ scope.params.userId }}/answers"
         }
       },
       "fields": {
@@ -2590,7 +2596,7 @@
               "select": ".QuestionHeader-title",
               "template": "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}"
             },
-            "home": "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}",
+            "home": "/question/{{ scope.params.questionId }}?sort_by={{ scope.params.sort }}",
             "type": "{{ source.vars.sortTypes[scope.params.sort] }}"
           }
         }
@@ -2615,7 +2621,7 @@
               "select": ".QuestionHeader-title",
               "template": "{{ scope.value }} | 回答"
             },
-            "home": "/question/{{ scope.params.questionId | url_path }}?sort_by=default",
+            "home": "/question/{{ scope.params.questionId }}?sort_by=default",
             "type": "ranking"
           }
         }
@@ -2623,7 +2629,7 @@
     ],
     "loader": {
       "type": "json",
-      "url": "/api/v4/questions/{{ scope.params.questionId | url_path }}/answers",
+      "url": "/api/v4/questions/{{ scope.params.questionId }}/answers",
       "items": "data",
       "metadata": {
         "title": {
@@ -2631,7 +2637,7 @@
           "template": "{{ scope.value }} | {{ source.vars.sortLabels[scope.params.sort] }}"
         },
         "home": {
-          "template": "/question/{{ scope.params.questionId | url_path }}?sort_by={{ scope.params.sort | url_query }}"
+          "template": "/question/{{ scope.params.questionId }}?sort_by={{ scope.params.sort }}"
         },
         "type": {
           "template": "{{ source.vars.sortTypes[scope.params.sort] }}"
@@ -2765,7 +2771,7 @@
               ],
               "template": "{{ scope.value }} | {{ source.vars.ringSortLabels[scope.params.sort] }}"
             },
-            "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0"
+            "home": "/ring/host/{{ scope.params.ringId }}?tab={{ scope.params.sort }}&tab_id=0"
           }
         }
       },
@@ -2800,18 +2806,18 @@
               ],
               "template": "{{ scope.value }} | 最新"
             },
-            "home": "/ring/host/{{ scope.params.ringId | url_path }}?tab=new&tab_id=0"
+            "home": "/ring/host/{{ scope.params.ringId }}?tab=new&tab_id=0"
           }
         }
       }
     ],
     "loader": {
       "type": "json",
-      "url": "/api/v4/rings/v1/{{ scope.params.ringId | url_path }}/feeds/{{ scope.params.sort | url_path }}/pc",
+      "url": "/api/v4/rings/v1/{{ scope.params.ringId }}/feeds/{{ scope.params.sort }}/pc",
       "items": "data[?ring_biz_data.is_topping != `true`]",
       "metadata": {
         "home": {
-          "template": "/ring/host/{{ scope.params.ringId | url_path }}?tab={{ scope.params.sort | url_query }}&tab_id=0"
+          "template": "/ring/host/{{ scope.params.ringId }}?tab={{ scope.params.sort }}&tab_id=0"
         }
       },
       "fields": {
