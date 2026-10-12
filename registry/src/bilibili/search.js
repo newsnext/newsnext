@@ -1,6 +1,6 @@
 import { fieldTransforms } from "@newsnext/source-kit/core"
-import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliNumericCount, parseBilibiliTimestamp } from "./shared"
-import { getBilibiliWbiKeys, signBilibiliWbiParams } from "./wbi"
+import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliNumericCount, parseBilibiliTimestamp } from "./shared.js"
+import { getBilibiliWbiKeys, signBilibiliWbiParams } from "./wbi.js"
 
 const BILIBILI_SEARCH_URL = "https://api.bilibili.com/x/web-interface/wbi/search/type"
 const BILIBILI_SEARCH_TIMEZONE_OFFSET = "+08:00"
@@ -124,22 +124,6 @@ async function fetchBilibiliSearch({ date, duration, endDate, keyword, order, st
     },
   }
 }
-function readSearchDateRange() {
-  const page = globalThis
-  const params = new URL(page.location.href).searchParams
-  const begin = Number(params.get("pubtime_begin_s"))
-  const end = Number(params.get("pubtime_end_s"))
-  if (!begin || !end || begin > end)
-    return undefined
-  const days = Math.trunc((end - begin) / 86_400) + 1
-  if (days === 1)
-    return "day"
-  if (days === 7)
-    return "week"
-  if (days === 180)
-    return "halfyear"
-  return "custom"
-}
 export const searchSource = {
   version: 4,
   metadata: {
@@ -215,31 +199,9 @@ export const searchSource = {
         params: {
           keyword: "{{ scope.query.keyword }}",
           order: "{{ scope.query.order }}",
-          date: readSearchDateRange,
-          startDate: () => {
-            const page = globalThis
-            const value = Number(new URL(page.location.href).searchParams.get("pubtime_begin_s"))
-            if (!value)
-              return undefined
-            return new Intl.DateTimeFormat("en-CA", {
-              day: "2-digit",
-              month: "2-digit",
-              timeZone: "Asia/Shanghai",
-              year: "numeric",
-            }).format(value * 1000)
-          },
-          endDate: () => {
-            const page = globalThis
-            const value = Number(new URL(page.location.href).searchParams.get("pubtime_end_s"))
-            if (!value)
-              return undefined
-            return new Intl.DateTimeFormat("en-CA", {
-              day: "2-digit",
-              month: "2-digit",
-              timeZone: "Asia/Shanghai",
-              year: "numeric",
-            }).format(value * 1000)
-          },
+          date: { type: "date-range", start: "pubtime_begin_s", end: "pubtime_end_s", ranges: { 1: "day", 7: "week", 180: "halfyear" }, other: "custom" },
+          startDate: { type: "query", key: "pubtime_begin_s", timestamp: { unit: "seconds", timezone: "Asia/Shanghai" } },
+          endDate: { type: "query", key: "pubtime_end_s", timestamp: { unit: "seconds", timezone: "Asia/Shanghai" } },
           duration: "{{ scope.query.duration }}",
         },
       },

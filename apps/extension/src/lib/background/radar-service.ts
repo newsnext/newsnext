@@ -1,9 +1,9 @@
 import type { SourceDescriptor } from "@newsnext/source-kit/types"
 import type { RadarMatcher, ResolvedRadarSuggestion } from "@/lib/radar"
-import { loadSourceDescriptors, loadSources } from "@newsnext/source-kit/runtime"
+import { getSourceCatalogRevision, loadSourceDescriptors, loadSources } from "@newsnext/source-kit/runtime"
 import {
   createRadarMatcher,
-  readRadarPageScriptValues,
+  readRadarPageParamValues,
   readRadarPageSelections,
 } from "@/lib/radar"
 
@@ -23,8 +23,14 @@ interface RadarRuntime {
 }
 
 let radarRuntimePromise: Promise<RadarRuntime> | undefined
+let radarRuntimeRevision = -1
 
 function loadRadarRuntime(): Promise<RadarRuntime> {
+  const revision = getSourceCatalogRevision()
+  if (radarRuntimeRevision !== revision) {
+    radarRuntimeRevision = revision
+    radarRuntimePromise = undefined
+  }
   radarRuntimePromise ??= Promise.all([
     loadSources(),
     loadSourceDescriptors(),
@@ -37,7 +43,7 @@ function loadRadarRuntime(): Promise<RadarRuntime> {
     ),
     sourceDescriptorsById: new Map(sourceDescriptors.map(source => [source.id, source])),
   })).catch((error) => {
-    radarRuntimePromise = undefined
+    if (radarRuntimeRevision === revision) radarRuntimePromise = undefined
     throw error
   })
 
@@ -51,13 +57,13 @@ async function scanRadarSuggestions({
 }: ResolveRadarSuggestionsInput): Promise<ResolvedRadarSuggestion[]> {
   const { matcher, sourceDescriptorsById } = await loadRadarRuntime()
   const baseContext = { title, url }
-  const [pageSelections, pageScriptValues] = await Promise.all([
+  const [pageSelections, pageParamValues] = await Promise.all([
     readRadarPageSelections(tabId, matcher.getPageQueries(baseContext)),
-    readRadarPageScriptValues(tabId, matcher.getPageScripts(baseContext)),
+    readRadarPageParamValues(tabId, matcher.getPageParams(baseContext)),
   ])
   return matcher.getSuggestions({
     ...baseContext,
-    pageScriptValues,
+    pageParamValues,
     pageSelections,
   }).flatMap((suggestion) => {
     const source = sourceDescriptorsById.get(suggestion.sourceId)

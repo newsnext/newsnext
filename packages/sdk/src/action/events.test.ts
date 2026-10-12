@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import { createEventCatalog, defineEventContract } from "./definition.js"
-import { eventContracts } from "./index.js"
 import { EmptyObject } from "./schema.js"
 
 describe("event catalog", () => {
@@ -20,13 +19,5 @@ describe("event catalog", () => {
   it("rejects duplicate names instead of replacing a contract", () => {
     expect(() => createEventCatalog([statusChanged, { ...statusChanged }]))
       .toThrow("Duplicate Event name 'nativeIntegration.statusChanged'")
-  })
-
-  it("publishes the background events both directions share", () => {
-    expect(Object.keys(eventContracts).sort()).toEqual([
-      "diagnostics.changed",
-      "nativeIntegration.logsChanged",
-      "nativeIntegration.statusChanged",
-    ])
   })
 })

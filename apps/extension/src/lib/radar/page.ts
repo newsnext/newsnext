@@ -1,25 +1,77 @@
 import type { HtmlTraversal } from "@newsnext/source-kit/types"
-import type { RadarPageScript } from "./matcher"
+import type { RadarPageParam } from "./matcher"
 import type { RadarPageQuery } from "./page-query"
+import { resolveRadarPageParamValue } from "@newsnext/source-kit/core"
 import { browser } from "#imports"
 import { getRadarPageQueryKey } from "./page-query"
 
 const MAX_PAGE_SELECTION_LENGTH = 20_000
 
-export async function readRadarPageScriptValues(
+/** A fixed reader accepts portable page queries rather than Source-owned executable code. */
+export async function readRadarPageParamValues(
   tabId: number,
-  scripts: readonly RadarPageScript[],
+  params: readonly RadarPageParam[],
 ): Promise<Record<string, unknown>> {
-  const entries = await Promise.all(scripts.map(async ({ key, script }) => {
-    const [executionResult] = await browser.scripting.executeScript({
-      target: { tabId },
-      func: script,
-    }).catch(() => [])
-    return [key, executionResult?.result] as const
+  if (!params.length) return {}
+  const [executionResult] = await browser.scripting.executeScript<
+    [RadarPageParam[]],
+    Promise<Record<string, unknown>>
+  >({
+    target: { tabId },
+    args: [[...params]],
+    func: async (pageParams) => {
+      const values: Record<string, unknown> = {}
+      const panels = new Map<string, { ready: boolean, trigger?: HTMLElement }>()
+      try {
+        for (const { key, query } of pageParams) {
+          try {
+            if (query.type === "query") {
+              values[key] = new URL(location.href).searchParams.get(query.key)
+              continue
+            }
+            if (query.type === "date-range") {
+              const params = new URL(location.href).searchParams
+              values[key] = { start: params.get(query.start), end: params.get(query.end) }
+              continue
+            }
+            if (query.reveal) {
+              const reveal = query.reveal
+              const panelKey = JSON.stringify(reveal)
+              let panel = panels.get(panelKey)
+              if (!panel) {
+                const trigger = document.querySelector<HTMLElement>(reveal.trigger)
+                panel = { ready: Boolean(trigger && (!reveal.active || trigger.matches(reveal.active))) }
+                panels.set(panelKey, panel)
+                if (panel.ready && !document.querySelector(reveal.visible) && trigger) {
+                  panel.trigger = trigger
+                  trigger.click()
+                  await new Promise(resolve => setTimeout(resolve, reveal.waitMs ?? 0))
+                }
+              }
+              if (!panel.ready) {
+                values[key] = -1
+                continue
+              }
+            }
+            const root = query.group
+              ? document.querySelectorAll(query.group.select)[query.group.index]
+              : document
+            const controls = root ? Array.from(root.querySelectorAll(query.select)) : []
+            values[key] = controls.findIndex(control => control.matches(query.active))
+          } catch {
+            values[key] = null
+          }
+        }
+      } finally {
+        for (const panel of [...panels.values()].reverse()) panel.trigger?.click()
+      }
+      return values
+    },
+  }).catch(() => [])
+  return Object.fromEntries(params.flatMap(({ key, query }) => {
+    const value = resolveRadarPageParamValue(query, executionResult?.result?.[key])
+    return value === undefined ? [] : [[key, value]]
   }))
-  return Object.fromEntries(entries.filter((entry): entry is readonly [string, unknown] => (
-    entry[1] !== undefined && entry[1] !== null
-  )))
 }
 
 export async function readRadarPageSelections(

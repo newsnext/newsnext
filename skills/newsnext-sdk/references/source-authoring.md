@@ -1,10 +1,10 @@
 # Source discovery, authoring, and testing
 
-Use this workflow when creating or changing a NewsNext Source. Writing registry
-files requires a NewsNext web repository checkout, where Sources live under
-`registry/src`. With only the installed skill and CLI and no checkout, stop
-after discovery: report the requested stream, the verified feed, API, or HTML
-evidence, and the recommended transport instead of writing registry files.
+Use this workflow when creating or changing a NewsNext Source. Create local
+Providers by default in `~/.config/newsnext/sources/` (`newsnext.dev` for the
+development CLI, or `NEWSNEXT_SOURCES_PATH` when configured). A web repository
+checkout is only needed when explicitly contributing a bundled Provider to
+`registry/src`. Local and bundled Providers share the same authoring contract.
 
 ## Start from the user's intent
 
@@ -35,9 +35,13 @@ Record why each higher-priority option was unavailable or insufficient. This mak
 
 Transport choice and source-file format are separate decisions. Prefer a JSON provider file for declarative `rss`, `json`, and `html` loaders. Use JavaScript only when the Source genuinely needs a custom loader, custom request callback, imported helper, browser API, computed configuration, request signing, token refresh, or response normalization that declarative fields cannot express. Read the authoritative [Source manifest schema](schemas/source.json) and [parameter schema](schemas/params.json) for accepted JSON fields and constraints.
 
+JavaScript Providers use standard ESM with explicit relative file extensions (`./shared.js`). Copy a multi-file Provider directory together with its helpers. Import shared HTML parsing (`parseHtml`) and relative-date parsing (`parseRelativeDate`) from `@newsnext/source-kit/utils`; these helpers are available in both bundled and local runtimes. Radar page parameters use portable `query`, `date-range`, or `selected` rules from the Source schema rather than page-executed functions.
+
 ## Reference existing Sources first
 
-Before writing a new provider, inspect `registry/src` and select the closest existing Source by transport, parameter shape, metadata, and discovery behavior. Prefer JSON examples:
+Before writing a new provider, inspect the installed examples and, when a web
+checkout is available, `registry/src`. Select the closest existing Source by
+transport, parameter shape, metadata, and discovery behavior. Prefer JSON examples:
 
 - RSS: `registry/src/rss.json`
 - Public JSON API: `registry/src/36kr.json` or `registry/src/netease-music.json`
@@ -48,7 +52,14 @@ Reuse established shapes and field semantics; do not copy provider-specific sele
 
 ## Implement the smallest declarative Source
 
-For a new declarative provider, create `registry/src/<provider-id>.json`. A provider and all of its Sources must use one format; do not split it between JSON and JavaScript. Do not edit generated `registry/registry.json` or `registry/sources.js` directly.
+For a new declarative Provider, create `sources/<provider-id>.json`. For
+JavaScript, use `sources/<provider-id>.js`, `.mjs`, or
+`sources/<provider-id>/index.js` / `index.mjs` with imported helpers. Changes
+reload automatically. A Provider and all its Sources use one format. Local
+Providers take priority over plugin and bundled Providers as a whole; choose
+a distinct Provider ID unless replacing an existing Provider is intended.
+For an explicitly requested bundled contribution, use `registry/src` and
+regenerate its artifacts; never edit `registry.json` or `sources.js` directly.
 
 Keep the configuration focused:
 
@@ -70,7 +81,7 @@ Runnable provider examples live at `references/examples/`: `rss-provider`
 (minimal RSS feed), `json-provider` (JSON API with a `number` parameter,
 JMESPath fields, and structured query parameters), and `html-provider` (HTML
 scraping with CSS selectors and ranking metadata). Copy the closest example to
-`registry/src/<provider-id>.json`, substitute a real stream, and run it after
+the local `sources/<provider-id>.json`, substitute a real stream, and run it after
 every meaningful change with the script under **Validate Sources**.
 
 Use JavaScript custom loaders as a last resort. They must use `context.fetch`, declare network and cookie capabilities, propagate cancellation, return `{ items, metadata? }`, and normalize multiple response shapes through shared helpers. Collect required website values through declared cookie or local-storage secrets; do not expose or commit actual secret values.
@@ -114,28 +125,28 @@ return { execution: result.execution, sample: result.data.slice(0, 3) }
 
 ## Validate Sources
 
-Run the local provider after every meaningful change. Select a source ID when
+Run its registered Source ID after every meaningful change. Select a source ID when
 the provider defines more than one and exercise representative non-default
 parameter values:
 
 ```sh
 newsnext eval '
-const { readFile } = await import("node:fs/promises")
-const provider = JSON.parse(await readFile("/absolute/path/to/registry/src/<provider-id>.json", "utf8"))
 const result = await client.run({
-  providerId: "<provider-id>", provider, sourceId: "latest",
+  sourceId: "<provider-id>:latest",
   params: { topic: "technology" }
 })
 return { execution: result.execution, itemCount: result.data.length, sample: result.data.slice(0, 3) }
 '
 ```
 
-Use the checkout's absolute file path: `eval` runs in the daemon's runtime
-directory.
-
-For a JavaScript provider, build the registry and run its registered Source ID.
-For a local provider that uses stored secrets, set `useProviderSecrets: true` in
-the `client.run` input.
+Local JSON and JavaScript use this same validation path; no registry build is
+needed. JavaScript loads directly as ESM in a fresh Node.js 22.15+ worker, while `ctx.fetch` and
+`ctx.updateSecrets` use the originating browser. Use these context APIs;
+`window`, `document`, and extension APIs are unavailable in the local worker.
+Registered Sources use their Provider's stored secrets automatically.
+For a temporary JSON preview, pass `providerId`, `provider`, and an unqualified
+`sourceId` to `client.run`; `useProviderSecrets: true` opts that preview into the
+stored Provider secrets. File imports in `eval` need absolute paths.
 
 If a run requires authentication, open its login URL and rerun the script.
 Pass large numeric identifiers as strings in `params` to preserve every digit.
@@ -159,10 +170,9 @@ If Radar is present, revisit every matching page and meaningful URL or in-page s
 
 ## Finish repository verification
 
-After live behavior is correct, hand off to the repository workflow that owns
-the registry: regenerate generated artifacts with the repository's own build
-(never hand-edit them), and run the repository-required typecheck, tests, and
-diff hygiene checks per that repository's `AGENTS.md`. Then:
+After live behavior is correct, run the applicable syntax/type checks and diff
+hygiene checks. For bundled contributions, regenerate registry artifacts with
+the repository's build and follow its `AGENTS.md`. Then:
 
 1. Confirm no credentials, session identifiers, transient request headers, or debug response data entered the diff.
 2. Report the chosen transport, the existing Source used as a model, live

@@ -6,7 +6,7 @@ function sourceDescriptorQueryOptions(sourceId: string) {
     queryKey: ["source-descriptor", sourceId],
     queryFn: () => loadSourceDescriptor(sourceId),
     networkMode: "always",
-    // Descriptors change only with registry updates; missing definitions stay missing.
+    // Catalog events invalidate descriptors, including previously missing local definitions.
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
   })

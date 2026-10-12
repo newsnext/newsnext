@@ -4,14 +4,18 @@ import type {
   SourceDescriptor,
   SourceParamSchemaMap,
 } from "../types"
+import type { SourceCatalog } from "./catalog"
 import { parseSourceParams } from "../core/params"
+import { parseRegistrySourceId } from "../registry/validation"
 import { SourceParamValueError } from "../types"
+
+export { mergeSourceCatalogs, resolveSourceCatalog } from "./catalog"
+export type { SourceCatalog } from "./catalog"
 
 export type SourceErrorCode
   = | "SOURCE_NOT_FOUND"
     | "INVALID_PARAMS"
     | "INVALID_FORMAT"
-    | "LOADER_NOT_FOUND"
     | "PROVIDER_NOT_FOUND"
 
 export class SourceRuntimeError extends Error {
@@ -35,52 +39,34 @@ export interface PreparedSourceRequest<TParams extends SourceParamSchemaMap = So
 }
 
 let sourceGeneration = 0
-let externalSourcesLoader: ExternalSourcesLoader = async () => ({})
-let externalSources: Record<string, RuntimeSource> | undefined
-let externalSourcesPromise: Promise<Record<string, RuntimeSource>> | undefined
+let sourceCatalogLoader: SourceCatalogLoader = async () => ({})
+let sourceCatalogPromise: Promise<SourceCatalog> | undefined
 
-export type ExternalSourcesLoader = () => Promise<Record<string, RuntimeSource>>
+/** Consumers with derived indexes use this revision to retire stale catalog data. */
+export function getSourceCatalogRevision(): number {
+  return sourceGeneration
+}
 
-function setExternalSourcesLoader(loader: ExternalSourcesLoader): void {
+export type SourceCatalogLoader = () => Promise<SourceCatalog>
+
+/** Supply the complete catalog; origins and execution backends belong to the host. */
+export function configureSourceCatalog(loader: SourceCatalogLoader): void {
   sourceGeneration += 1
-  externalSourcesLoader = loader
-  externalSources = undefined
-  externalSourcesPromise = undefined
+  sourceCatalogLoader = loader
+  sourceCatalogPromise = undefined
 }
 
-export function configureExternalSourcesLoader(loader: ExternalSourcesLoader): () => void {
-  const previousLoader = externalSourcesLoader
-  setExternalSourcesLoader(loader)
-  return () => setExternalSourcesLoader(previousLoader)
-}
-
-function loadExternalSources(): Promise<Record<string, RuntimeSource>> {
-  if (externalSources) {
-    return Promise.resolve(externalSources)
-  }
-  if (externalSourcesPromise) {
-    return externalSourcesPromise
-  }
-
+function loadSourceCatalog(): Promise<SourceCatalog> {
   const generation = sourceGeneration
-  externalSourcesPromise = externalSourcesLoader()
-    .then((sources) => {
-      if (generation === sourceGeneration) {
-        externalSources = sources
-      }
-      return sources
-    })
-    .finally(() => {
-      if (generation === sourceGeneration) {
-        externalSourcesPromise = undefined
-      }
-    })
-
-  return externalSourcesPromise
+  sourceCatalogPromise ??= sourceCatalogLoader().catch((error) => {
+    if (generation === sourceGeneration) sourceCatalogPromise = undefined
+    throw error
+  })
+  return sourceCatalogPromise
 }
 
 export async function loadSources(): Promise<Record<string, RuntimeSource>> {
-  return loadExternalSources()
+  return loadSourceCatalog()
 }
 
 export async function loadSourceDescriptors(): Promise<SourceDescriptor[]> {
@@ -93,43 +79,26 @@ export async function loadSourceDescriptor(sourceId: string): Promise<SourceDesc
   return toSourceDescriptor(sourceId, await resolveSource(sourceId))
 }
 
-function toSourceDescriptor(id: string, source: RuntimeSource<any>): SourceDescriptor {
+export function toSourceDescriptor(id: string, source: RuntimeSource): SourceDescriptor {
   const { loader: _loader, ...descriptor } = source
   return {
     ...descriptor,
     id,
-    radar: descriptor.radar?.map(rule => ({
-      ...rule,
-      patch: rule.patch
-        ? {
-            ...rule.patch,
-            params: Object.fromEntries(
-              Object.entries(rule.patch.params ?? {}).filter((entry): entry is [string, string] => (
-                typeof entry[1] === "string"
-              )),
-            ),
-          }
-        : undefined,
-    })),
   }
 }
 
 export function parseSourceId(sourceId: string): ParsedSourceId {
-  const [provider, source, extra] = sourceId.split(":")
-
-  if (!provider || !source || extra !== undefined) {
-    throw new SourceRuntimeError(
-      "INVALID_FORMAT",
-      "Invalid source ID format. Expected 'provider:source'",
-    )
+  try {
+    const [provider, source] = parseRegistrySourceId(sourceId)
+    return { provider, source }
+  } catch {
+    throw new SourceRuntimeError("INVALID_FORMAT", "Invalid source ID format. Expected 'provider:source'")
   }
-
-  return { provider, source }
 }
 
 export async function resolveSource(sourceId: string): Promise<RuntimeSource<any>> {
   const { provider, source } = parseSourceId(sourceId)
-  const sources = await loadExternalSources()
+  const sources = await loadSourceCatalog()
   const resolvedSource = sources[sourceId]
   if (!resolvedSource) {
     const hasProvider = Object.keys(sources).some(id => id.startsWith(`${provider}:`))

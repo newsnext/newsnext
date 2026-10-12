@@ -564,3 +564,11 @@ Native worker routing, Insight catalog, or connection state changed; re-read nat
 ```ts
 // payload: {}
 ```
+
+### source.catalogChanged
+
+Source definitions or catalog priority changed; re-read Source descriptors and data.
+
+```ts
+// payload: {}
+```

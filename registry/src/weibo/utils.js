@@ -1,5 +1,5 @@
 import { fieldTransforms, SourceLoginRequiredError } from "@newsnext/source-kit/core"
-import { load } from "cheerio/slim"
+import { parseHtml } from "@newsnext/source-kit/utils"
 
 const WEIBO_ORIGIN = "https://weibo.com"
 const WEIBO_MOBILE_ORIGIN = "https://m.weibo.cn"
@@ -11,7 +11,7 @@ async function fetchWeiboDesktop(url, context) {
   }).json()
 }
 function htmlToText(html) {
-  return html ? fieldTransforms.normalize_whitespace(load(html).text()) : ""
+  return html ? fieldTransforms.normalize_whitespace(parseHtml(html).text()) : ""
 }
 function normalizePictures(pictures) {
   if (!pictures)

@@ -14,17 +14,13 @@
   "scripts": {
     "build": "bun run build.ts",
     "build:watch": "bun --watch run build.ts",
-    "typecheck": "bun check",
-    "test:live": "vitest run --config vitest.live.config.js"
+    "typecheck": "bun check"
   },
   "dependencies": {
-    "@newsnext/date-parser": "workspace:*",
-    "@newsnext/source-kit": "workspace:*",
-    "cheerio": "catalog:"
+    "@newsnext/source-kit": "workspace:*"
   },
   "devDependencies": {
     "@newsnext/sdk": "workspace:*",
-    "@newsnext/tsconfigs": "workspace:*",
-    "vitest": "catalog:"
+    "@newsnext/tsconfigs": "workspace:*"
   }
 }

@@ -1,5 +1,5 @@
-import { bilibiliApiCapabilities, bilibiliUserIdParam, compactBilibiliTitle, normalizeBilibiliUrl, parseBilibiliCount, parseBilibiliDisplayDate, parseBilibiliNumericCount, parseBilibiliOpusTimestamp, parseBilibiliTimestamp } from "./shared"
-import { getBilibiliWbiKeys, signBilibiliWbiParams } from "./wbi"
+import { bilibiliApiCapabilities, bilibiliUserIdParam, compactBilibiliTitle, normalizeBilibiliUrl, parseBilibiliCount, parseBilibiliDisplayDate, parseBilibiliNumericCount, parseBilibiliOpusTimestamp, parseBilibiliTimestamp } from "./shared.js"
+import { getBilibiliWbiKeys, signBilibiliWbiParams } from "./wbi.js"
 
 const UP_VIDEO_URL = "https://api.bilibili.com/x/space/wbi/arc/search"
 const UP_OPUS_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/opus/feed/space"
@@ -204,12 +204,7 @@ export const upSources = {
         patch: {
           params: {
             mid: "{{ scope.path.mid }}",
-            order: () => {
-              const page = globalThis
-              const filters = Array.from(page.document.querySelectorAll(".radio-filter__item")).slice(0, 3)
-              const activeIndex = filters.findIndex(filter => filter.classList.contains("radio-filter__item--active"))
-              return ["pubdate", "click", "stow"][activeIndex]
-            },
+            order: { type: "selected", select: ".radio-filter__item", active: ".radio-filter__item--active", values: ["pubdate", "click", "stow"] },
           },
           metadata: {
             home: "https://space.bilibili.com/{{ scope.params.mid }}/upload/video",

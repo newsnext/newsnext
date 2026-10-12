@@ -1,4 +1,4 @@
-import { requestXueqiuJson } from "./shared"
+import { requestXueqiuJson } from "./shared.js"
 
 const stockStatusTitle = {
   select: "title || description || text",
@@ -81,12 +81,7 @@ export const stockSources = {
       patch: {
         params: {
           symbol: "{{ scope.path.symbol }}",
-          sort: () => {
-            const page = globalThis
-            const controls = Array.from(page.document.querySelectorAll(".sort-types a"))
-            const activeIndex = controls.findIndex(control => control.classList.contains("active"))
-            return ["latest", "hot"][activeIndex] ?? "latest"
-          },
+          sort: { type: "selected", select: ".sort-types a", active: ".active", values: ["latest", "hot"], default: "latest" },
         },
         metadata: {
           title: {

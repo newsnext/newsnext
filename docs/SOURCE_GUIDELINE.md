@@ -48,10 +48,13 @@ export default {
 
 ## Local sources
 
-Drop `<provider>.json` into the daemon `sources` dir
+Create providers in the daemon `sources` dir
 (dev: `~/.config/newsnext.dev/sources/`, prod: `~/.config/newsnext/sources/`).
-JSON only, watched live, invalid files ignored. Same shape as
-`registry/src/<provider>.json`.
+Use `<provider>.json` for declarative loaders, or `<provider>.js`,
+`<provider>.mjs`, `<provider>/index.js` / `index.mjs` for JavaScript with helpers.
+Both use the same ProviderConfig as bundled Sources. Changes reload live;
+invalid files are ignored. Local Providers override plugin and bundled
+Providers as a whole. See [Source Architecture](SOURCE_ARCHITECTURE.md).
 
 ## Author rules (not in types)
 
@@ -96,15 +99,5 @@ JSON only, watched live, invalid files ignored. Same shape as
   inside templates.
 - Keep opaque numeric IDs as `text` params with string defaults (they can
   exceed safe-integer range); quote them as JSON strings in CLI runs.
-- Radar JS param functions must be closure-free (serialized into the page);
-  keep them cheap and side-effect-free, evaluated on every full resolve.
-
-## Live verification
-
-Run `bun run test:source` against a connected NewsNext runtime through the SDK.
-By default, every Source returned by `client.actions.source.list()` is tested
-with its default parameters, including authenticated and local Sources.
-Set `NEWSNEXT_WORKER_ID` to select the browser whose login state should be used.
-Set comma-separated `NEWSNEXT_SOURCE_IDS` to choose other Sources;
-`NEWSNEXT_SOURCE_PARAMS` accepts a JSON object keyed by Source ID.
-These tests run separately from `bun run test` and use real requests.
+- Radar page parameters use portable URL-query, date-range, and selected-control rules,
+  evaluated by the same browser reader for bundled and local Sources.

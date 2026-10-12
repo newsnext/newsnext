@@ -1,6 +1,6 @@
-import { parseRelativeDate } from "@newsnext/date-parser"
-import { parseXiaohongshuNoteTimestamp, sortXiaohongshuItemsByNewest, xiaohongshuFeedItemToNewsItem } from "./shared"
-import { signXiaohongshuPost } from "./signing"
+import { parseRelativeDate } from "@newsnext/source-kit/utils"
+import { parseXiaohongshuNoteTimestamp, sortXiaohongshuItemsByNewest, xiaohongshuFeedItemToNewsItem } from "./shared.js"
+import { signXiaohongshuPost } from "./signing.js"
 
 const SEARCH_URI = "/api/sns/web/v2/search/notes"
 const SEARCH_URL = `https://so.xiaohongshu.com${SEARCH_URI}`
@@ -237,67 +237,51 @@ export const searchSource = {
     },
     patch: {
       params: {
-        keyword: () => {
-          const page = globalThis
-          let keyword = new URL(page.location.href).searchParams.get("keyword") ?? ""
-          for (let pass = 0; pass < 2; pass += 1) {
-            try {
-              const decoded = decodeURIComponent(keyword)
-              if (decoded === keyword)
-                break
-              keyword = decoded
-            } catch {
-              break
-            }
-          }
-          return keyword
+        keyword: { type: "query", key: "keyword", decode: 2 },
+        order: {
+          type: "selected",
+          select: ".tags:not([aria-hidden=\"true\"])",
+          active: ".active",
+          values: ["general", "time_descending", "popularity_descending", "comment_descending", "collect_descending"],
+          default: "general",
+          group: { select: ".filter-panel .filters", index: 0 },
+          reveal: { trigger: ".filter", active: ".active", visible: ".filter-panel", waitMs: 300 },
         },
-        order: async () => {
-          const page = globalThis
-          const trigger = page.document.querySelector(".filter")
-          if (!trigger?.classList.contains("active")) {
-            page.document.documentElement.setAttribute("data-newsnext-xhs-filter-indices", "[0,0,0,0,0]")
-            return "general"
-          }
-          const wasOpen = Boolean(page.document.querySelector(".filter-panel"))
-          if (!wasOpen) {
-            trigger.click()
-            await new Promise(resolve => setTimeout(resolve, 300))
-          }
-          const indices = Array.from(page.document.querySelectorAll(".filter-panel .filters"), group => (Array.from(group.querySelectorAll(".tags:not([aria-hidden=\"true\"])"))
-            .findIndex(tag => tag.classList.contains("active"))))
-          page.document.documentElement.setAttribute("data-newsnext-xhs-filter-indices", JSON.stringify(indices))
-          if (!wasOpen)
-            trigger.click()
-          return ["general", "time_descending", "popularity_descending", "comment_descending", "collect_descending"][indices[0] ?? 0]
+        noteType: {
+          type: "selected",
+          select: ".tags:not([aria-hidden=\"true\"])",
+          active: ".active",
+          values: ["all", "video", "image"],
+          default: "all",
+          group: { select: ".filter-panel .filters", index: 1 },
+          reveal: { trigger: ".filter", active: ".active", visible: ".filter-panel", waitMs: 300 },
         },
-        noteType: async () => {
-          const page = globalThis
-          await new Promise(resolve => setTimeout(resolve, 400))
-          const indices = JSON.parse(page.document.documentElement.getAttribute("data-newsnext-xhs-filter-indices") ?? "[]")
-          const index = indices[1]
-          return ["all", "video", "image"][index ?? 0]
+        time: {
+          type: "selected",
+          select: ".tags:not([aria-hidden=\"true\"])",
+          active: ".active",
+          values: ["all", "day", "week", "halfyear"],
+          default: "all",
+          group: { select: ".filter-panel .filters", index: 2 },
+          reveal: { trigger: ".filter", active: ".active", visible: ".filter-panel", waitMs: 300 },
         },
-        time: async () => {
-          const page = globalThis
-          await new Promise(resolve => setTimeout(resolve, 400))
-          const indices = JSON.parse(page.document.documentElement.getAttribute("data-newsnext-xhs-filter-indices") ?? "[]")
-          const index = indices[2]
-          return ["all", "day", "week", "halfyear"][index ?? 0]
+        range: {
+          type: "selected",
+          select: ".tags:not([aria-hidden=\"true\"])",
+          active: ".active",
+          values: ["all", "seen", "unseen", "following"],
+          default: "all",
+          group: { select: ".filter-panel .filters", index: 3 },
+          reveal: { trigger: ".filter", active: ".active", visible: ".filter-panel", waitMs: 300 },
         },
-        range: async () => {
-          const page = globalThis
-          await new Promise(resolve => setTimeout(resolve, 400))
-          const indices = JSON.parse(page.document.documentElement.getAttribute("data-newsnext-xhs-filter-indices") ?? "[]")
-          const index = indices[3]
-          return ["all", "seen", "unseen", "following"][index ?? 0]
-        },
-        distance: async () => {
-          const page = globalThis
-          await new Promise(resolve => setTimeout(resolve, 400))
-          const indices = JSON.parse(page.document.documentElement.getAttribute("data-newsnext-xhs-filter-indices") ?? "[]")
-          const index = indices[4]
-          return ["all", "same_city", "nearby"][index ?? 0]
+        distance: {
+          type: "selected",
+          select: ".tags:not([aria-hidden=\"true\"])",
+          active: ".active",
+          values: ["all", "same_city", "nearby"],
+          default: "all",
+          group: { select: ".filter-panel .filters", index: 4 },
+          reveal: { trigger: ".filter", active: ".active", visible: ".filter-panel", waitMs: 300 },
         },
       },
       metadata: {

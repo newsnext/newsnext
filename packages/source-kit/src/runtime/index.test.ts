@@ -15,9 +15,9 @@ describe("source service", () => {
   })
 
   it("throws for invalid source IDs", () => {
-    expect(() => parseSourceId("")).toThrowError(SourceRuntimeError)
-    expect(() => parseSourceId("rss")).toThrowError(SourceRuntimeError)
-    expect(() => parseSourceId("rss:latest:extra")).toThrowError(SourceRuntimeError)
+    for (const id of ["", "rss", "rss:latest:extra", "rss:bad id", "constructor:latest"]) {
+      expect(() => parseSourceId(id)).toThrowError(SourceRuntimeError)
+    }
   })
 
   it("normalizes parameter values using source parameter definitions", () => {

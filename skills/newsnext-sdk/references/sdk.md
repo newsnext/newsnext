@@ -46,8 +46,13 @@ already sent to the Worker.
 
 Each capability can be installed without a plugin. Place Actions in
 `~/.config/newsnext/actions/<action-id>/`, Insights in
-`~/.config/newsnext/insights/<insight-id>/`, and Source provider JSON files in
-`~/.config/newsnext/sources/<provider-id>.json`. The development CLI uses
+`~/.config/newsnext/insights/<insight-id>/`, and Source providers in
+`~/.config/newsnext/sources/`. Sources accept `<provider-id>.json`, `.js`, `.mjs`,
+or `<provider-id>/index.js` / `index.mjs`. JavaScript requires Node.js 22.15+;
+modules load directly without a build step. Relative imports and installed npm
+dependencies use Node resolution; `@newsnext/source-kit` imports resolve to
+the host's built-in library. Author-owned `.js` files are ES modules.
+The development CLI uses
 `newsnext.dev` instead. `NEWSNEXT_ACTIONS_PATH` and `NEWSNEXT_SOURCES_PATH`
 override their respective directories.
 
@@ -81,7 +86,8 @@ Place each plugin in `~/.config/newsnext/plugins/<plugin-id>/` (or
 
 The loader discovers capabilities by convention. A plugin can contain any
 nonempty combination of `actions/<action-name>/`, `insights/<insight-id>/`, and
-`sources/<provider-id>.json`. Adding one does not require editing `plugin.json`.
+`sources/` using the same JSON/JavaScript Provider formats. Adding one does not
+require editing `plugin.json`.
 Each Action owns its metadata and module. For `greet`, add
 `actions/greet/action.json`:
 
@@ -93,10 +99,11 @@ Each Action owns its metadata and module. For `greet`, add
 }
 ```
 
-Insight files use their existing format under `insights/<insight-id>/`; Source
-provider JSON files go under `sources/<provider-id>.json`. A plugin bundles the
-same formats used by standalone capabilities. Standalone Insights and Sources
-take precedence when IDs collide.
+Insight files use their existing format under `insights/<insight-id>/`. A plugin
+bundles the same formats used by standalone capabilities. Source priority is
+standalone local Provider, then plugin Provider, then bundled Provider. A higher
+priority Provider replaces the whole lower priority Provider; removing it
+restores the next available definition. Local Source changes reload live.
 
 `actions/greet/index.mjs`:
 

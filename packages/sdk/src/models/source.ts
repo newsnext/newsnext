@@ -56,10 +56,45 @@ export interface SourceRadarMatch {
   query?: string[]
 }
 
-export type SourceRadarParamScript = () => unknown | Promise<unknown>
+/** Portable page reads executed by the extension's fixed Radar reader. */
+export type SourceRadarPageParam = {
+  type: "query"
+  key: string
+  /** Extra decoding passes after URLSearchParams decoding; 0–2, default 0. */
+  decode?: number
+  /** Format an epoch query value as YYYY-MM-DD in the specified time zone. */
+  timestamp?: { unit: "seconds" | "milliseconds", timezone: string }
+} | {
+  type: "date-range"
+  /** Query keys containing inclusive epoch-second boundaries. */
+  start: string
+  end: string
+  /** Inclusive day counts mapped to parameter values, such as { "7": "week" }. */
+  ranges: Record<string, string>
+  other?: string
+} | {
+  type: "selected"
+  select: string
+  /** Selector identifying the active element within the selected controls. */
+  active: string
+  /** Parameter values in the same order as the page controls. */
+  values: string[]
+  default?: string
+  /** Select a control group before finding its controls. */
+  group?: { select: string, index: number }
+  /** Temporarily reveal a collapsed panel, read its controls, then close it. */
+  reveal?: {
+    trigger: string
+    /** If this selector does not match the trigger, use the default value. */
+    active?: string
+    visible: string
+    /** 0–1000 milliseconds, default 0. */
+    waitMs?: number
+  }
+}
 
 /** Empty rendered text omits the parameter patch; use ?? for explicit fallback values. */
-export type SourceRadarParam = string | SourceRadarParamScript
+export type SourceRadarParam = string | SourceRadarPageParam
 
 export type SourceRadarParams = Record<string, SourceRadarParam>
 

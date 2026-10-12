@@ -24,6 +24,7 @@ export type {
   SourceParamsValidationResult,
   SourceParamValidationResult,
 } from "./params"
+export { resolveRadarPageParamValue } from "./radar-page"
 export {
   compileSourceRegex,
   validateSourceRegexInput,
@@ -38,6 +39,7 @@ export {
   TemplateRenderError,
   TemplateValidationError,
 } from "./template"
+
 export type {
   CompiledSourceTemplate,
   CompiledSourceTemplateValue,

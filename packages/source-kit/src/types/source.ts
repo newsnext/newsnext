@@ -1,7 +1,7 @@
 import type { InferSourceParams, NewsItem, SourceDescriptor, SourceLoaderOutput, SourceLoaderResult, SourceParamSchemaMap, SourceSecrets } from "@newsnext/sdk/models"
 import type { KyInstance } from "ky"
 
-export type { CategoryId, SourceCapabilities, SourceCookieSecretDefinition, SourceDescriptor, SourceLoaderOutput, SourceLoaderResult, SourceLocalStorageSecretDefinition, SourcePatch, SourcePresentationMetadata, SourcePresentationType, SourceProvider, SourceRadarMatch, SourceRadarMetadata, SourceRadarParam, SourceRadarParams, SourceRadarParamScript, SourceRadarPatch, SourceRadarPaths, SourceRadarRule, SourceRequestRule, SourceSecretBaseDefinition, SourceSecretDefinition, SourceSecrets, SourceTemplateVars, SourceTemplateVarValue } from "@newsnext/sdk/models"
+export type { CategoryId, SourceCapabilities, SourceCookieSecretDefinition, SourceDescriptor, SourceLoaderOutput, SourceLoaderResult, SourceLocalStorageSecretDefinition, SourcePatch, SourcePresentationMetadata, SourcePresentationType, SourceProvider, SourceRadarMatch, SourceRadarMetadata, SourceRadarPageParam, SourceRadarParam, SourceRadarParams, SourceRadarPatch, SourceRadarPaths, SourceRadarRule, SourceRequestRule, SourceSecretBaseDefinition, SourceSecretDefinition, SourceSecrets, SourceTemplateVars, SourceTemplateVarValue } from "@newsnext/sdk/models"
 export { CATEGORY_IDS, isSourcePresentationMetadataKey, isSourcePresentationType, SOURCE_PRESENTATION_METADATA_KEYS, SOURCE_PRESENTATION_TYPES } from "@newsnext/sdk/models"
 
 export type SourceFetch = KyInstance

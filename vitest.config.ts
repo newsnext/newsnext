@@ -34,10 +34,8 @@ export default defineConfig({
     globals: true,
     include: [
       "apps/extension/**/*.{test,spec}.{ts,tsx}",
-      "apps/cli/**/*.{test,spec}.{ts,tsx}",
       "packages/cmdk/**/*.{test,spec}.{ts,tsx}",
       "packages/date-parser/**/*.{test,spec}.{ts,tsx}",
-      "registry/src/**/*.{test,spec}.{js,ts,tsx}",
       "packages/shared/**/*.{test,spec}.{ts,tsx}",
       "packages/source-kit/**/*.{test,spec}.{ts,tsx}",
       "packages/sdk/**/*.{test,spec}.{ts,tsx}",

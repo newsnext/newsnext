@@ -6,7 +6,7 @@ import type {
   SourcePresentationMetadata,
   SourceRadarMatch,
   SourceRadarMetadata,
-  SourceRadarParamScript,
+  SourceRadarPageParam,
   SourceRadarRule,
 } from "@newsnext/source-kit/types"
 import type { RadarPageQuery } from "./page-query"
@@ -31,12 +31,12 @@ export interface RadarContext {
   url: string
   title?: string
   pageSelections?: Record<string, string>
-  pageScriptValues?: Record<string, unknown>
+  pageParamValues?: Record<string, unknown>
 }
 
-export interface RadarPageScript {
+export interface RadarPageParam {
   key: string
-  script: SourceRadarParamScript
+  query: SourceRadarPageParam
 }
 
 export type { RadarSuggestion, ResolvedRadarSuggestion } from "@newsnext/sdk/models"
@@ -119,7 +119,7 @@ interface LocationPatterns {
 interface CompiledRadarRule {
   metadata: Partial<Record<keyof SourceRadarMetadata, CompiledRadarMetadata>>
   paramTemplates: Record<string, CompiledSourceTemplate>
-  paramScripts: Record<string, RadarPageScript>
+  pageParams: Record<string, RadarPageParam>
   source: RadarSourceMetadata
   rule: SourceRadarRule
   hosts: string[]
@@ -146,7 +146,7 @@ type CompiledRadarMetadata
 
 export interface RadarMatcher {
   getPageQueries: (context: RadarContext) => RadarPageQuery[]
-  getPageScripts: (context: RadarContext) => RadarPageScript[]
+  getPageParams: (context: RadarContext) => RadarPageParam[]
   getSuggestions: (context: RadarContext) => RadarSuggestion[]
 }
 
@@ -420,16 +420,16 @@ function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): Co
           }),
         ]),
     )
-    const paramScripts = Object.fromEntries(
+    const pageParams = Object.fromEntries(
       Object.entries(rule.patch?.params ?? {})
-        .filter((entry): entry is [string, SourceRadarParamScript] => (
-          typeof entry[1] === "function"
+        .filter((entry): entry is [string, SourceRadarPageParam] => (
+          typeof entry[1] === "object"
         ))
-        .map(([key, script]) => [
+        .map(([key, query]) => [
           key,
           {
             key: `${sourceRule.source.id}:${rule.id}:${key}`,
-            script,
+            query,
           },
         ]),
     )
@@ -449,7 +449,7 @@ function compileRadarRule(sourceRule: SourceRuleSpec, rule: SourceRadarRule): Co
       rule,
       hosts: rule.match.hosts.map(normalizeHostname),
       locationMatcher: compileLocationMatcher(rule.match),
-      paramScripts,
+      pageParams,
       paramTemplates,
     }
   } catch (error) {
@@ -487,8 +487,8 @@ function resolveParamsPatch(
         parameterValues[key] = value
       }
     }
-    for (const [key, pageScript] of Object.entries(rule.paramScripts)) {
-      const value = input.pageScriptValues?.[pageScript.key]
+    for (const [key, pageParam] of Object.entries(rule.pageParams)) {
+      const value = input.pageParamValues?.[pageParam.key]
       if (isPresent(value)) {
         parameterValues[key] = value
       }
@@ -650,21 +650,21 @@ function getPageQueries(
   return [...queries.values()]
 }
 
-function getPageScripts(
+function getPageParams(
   context: RadarContext,
   rulesByHost: Map<string, CompiledRadarRule[]>,
-): RadarPageScript[] {
+): RadarPageParam[] {
   const location = resolveRadarLocation(context, rulesByHost)
   if (!location) return []
 
-  const scripts = new Map<string, RadarPageScript>()
+  const params = new Map<string, RadarPageParam>()
   for (const rule of location.rules) {
     if (!rule.locationMatcher(location.url)) continue
-    for (const pageScript of Object.values(rule.paramScripts)) {
-      scripts.set(pageScript.key, pageScript)
+    for (const pageParam of Object.values(rule.pageParams)) {
+      params.set(pageParam.key, pageParam)
     }
   }
-  return [...scripts.values()]
+  return [...params.values()]
 }
 
 function createSuggestions(
@@ -741,7 +741,7 @@ export function createRadarMatcher(sourceMetadata: RadarSourceMetadata[] = []): 
   const rulesByHost = indexRulesByHost(compiledRules)
   const radarMatcher: RadarMatcher = {
     getPageQueries: context => getPageQueries(context, rulesByHost),
-    getPageScripts: context => getPageScripts(context, rulesByHost),
+    getPageParams: context => getPageParams(context, rulesByHost),
     getSuggestions: context => createSuggestions(context, rulesByHost),
   }
 

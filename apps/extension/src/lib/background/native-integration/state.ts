@@ -9,7 +9,7 @@ export const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
 // Transport connects before initialization; startup frames carry task progress.
-export const PROTOCOL_VERSION = 38
+export const PROTOCOL_VERSION = 40
 export const WORKSPACE_SYNCED_AT_KEY = "newsnext-workspace-synced-at"
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"

@@ -13,7 +13,8 @@ import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { emitBackgroundEvent } from "../background-events"
-import { setLocalSourceProviders } from "../bundled-sources"
+import { executeLocalSourceContext } from "../local-source-runner"
+import { setLocalSourceProviders } from "../source-catalog"
 import { initializeWorkerIdentity } from "../worker-identity"
 import { summarizeWorkspace } from "../workspace-resolution"
 import {
@@ -247,6 +248,9 @@ async function setNativeIntegrationEnabled(
 
 async function executeCommand(connection: NativePort, request: ExtensionCommand): Promise<unknown> {
   if (!runtime.enabled || runtime.port !== connection) throw new Error("NewsNext CLI disconnected")
+  if (request.type === "source.context") {
+    return executeLocalSourceContext(request.executionId, request.operation)
+  }
   if (runtime.connectionState !== "connected" && request.type !== "action.list"
     && !["nativeIntegration.getStatus", "nativeIntegration.resolveWorkspace", "nativeIntegration.setEnabled"].includes(request.name)) {
     throw new Error("Resolve this browser's Workspace in Settings before using connected Actions")
@@ -463,11 +467,11 @@ function handleMessage(connection: NativePort, value: unknown): void {
       runtime.offlineWorkers = message.offlineWorkers
       runtime.insightCatalog = message.insights
       runtime.insightServerOrigin = message.insightServerUrl
-      setLocalSourceProviders(message.localSources)
       runtime.connectionError = undefined
       void initializeSharedWorkspace(connection, message.workspace, message.localCardIds).then(() => {
         if (runtime.port !== connection) return
         runtime.ready = true
+        setLocalSourceProviders(message.localSources)
         runtime.startupLogs = []
         if (runtime.connectionState === "connected") {
           resolveNativeConnection(connection)

@@ -32,16 +32,16 @@ async function updateRadarBadge(tab: Browser.tabs.Tab): Promise<void> {
   }
 }
 
-export function registerRadarBadge(): void {
-  const updateActiveRadarBadge = async (): Promise<void> => {
-    const tabs = await browser.tabs.query({ active: true, currentWindow: true })
-    await Promise.all(tabs.map(updateRadarBadge))
-  }
+export async function refreshActiveRadarBadge(): Promise<void> {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true })
+  await Promise.all(tabs.map(updateRadarBadge))
+}
 
-  void updateActiveRadarBadge()
+export function registerRadarBadge(): void {
+  void refreshActiveRadarBadge()
 
   browser.tabs.onActivated.addListener(() => {
-    void updateActiveRadarBadge()
+    void refreshActiveRadarBadge()
   })
   browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
     if (!changeInfo.url && !changeInfo.title && changeInfo.status !== "complete") {

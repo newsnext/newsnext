@@ -1,4 +1,4 @@
-import { BILIBILI_WEB_LOCATION, bilibiliApiCapabilities, bilibiliUserIdParam, compactBilibiliTitle, normalizeBilibiliUrl, parseBilibiliCount, parseBilibiliDisplayDate, parseBilibiliTimestamp } from "./shared"
+import { BILIBILI_WEB_LOCATION, bilibiliApiCapabilities, bilibiliUserIdParam, compactBilibiliTitle, normalizeBilibiliUrl, parseBilibiliCount, parseBilibiliDisplayDate, parseBilibiliTimestamp } from "./shared.js"
 
 const FOLLOWING_DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/all"
 const USER_DYNAMIC_FEED_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/feed/space"

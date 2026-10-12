@@ -1,4 +1,4 @@
-import { parseZhihuColumn, parseZhihuFollowing, ZHIHU_ORIGIN } from "./shared"
+import { parseZhihuColumn, parseZhihuFollowing, ZHIHU_ORIGIN } from "./shared.js"
 /** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
 export default {
   title: "知乎",

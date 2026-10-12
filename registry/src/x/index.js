@@ -1,6 +1,6 @@
 import { fieldTransforms } from "@newsnext/source-kit/core"
-import { LOCATION_OPTIONS } from "./locations"
-import { createXLoggedInHeaders, entriesToNewsItems, formatXAnnotation, getTimelineEntries, getXUserTimelineUrl, HOME_LATEST_TIMELINE_QUERY_ID, HOME_LATEST_TIMELINE_URL, LIST_LATEST_TWEETS_URL, normalizeXSearchUrl, PLACE_TRENDS_URL, sortNewsItemsByNewest, USER_BY_SCREEN_NAME_URL, X_CSRF_TOKEN_SECRET_KEY, X_ORIGIN, X_TIMELINE_COUNT, X_TIMELINE_FEATURES, X_USER_FEATURES } from "./utils"
+import { LOCATION_OPTIONS } from "./locations.js"
+import { createXLoggedInHeaders, entriesToNewsItems, formatXAnnotation, getTimelineEntries, getXUserTimelineUrl, HOME_LATEST_TIMELINE_QUERY_ID, HOME_LATEST_TIMELINE_URL, LIST_LATEST_TWEETS_URL, normalizeXSearchUrl, PLACE_TRENDS_URL, sortNewsItemsByNewest, USER_BY_SCREEN_NAME_URL, X_CSRF_TOKEN_SECRET_KEY, X_ORIGIN, X_TIMELINE_COUNT, X_TIMELINE_FEATURES, X_USER_FEATURES } from "./utils.js"
 
 const X_RADAR_RESERVED_PATHS = [
   "compose",

@@ -5,10 +5,10 @@ export {
 export type {
   RadarContext,
   RadarMatcher,
-  RadarPageScript,
+  RadarPageParam,
   RadarSuggestion,
   ResolvedRadarSuggestion,
 } from "./matcher"
 export { createRadarMatcher } from "./matcher"
-export { readRadarPageScriptValues, readRadarPageSelections } from "./page"
+export { readRadarPageParamValues, readRadarPageSelections } from "./page"
 export { createRadarLiveCard } from "./radar-live-card"

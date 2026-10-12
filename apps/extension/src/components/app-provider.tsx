@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query"
 import { domMax, LazyMotion, MotionConfig } from "motion/react"
 import { useEffect } from "react"
 import { I18nProvider } from "@/components/i18n-provider"
+import { useBackgroundEvent } from "@/hooks/use-background-event"
 
 interface AppProviderProps {
   queryClient: QueryClient
@@ -13,6 +14,11 @@ export function AppProvider({
   children,
   queryClient,
 }: PropsWithChildren<AppProviderProps>) {
+  useBackgroundEvent("source.catalogChanged", () => {
+    void queryClient.invalidateQueries({
+      predicate: query => ["source-descriptor", "source", "card"].includes(String(query.queryKey[0])),
+    })
+  })
   useEffect(() => {
     const preventContextMenuOutsideNewsItems = (event: MouseEvent) => {
       const target = event.target

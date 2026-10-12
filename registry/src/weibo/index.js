@@ -1,5 +1,5 @@
-import { fetchWeiboHotSearch } from "./hot-search"
-import { fetchWeiboFollowingTimeline, fetchWeiboKeywordPosts, fetchWeiboSuperTopicPosts, fetchWeiboUserPosts } from "./utils"
+import { fetchWeiboHotSearch } from "./hot-search.js"
+import { fetchWeiboFollowingTimeline, fetchWeiboKeywordPosts, fetchWeiboSuperTopicPosts, fetchWeiboUserPosts } from "./utils.js"
 
 const weiboCapabilities = {
   network: ["weibo.com", "*.sinaimg.cn"],

@@ -13,6 +13,9 @@ export function parseExtensionCommand(
   if (value.type === "action.list") {
     return { id: value.id, type: "action.list" }
   }
+  if (value.type === "source.context" && typeof value.executionId === "string" && isRecord(value.operation)) {
+    return { id: value.id, type: "source.context", executionId: value.executionId, operation: value.operation }
+  }
   if (
     value.type === "action.execute"
     && typeof value.name === "string"

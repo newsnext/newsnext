@@ -1,5 +1,5 @@
 import { fieldTransforms } from "@newsnext/source-kit/core"
-import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliCount } from "./shared"
+import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliCount } from "./shared.js"
 
 const BILIBILI_RANKING_URL = "https://api.bilibili.com/x/web-interface/ranking/v2"
 const BILIBILI_ANIME_RANKING_URL = "https://api.bilibili.com/pgc/web/rank/list"

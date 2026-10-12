@@ -1,8 +1,8 @@
-import { followingSource, userDynamicsSource } from "./dynamics"
-import { favoriteSources } from "./favorites"
-import { rankingSource } from "./ranking"
-import { searchSource } from "./search"
-import { upSources } from "./up"
+import { followingSource, userDynamicsSource } from "./dynamics.js"
+import { favoriteSources } from "./favorites.js"
+import { rankingSource } from "./ranking.js"
+import { searchSource } from "./search.js"
+import { upSources } from "./up.js"
 /** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
 export default {
   title: "哔哩哔哩",

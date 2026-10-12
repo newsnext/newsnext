@@ -8,10 +8,11 @@ beside the implementation — linked below).
 - `registry/`: author input (`src/`) → build (`build.ts`) →
   generated `registry.json` + `sources.js`. Registry is the only writer of
   generated artifacts.
-- `packages/source-kit/`: expansion (`registry/*`), runtime resolution
-  (`runtime/`), execution (`core/`, `utils/request/`).
-- `apps/extension/src/lib/source/`: query policy, bundled sources, background
-  execution. Daemon/CLI executes natively via the versioned protocol.
+- `packages/source-kit/`: expansion (`registry/*`), a host-supplied Source
+  catalog (`runtime/catalog.ts`), execution (`core/`, `utils/request/`).
+- Hosts supply Provider catalogs and bind execution backends to descriptors.
+  Local modules and bundled modules share the same Source contract; origin
+  does not change LiveCard, parameter, permission, or snapshot semantics.
 - Action/Typed-SDK/Widget/CLI contracts belong to their packages; this doc
   covers source flow only.
 
@@ -21,8 +22,19 @@ beside the implementation — linked below).
    `core/limits.ts`) → expand defaults → emit declarative sources to
    `registry.json`, executable ones to `sources.js`. Duplicate source IDs
    (or duplicate executable provider IDs) fail the build (`registry/build.ts`).
-2. Local sources merge over the registry (JSON only, watched, invalid ignored;
-   bundled IDs win on conflict).
+2. Catalog priority is standalone local Provider → plugin Provider → bundled
+   Provider. A higher-priority Provider replaces the whole lower-priority
+   Provider, preventing mixed identity/defaults; removal restores the next
+   available Provider. Invalid definitions are ignored. Local JSON resolves
+   declaratively; local modules publish schema-validated `SourceDescriptor`s
+   and execute through a bound local loader. Executable paths stay in the host.
+   `ctx.fetch` and `ctx.updateSecrets` return to the originating browser,
+   retaining its session, network capabilities, request queue, and secret
+   storage. Node.js 22.15+ loads local ESM modules directly, resolving
+   `@newsnext/source-kit` to the embedded library; no local Source compilation
+   is needed. Fresh workers load the current dependency graph. Runtime code
+   never executes dynamically in the extension. Local directory changes
+   replace the catalog live.
 3. Resolution: `flattenProviderConfig`/`resolveProvider`
    (`core/resolver.ts`) → `baseUrl` joins (`core/base-url.ts`) → params
    validate/coerce (`core/params.ts`) → Radar matches page → patch applies

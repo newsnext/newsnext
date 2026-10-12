@@ -155,9 +155,9 @@ Extension views retain display state but do not maintain a separate data cache.
 With `data.mjs` present, a data-only `insight.json` can be `{}`. Without that
 file, declare `data.queries`. Omit both for a data-free Insight: the pipeline
 yields empty `queries`, and the host hides the refresh button. Built-in views
-still require their view query in the declared data. The independent data loader ignores visual configuration. JS uses the first available runtime in this order: Bun, then Node.js 22+.
+still require their view query in the declared data. The independent data loader ignores visual configuration. JS runs in Node.js 22+.
 The daemon searches PATH and standard installation directories, including
-`~/.bun/bin` and `~/.local/bin`, so browser launches do not depend on shell PATH.
+`~/.local/bin`, so browser launches do not depend on shell PATH.
 Script executions share one short-lived runtime host with at most four isolated
 worker threads. An idle thread exits after 10 seconds; the host exits after 60
 seconds without a script request.

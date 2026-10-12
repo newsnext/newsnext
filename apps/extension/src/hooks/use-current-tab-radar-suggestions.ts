@@ -2,9 +2,12 @@ import type { ResolvedRadarSuggestion } from "@/lib/radar"
 import { useEffect, useState } from "react"
 import { browser } from "#imports"
 import { actions } from "@/lib/actions"
+import { useBackgroundEvent } from "./use-background-event"
 
 export function useCurrentTabRadarSuggestions(): ResolvedRadarSuggestion[] | null {
   const [suggestions, setSuggestions] = useState<ResolvedRadarSuggestion[] | null>(null)
+  const [catalogRevision, setCatalogRevision] = useState(0)
+  useBackgroundEvent("source.catalogChanged", () => setCatalogRevision(revision => revision + 1))
 
   useEffect(() => {
     let isCancelled = false
@@ -31,7 +34,7 @@ export function useCurrentTabRadarSuggestions(): ResolvedRadarSuggestion[] | nul
     return () => {
       isCancelled = true
     }
-  }, [])
+  }, [catalogRevision])
 
   return suggestions
 }

@@ -1,7 +1,7 @@
 import { isJwtExpired } from "@newsnext/source-kit/utils"
-import { buildJikeTopicFeedUrl, createJikeHeaders, formatJikeAnnotation, formatJikeAuthorAnnotation, getJikeUserAvatar, isPinnedPersonalUpdate, JIKE_WEB_ORIGIN, jikePostsToNewsItems } from "./utils"
+import { buildJikeTopicFeedUrl, createJikeHeaders, formatJikeAnnotation, formatJikeAuthorAnnotation, getJikeUserAvatar, isPinnedPersonalUpdate, JIKE_WEB_ORIGIN, jikePostsToNewsItems } from "./utils.js"
 
-export { jikePostsToNewsItems } from "./utils"
+export { jikePostsToNewsItems } from "./utils.js"
 const REFRESH_AUTH_TOKEN_URL = "https://api.ruguoapp.com/app_auth_tokens.refresh"
 const FOLLOWING_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/followingUpdates"
 const USER_UPDATES_URL = "https://api.ruguoapp.com/1.0/personalUpdate/single"

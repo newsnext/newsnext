@@ -34,8 +34,15 @@ const diagnosticsChangedEvent = defineEventContract({
   payload: EmptyObject,
 })
 
+const sourceCatalogChangedEvent = defineEventContract({
+  description: "Source definitions or catalog priority changed; re-read Source descriptors and data.",
+  name: "source.catalogChanged",
+  payload: EmptyObject,
+})
+
 export const backgroundEventContracts = [
   nativeIntegrationStatusChangedEvent,
   nativeIntegrationLogsChangedEvent,
   diagnosticsChangedEvent,
+  sourceCatalogChangedEvent,
 ] as const

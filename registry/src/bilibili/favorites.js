@@ -1,5 +1,5 @@
 import { fieldTransforms } from "@newsnext/source-kit/core"
-import { BILIBILI_WEB_LOCATION, bilibiliApiCapabilities, normalizeBilibiliUrl } from "./shared"
+import { BILIBILI_WEB_LOCATION, bilibiliApiCapabilities, normalizeBilibiliUrl } from "./shared.js"
 
 const FAVORITE_FOLDERS_URL = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"
 const FAVORITE_RESOURCES_URL = "https://api.bilibili.com/x/v3/fav/resource/list"
@@ -178,12 +178,7 @@ export const favoriteSources = {
           params: {
             folder: "{{ scope.query.fid }}",
             mid: "{{ scope.path.mid }}",
-            order: () => {
-              const page = globalThis
-              const filters = Array.from(page.document.querySelectorAll(".radio-filter__item"))
-              const activeIndex = filters.findIndex(filter => filter.classList.contains("radio-filter__item--active"))
-              return ["mtime", "view", "pubtime"][activeIndex]
-            },
+            order: { type: "selected", select: ".radio-filter__item", active: ".radio-filter__item--active", values: ["mtime", "view", "pubtime"] },
           },
         },
       },

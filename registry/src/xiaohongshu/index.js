@@ -1,5 +1,5 @@
-import { searchSource } from "./search"
-import { parseXiaohongshuInitialState, sortXiaohongshuItemsByNewest, xiaohongshuFeedItemToNewsItem } from "./shared"
+import { searchSource } from "./search.js"
+import { parseXiaohongshuInitialState, sortXiaohongshuItemsByNewest, xiaohongshuFeedItemToNewsItem } from "./shared.js"
 
 const XIAOHONGSHU_ORIGIN = "https://www.xiaohongshu.com"
 const RESULT_LIMIT = 50

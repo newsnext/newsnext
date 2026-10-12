@@ -1,4 +1,4 @@
-import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils"
+import { REDDIT_ORIGIN, redditPostsToNewsItems } from "./utils.js"
 
 const REDDIT_LISTING_LIMIT = 50
 const REDDIT_USER_ANNOTATION_TEMPLATE = "{{ scope.item.attributes.community }}"

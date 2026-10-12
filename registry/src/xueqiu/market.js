@@ -1,4 +1,4 @@
-import { requestXueqiuJson } from "./shared"
+import { requestXueqiuJson } from "./shared.js"
 
 export function formatXueqiuPriceAnnotation(item, includeExchange = false) {
   const { changePercent, current, exchange } = item.attributes ?? {}
@@ -86,18 +86,8 @@ export const marketSources = {
       },
       patch: {
         params: {
-          market: () => {
-            const page = globalThis
-            const controls = Array.from(page.document.querySelectorAll(".stock-hot__container:has(> h3 a[href=\"/hq#hot\"]) > .tabs__panel a"))
-            const activeIndex = controls.findIndex(control => control.classList.contains("active"))
-            return ["global", "cn", "hk", "us"][activeIndex] ?? "global"
-          },
-          period: () => {
-            const page = globalThis
-            const controls = Array.from(page.document.querySelectorAll(".stock-hot__container:has(> h3 a[href=\"/hq#hot\"]) > .stock-hot__time a"))
-            const activeIndex = controls.findIndex(control => control.classList.contains("active"))
-            return ["hour", "day"][activeIndex] ?? "hour"
-          },
+          market: { type: "selected", select: ".stock-hot__container:has(> h3 a[href=\"/hq#hot\"]) > .tabs__panel a", active: ".active", values: ["global", "cn", "hk", "us"], default: "global" },
+          period: { type: "selected", select: ".stock-hot__container:has(> h3 a[href=\"/hq#hot\"]) > .stock-hot__time a", active: ".active", values: ["hour", "day"], default: "hour" },
         },
         metadata: {
           title: hotStockTitleTemplate,
@@ -181,18 +171,8 @@ export const marketSources = {
       },
       patch: {
         params: {
-          market: () => {
-            const page = globalThis
-            const controls = Array.from(page.document.querySelectorAll(".stock-hot__container:has(> h3 a[href=\"/hq#rank\"]) > .tabs__panel a"))
-            const activeIndex = controls.findIndex(control => control.classList.contains("active"))
-            return ["cn", "hk", "us"][activeIndex] ?? "cn"
-          },
-          direction: () => {
-            const page = globalThis
-            const controls = Array.from(page.document.querySelectorAll(".stock-hot__container:has(> h3 a[href=\"/hq#rank\"]) > .stock-hot__time a"))
-            const activeIndex = controls.findIndex(control => control.classList.contains("active"))
-            return ["gainers", "losers"][activeIndex] ?? "gainers"
-          },
+          market: { type: "selected", select: ".stock-hot__container:has(> h3 a[href=\"/hq#rank\"]) > .tabs__panel a", active: ".active", values: ["cn", "hk", "us"], default: "cn" },
+          direction: { type: "selected", select: ".stock-hot__container:has(> h3 a[href=\"/hq#rank\"]) > .stock-hot__time a", active: ".active", values: ["gainers", "losers"], default: "gainers" },
         },
         metadata: {
           title: marketMoversTitleTemplate,

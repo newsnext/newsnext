@@ -1,4 +1,4 @@
-import { requestXueqiuJson } from "./shared"
+import { requestXueqiuJson } from "./shared.js"
 
 const postFields = {
   url: "target",
@@ -168,12 +168,7 @@ export const feedSources = {
       },
       patch: {
         params: {
-          filter: () => {
-            const page = globalThis
-            const controls = Array.from(page.document.querySelectorAll(".timeline__tab__tags a"))
-            const activeIndex = controls.findIndex(control => control.classList.contains("active"))
-            return ["all", "announcements", "news"][activeIndex] ?? "all"
-          },
+          filter: { type: "selected", select: ".timeline__tab__tags a", active: ".active", values: ["all", "announcements", "news"], default: "all" },
         },
         metadata: {
           title: "自选 | {{ source.vars.title[scope.params.filter] }}",

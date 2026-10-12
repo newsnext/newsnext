@@ -54,14 +54,14 @@ describe("getRadarSuggestions", () => {
         context.title,
       ]),
     )
-    const pageScriptValues = Object.fromEntries(
-      matcher.getPageScripts(context).map(script => [script.key, "latest"]),
+    const pageParamValues = Object.fromEntries(
+      matcher.getPageParams(context).map(script => [script.key, "latest"]),
     )
 
     expect(matcher.getSuggestions({
       ...context,
       pageSelections,
-      pageScriptValues,
+      pageParamValues,
     })).toMatchObject([
       {
         sourceId: "xueqiu:stock-discussions",
@@ -100,12 +100,12 @@ describe("getRadarSuggestions", () => {
       title: "我的首页 - 雪球",
     }
 
-    const pageScripts = matcher.getPageScripts(context)
-    expect(pageScripts).toHaveLength(1)
+    const pageParams = matcher.getPageParams(context)
+    expect(pageParams).toHaveLength(1)
     expect(matcher.getSuggestions({
       ...context,
-      pageScriptValues: {
-        [pageScripts[0]!.key]: filter,
+      pageParamValues: {
+        [pageParams[0]!.key]: filter,
       },
     })).toMatchObject([
       {
@@ -135,7 +135,7 @@ describe("getRadarSuggestions", () => {
         "xueqiu:market-movers:xueqiu-market-movers:market": "us",
       },
     ],
-  ] as const)("detects the active %s controls", (sourceId, params, pageScriptValues) => {
+  ] as const)("detects the active %s controls", (sourceId, params, pageParamValues) => {
     const source = sourceDescriptors.find(source => source.id === sourceId)
     expect(source).toBeDefined()
     const matcher = createRadarMatcher(source ? [source] : [])
@@ -143,12 +143,12 @@ describe("getRadarSuggestions", () => {
       url: "https://xueqiu.com/",
       title: "我的首页 - 雪球",
     }
-    const pageScripts = matcher.getPageScripts(context)
+    const pageParams = matcher.getPageParams(context)
 
-    expect(pageScripts).toHaveLength(2)
+    expect(pageParams).toHaveLength(2)
     expect(matcher.getSuggestions({
       ...context,
-      pageScriptValues,
+      pageParamValues,
     })).toMatchObject([{
       sourceId,
       patch: {
@@ -248,8 +248,8 @@ describe("getRadarSuggestions", () => {
     )).toEqual([])
   })
 
-  it("renders Radar parameters from page JavaScript", () => {
-    const script = () => "current-account"
+  it("renders Radar parameters from portable page reads", () => {
+    const query = { type: "query", key: "identity" } as const
     const matcher = createRadarMatcher([
       {
         id: "test:script-params",
@@ -264,19 +264,19 @@ describe("getRadarSuggestions", () => {
           {
             id: "script-params",
             match: { hosts: ["example.com"] },
-            patch: { params: { identity: script } },
+            patch: { params: { identity: query } },
           },
         ],
       },
     ])
     const context = { url: "https://example.com/" }
 
-    expect(matcher.getPageScripts(context)).toEqual([
-      { key: "test:script-params:script-params:identity", script },
+    expect(matcher.getPageParams(context)).toEqual([
+      { key: "test:script-params:script-params:identity", query },
     ])
     expect(matcher.getSuggestions({
       ...context,
-      pageScriptValues: {
+      pageParamValues: {
         "test:script-params:script-params:identity": "current-account",
       },
     })).toMatchObject([

@@ -2,6 +2,7 @@ import type {
   HtmlFieldConfig,
   SourceRadarRule,
 } from "../types"
+import { firstJsonSchemaIssue, radarPageParamDefinition } from "@newsnext/sdk/schemas"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import { validateFieldTransforms } from "./field-transforms"
 import { SOURCE_REGISTRY_LIMITS } from "./limits"
@@ -18,11 +19,13 @@ export function validateRadarRules(
     validateRadarMatch(rule.match, `${location}.${index}.match`)
     const patchLocation = `${location}.${index}.patch`
     for (const [key, template] of Object.entries(rule.patch?.params ?? {})) {
-      if (typeof template === "function") continue
-      compileSourceTemplate(template, {
-        location: `${patchLocation}.params.${key}`,
-        slot: "radarParams",
-      })
+      const paramLocation = `${patchLocation}.params.${key}`
+      if (typeof template === "string") {
+        compileSourceTemplate(template, { location: paramLocation, slot: "radarParams" })
+      } else {
+        const issue = firstJsonSchemaIssue(radarPageParamDefinition, template)
+        if (issue) throw new TypeError(`${paramLocation}${issue.instancePath}: ${issue.message}`)
+      }
     }
     for (const [key, field] of Object.entries(rule.patch?.metadata ?? {})) {
       if (!isSourcePresentationMetadataKey(key)) {

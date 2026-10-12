@@ -1,3 +1,4 @@
+import type { SourceDescriptor } from "../models/source"
 import Type from "typebox"
 
 const nonBlank = () => Type.String({ pattern: "\\S" })
@@ -198,12 +199,47 @@ const radarMatch = strictObject({
   ])),
   query: Type.Optional(stringArray()),
 })
+export const radarPageParamDefinition = Type.Union([
+  strictObject({
+    type: Type.Literal("query"),
+    key: nonBlank(),
+    decode: Type.Optional(Type.Integer({ minimum: 0, maximum: 2 })),
+    timestamp: Type.Optional(strictObject({
+      unit: Type.Union([Type.Literal("seconds"), Type.Literal("milliseconds")]),
+      timezone: nonBlank(),
+    })),
+  }),
+  strictObject({
+    type: Type.Literal("date-range"),
+    start: nonBlank(),
+    end: nonBlank(),
+    ranges: Type.Record(Type.String({ pattern: "^[1-9][0-9]*$" }), Type.String()),
+    other: Type.Optional(Type.String()),
+  }),
+  strictObject({
+    type: Type.Literal("selected"),
+    select: nonBlank(),
+    active: nonBlank(),
+    values: Type.Array(Type.String(), { minItems: 1, maxItems: 100 }),
+    default: Type.Optional(Type.String()),
+    group: Type.Optional(strictObject({
+      select: nonBlank(),
+      index: Type.Integer({ minimum: 0, maximum: 32 }),
+    })),
+    reveal: Type.Optional(strictObject({
+      trigger: nonBlank(),
+      active: Type.Optional(nonBlank()),
+      visible: nonBlank(),
+      waitMs: Type.Optional(Type.Integer({ minimum: 0, maximum: 1000 })),
+    })),
+  }),
+])
 const radarRule = strictObject({
   id: nonBlank(),
   priority: Type.Optional(Type.Number()),
   match: radarMatch,
   patch: Type.Optional(strictObject({
-    params: Type.Optional(Type.Object({}, { additionalProperties: true })),
+    params: Type.Optional(Type.Record(identifier(), Type.Union([Type.String(), radarPageParamDefinition]))),
     metadata: Type.Optional(Type.Object({}, { additionalProperties: true })),
   })),
 })
@@ -222,7 +258,7 @@ const sourceConfig = strictObject({
   baseUrl: Type.Optional(Type.String()),
   vars: Type.Optional(Type.Object({}, { additionalProperties: true })),
 })
-const sourceManifestBase = strictObject({
+const sourceProvider = strictObject({
   title: nonBlank(),
   color: Type.Union(colors.map(color => Type.Literal(color))),
   category: Type.Optional(Type.Union([
@@ -234,12 +270,26 @@ const sourceManifestBase = strictObject({
     Type.Literal("entertainment"),
   ])),
   icon: Type.Optional(Type.String()),
+})
+
+const sourceManifestBase = strictObject({
+  ...sourceProvider.properties,
   defaults: Type.Optional(sourceConfig),
   sources: Type.Record(Type.String({ pattern: "^[^:\\s]+$" }), sourceConfig, {
     additionalProperties: false,
     minProperties: 1,
   }),
 })
+
+/** Resolved Source data travels independently of its executable loader. */
+export const sourceDescriptorDefinition = Type.Unsafe<SourceDescriptor>(strictObject({
+  ...Type.Omit(sourceConfig, ["loader"]).properties,
+  id: Type.String({ pattern: "^[^:\\s]+:[^:\\s]+$" }),
+  provider: sourceProvider,
+  version: Type.Integer({ minimum: 1 }),
+  metadata: sourceMetadata,
+  capabilities: strictObject({ network: stringArray(), cookies: stringArray() }),
+}))
 
 // JSON Schema expresses whether individual Sources must provide a loader type
 // when the provider defaults do not provide one.
@@ -279,9 +329,10 @@ const portableJsonSchema = <TSchema extends object>(schema: TSchema) => ({
 })
 
 export const portableJsonSchemas = {
-  action: portableJsonSchema(actionManifestDefinition),
-  params: portableJsonSchema(paramsDefinition),
-  plugin: portableJsonSchema(pluginManifestDefinition),
-  source: portableJsonSchema(sourceManifestDefinition),
-  insight: portableJsonSchema(insightManifestDefinition),
+  "action": portableJsonSchema(actionManifestDefinition),
+  "params": portableJsonSchema(paramsDefinition),
+  "plugin": portableJsonSchema(pluginManifestDefinition),
+  "source": portableJsonSchema(sourceManifestDefinition),
+  "source-descriptor": portableJsonSchema(sourceDescriptorDefinition),
+  "insight": portableJsonSchema(insightManifestDefinition),
 }

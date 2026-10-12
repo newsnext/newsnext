@@ -23,6 +23,7 @@ import { parseLocalCardIds, parseLogs, parseRevision } from "./message-values"
 import { isRpcNotification, isRpcRequest, parseRpcNotification, parseRpcRequest, parseRpcResponse } from "./rpc-message"
 
 interface NativeMethods {
+  "localSourceLoad": { params: { sourceId: string, executionId: string, params: Record<string, unknown>, secrets: Record<string, string | undefined> }, result: unknown }
   "rankingPositionsGet": { params: RankingHistoryQuery, result: RankingPosition[] }
   "collectionStatusSubscribe": { params: CollectionStatusSubscribeParams, result: null }
   "sdk.open": { params: SdkOpenParams, result: null }
@@ -40,6 +41,7 @@ interface NativeMethods {
 }
 
 const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMethods[Method]["result"] } = {
+  "localSourceLoad": value => value,
   "rankingPositionsGet": (value) => {
     if (!Array.isArray(value) || !value.every(isRankingPosition)) {
       throw new Error("The native host returned invalid ranking history")
