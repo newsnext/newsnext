@@ -8,6 +8,7 @@ import {
   searchVideoItemToNewsItem,
 } from "./search"
 import {
+  compactBilibiliTitle,
   parseBilibiliCount,
   parseBilibiliDisplayDate,
   parseBilibiliOpusTimestamp,
@@ -34,6 +35,17 @@ describe("bilibili search", () => {
       begin: Date.parse("2026-08-03T00:00:00+08:00") / 1000,
       end: Date.parse("2026-08-01T23:59:59+08:00") / 1000,
     })
+  })
+
+  it("removes non-content markup and preserves unfinished text in search results", () => {
+    expect(searchVideoItemToNewsItem({
+      bvid: "BV1test",
+      title: "<!-- hidden --><script>tracking()</script><em>Visible</em>",
+      description: "<style>.hidden{}</style> Details <unfinished",
+    })).toEqual(expect.objectContaining({
+      title: "Visible",
+      content: { text: "Details <unfinished", pictures: undefined },
+    }))
   })
 
   it("maps highlighted video results", () => {
@@ -323,11 +335,21 @@ function dynamicVideo(title: string, bvid: string, publishedAt: number) {
   }
 }
 
+describe("compactBilibiliTitle", () => {
+  it("counts the suffix within the title limit without splitting emoji", () => {
+    expect(compactBilibiliTitle("😀".repeat(81))).toBe(`${"😀".repeat(79)}…`)
+    expect(compactBilibiliTitle("😀".repeat(80))).toBe("😀".repeat(80))
+    expect(compactBilibiliTitle("  ")).toBeUndefined()
+  })
+})
+
 describe("parseBilibiliCount", () => {
   it.each([
     ["123", 123],
     ["12.3万观看", 123_000],
     ["1.2亿", 120_000_000],
+    ["3千播放", 3_000],
+    ["1.2K views", 1_200],
     [undefined, undefined],
   ])("parses %s", (value, expected) => {
     expect(parseBilibiliCount(value)).toBe(expected)

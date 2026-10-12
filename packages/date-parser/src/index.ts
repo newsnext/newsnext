@@ -1,9 +1,8 @@
 import type { Duration } from "date-fns"
-import { tz, tzOffset } from "@date-fns/tz"
+import { tz, TZDate } from "@date-fns/tz"
 import { add, isAfter, parse, set, setDay, sub, subWeeks } from "date-fns"
 
 const DEFAULT_TIMEZONE = "Asia/Shanghai"
-const MS_PER_MINUTE = 60 * 1000
 const TODAY_REGEX = /^(?:今[天日]|to?day?)(.*)/
 const YESTERDAY_REGEX = /^(?:昨[天日]|y(?:ester)?day?)(.*)/
 const DAY_BEFORE_YESTERDAY_REGEX = /^(?:前天|(?:the)?d(?:ay)?b(?:eforeyesterda)?y)(.*)/
@@ -51,20 +50,20 @@ interface WordRule {
  */
 export function transformToUTC(date: string, formatString?: string, timezone: string = DEFAULT_TIMEZONE): number {
   assertTimeZone(timezone)
-  const base = formatString ? parse(date, formatString, new Date()) : new Date(date)
-
-  const y = base.getFullYear()
-  const m = base.getMonth()
-  const d = base.getDate()
-  const h = base.getHours()
-  const mi = base.getMinutes()
-  const s = base.getSeconds()
-  const ms = base.getMilliseconds()
-
-  const utcFromWall = Date.UTC(y, m, d, h, mi, s, ms)
-  const offsetMinutes = tzOffset(timezone, new Date(utcFromWall))
-
-  return utcFromWall - offsetMinutes * MS_PER_MINUTE
+  if (formatString) {
+    return parse(date, formatString, new Date(), { in: tz(timezone) }).getTime()
+  }
+  const base = new Date(date)
+  return new TZDate(
+    base.getFullYear(),
+    base.getMonth(),
+    base.getDate(),
+    base.getHours(),
+    base.getMinutes(),
+    base.getSeconds(),
+    base.getMilliseconds(),
+    timezone,
+  ).getTime()
 }
 
 export function isValidTimeZone(timezone: string): boolean {

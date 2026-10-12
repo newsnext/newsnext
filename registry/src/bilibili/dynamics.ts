@@ -347,7 +347,7 @@ async function fetchBilibiliUserDynamics(
 }
 
 export const followingSource = {
-  version: 3,
+  version: 4,
   metadata: {
     title: "关注动态",
     desc: "已关注 UP 主发布的最新动态",
@@ -388,7 +388,7 @@ export const followingSource = {
 } satisfies ProviderSourceConfig
 
 export const userDynamicsSource = {
-  version: 3,
+  version: 4,
   metadata: {
     title: "用户动态",
     desc: "指定用户发布的动态",

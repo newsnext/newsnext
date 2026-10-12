@@ -242,7 +242,7 @@ async function fetchXiaohongshuSearch(
 }
 
 export const searchSource = {
-  version: 1,
+  version: 2,
   metadata: {
     title: "笔记搜索",
     desc: "按关键词和页面筛选条件搜索小红书笔记",

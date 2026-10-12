@@ -52,6 +52,16 @@ describe("getTimelineEntries", () => {
     expect(formatXAnnotation(normalize(entriesToNewsItems(entries))[0]!)).toBe("@author")
   })
 
+  it.each([undefined, "", "invalid"])("keeps tweets with missing or invalid dates (%s)", (createdAt) => {
+    const tweet = createTweet("1", "author")
+    tweet.legacy = { ...tweet.legacy, created_at: createdAt }
+    const entries = [{ content: { itemContent: { tweet_results: { result: tweet } } } }]
+    expect(normalize(entriesToNewsItems(entries))).toEqual([
+      expect.objectContaining({ title: "Tweet 1", url: "https://x.com/author/status/1" }),
+    ])
+    expect(entriesToNewsItems(entries)[0]?.publishedAt).toBeUndefined()
+  })
+
   it("parses direct tweets with the current X user shape", () => {
     const entries = getTimelineEntries([
       {

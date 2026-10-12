@@ -1,12 +1,13 @@
 import type { NewsItem, NewsItemInput } from "@newsnext/source-kit/types"
 import type { JikePicture, JikePost, JikeUser, TopicFeedOrder } from "./types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 
 export const JIKE_WEB_ORIGIN = "https://web.okjike.com"
 const JIKE_SHARE_ORIGIN = "https://m.okjike.com"
 const TOPIC_FEED_BASE_URL = "https://api.ruguoapp.com/1.0/topics/tabs"
 
 function compactText(text: string): string {
-  return text.trim().replace(/\s+/g, " ")
+  return fieldTransforms.normalize_whitespace(text)
 }
 
 function getPictureUrl(picture: JikePicture): string | undefined {
@@ -44,9 +45,6 @@ export function jikePostsToNewsItems(
     const url = getPostUrl(post)
     if (!url) return []
 
-    const timestampSource = post.actionTime ?? post.createdAt
-    const parsedTimestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
-    const publishedAt = Number.isFinite(parsedTimestamp) ? parsedTimestamp : undefined
     const authorName = post.user?.screenName
     const avatar = includeIcon ? getJikeUserAvatar(post.user) : undefined
     const previewText = post.target?.content
@@ -58,7 +56,7 @@ export function jikePostsToNewsItems(
     return [{
       title: getPostTitle(post),
       url,
-      publishedAt,
+      publishedAt: fieldTransforms.date_to_ms(post.actionTime ?? post.createdAt),
       author: {
         name: authorName,
         home: post.user?.username ? `${JIKE_WEB_ORIGIN}/u/${post.user.username}` : undefined,

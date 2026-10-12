@@ -5,6 +5,7 @@ import type {
   SourceLoaderOutput,
   SourceRadarRule,
 } from "@newsnext/source-kit/types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 import {
   BILIBILI_WEB_LOCATION,
   bilibiliApiCapabilities,
@@ -94,12 +95,11 @@ export function favoriteMediaToNewsItem(
 ): NewsItemInput | null {
   const bvid = media.bvid ?? media.bv_id
   if (!media.title || !bvid) return null
-  const publishedAt = media.pubtime ? media.pubtime * 1000 : undefined
 
   return {
     title: media.title,
     url: `https://www.bilibili.com/video/${bvid}`,
-    publishedAt,
+    publishedAt: fieldTransforms.seconds_to_ms(media.pubtime || undefined),
     author: {
       name: media.upper?.name,
       home: media.upper?.mid ? `https://space.bilibili.com/${media.upper.mid}` : undefined,

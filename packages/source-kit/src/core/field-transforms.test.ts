@@ -29,6 +29,24 @@ describe("field transforms", () => {
     }
   })
 
+  it("parses formatted wall time in its declared timezone", () => {
+    const step = { op: "date_to_ms", format: "yyyy年MM月dd日", timezone: "Asia/Shanghai" } as const
+    validateFieldTransforms(step, "source.publishedAt")
+    expect(applyFieldTransforms("2026年01月02日", step)).toBe(Date.UTC(2026, 0, 1, 16))
+    expect(applyFieldTransforms("2026年01月02日", { ...step, timezone: "UTC" })).toBe(Date.UTC(2026, 0, 2))
+    for (const value of [undefined, null, "", "2026年02月30日"]) {
+      expect(applyFieldTransforms(value, step)).toBeUndefined()
+    }
+    expect(() => applyFieldTransforms("2026年01月02日", { ...step, timezone: "Mars/Olympus_Mons" })).toThrow("Invalid IANA timezone")
+  })
+
+  it("keeps default date parsing independent of the request URL", () => {
+    expect(applyFieldTransforms("2026-01-02T12:00:00+08:00", "date_to_ms", "https://example.com/"))
+      .toBe(Date.UTC(2026, 0, 2, 4))
+    expect(applyFieldTransforms("2026-01-02T12:00:00", { op: "date_to_ms", timezone: "Asia/Shanghai" }))
+      .toBe(Date.UTC(2026, 0, 2, 4))
+  })
+
   it("cleans selected text before composing it", () => {
     expect(applyFieldTransforms(" First \n\n Second ", { op: "normalize_lines", spacing: 2 })).toBe("First\n\nSecond")
     expect(applyFieldTransforms("\nTelegram message\nSecond", ["first_line", { op: "truncate", length: 8, suffix: "…" }])).toBe("Telegra…")
@@ -36,6 +54,40 @@ describe("field transforms", () => {
     expect(applyFieldTransforms("2.5M", "parse_compact_number")).toBe(2500000)
     expect(applyFieldTransforms("OPEN", "lowercase")).toBe("open")
     expect(applyFieldTransforms("abcdef12345", { op: "truncate", length: 7, suffix: "" })).toBe("abcdef1")
+  })
+
+  it.each([
+    ["1.2万", 12_000],
+    ["3千", 3_000],
+    ["1.2亿", 120_000_000],
+    ["1,234.5K", 1_234_500],
+    [" 2.5 M ", 2_500_000],
+    ["0", 0],
+    ["1.25", 1.25],
+    ["12万观看", undefined],
+    ["1.2.3万", undefined],
+    ["1,23万", undefined],
+    ["", undefined],
+    [Number.NaN, undefined],
+  ])("parses compact numbers (%s)", (value, expected) => {
+    expect(applyFieldTransforms(value, "parse_compact_number")).toBe(expected)
+  })
+
+  it.each([
+    ["😀😃😄😁", 3, "…", "😀😃…"],
+    ["😀😃😄", 3, "…", "😀😃😄"],
+    ["😀😃😄😁", 2, "😀", "😀😀"],
+    ["😀😃😄😁", 2, "", "😀😃"],
+    ["abcdef", 2, "...", ".."],
+    ["abcdef", 0, "…", ""],
+  ])("truncates Unicode text (%s) within the total length", (value, length, suffix, expected) => {
+    expect(applyFieldTransforms(value, { op: "truncate", length, suffix })).toBe(expected)
+  })
+
+  it("preserves shorter non-string inputs when truncating", () => {
+    for (const value of [null, undefined, 12, false]) {
+      expect(applyFieldTransforms(value, { op: "truncate", length: 8 })).toBe(value)
+    }
   })
 
   it("reduces timestamp precision without inventing missing dates", () => {

@@ -1,4 +1,5 @@
 import type { NewsItemInput } from "@newsnext/source-kit/types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 
 const INITIAL_STATE_MARKER = "window.__INITIAL_STATE__="
 const SCRIPT_END = "</script>"
@@ -67,14 +68,9 @@ export function parseXiaohongshuInitialState(html: string): unknown {
 }
 
 export function parseXiaohongshuCount(value: number | string | undefined): number | undefined {
-  if (typeof value === "number") return Number.isFinite(value) ? value : undefined
-  if (!value) return undefined
-  const match = value.trim().match(/^([\d.]+)([万千]?)$/)
-  if (!match) return undefined
-  const amount = Number(match[1])
-  if (!Number.isFinite(amount)) return undefined
-  const multiplier = match[2] === "万" ? 10_000 : match[2] === "千" ? 1_000 : 1
-  return Math.round(amount * multiplier)
+  const count = fieldTransforms.parse_compact_number(value)
+  if (count === undefined) return undefined
+  return typeof value === "number" ? count : Math.round(count)
 }
 
 export function parseXiaohongshuNoteTimestamp(noteId: string | undefined): number | undefined {

@@ -20,6 +20,11 @@ describe("xiaohongshu helpers", () => {
     expect(parseXiaohongshuCount("1.2万")).toBe(12_000)
     expect(parseXiaohongshuCount("3千")).toBe(3_000)
     expect(parseXiaohongshuCount("42")).toBe(42)
+    expect(parseXiaohongshuCount("1.2亿")).toBe(120_000_000)
+    expect(parseXiaohongshuCount("1.2K")).toBe(1_200)
+    expect(parseXiaohongshuCount("1.6")).toBe(2)
+    expect(parseXiaohongshuCount(1.6)).toBe(1.6)
+    expect(parseXiaohongshuCount("invalid")).toBeUndefined()
   })
 
   it("derives a publication timestamp from a note ID", () => {

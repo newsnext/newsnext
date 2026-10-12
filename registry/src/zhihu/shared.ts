@@ -1,5 +1,5 @@
 import type { NewsItemInput } from "@newsnext/source-kit/types"
-import { applyFieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 
 export const ZHIHU_ORIGIN = "https://www.zhihu.com"
 
@@ -83,11 +83,8 @@ export function resolveZhihuUrl(content: ZhihuContent): string | undefined {
 }
 
 function cleanText(value: string | undefined, maxLength?: number): string {
-  return String(applyFieldTransforms(value, [
-    "strip_html",
-    "normalize_whitespace",
-    ...(maxLength === undefined ? [] : [{ op: "truncate" as const, length: maxLength, suffix: "…" }]),
-  ]) ?? "")
+  const text = fieldTransforms.normalize_whitespace(fieldTransforms.strip_html(value))
+  return maxLength === undefined ? text : fieldTransforms.truncate(text, maxLength, "…")
 }
 
 function parseZhihuContent(content: ZhihuContent, feed?: ZhihuFeed): NewsItemInput | undefined {
@@ -96,13 +93,12 @@ function parseZhihuContent(content: ZhihuContent, feed?: ZhihuFeed): NewsItemInp
   const url = resolveZhihuUrl(content)
   if (!title || !url) return undefined
 
-  const timestamp = applyFieldTransforms(feed ? feed.created_time : content.created_time ?? content.created, "seconds_to_ms")
   const author = content.author
   const statistics = content.reaction?.statistics
   return {
     title,
     url,
-    publishedAt: typeof timestamp === "number" ? timestamp : undefined,
+    publishedAt: fieldTransforms.seconds_to_ms(feed ? feed.created_time : content.created_time ?? content.created),
     author: author?.name ? { name: author.name } : undefined,
     icon: author?.avatar_url ? { src: author.avatar_url, kind: "author", label: author.name } : undefined,
     stats: feed

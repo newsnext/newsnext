@@ -1,5 +1,5 @@
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
-import { SourceLoginRequiredError } from "@newsnext/source-kit/core"
+import { fieldTransforms, SourceLoginRequiredError } from "@newsnext/source-kit/core"
 import { load } from "cheerio/slim"
 
 const WEIBO_ORIGIN = "https://weibo.com"
@@ -63,7 +63,7 @@ async function fetchWeiboDesktop<T>(url: string, context: SourceLoaderContext): 
 }
 
 function htmlToText(html?: string): string {
-  return html ? load(html).text().replace(/\s+/g, " ").trim() : ""
+  return html ? fieldTransforms.normalize_whitespace(load(html).text()) : ""
 }
 
 function normalizePictures(pictures?: WeiboStatus["pics"] | WeiboStatus["pic_infos"]): string[] {
@@ -94,13 +94,12 @@ function weiboStatusToNewsItem(
     ...normalizePictures(status.pic_infos ?? status.pics),
     ...normalizePictures(status.retweeted_status?.pic_infos ?? status.retweeted_status?.pics),
   ]
-  const timestamp = status.created_at ? Date.parse(status.created_at) : Number.NaN
   const inlineIcon = includeIcon ? status.user?.profile_image_url : undefined
   const authorName = status.user?.screen_name
   return {
     title: text,
     url: userId ? `${WEIBO_ORIGIN}/${userId}/${postId}` : `${WEIBO_ORIGIN}/status/${postId}`,
-    publishedAt: timestamp,
+    publishedAt: fieldTransforms.date_to_ms(status.created_at),
     author: {
       name: authorName,
       home: userId ? `${WEIBO_ORIGIN}/u/${userId}` : undefined,

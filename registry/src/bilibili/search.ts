@@ -1,5 +1,6 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 import {
   bilibiliApiCapabilities,
   normalizeBilibiliUrl,
@@ -91,7 +92,7 @@ export function getBilibiliSearchDateRange(
 }
 
 function cleanBilibiliSearchText(value: string | undefined): string | undefined {
-  const text = value?.replace(/<[^>]+>/g, "").trim()
+  const text = fieldTransforms.strip_html(value).trim()
   return text || undefined
 }
 
@@ -206,7 +207,7 @@ function readSearchDateRange(): BilibiliSearchDate | undefined {
 }
 
 export const searchSource = {
-  version: 3,
+  version: 4,
   metadata: {
     title: "视频搜索",
     desc: "按关键词搜索哔哩哔哩视频",

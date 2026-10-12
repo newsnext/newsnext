@@ -7,6 +7,7 @@ export {
   validateSourceRequestRules,
 } from "./capabilities"
 export { parseEmbeddedJson } from "./embedded-json"
+export { fieldTransforms } from "./field-conversions"
 export { applyFieldTransforms } from "./field-transforms"
 export {
   validateNewsItems,

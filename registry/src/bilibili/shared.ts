@@ -1,4 +1,4 @@
-import { transformToUTC } from "@newsnext/date-parser"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 
 export const BILIBILI_WEB_LOCATION = "333.1365"
 
@@ -24,9 +24,8 @@ export function normalizeBilibiliUrl(url: string): string {
 }
 
 export function parseBilibiliTimestamp(value: number | string | undefined): number | undefined {
-  const timestamp = typeof value === "string" ? Number(value) : value
-  if (timestamp === undefined || !Number.isFinite(timestamp) || timestamp <= 0) return undefined
-  return timestamp * 1000
+  const timestamp = fieldTransforms.seconds_to_ms(value)
+  return timestamp !== undefined && timestamp > 0 ? timestamp : undefined
 }
 
 export function parseBilibiliDisplayDate(value: string | undefined, now = Date.now()): number | undefined {
@@ -39,15 +38,14 @@ export function parseBilibiliDisplayDate(value: string | undefined, now = Date.n
     timeZone: BILIBILI_TIMEZONE,
     year: "numeric",
   }).format(now))
-  const toTimestamp = (year: number) => transformToUTC(
+  const toTimestamp = (year: number) => fieldTransforms.date_to_ms(
     explicitYear ? displayDate : `${year}年${displayDate}`,
-    "yyyy年MM月dd日",
-    BILIBILI_TIMEZONE,
+    { format: "yyyy年MM月dd日", timezone: BILIBILI_TIMEZONE },
   )
   let timestamp = toTimestamp(currentYear)
-  if (!Number.isFinite(timestamp)) return undefined
+  if (timestamp === undefined) return undefined
   if (!explicitYear && timestamp > now) timestamp = toTimestamp(currentYear - 1)
-  return Number.isFinite(timestamp) ? timestamp : undefined
+  return timestamp
 }
 
 export function parseBilibiliOpusTimestamp(id: string | undefined): number | undefined {
@@ -62,12 +60,9 @@ export function parseBilibiliOpusTimestamp(id: string | undefined): number | und
 }
 
 export function parseBilibiliCount(value: string | undefined): number | undefined {
-  const match = value?.trim().match(/^(\d+(?:\.\d+)?)\s*([万亿])?/)
-  if (!match) return undefined
-
-  const count = Number(match[1])
-  const multiplier = match[2] === "亿" ? 100_000_000 : match[2] === "万" ? 10_000 : 1
-  return Number.isFinite(count) ? Math.round(count * multiplier) : undefined
+  const numericText = value?.trim().match(/^\d+(?:\.\d+)?\s*[KMBT千万亿]?/i)?.[0]
+  const count = fieldTransforms.parse_compact_number(numericText)
+  return count === undefined ? undefined : Math.round(count)
 }
 
 export function parseBilibiliNumericCount(value: number | string | undefined): number | undefined {
@@ -76,8 +71,7 @@ export function parseBilibiliNumericCount(value: number | string | undefined): n
 }
 
 export function compactBilibiliTitle(value: string | undefined): string | undefined {
-  const text = value?.trim().replace(/\s+/g, " ")
+  const text = fieldTransforms.normalize_whitespace(value)
   if (!text) return undefined
-  const characters = Array.from(text)
-  return characters.length > 80 ? `${characters.slice(0, 80).join("")}…` : text
+  return fieldTransforms.truncate(text, 80, "…")
 }

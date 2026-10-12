@@ -344,6 +344,7 @@ export const upSources = {
     capabilities: bilibiliApiCapabilities,
   },
   "up-opus": {
+    version: 2,
     metadata: {
       title: "UP 主图文",
       desc: "指定 UP 主发布的图文",

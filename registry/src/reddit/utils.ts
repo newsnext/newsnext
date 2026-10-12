@@ -1,5 +1,6 @@
 import type { NewsItemInput } from "@newsnext/source-kit/types"
 import type { RedditPost } from "./types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 
 export const REDDIT_ORIGIN = "https://www.reddit.com"
 
@@ -50,7 +51,7 @@ export function redditPostsToNewsItems(
     const item: NewsItemInput = {
       title,
       url,
-      publishedAt: typeof post.created_utc === "number" ? post.created_utc * 1000 : undefined,
+      publishedAt: fieldTransforms.seconds_to_ms(post.created_utc),
       author: {
         name: post.author ? `u/${post.author}` : undefined,
         home: post.author ? `${REDDIT_ORIGIN}/user/${post.author}/` : undefined,

@@ -6,6 +6,7 @@ import type {
   XTweetTextMode,
   XUserTimelineMode,
 } from "./types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 
 export const X_ORIGIN = "https://x.com"
 export function formatXAnnotation(item: Readonly<NewsItem>): string | undefined {
@@ -143,14 +144,13 @@ function xTweetToNewsItem(
   if (!id || !screenName || !title) return undefined
 
   const favoriteCount = tweet.legacy?.favorite_count ?? 0
-  const timestamp = tweet.legacy?.created_at ? Date.parse(tweet.legacy.created_at) : Number.NaN
   const pictures = tweet.legacy?.entities?.media
     ?.map(media => media.media_url_https)
     .filter((url): url is string => Boolean(url))
   return {
     title,
     url: `${X_ORIGIN}/${screenName}/status/${id}`,
-    publishedAt: timestamp,
+    publishedAt: fieldTransforms.date_to_ms(tweet.legacy?.created_at),
     author: {
       name: authorName,
       home: `${X_ORIGIN}/${screenName}`,

@@ -67,7 +67,7 @@ export default {
   sources: {
     search: searchSource,
     user: {
-      version: 2,
+      version: 3,
       metadata: {
         title: "用户笔记",
         desc: "指定小红书用户发布的笔记",

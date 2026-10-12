@@ -298,6 +298,17 @@ describe("common webpage relative date formats", () => {
   })
 })
 
+describe("formatted wall-time conversion", () => {
+  it.each([
+    ["2025-03-09 02:30", "2025-03-09T07:30:00.000Z"],
+    ["2025-03-09 03:30", "2025-03-09T07:30:00.000Z"],
+    ["2025-11-02 01:30", "2025-11-02T05:30:00.000Z"],
+    ["2025-11-02 02:30", "2025-11-02T07:30:00.000Z"],
+  ])("resolves New York DST wall time %s", (value, expected) => {
+    expect(new Date(transformToUTC(value, "yyyy-MM-dd HH:mm", "America/New_York")).toISOString()).toBe(expected)
+  })
+})
+
 describe("transform Beijing time to UTC in different timezone", () => {
   const a = "2024/10/3 12:26:16"
   const b = 1727929576000

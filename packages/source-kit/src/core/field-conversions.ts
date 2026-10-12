@@ -1,34 +1,53 @@
-import { parseRelativeDate } from "@newsnext/date-parser"
+import { parseRelativeDate, transformToUTC } from "@newsnext/date-parser"
 import { getFavicon } from "@newsnext/shared/utils"
 import { compileSourceRegex, validateSourceRegexInput } from "./regex"
 
 const CACHE_LIMIT = 256
 const regexCache = new Map<string, RegExp>()
 
-// Conversions used by field transforms.
-export const fieldConversions = {
+/** Shared conversions for declarative fields and direct, typed use in custom loaders. */
+export const fieldTransforms = {
+  strip_html: (value: unknown): string => stripHtml(stringify(value)),
+  lowercase: (value: unknown): string => stringify(value).toLowerCase(),
+  seconds_to_ms: (value: unknown): number | undefined => {
+    if (value === undefined || value === null || value === "") return undefined
+    const timestamp = Number(value) * 1000
+    return Number.isFinite(timestamp) ? timestamp : undefined
+  },
+  timestamp_precision: (value: unknown, milliseconds: number): number | undefined => {
+    if (value === undefined || value === null || value === "") return undefined
+    const timestamp = Number(value)
+    return Number.isFinite(timestamp) ? Math.floor(timestamp / milliseconds) * milliseconds : undefined
+  },
+  truncate: <T>(value: T, length: number, suffix = "..."): T | string => {
+    const characters = Array.from(stringify(value))
+    if (characters.length <= length) return value
+    const ending = Array.from(suffix).slice(0, length)
+    return characters.slice(0, length - ending.length).join("") + ending.join("")
+  },
+  replace: (value: unknown, search: string, replacement: string): string => stringify(value).split(search).join(replacement),
+  append: (value: unknown, suffix: string): string => stringify(value) + suffix,
   absolute_url: resolveUrl,
   css_url: extractCssUrl,
   parse_compact_number: parseCompactNumber,
-  date_to_ms: (value: unknown) => {
-    const timestamp = Date.parse(stringify(value))
+  date_to_ms: (value: unknown, options: { format?: string, timezone?: string } = {}): number | undefined => {
+    const text = stringify(value)
+    const timestamp = options.format || options.timezone
+      ? transformToUTC(text, options.format, options.timezone)
+      : Date.parse(text)
     return Number.isFinite(timestamp) ? timestamp : undefined
   },
   first_line: firstLine,
-  favicon_url: (value: unknown) => {
-    return getFavicon(stringify(value))
-  },
-  normalize_lines: (value: unknown, spacing: unknown = 1) => {
+  favicon_url: (value: unknown): string => getFavicon(stringify(value)),
+  normalize_lines: (value: unknown, spacing: unknown = 1): string => {
     const lineSpacing = Number(spacing)
     if (!Number.isInteger(lineSpacing) || lineSpacing < 1 || lineSpacing > 4) {
       throw new Error("The normalize_lines spacing must be an integer from 1 through 4")
     }
     return normalizeLines(value, "\n".repeat(lineSpacing))
   },
-  normalize_whitespace: (value: unknown) => {
-    return stringify(value).replace(/\s+/g, " ").trim()
-  },
-  regex_extract: (value: unknown, pattern: unknown, group: unknown = 1) => {
+  normalize_whitespace: (value: unknown): string => stringify(value).replace(/\s+/g, " ").trim(),
+  regex_extract: (value: unknown, pattern: unknown, group: unknown = 1): string => {
     const input = getRegexInput(value)
     const match = getRegex(pattern).exec(input)
     if (!match) return ""
@@ -39,10 +58,8 @@ export const fieldConversions = {
     }
     return match[groupIndex] ?? ""
   },
-  regex_replace: (value: unknown, pattern: unknown, replacement: unknown = "") => {
-    return getRegexInput(value).replace(getRegex(pattern, true), stringify(replacement))
-  },
-  relative_date_to_ms: (value: unknown, timezone: unknown = undefined) => {
+  regex_replace: (value: unknown, pattern: unknown, replacement: unknown = ""): string => getRegexInput(value).replace(getRegex(pattern, true), stringify(replacement)),
+  relative_date_to_ms: (value: unknown, timezone: unknown = undefined): number | undefined => {
     const date = parseRelativeDate(
       stringify(value),
       timezone === undefined ? undefined : stringify(timezone),
@@ -55,11 +72,14 @@ export const fieldConversions = {
 function parseCompactNumber(value: unknown): number | undefined {
   if (typeof value === "number") return Number.isFinite(value) ? value : undefined
 
-  const match = stringify(value).trim().match(/^([+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?)\s*([KMBT])?$/i)
+  const match = stringify(value).trim().match(/^([+-]?(?:\d{1,3}(?:,\d{3})*|\d+)(?:\.\d+)?)\s*([KMBT千万亿])?$/i)
   if (!match) return undefined
 
   const number = Number(match[1]?.replaceAll(",", ""))
   const multiplier = {
+    千: 1_000,
+    万: 10_000,
+    亿: 100_000_000,
     K: 1_000,
     M: 1_000_000,
     B: 1_000_000_000,
@@ -140,4 +160,27 @@ function setCached<T>(cache: Map<string, T>, key: string, value: T): void {
 
 function stringify(value: unknown): string {
   return value === undefined || value === null ? "" : String(value)
+}
+
+// Linear scan tolerates unclosed markup without a backtracking regular expression.
+function stripHtml(text: string): string {
+  const blocks = new Map([["<script", "</script>"], ["<style", "</style>"], ["<!--", "-->"], ["<", ">"]])
+  let result = ""
+  let cursor = 0
+  while (cursor < text.length) {
+    const start = text.indexOf("<", cursor)
+    if (start < 0) return result + text.slice(cursor)
+    result += text.slice(cursor, start)
+    for (const [open, close] of blocks) {
+      if (!text.startsWith(open, start)) continue
+      const end = text.indexOf(close, start + open.length)
+      if (end >= 0) {
+        cursor = end + close.length
+        break
+      }
+      blocks.delete(open)
+    }
+    if (cursor <= start) return result + text.slice(start)
+  }
+  return result
 }

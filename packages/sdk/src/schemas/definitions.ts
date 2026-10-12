@@ -131,6 +131,7 @@ export const insightManifestDefinition = strictObject({
 
 const fieldTransformDefinition = Type.Union([
   ...["strip_html", "normalize_whitespace", "first_line", "date_to_ms", "seconds_to_ms", "parse_compact_number", "css_url", "favicon_url", "absolute_url", "lowercase"].map(name => Type.Literal(name)),
+  strictObject({ op: Type.Literal("date_to_ms"), format: Type.Optional(Type.String()), timezone: Type.Optional(Type.String()) }),
   strictObject({ op: Type.Literal("timestamp_precision"), milliseconds: Type.Integer({ minimum: 1 }) }),
   strictObject({ op: Type.Literal("normalize_lines"), spacing: Type.Optional(Type.Integer({ minimum: 1, maximum: 4 })) }),
   strictObject({ op: Type.Literal("truncate"), length: Type.Integer({ minimum: 0 }), suffix: Type.Optional(Type.String()) }),

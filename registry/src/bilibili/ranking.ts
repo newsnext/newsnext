@@ -1,5 +1,6 @@
 import type { ProviderSourceConfig } from "@newsnext/source-kit/registry"
 import type { NewsItem, NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliCount } from "./shared"
 
 const BILIBILI_RANKING_URL = "https://api.bilibili.com/x/web-interface/ranking/v2"
@@ -127,7 +128,7 @@ export function videoRankingItemToNewsItem(item: BilibiliVideoRankingItem): News
   return {
     title: item.title,
     url: `https://www.bilibili.com/video/${item.bvid}`,
-    publishedAt: item.pubdate ? item.pubdate * 1000 : undefined,
+    publishedAt: fieldTransforms.seconds_to_ms(item.pubdate || undefined),
     author: { name: item.owner?.name },
     stats: {
       views: item.stat?.view,
@@ -238,5 +239,5 @@ export const rankingSource = {
     annotation: formatBilibiliPgcAnnotation,
   },
   capabilities: bilibiliApiCapabilities,
-  version: 6,
+  version: 7,
 } satisfies ProviderSourceConfig

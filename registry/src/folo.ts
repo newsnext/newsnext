@@ -1,5 +1,6 @@
 import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { NewsItemInput, SourceLoaderContext, SourceLoaderOutput } from "@newsnext/source-kit/types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 
 interface FoloMedia {
   url?: string
@@ -59,8 +60,6 @@ async function loadFoloEntries(
       .flatMap(({ entries, feeds }): NewsItemInput[] => {
         if (!entries?.title || !entries.url) return []
 
-        const timestampSource = entries.publishedAt ?? entries.insertedAt
-        const timestamp = timestampSource ? Date.parse(timestampSource) : Number.NaN
         const pictures = entries.media
           ?.filter((media): media is FoloMedia & { url: string } => media.type === "photo" && Boolean(media.url))
           .map(media => media.url)
@@ -68,7 +67,7 @@ async function loadFoloEntries(
         return [{
           title: entries.title,
           url: entries.url,
-          publishedAt: timestamp,
+          publishedAt: fieldTransforms.date_to_ms(entries.publishedAt ?? entries.insertedAt),
           author: { name: entries.author },
           attributes: { source: feeds?.title },
           icon: isList && feeds?.image

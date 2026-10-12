@@ -12,6 +12,7 @@ import type {
   XUserTimelineMode,
   XUserTimelineResponse,
 } from "./types"
+import { fieldTransforms } from "@newsnext/source-kit/core"
 import { LOCATION_OPTIONS } from "./types"
 import {
   createXLoggedInHeaders,
@@ -85,7 +86,7 @@ async function fetchXPlaceTrends(
     headers: createXLoggedInHeaders(context),
     searchParams: { id: location },
   }).json<XPlaceTrendResponse[]>()
-  const timestamp = response[0]?.created_at ? Date.parse(response[0].created_at) : undefined
+  const timestamp = fieldTransforms.date_to_ms(response[0]?.created_at)
   return {
     items: (response[0]?.trends ?? []).map(trend => ({
       title: trend.name,

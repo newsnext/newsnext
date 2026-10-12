@@ -1544,6 +1544,25 @@
             {
               "type": "object",
               "required": [
+                "op"
+              ],
+              "properties": {
+                "op": {
+                  "type": "string",
+                  "const": "date_to_ms"
+                },
+                "format": {
+                  "type": "string"
+                },
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
                 "op",
                 "milliseconds"
               ],
@@ -1744,6 +1763,25 @@
               {
                 "type": "string",
                 "const": "lowercase"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "op"
+                ],
+                "properties": {
+                  "op": {
+                    "type": "string",
+                    "const": "date_to_ms"
+                  },
+                  "format": {
+                    "type": "string"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
               },
               {
                 "type": "object",
