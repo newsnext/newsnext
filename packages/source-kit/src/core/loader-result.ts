@@ -207,6 +207,7 @@ function assertSourceLoaderMetadata(value: unknown): void {
     if (!isSourcePresentationMetadataKey(key)) {
       throwInvalidLoaderResult(`metadata.${key} is not supported`)
     }
+    if (metadataValue === undefined) continue
     if (key === "type") {
       if (!isSourcePresentationType(metadataValue)) {
         throwInvalidLoaderResult("metadata.type must be \"list\" or \"ranking\"")

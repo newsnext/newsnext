@@ -1,4 +1,13 @@
 {
   "extends": "@newsnext/tsconfigs/server.json",
-  "include": ["src", "build.ts", "sources.ts", "*.test.ts"]
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false
+  },
+  "include": [
+    "src",
+    "build.ts",
+    "sources.js",
+    "sources.d.ts"
+  ]
 }

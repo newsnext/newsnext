@@ -7,7 +7,7 @@ const REGISTRY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../..
 const REGISTRY_SOURCE_DIR = resolve(REGISTRY_ROOT, "src")
 const REGISTRY_OUTPUT_PATH = resolve(REGISTRY_ROOT, "registry.json")
 const SOURCE_CHANGE_EVENTS = new Set(["add", "change", "unlink"])
-const TEST_FILE_REGEX = /\.(?:test|spec)\.ts$/
+const TEST_FILE_REGEX = /\.(?:test|spec)\.js$/
 
 export function isSourceProviderFile(
   filePath: string,
@@ -25,10 +25,10 @@ export function isSourceProviderFile(
   }
 
   if (registryPathParts.length === 2) {
-    return fileName.endsWith(".json") || fileName.endsWith(".ts")
+    return fileName.endsWith(".json") || fileName.endsWith(".js")
   }
 
-  return registryPathParts.length === 3 && fileName === "index.ts"
+  return registryPathParts.length === 3 && fileName === "index.js"
 }
 
 function runRegistryBuild(): Promise<void> {

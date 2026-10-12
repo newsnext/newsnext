@@ -20,9 +20,8 @@ Field semantics live as TSDoc on the types — links below.
 
 ## Quick start
 
-```ts
-import type { ProviderConfig } from "@newsnext/source-kit/registry"
-
+```js
+/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
 export default {
   title: "Example",
   color: "blue",
@@ -38,13 +37,13 @@ export default {
       },
     },
   },
-} satisfies ProviderConfig
+}
 ```
 
-- JSON for declarative loaders, TypeScript for custom loaders/helpers.
-  Filename (or parent dir of nested `index.ts`) becomes the provider ID;
+- JSON for declarative loaders, JavaScript for custom loaders/helpers.
+  Filename (or parent dir of nested `index.js`) becomes the provider ID;
   one provider uses one format. Never edit `registry/registry.json` or
-  `registry/sources.ts` — build with `bun --filter=@newsnext/registry run build`.
+  `registry/sources.js` — build with `bun --filter=@newsnext/registry run build`.
 - Source IDs are `<provider>:<source>`.
 
 ## Local sources
@@ -92,10 +91,20 @@ JSON only, watched live, invalid files ignored. Same shape as
   `registry/validation.ts` and `core/source-error.ts`.
 - Keep templates for interpolation and `??`/`||` fallback and `url_path`/`url_query` encoding; tags are rejected. Use `loader.query`
   for query parameters and field `transform` for value conversion; use JMESPath
-  for JSON fallbacks and array operations, and TypeScript for conditional logic.
+  for JSON fallbacks and array operations, and JavaScript for conditional logic.
   Transform regex patterns have only JSON escaping; avoid regex string parsing
   inside templates.
 - Keep opaque numeric IDs as `text` params with string defaults (they can
   exceed safe-integer range); quote them as JSON strings in CLI runs.
 - Radar JS param functions must be closure-free (serialized into the page);
   keep them cheap and side-effect-free, evaluated on every full resolve.
+
+## Live verification
+
+Run `bun run test:source` against a connected NewsNext runtime through the SDK.
+By default, every Source returned by `client.actions.source.list()` is tested
+with its default parameters, including authenticated and local Sources.
+Set `NEWSNEXT_WORKER_ID` to select the browser whose login state should be used.
+Set comma-separated `NEWSNEXT_SOURCE_IDS` to choose other Sources;
+`NEWSNEXT_SOURCE_PARAMS` accepts a JSON object keyed by Source ID.
+These tests run separately from `bun run test` and use real requests.

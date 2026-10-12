@@ -216,6 +216,14 @@ describe("source loader result", () => {
     })
   })
 
+  it("accepts omitted optional metadata values from custom loaders", () => {
+    const result = {
+      items: [{ title: "Example", url: "https://example.com" }],
+      metadata: { title: "Example", type: undefined, badge: undefined, home: undefined },
+    }
+    expect(validateSourceLoaderOutput(result)).toEqual(result)
+  })
+
   it("rejects invalid metadata", () => {
     expect(() => validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],

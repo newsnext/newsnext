@@ -1,0 +1,241 @@
+import { fetchWeiboHotSearch } from "./hot-search"
+import { fetchWeiboFollowingTimeline, fetchWeiboKeywordPosts, fetchWeiboSuperTopicPosts, fetchWeiboUserPosts } from "./utils"
+
+const weiboCapabilities = {
+  network: ["weibo.com", "*.sinaimg.cn"],
+}
+const weiboSearchCapabilities = {
+  network: ["m.weibo.cn", "*.sinaimg.cn"],
+}
+const weiboRequestRules = [
+  {
+    action: {
+      type: "modifyHeaders",
+      requestHeaders: [
+        {
+          header: "Referer",
+          operation: "set",
+          value: "https://weibo.com/",
+        },
+      ],
+    },
+    condition: {
+      requestDomains: ["weibo.com", "sinaimg.cn"],
+      resourceTypes: ["image", "xmlhttprequest"],
+    },
+  },
+]
+const weiboSearchRequestRules = [
+  {
+    action: {
+      type: "modifyHeaders",
+      requestHeaders: [
+        {
+          header: "Referer",
+          operation: "set",
+          value: "https://weibo.com/",
+        },
+      ],
+    },
+    condition: {
+      requestDomains: ["m.weibo.cn", "sinaimg.cn"],
+      resourceTypes: ["image", "xmlhttprequest"],
+    },
+  },
+]
+/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+export default {
+  title: "微博",
+  category: "social",
+  icon: "https://weibo.com/favicon.ico",
+  color: "red",
+  defaults: {
+    baseUrl: "https://weibo.com/",
+    capabilities: weiboCapabilities,
+    requestRules: weiboRequestRules,
+    loader: {
+      type: "custom",
+    },
+  },
+  sources: {
+    "hot-search": {
+      metadata: {
+        title: "热搜",
+        type: "ranking",
+      },
+      params: {
+        type: {
+          type: "select",
+          title: "类别",
+          values: [
+            { label: "热搜", value: "search" },
+            { label: "好友热搜", value: "mine" },
+            { label: "文娱", value: "entertainment" },
+            { label: "要闻", value: "social" },
+            { label: "科技", value: "tech" },
+            { label: "生活", value: "life" },
+            { label: "体育", value: "sports" },
+            { label: "ACG", value: "acg" },
+          ],
+          default: "search",
+        },
+      },
+      radar: [
+        {
+          id: "weibo-hot-search",
+          match: {
+            hosts: ["weibo.com"],
+            paths: ["/hot/:type"],
+          },
+          patch: {
+            params: {
+              type: "{{ scope.path.type }}",
+            },
+            metadata: {
+              title: {
+                select: "a[aria-current=\"page\"] [title]",
+              },
+              home: "/hot/{{ scope.path.type }}",
+            },
+          },
+        },
+      ],
+      loader: { load: fetchWeiboHotSearch },
+      version: 7,
+    },
+    "user": {
+      metadata: {
+        title: "用户微博",
+        desc: "指定微博用户发布的最新微博",
+        home: "/",
+      },
+      params: {
+        uid: {
+          type: "text",
+          title: "用户 UID",
+          description: "微博用户的数字 UID。",
+          default: "1195230310",
+          required: true,
+          validate: { format: "digits" },
+        },
+      },
+      radar: [
+        {
+          id: "weibo-user",
+          match: {
+            hosts: ["weibo.com"],
+            paths: ["/u/:uid", "/profile/:uid", "/:uid"],
+          },
+          patch: {
+            params: {
+              uid: "{{ scope.path.uid }}",
+            },
+            metadata: {
+              title: {
+                select: "[class*=\"_box1_\"] [class*=\"_h3_\"] > [class*=\"_name_\"]",
+              },
+            },
+          },
+        },
+      ],
+      loader: {
+        load: fetchWeiboUserPosts,
+      },
+      version: 3,
+    },
+    "keyword": {
+      metadata: {
+        title: "关键词",
+        desc: "包含指定关键词的最新微博",
+        home: "https://s.weibo.com",
+      },
+      params: {
+        keyword: {
+          type: "text",
+          title: "关键词",
+          default: "MSI",
+          required: true,
+        },
+      },
+      radar: [
+        {
+          id: "weibo-keyword",
+          match: {
+            hosts: ["s.weibo.com"],
+          },
+          patch: {
+            params: {
+              keyword: "{{ scope.query.q ?? scope.query.keyword }}",
+            },
+            metadata: {
+              title: "{{ scope.params.keyword }}",
+            },
+          },
+        },
+      ],
+      loader: {
+        load: fetchWeiboKeywordPosts,
+      },
+      capabilities: weiboSearchCapabilities,
+      requestRules: weiboSearchRequestRules,
+    },
+    "super-topic": {
+      metadata: {
+        title: "超话",
+        desc: "指定微博超话的最新帖子",
+        home: "/",
+      },
+      params: {
+        id: {
+          type: "text",
+          title: "超话 ID",
+          description: "以 100808 开头的微博超话 ID。",
+          default: "1008084989d223732bf6f02f75ea30efad58a9",
+          required: true,
+          validate: { regex: "^100808[A-Za-z0-9]+$" },
+        },
+      },
+      radar: [
+        {
+          id: "weibo-super-topic",
+          match: {
+            hosts: ["weibo.com"],
+            paths: ["/p/:id", "/p/:id/*rest"],
+          },
+          patch: {
+            params: {
+              id: "{{ scope.path.id }}",
+            },
+            metadata: {
+              title: {
+                select: "[class*=\"_infoRow_\"] [class*=\"_nameRow_\"] > [class*=\"_name_\"]",
+              },
+            },
+          },
+        },
+      ],
+      loader: {
+        load: fetchWeiboSuperTopicPosts,
+      },
+    },
+    "following": {
+      metadata: {
+        title: "关注",
+        desc: "所有已关注微博账号发布的最新微博",
+        home: "/",
+      },
+      radar: [
+        {
+          id: "weibo-following",
+          match: {
+            hosts: ["weibo.com"],
+            paths: ["/"],
+          },
+        },
+      ],
+      loader: {
+        load: fetchWeiboFollowingTimeline,
+      },
+    },
+  },
+}

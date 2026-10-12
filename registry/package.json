@@ -6,12 +6,16 @@
   "sideEffects": false,
   "exports": {
     ".": "./registry.json",
-    "./sources": "./sources.ts"
+    "./sources": {
+      "types": "./sources.d.ts",
+      "default": "./sources.js"
+    }
   },
   "scripts": {
     "build": "bun run build.ts",
     "build:watch": "bun --watch run build.ts",
-    "typecheck": "bun check"
+    "typecheck": "bun check",
+    "test:live": "vitest run --config vitest.live.config.js"
   },
   "dependencies": {
     "@newsnext/date-parser": "workspace:*",
@@ -19,6 +23,7 @@
     "cheerio": "catalog:"
   },
   "devDependencies": {
+    "@newsnext/sdk": "workspace:*",
     "@newsnext/tsconfigs": "workspace:*",
     "vitest": "catalog:"
   }

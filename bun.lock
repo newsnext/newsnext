@@ -227,6 +227,7 @@
         "cheerio": "catalog:",
       },
       "devDependencies": {
+        "@newsnext/sdk": "workspace:*",
         "@newsnext/tsconfigs": "workspace:*",
         "vitest": "catalog:",
       },

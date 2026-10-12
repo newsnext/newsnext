@@ -6,11 +6,12 @@ const REGISTRY_ROOT = resolve("/workspace/registry")
 
 describe("source WXT module", () => {
   it.each([
-    ["src/github.ts", true],
-    ["src/jike/index.ts", true],
-    ["src/jike/utils.ts", false],
-    ["src/telegram.test.ts", false],
-    ["src/core/params.ts", false],
+    ["src/github.js", true],
+    ["src/jike/index.js", true],
+    ["src/jike/utils.js", false],
+    ["src/telegram.test.js", false],
+    ["src/core/params.js", false],
+    ["src/legacy.ts", false],
   ])("matches provider file %s", (filePath, expected) => {
     expect(
       isSourceProviderFile(resolve(REGISTRY_ROOT, filePath), REGISTRY_ROOT),
@@ -20,8 +21,8 @@ describe("source WXT module", () => {
   it.each([
     ["src/github.json", true],
     ["src/netease-music.json", true],
-    ["src/index.ts", true],
-    ["src/github.test.ts", false],
+    ["src/index.js", true],
+    ["src/github.test.js", false],
   ])("matches JSON provider file %s", (filePath, expected) => {
     expect(
       isSourceProviderFile(resolve(REGISTRY_ROOT, filePath), REGISTRY_ROOT),
@@ -31,7 +32,7 @@ describe("source WXT module", () => {
   it("ignores files outside the source package", () => {
     expect(
       isSourceProviderFile(
-        "/workspace/apps/extension/src/index.ts",
+        "/workspace/apps/extension/src/index.js",
         REGISTRY_ROOT,
       ),
     ).toBe(false)

@@ -5,8 +5,8 @@ beside the implementation — linked below).
 
 ## Boundaries
 
-- `registry/`: author input (`src/`) → build (`build.ts`, `provider.ts`) →
-  generated `registry.json` + `sources.ts`. Registry is the only writer of
+- `registry/`: author input (`src/`) → build (`build.ts`) →
+  generated `registry.json` + `sources.js`. Registry is the only writer of
   generated artifacts.
 - `packages/source-kit/`: expansion (`registry/*`), runtime resolution
   (`runtime/`), execution (`core/`, `utils/request/`).
@@ -19,7 +19,7 @@ beside the implementation — linked below).
 
 1. Build: parse → validate (`registry/validation.ts`, `parser.ts`,
    `core/limits.ts`) → expand defaults → emit declarative sources to
-   `registry.json`, executable ones to `sources.ts`. Duplicate source IDs
+   `registry.json`, executable ones to `sources.js`. Duplicate source IDs
    (or duplicate executable provider IDs) fail the build (`registry/build.ts`).
 2. Local sources merge over the registry (JSON only, watched, invalid ignored;
    bundled IDs win on conflict).

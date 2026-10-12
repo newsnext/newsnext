@@ -49,6 +49,7 @@
   "scripts": {
     "lint": "bun run --bun eslint .",
     "test": "vitest",
+    "test:source": "bun --filter=@newsnext/registry run test:live",
     "typecheck": "bun --filter=@newsnext/sdk run schemas:check && bun check -b",
     "prepare": "simple-git-hooks",
     "dev": "bun --filter=@newsnext/extension run dev",

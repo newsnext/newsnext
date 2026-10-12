@@ -1,0 +1,297 @@
+import { bilibiliApiCapabilities, bilibiliUserIdParam, compactBilibiliTitle, normalizeBilibiliUrl, parseBilibiliCount, parseBilibiliDisplayDate, parseBilibiliNumericCount, parseBilibiliOpusTimestamp, parseBilibiliTimestamp } from "./shared"
+import { getBilibiliWbiKeys, signBilibiliWbiParams } from "./wbi"
+
+const UP_VIDEO_URL = "https://api.bilibili.com/x/space/wbi/arc/search"
+const UP_OPUS_URL = "https://api.bilibili.com/x/polymer/web-dynamic/v1/opus/feed/space"
+const UP_AUDIO_URL = "https://api.bilibili.com/audio/music-service/web/song/upper"
+const UP_OPUS_MAX_PAGES = 2
+const UP_RESULT_LIMIT = 30
+const BILIBILI_UP_VIDEO_ORDER_LABELS = {
+  click: "最多播放",
+  pubdate: "最新发布",
+  stow: "最多收藏",
+}
+export function upVideoItemToNewsItem(item) {
+  if (!item.title || !item.bvid)
+    return null
+  return {
+    title: item.title,
+    url: `https://www.bilibili.com/video/${item.bvid}`,
+    publishedAt: parseBilibiliTimestamp(item.created),
+    author: {
+      name: item.author,
+      home: item.mid ? `https://space.bilibili.com/${item.mid}` : undefined,
+    },
+    stats: {
+      comments: item.comment,
+      views: parseBilibiliNumericCount(item.play),
+    },
+    content: {
+      text: item.description,
+      pictures: item.pic ? normalizeBilibiliUrl(item.pic) : undefined,
+    },
+  }
+}
+export function upOpusItemToNewsItem(item) {
+  const id = item.opus_id?.trim()
+  const title = compactBilibiliTitle(item.content)
+  if (!id || !title)
+    return null
+  return {
+    title,
+    url: normalizeBilibiliUrl(item.jump_url ?? `https://www.bilibili.com/opus/${id}`),
+    publishedAt: parseBilibiliDisplayDate(item.pub_time) ?? parseBilibiliOpusTimestamp(id),
+    author: {
+      name: item.author?.name,
+      home: item.author?.mid ? `https://space.bilibili.com/${item.author.mid}` : undefined,
+    },
+    icon: {
+      kind: "author",
+      label: item.author?.name,
+      src: item.author?.face ? normalizeBilibiliUrl(item.author.face) : undefined,
+    },
+    stats: {
+      likes: parseBilibiliCount(item.stat?.like),
+      views: parseBilibiliCount(item.stat?.view),
+    },
+    content: {
+      text: item.content,
+      pictures: item.cover?.url ? normalizeBilibiliUrl(item.cover.url) : undefined,
+    },
+  }
+}
+export function upAudioItemToNewsItem(item) {
+  if (!item.id || !item.title)
+    return null
+  return {
+    title: item.title,
+    url: `https://www.bilibili.com/audio/au${item.id}`,
+    publishedAt: parseBilibiliTimestamp(item.passtime),
+    author: {
+      name: item.uname,
+      home: item.uid ? `https://space.bilibili.com/${item.uid}` : undefined,
+    },
+    stats: {
+      comments: item.statistic?.comment,
+      reposts: item.statistic?.share,
+      stars: item.statistic?.collect,
+      views: item.statistic?.play,
+    },
+    content: {
+      text: item.intro,
+      pictures: item.cover ? normalizeBilibiliUrl(item.cover) : undefined,
+    },
+  }
+}
+async function fetchBilibiliUpVideo({ mid, order }, context) {
+  const { imgUrl, subUrl } = await getBilibiliWbiKeys(context)
+  const searchParams = await signBilibiliWbiParams({
+    mid,
+    order,
+    pn: 1,
+    ps: UP_RESULT_LIMIT,
+    tid: 0,
+  }, imgUrl, subUrl)
+  const response = await context.fetch.get(UP_VIDEO_URL, {
+    headers: { referer: `https://space.bilibili.com/${mid}/upload/video` },
+    searchParams,
+  }).json()
+  if (response.code !== 0) {
+    throw new Error(response.message ?? "Failed to load Bilibili UP videos.")
+  }
+  const videos = response.data?.list?.vlist ?? []
+  const authorName = videos
+    .find(item => String(item.mid) === mid && item.author?.trim())
+    ?.author
+    ?.trim()
+    ?? videos.find(item => item.author?.trim())?.author?.trim()
+  return {
+    items: videos
+      .map(upVideoItemToNewsItem)
+      .filter(item => item !== null),
+    metadata: {
+      title: `${authorName ?? "UP 主视频"} | ${BILIBILI_UP_VIDEO_ORDER_LABELS[order]}`,
+      home: `https://space.bilibili.com/${mid}/upload/video`,
+    },
+  }
+}
+async function fetchBilibiliUpOpus({ mid }, context) {
+  const opusItems = []
+  let offset
+  for (let page = 1; page <= UP_OPUS_MAX_PAGES && opusItems.length < UP_RESULT_LIMIT; page += 1) {
+    const response = await context.fetch.get(UP_OPUS_URL, {
+      headers: { referer: `https://space.bilibili.com/${mid}/upload/opus` },
+      searchParams: {
+        host_mid: mid,
+        page,
+        offset: offset ?? "",
+        type: "all",
+      },
+    }).json()
+    if (response.code !== 0) {
+      throw new Error(response.message ?? "Failed to load Bilibili UP posts.")
+    }
+    opusItems.push(...(response.data?.items ?? []))
+    const nextOffset = response.data?.offset
+    if (!response.data?.has_more || !nextOffset || nextOffset === offset)
+      break
+    offset = nextOffset
+  }
+  const author = opusItems.find(item => item.author?.name)?.author
+  return {
+    items: opusItems
+      .map(upOpusItemToNewsItem)
+      .filter(item => item !== null)
+      .slice(0, UP_RESULT_LIMIT),
+    metadata: {
+      title: author?.name ? `${author.name} | 图文` : "UP 主图文",
+      home: `https://space.bilibili.com/${mid}/upload/opus`,
+    },
+  }
+}
+async function fetchBilibiliUpAudio({ mid }, context) {
+  const response = await context.fetch.get(UP_AUDIO_URL, {
+    headers: { referer: `https://space.bilibili.com/${mid}/upload/audio` },
+    searchParams: {
+      pn: 1,
+      ps: 42,
+      order: 1,
+      uid: mid,
+    },
+  }).json()
+  if (response.code !== 0) {
+    throw new Error(response.message ?? response.msg ?? "Failed to load Bilibili UP audio.")
+  }
+  const audioItems = response.data?.data ?? []
+  const authorName = audioItems.find(item => item.uname?.trim())?.uname?.trim()
+  return {
+    items: audioItems
+      .map(upAudioItemToNewsItem)
+      .filter(item => item !== null)
+      .slice(0, UP_RESULT_LIMIT),
+    metadata: {
+      title: authorName ? `${authorName} | 音频` : "UP 主音频",
+      home: `https://space.bilibili.com/${mid}/upload/audio`,
+    },
+  }
+}
+export const upSources = {
+  "up-video": {
+    metadata: {
+      title: "UP 主视频",
+      desc: "指定 UP 主的视频投稿",
+    },
+    params: {
+      mid: bilibiliUserIdParam,
+      order: {
+        type: "select",
+        title: "排序",
+        values: [
+          { label: "最新发布", value: "pubdate" },
+          { label: "最多播放", value: "click" },
+          { label: "最多收藏", value: "stow" },
+        ],
+        default: "pubdate",
+      },
+    },
+    radar: [
+      {
+        id: "bilibili-up-video",
+        match: {
+          hosts: ["space.bilibili.com"],
+          paths: ["/:mid/upload/video"],
+        },
+        patch: {
+          params: {
+            mid: "{{ scope.path.mid }}",
+            order: () => {
+              const page = globalThis
+              const filters = Array.from(page.document.querySelectorAll(".radio-filter__item")).slice(0, 3)
+              const activeIndex = filters.findIndex(filter => filter.classList.contains("radio-filter__item--active"))
+              return ["pubdate", "click", "stow"][activeIndex]
+            },
+          },
+          metadata: {
+            home: "https://space.bilibili.com/{{ scope.params.mid }}/upload/video",
+          },
+        },
+      },
+    ],
+    loader: {
+      type: "custom",
+      load: fetchBilibiliUpVideo,
+    },
+    capabilities: bilibiliApiCapabilities,
+  },
+  "up-opus": {
+    version: 2,
+    metadata: {
+      title: "UP 主图文",
+      desc: "指定 UP 主发布的图文",
+    },
+    params: {
+      mid: bilibiliUserIdParam,
+    },
+    radar: [
+      {
+        id: "bilibili-up-opus",
+        match: {
+          hosts: ["space.bilibili.com"],
+          paths: ["/:mid/upload/opus"],
+        },
+        patch: {
+          params: {
+            mid: "{{ scope.path.mid }}",
+          },
+          metadata: {
+            title: {
+              select: ".nickname",
+              template: "{{ scope.value }} | 图文",
+            },
+            home: "https://space.bilibili.com/{{ scope.params.mid }}/upload/opus",
+          },
+        },
+      },
+    ],
+    loader: {
+      type: "custom",
+      load: fetchBilibiliUpOpus,
+    },
+    capabilities: bilibiliApiCapabilities,
+  },
+  "up-audio": {
+    metadata: {
+      title: "UP 主音频",
+      desc: "指定 UP 主发布的音频",
+    },
+    params: {
+      mid: bilibiliUserIdParam,
+    },
+    radar: [
+      {
+        id: "bilibili-up-audio",
+        match: {
+          hosts: ["space.bilibili.com"],
+          paths: ["/:mid/upload/audio"],
+        },
+        patch: {
+          params: {
+            mid: "{{ scope.path.mid }}",
+          },
+          metadata: {
+            title: {
+              select: ".nickname",
+              template: "{{ scope.value }} | 音频",
+            },
+            home: "https://space.bilibili.com/{{ scope.params.mid }}/upload/audio",
+          },
+        },
+      },
+    ],
+    loader: {
+      type: "custom",
+      load: fetchBilibiliUpAudio,
+    },
+    capabilities: bilibiliApiCapabilities,
+  },
+}

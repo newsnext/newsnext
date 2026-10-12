@@ -1,0 +1,187 @@
+import { requestXueqiuJson } from "./shared"
+
+const postFields = {
+  url: "target",
+  title: {
+    select: "title || description || text",
+    transform: ["strip_html", "normalize_whitespace", { op: "truncate", length: 120, suffix: "…" }],
+  },
+  publishedAt: "created_at",
+  author: {
+    name: "user.screen_name",
+    home: "user.profile",
+  },
+  stats: {
+    likes: "like_count",
+    comments: "reply_count",
+    reposts: "retweet_count",
+    views: "view_count",
+  },
+  content: {
+    text: {
+      select: "description || text",
+      transform: ["strip_html", "normalize_whitespace"],
+    },
+    pictures: "firstImg",
+  },
+}
+const watchlistPostFields = {
+  ...postFields,
+  title: {
+    select: "title || description || text",
+    transform: ["strip_html", { op: "replace", search: "网页链接", replacement: "" }, "normalize_whitespace", { op: "truncate", length: 120, suffix: "…" }],
+  },
+}
+export const feedSources = {
+  "following": {
+    metadata: {
+      title: "关注",
+      home: "/",
+    },
+    loader: {
+      type: "json",
+      url: "https://api.xueqiu.com/v4/statuses/home_timeline.json",
+      query: { source: "user" },
+      request: requestXueqiuJson,
+      items: "home_timeline",
+      fields: postFields,
+    },
+    radar: [{
+      id: "xueqiu-following",
+      match: {
+        hosts: ["xueqiu.com"],
+        paths: ["/"],
+      },
+    }],
+    capabilities: {
+      network: ["xueqiu.com"],
+    },
+  },
+  "hot": {
+    metadata: {
+      title: "热门",
+      home: "/",
+      type: "ranking",
+    },
+    loader: {
+      type: "json",
+      url: "https://api.xueqiu.com/statuses/hot/listV3.json",
+      query: { source: "hot", page: "1" },
+      request: requestXueqiuJson,
+      items: "list",
+      fields: postFields,
+    },
+    radar: [{
+      id: "xueqiu-hot",
+      match: {
+        hosts: ["xueqiu.com"],
+        paths: ["/"],
+      },
+    }],
+    capabilities: {
+      network: ["xueqiu.com"],
+    },
+  },
+  "live-news": {
+    metadata: {
+      title: "7×24",
+      home: "/",
+    },
+    loader: {
+      type: "json",
+      url: "/statuses/livenews/list.json",
+      query: { category: "6", since_id: "-1", count: "30" },
+      items: "items",
+      fields: {
+        url: {
+          select: "target",
+          transform: { op: "regex_replace", pattern: "^http:", replacement: "https:" },
+        },
+        title: {
+          select: "text",
+          transform: ["strip_html", "normalize_whitespace", { op: "truncate", length: 120, suffix: "…" }],
+        },
+        publishedAt: "created_at",
+        content: {
+          text: {
+            select: "text",
+            transform: ["strip_html", "normalize_whitespace"],
+          },
+        },
+      },
+    },
+    radar: [{
+      id: "xueqiu-live-news",
+      match: {
+        hosts: ["xueqiu.com"],
+        paths: ["/"],
+      },
+    }],
+  },
+  "watchlist": {
+    metadata: {
+      title: "自选",
+      home: "/",
+    },
+    vars: {
+      source: {
+        all: "news_coll",
+        announcements: "公告",
+        news: "自选股新闻",
+      },
+      title: {
+        all: "全部",
+        announcements: "公告",
+        news: "新闻",
+      },
+    },
+    params: {
+      filter: {
+        type: "select",
+        title: "内容",
+        values: [
+          { label: "全部", value: "all" },
+          { label: "公告", value: "announcements" },
+          { label: "新闻", value: "news" },
+        ],
+        default: "all",
+      },
+    },
+    loader: {
+      type: "json",
+      url: "https://api.xueqiu.com/v4/statuses/home_timeline.json",
+      query: { source: "{{ source.vars.source[scope.params.filter] }}" },
+      request: requestXueqiuJson,
+      items: "home_timeline",
+      fields: watchlistPostFields,
+      metadata: {
+        title: {
+          template: "自选 | {{ source.vars.title[scope.params.filter] }}",
+        },
+      },
+    },
+    radar: [{
+      id: "xueqiu-watchlist",
+      match: {
+        hosts: ["xueqiu.com"],
+        paths: ["/"],
+      },
+      patch: {
+        params: {
+          filter: () => {
+            const page = globalThis
+            const controls = Array.from(page.document.querySelectorAll(".timeline__tab__tags a"))
+            const activeIndex = controls.findIndex(control => control.classList.contains("active"))
+            return ["all", "announcements", "news"][activeIndex] ?? "all"
+          },
+        },
+        metadata: {
+          title: "自选 | {{ source.vars.title[scope.params.filter] }}",
+        },
+      },
+    }],
+    capabilities: {
+      network: ["xueqiu.com"],
+    },
+  },
+}

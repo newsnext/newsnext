@@ -26,14 +26,14 @@ If browser automation is unavailable, say which browser-only evidence could not 
 
 Evaluate candidates in this order and use the first one that can faithfully provide the requested stream:
 
-1. **RSS, Atom, or JSON Feed.** Prefer a stable feed because it has a standard parser and minimal site coupling. Confirm that it contains useful item titles and URLs and represents the requested stream. Do not create a site-specific generic forum Source when the built-in `rss:feed` already covers the use case.
+1. **RSS, Atom, or JSON Feed.** Prefer a stable feed because it has a standard parser and minimal site coupling. Confirm that it contains useful item titles and URLs, represents the requested stream, and updates promptly enough for the use case. Use another transport when the feed is materially delayed. Do not create a site-specific generic forum Source when the built-in `rss:feed` already covers the use case.
 2. **Public structured API.** Prefer a stable JSON endpoint that does not depend on private account state, copied session tokens, or transient browser headers. Map it with a declarative JSON loader.
 3. **HTML.** Use a declarative HTML loader when the meaningful items are present in fetched HTML and stable selectors can extract them. If the HTML contains a strict JSON data element, use a JSON loader with `embeddedJson: { select: "script#__NEXT_DATA__" }` (or the page's actual CSS selector); it parses the selected element once and reuses the usual JMESPath items and fields. This still fetches HTML, without an extra API request. Do not use HTML parsing for a client-rendered shell with no item data.
 4. **Private API.** Use only when the requested stream requires the signed-in session or no earlier option is adequate. Minimize requests and rely on NewsNext's browser session, declared secrets, and bounded capabilities. Never hard-code cookies, access tokens, signatures, build IDs, or transient DevTools headers.
 
 Record why each higher-priority option was unavailable or insufficient. This makes the chosen contract reviewable and prevents an accidental dependency on a fragile private endpoint.
 
-Transport choice and source-file format are separate decisions. Prefer a JSON provider file for declarative `rss`, `json`, and `html` loaders. Use TypeScript only when the Source genuinely needs a custom loader, custom request callback, imported helper, browser API, computed configuration, request signing, token refresh, or response normalization that declarative fields cannot express. Read the authoritative [Source manifest schema](schemas/source.json) and [parameter schema](schemas/params.json) for accepted JSON fields and constraints.
+Transport choice and source-file format are separate decisions. Prefer a JSON provider file for declarative `rss`, `json`, and `html` loaders. Use JavaScript only when the Source genuinely needs a custom loader, custom request callback, imported helper, browser API, computed configuration, request signing, token refresh, or response normalization that declarative fields cannot express. Read the authoritative [Source manifest schema](schemas/source.json) and [parameter schema](schemas/params.json) for accepted JSON fields and constraints.
 
 ## Reference existing Sources first
 
@@ -42,13 +42,13 @@ Before writing a new provider, inspect `registry/src` and select the closest exi
 - RSS: `registry/src/rss.json`
 - Public JSON API: `registry/src/36kr.json` or `registry/src/netease-music.json`
 - HTML: `registry/src/hackernews.json`, `registry/src/github.json`, or `registry/src/telegram.json`
-- Authenticated custom API, only when required: `registry/src/x/index.ts`, `registry/src/jike/index.ts`, or the relevant nested TypeScript provider
+- Authenticated custom API, only when required: `registry/src/x/index.js`, `registry/src/jike/index.js`, or the relevant nested JavaScript provider
 
 Reuse established shapes and field semantics; do not copy provider-specific selectors, tokens, headers, or workarounds. Search for a closer example when the repository has evolved beyond this list.
 
 ## Implement the smallest declarative Source
 
-For a new declarative provider, create `registry/src/<provider-id>.json`. A provider and all of its Sources must use one format; do not split it between JSON and TypeScript. Do not edit generated `registry/registry.json` or `registry/sources.ts` directly.
+For a new declarative provider, create `registry/src/<provider-id>.json`. A provider and all of its Sources must use one format; do not split it between JSON and JavaScript. Do not edit generated `registry/registry.json` or `registry/sources.js` directly.
 
 Keep the configuration focused:
 
@@ -58,9 +58,9 @@ Keep the configuration focused:
 - Model user choices as validated parameters. Prefer one parameterized Source over duplicated variants when their loader and output shape are shared.
 - Add Radar rules when a page URL or page state can fully configure a Source. A suggestion must capture all meaningful state already expressed by the page.
 - For JSON loaders, use bounded JMESPath expressions for selection, fallbacks, and array projection/join. For HTML loaders, use stable CSS selectors and ordered fallbacks.
-- Use `loader.query` for query parameters (values are encoded once; empty/null values are omitted), and field `transform` for text, number, date, and regex conversions. A transform can be one operation or an ordered array; it runs before `template`. Templates support path/literal interpolation, `??`/`||` fallback, and one trailing `url_path` or `url_query` encoder; `{% ... %}` tags are rejected. Use TypeScript for conditional logic.
+- Use `loader.query` for query parameters (values are encoded once; empty/null values are omitted), and field `transform` for text, number, date, and regex conversions. A transform can be one operation or an ordered array; it runs before `template`. Templates support path/literal interpolation, `??`/`||` fallback, and one trailing `url_path` or `url_query` encoder; `{% ... %}` tags are rejected. Use JavaScript for conditional logic.
 - Templates produce strings except in `loader.fetchOptions.json`: a whole-expression value preserves its JSON type; mixed text stays a string. `??` replaces only missing/null values and preserves empty text, `false`, `0`, and empty arrays. `||` replaces falsy values, including empty text, `false`, `0`, and `NaN`; both operators short-circuit and return the chosen value. Each expression can chain one operator kind; mixing `??` and `||` or using parentheses is unsupported. Missing inputs render as empty text and preserve surrounding text. Optional query values are omitted naturally; empty request URLs and complete JSON bodies are checked at the request boundary.
-- Use `loader.annotation` for presentation: a template string in JSON/TS Sources, or a synchronous `(item) => string | undefined` formatter in TS Sources. Formatters receive the normalized `NewsItem` and produce `annotations` separately from item data. Annotations are trimmed; missing template inputs render as empty text. Use `??` for explicit fallback text; no empty fallback is needed. Other rendering failures are reported and isolated to the affected annotation. Keep `attributes` semantic; do not store formatted display text there.
+- Use `loader.annotation` for presentation: a template string in JSON/JavaScript Sources, or a synchronous `(item) => string | undefined` formatter in JavaScript Sources. Formatters receive the normalized `NewsItem` and produce `annotations` separately from item data. Annotations are trimmed; missing template inputs render as empty text. Use `??` for explicit fallback text; no empty fallback is needed. Other rendering failures are reported and isolated to the affected annotation. Keep `attributes` semantic; do not store formatted display text there.
 - Every item must produce a non-empty `title` and `url`. Use milliseconds for `publishedAt`; keep semantic author, stats, attributes, icon, mark, and content fields separate.
 - Preserve meaningful upstream order. Use `metadata.type: "ranking"` for ranked results and `sortByTimestamp` only when grouped chronological items need normalization.
 - Declare every possible network hostname. Keep request options minimal and never add a request solely to enrich metadata.
@@ -73,7 +73,7 @@ scraping with CSS selectors and ranking metadata). Copy the closest example to
 `registry/src/<provider-id>.json`, substitute a real stream, and run it after
 every meaningful change with the script under **Validate Sources**.
 
-Use TypeScript custom loaders as a last resort. They must use `context.fetch`, declare network and cookie capabilities, propagate cancellation, return `{ items, metadata? }`, and normalize multiple response shapes through shared helpers. Collect required website values through declared cookie or local-storage secrets; do not expose or commit actual secret values.
+Use JavaScript custom loaders as a last resort. They must use `context.fetch`, declare network and cookie capabilities, propagate cancellation, return `{ items, metadata? }`, and normalize multiple response shapes through shared helpers. Collect required website values through declared cookie or local-storage secrets; do not expose or commit actual secret values.
 
 ## Investigate requests
 
@@ -133,7 +133,7 @@ return { execution: result.execution, itemCount: result.data.length, sample: res
 Use the checkout's absolute file path: `eval` runs in the daemon's runtime
 directory.
 
-For a TypeScript provider, build the registry and run its registered Source ID.
+For a JavaScript provider, build the registry and run its registered Source ID.
 For a local provider that uses stored secrets, set `useProviderSecrets: true` in
 the `client.run` input.
 

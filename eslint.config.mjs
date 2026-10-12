@@ -17,7 +17,8 @@ export default antfu(
       "packages/sdk/src/protocol/**",
       "apps/extension/src/lib/native-protocol/**",
       "registry/registry.json",
-      "registry/sources.ts",
+      "registry/sources.js",
+      "registry/sources.d.ts",
     ],
     rules: {
       "antfu/curly": "error",
@@ -47,7 +48,7 @@ export default antfu(
   {
     name: "newsnext/esm-top-level-await",
     files: [
-      "**/*.{test,spec}.{ts,tsx}",
+      "**/*.{test,spec}.{js,ts,tsx}",
       "registry/build.ts",
     ],
     rules: {
