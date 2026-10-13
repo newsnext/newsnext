@@ -1,39 +1,36 @@
-import type { HtmlTraversal } from "@newsnext/source-kit/types"
+import type { HtmlTraversal, SourceRadarPageParam } from "@newsnext/source-kit/types"
 import type { RadarPageParam } from "./matcher"
 import type { RadarPageQuery } from "./page-query"
 import { resolveRadarPageParamValue } from "@newsnext/source-kit/core"
 import { browser } from "#imports"
 import { getRadarPageQueryKey } from "./page-query"
+import { resolveRadarUrlParamValues } from "./url-params"
 
 const MAX_PAGE_SELECTION_LENGTH = 20_000
 
 /** A fixed reader accepts portable page queries rather than Source-owned executable code. */
 export async function readRadarPageParamValues(
   tabId: number,
+  url: string,
   params: readonly RadarPageParam[],
 ): Promise<Record<string, unknown>> {
-  if (!params.length) return {}
+  const urlValues = resolveRadarUrlParamValues(url, params)
+  const selectedParams = params.filter(
+    (param): param is RadarPageParam & { query: Extract<SourceRadarPageParam, { type: "selected" }> } => param.query.type === "selected",
+  )
+  if (!selectedParams.length) return urlValues
   const [executionResult] = await browser.scripting.executeScript<
-    [RadarPageParam[]],
+    [typeof selectedParams],
     Promise<Record<string, unknown>>
   >({
     target: { tabId },
-    args: [[...params]],
+    args: [selectedParams],
     func: async (pageParams) => {
       const values: Record<string, unknown> = {}
       const panels = new Map<string, { ready: boolean, trigger?: HTMLElement }>()
       try {
         for (const { key, query } of pageParams) {
           try {
-            if (query.type === "query") {
-              values[key] = new URL(location.href).searchParams.get(query.key)
-              continue
-            }
-            if (query.type === "date-range") {
-              const params = new URL(location.href).searchParams
-              values[key] = { start: params.get(query.start), end: params.get(query.end) }
-              continue
-            }
             if (query.reveal) {
               const reveal = query.reveal
               const panelKey = JSON.stringify(reveal)
@@ -68,10 +65,10 @@ export async function readRadarPageParamValues(
       return values
     },
   }).catch(() => [])
-  return Object.fromEntries(params.flatMap(({ key, query }) => {
+  return { ...urlValues, ...Object.fromEntries(selectedParams.flatMap(({ key, query }) => {
     const value = resolveRadarPageParamValue(query, executionResult?.result?.[key])
     return value === undefined ? [] : [[key, value]]
-  }))
+  })) }
 }
 
 export async function readRadarPageSelections(
