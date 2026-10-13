@@ -7,6 +7,7 @@ export default defineConfig({
     "widget": "src/widget.ts",
     "extension": "src/extension.ts",
     "models/index": "src/models/index.ts",
+    "native-protocol": "src/native-protocol.ts",
     "action/index": "src/action/index.ts",
   },
   target: "node22",

@@ -383,7 +383,7 @@ await client.actions.liveWidget.setLayouts(input: { boardId: string; liveWidgets
 
 ```ts
 await client.actions.nativeIntegration.getInsights()
-// => { id: string; title: string; color: string; width: integer ≥ 1; height: integer ≥ 1; minWidth: integer ≥ 1; minHeight: integer ≥ 1; url?: string; view?: unknown; params: unknown; dataRevision: string; dataFiles: string[]; viewRevision: string; hasData: boolean; refreshIntervalMs: number }[]
+// => { id: string; title: string; color: string; width: integer ≥ 1 ≤ 9007199254740991; height: integer ≥ 1 ≤ 9007199254740991; minWidth: integer ≥ 1 ≤ 9007199254740991; minHeight: integer ≥ 1 ≤ 9007199254740991; url?: string; view?: unknown; params: unknown; dataRevision: string; dataFiles: string[]; viewRevision: string; hasData: boolean; refreshIntervalMs: integer ≥ 0 ≤ 9007199254740991 }[]
 ```
 
 ### nativeIntegration.getLogs
@@ -392,7 +392,7 @@ await client.actions.nativeIntegration.getInsights()
 
 ```ts
 await client.actions.nativeIntegration.getLogs()
-// => { id: number; timestamp: string; level: "error" | "warn" | "info"; target: string; message: string }[]
+// => { id: integer ≥ 0 ≤ 9007199254740991; timestamp: string; level: "error" | "warn" | "info"; target: string; message: string }[]
 ```
 
 ### nativeIntegration.getStatus
@@ -401,7 +401,7 @@ await client.actions.nativeIntegration.getLogs()
 
 ```ts
 await client.actions.nativeIntegration.getStatus()
-// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0; totalSteps: integer ≥ 1; startedAt: integer ≥ 0; elapsedMs: integer ≥ 0 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
+// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0 ≤ 9007199254740991; totalSteps: integer ≥ 1 ≤ 9007199254740991; startedAt: integer ≥ 0 ≤ 9007199254740991; elapsedMs: integer ≥ 0 ≤ 9007199254740991 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.regenerateIdentity
@@ -410,7 +410,7 @@ await client.actions.nativeIntegration.getStatus()
 
 ```ts
 await client.actions.nativeIntegration.regenerateIdentity()
-// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0; totalSteps: integer ≥ 1; startedAt: integer ≥ 0; elapsedMs: integer ≥ 0 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
+// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0 ≤ 9007199254740991; totalSteps: integer ≥ 1 ≤ 9007199254740991; startedAt: integer ≥ 0 ≤ 9007199254740991; elapsedMs: integer ≥ 0 ≤ 9007199254740991 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.resolveWorkspace
@@ -419,7 +419,7 @@ await client.actions.nativeIntegration.regenerateIdentity()
 
 ```ts
 await client.actions.nativeIntegration.resolveWorkspace(input: { resolution: "overwrite" | "merge" | "discard"; expectedRevision: integer ≥ 0 })
-// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0; totalSteps: integer ≥ 1; startedAt: integer ≥ 0; elapsedMs: integer ≥ 0 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
+// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0 ≤ 9007199254740991; totalSteps: integer ≥ 1 ≤ 9007199254740991; startedAt: integer ≥ 0 ≤ 9007199254740991; elapsedMs: integer ≥ 0 ≤ 9007199254740991 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.restart
@@ -437,7 +437,7 @@ await client.actions.nativeIntegration.restart()
 
 ```ts
 await client.actions.nativeIntegration.setEnabled(input: { enabled: boolean })
-// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0; totalSteps: integer ≥ 1; startedAt: integer ≥ 0; elapsedMs: integer ≥ 0 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
+// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0 ≤ 9007199254740991; totalSteps: integer ≥ 1 ≤ 9007199254740991; startedAt: integer ≥ 0 ≤ 9007199254740991; elapsedMs: integer ≥ 0 ≤ 9007199254740991 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nativeIntegration.setLogLevel
@@ -445,7 +445,7 @@ await client.actions.nativeIntegration.setEnabled(input: { enabled: boolean })
 *mutation* — Set the NewsNext CLI service log level (off disables logging entirely).
 
 ```ts
-await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "error" | "warn" | "info" })
+await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "info" | "warn" | "error" })
 // => {}
 ```
 
@@ -455,7 +455,7 @@ await client.actions.nativeIntegration.setLogLevel(input: { level: "off" | "erro
 
 ```ts
 await client.actions.nativeIntegration.takeOver(input: { cardIds: string[]; workerId: string })
-// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0; totalSteps: integer ≥ 1; startedAt: integer ≥ 0; elapsedMs: integer ≥ 0 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
+// => { ready: boolean; initialization?: { id: string; label: string; stage: string; completedSteps: integer ≥ 0 ≤ 9007199254740991; totalSteps: integer ≥ 1 ≤ 9007199254740991; startedAt: integer ≥ 0 ≤ 9007199254740991; elapsedMs: integer ≥ 0 ≤ 9007199254740991 }; workspaceConflict?: { revision: integer ≥ 0; local: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 }; shared: { boards: integer ≥ 0; liveCards: integer ≥ 0; liveWidgets: integer ≥ 0 } }; daemonVersion?: string; capabilities: string[]; offlineWorkers: { id: string; cardIds: string[] }[]; connectionError?: { code?: string; message: string }; state: "disabled" | "connected" | "connecting" | "workspaceConflict" | "hostNotInstalled" | "protocolIncompatible" | "serviceNotRunning" | "daemonStartFailed" | "workerConflict"; workerId: string; insightServerOrigin?: string }
 ```
 
 ### nextLayer.setManualOrder

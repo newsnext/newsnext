@@ -1,7 +1,6 @@
-import type { LongTaskProgress } from "../protocol/LongTaskProgress.js"
-import type { OfflineWorker } from "../protocol/OfflineWorker.js"
+import type { LongTaskProgress, OfflineWorker } from "../native-protocol.js"
 
-export type { LongTaskProgress } from "../protocol/LongTaskProgress.js"
+export type { LongTaskProgress } from "../native-protocol.js"
 
 export type NativeIntegrationFailureState
   = | "hostNotInstalled"

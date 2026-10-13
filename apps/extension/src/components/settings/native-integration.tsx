@@ -1,7 +1,7 @@
 import type { WorkspaceResolution } from "@newsnext/sdk/models"
+import type { LogEntry as NativeLogEntry } from "@newsnext/sdk/native-protocol"
 import type { NativeIntegrationStatus } from "@/lib/background/native-integration"
 import type { StaticMessageKey } from "@/lib/i18n"
-import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
 import { Button } from "@newsnext/ui/components/button"
 import { Switch } from "@newsnext/ui/components/switch"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"

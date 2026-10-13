@@ -1,147 +1,33 @@
-import type { OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/models"
-import type { HostToExtension } from "@/lib/native-protocol/HostToExtension"
-import type { NativeNotification } from "@/lib/native-protocol/NativeNotification"
-import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
+import type { HostToExtension, NativeNotification } from "@newsnext/sdk/native-protocol"
+import { nativeNotificationSchema, parseHostMessage, parseNativeValue } from "@newsnext/sdk/native-protocol"
 import { NativeMessageChunkAssembler } from "../native-message-chunks"
-import { parseWorkspacePatch } from "../workspace-patch"
-import { parseCollectionStatus } from "./collection-status"
-import { parseInsightCatalog, parseLocalCardIds, parseLogs, parseRevision } from "./message-values"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./workspace-data"
 
 type ParsedHostMessage = Exclude<HostToExtension, { type: "chunk" }>
-
 const nativeMessageChunks = new NativeMessageChunkAssembler(NATIVE_REQUEST_TIMEOUT_MS)
 
 export function parseNativeHostValue(value: unknown): ParsedHostMessage | undefined {
   const result = nativeMessageChunks.accept(value)
-  return result.complete ? parseHostMessage(result.value) : undefined
+  if (!result.complete) return undefined
+  const message = parseHostMessage(result.value)
+  if (message.type === "chunk") throw new Error("The native host returned a nested message chunk")
+  if (message.type === "ready") {
+    return {
+      ...message,
+      insightServerUrl: parseInsightServerOrigin(message.insightServerUrl),
+      workspace: { ...message.workspace, ...toNativeWorkspaceData(fromNativeWorkspaceData(message.workspace)) },
+    }
+  }
+  return message
 }
 
 export function clearNativeMessageChunks(): void {
   nativeMessageChunks.clear()
 }
 
-function parseHostMessage(value: unknown): ParsedHostMessage {
-  if (!isRecord(value) || typeof value.type !== "string") {
-    throw new Error("The native host returned an invalid message")
-  }
-  if (
-    value.type === "ready"
-    && typeof value.protocolVersion === "number"
-    && typeof value.daemonVersion === "string"
-    && Array.isArray(value.capabilities)
-    && value.capabilities.every(capability => typeof capability === "string")
-  ) {
-    return {
-      type: "ready",
-      protocolVersion: value.protocolVersion,
-      daemonVersion: value.daemonVersion,
-      capabilities: value.capabilities,
-      insightServerUrl: parseInsightServerOrigin(value.insightServerUrl),
-      insights: parseInsightCatalog(value.insights),
-      workspace: parseWorkspace(value.workspace),
-      localCardIds: parseLocalCardIds(value.localCardIds),
-      workerRoutingRevision: parseRevision(value.workerRoutingRevision, "Worker routing"),
-      offlineWorkers: parseOfflineWorkers(value.offlineWorkers),
-      localSources: parseLocalProviders(value.localSources),
-    }
-  }
-  if (value.type === "initializing" && typeof value.protocolVersion === "number"
-    && typeof value.daemonVersion === "string" && Number.isSafeInteger(value.pid) && Number(value.pid) > 0) {
-    const progress = value.progress
-    if (progress !== null && (!isRecord(progress)
-      || typeof progress.id !== "string" || typeof progress.label !== "string" || typeof progress.stage !== "string"
-      || !Number.isSafeInteger(progress.completedSteps) || Number(progress.completedSteps) < 0
-      || !Number.isSafeInteger(progress.totalSteps) || Number(progress.totalSteps) < 1
-      || Number(progress.completedSteps) > Number(progress.totalSteps)
-      || !Number.isSafeInteger(progress.startedAt) || Number(progress.startedAt) < 0
-      || !Number.isSafeInteger(progress.elapsedMs) || Number(progress.elapsedMs) < 0)) {
-      throw new Error("The native host returned invalid task progress")
-    }
-    return {
-      type: "initializing",
-      protocolVersion: value.protocolVersion,
-      daemonVersion: value.daemonVersion,
-      pid: Number(value.pid),
-      logs: parseLogs(value.logs),
-      progress: progress === null
-        ? null
-        : {
-            id: String(progress.id),
-            label: String(progress.label),
-            stage: String(progress.stage),
-            completedSteps: Number(progress.completedSteps),
-            totalSteps: Number(progress.totalSteps),
-            startedAt: Number(progress.startedAt),
-            elapsedMs: Number(progress.elapsedMs),
-          },
-    }
-  }
-  if (value.type === "rpc" && "message" in value) return { type: "rpc", message: value.message }
-  if (
-    value.type === "error"
-    && (typeof value.requestId === "string" || value.requestId === null)
-    && typeof value.message === "string"
-  ) {
-    return {
-      type: "error",
-      requestId: value.requestId,
-      code: typeof value.code === "string" ? value.code : undefined,
-      message: value.message,
-    }
-  }
-  throw new Error("The native host returned an unsupported message")
-}
-
-function parseWorkspace(value: unknown): NativeWorkspace {
-  if (!isRecord(value)
-    || !Number.isSafeInteger(value.revision)
-    || Number(value.revision) < 0
-    || !Number.isSafeInteger(value.updatedAt)
-    || Number(value.updatedAt) < 0
-    || !Array.isArray(value.boardOrder)
-    || !isRecord(value.boards)
-    || !isRecord(value.liveCards)
-    || !isRecord(value.liveWidgets)
-    || typeof value.settings !== "string") {
-    throw new Error("The native host returned an invalid Workspace")
-  }
-  const application = fromNativeWorkspaceData({
-    boardOrder: value.boardOrder as NativeWorkspace["boardOrder"],
-    boards: value.boards as NativeWorkspace["boards"],
-    liveCards: value.liveCards as NativeWorkspace["liveCards"],
-    liveWidgets: value.liveWidgets as NativeWorkspace["liveWidgets"],
-  })
-  const nativeData = toNativeWorkspaceData(application)
-  return {
-    revision: Number(value.revision),
-    updatedAt: Number(value.updatedAt),
-    ...nativeData,
-    settings: value.settings,
-  }
-}
-
-function parseOfflineWorkers(value: unknown): NativeOfflineWorker[] {
-  if (!Array.isArray(value) || value.some(worker => (
-    !isRecord(worker)
-    || typeof worker.id !== "string"
-    || !worker.id
-    || !isIdentifierArray(worker.cardIds)
-    || worker.cardIds.length === 0
-  ))) {
-    throw new Error("The native host returned invalid offline Workers")
-  }
-  return value.map(worker => ({
-    id: String(worker.id),
-    cardIds: [...worker.cardIds],
-  }))
-}
-
-function isIdentifierArray(value: unknown): value is string[] {
-  return Array.isArray(value)
-    && value.every(id => typeof id === "string" && id.length > 0)
-    && new Set(value).size === value.length
+export function parseNativeNotification(method: string, params: unknown): NativeNotification {
+  return parseNativeValue(nativeNotificationSchema, { method, params })
 }
 
 function parseInsightServerOrigin(value: unknown): string {
@@ -162,39 +48,4 @@ function parseInsightServerOrigin(value: unknown): string {
     throw new Error("The native host widget server must use a loopback HTTP origin")
   }
   return url.origin
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
-}
-
-function parseLocalProviders(value: unknown): Record<string, unknown> {
-  if (!isRecord(value) || Object.values(value).some(provider => !isRecord(provider))) {
-    throw new Error("The native host returned invalid local Sources")
-  }
-  return value
-}
-
-export function parseNativeNotification(method: string, params: unknown): NativeNotification {
-  if (!isRecord(params)) throw new Error("The native host returned invalid notification parameters")
-  switch (method) {
-    case "workerRoutingChanged":
-      return { method, params: {
-        revision: parseRevision(params.revision, "Worker routing"),
-        localCardIds: parseLocalCardIds(params.localCardIds),
-        offlineWorkers: parseOfflineWorkers(params.offlineWorkers),
-      } }
-    case "workspaceChanged":
-      return { method, params: { patch: parseWorkspacePatch(params.patch), localCardIds: parseLocalCardIds(params.localCardIds) } }
-    case "collectionStatusChanged":
-      return { method, params: { status: parseCollectionStatus(params.status) } }
-    case "logsChanged":
-      return { method, params: { entries: parseLogs(params.entries) } }
-    case "insightCatalogChanged":
-      return { method, params: { insights: parseInsightCatalog(params.insights) } }
-    case "localSourcesChanged":
-      return { method, params: { providers: parseLocalProviders(params.providers) } }
-    default:
-      throw new Error(`Unsupported native notification '${method}'`)
-  }
 }

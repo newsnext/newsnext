@@ -1,4 +1,4 @@
-import type { SerializedError } from "@/lib/native-protocol/SerializedError"
+import type { SerializedError } from "@newsnext/sdk/native-protocol"
 
 function getStringProperty(value: object, key: string): string | undefined {
   const property = (value as Record<string, unknown>)[key]

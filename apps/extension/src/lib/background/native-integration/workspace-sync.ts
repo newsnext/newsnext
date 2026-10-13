@@ -1,7 +1,7 @@
 import type { WorkspaceResolution } from "@newsnext/sdk/models"
+import type { Workspace as NativeWorkspace } from "@newsnext/sdk/native-protocol"
 import type { PersistedSettings } from "../../settings/persisted-settings"
 import type { NativePort, RequireNativeConnection } from "./types"
-import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import { browser } from "#imports"
 import { normalizeApplicationData, PERSISTED_DATA_SLICES } from "../../settings/persisted-data"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"

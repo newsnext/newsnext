@@ -1,7 +1,6 @@
+import type { ExtensionCommand, ExtensionToHost } from "@newsnext/sdk/native-protocol"
 import type { JSONRPCRequest } from "json-rpc-2.0"
 import type { NativePort } from "./types"
-import type { ExtensionCommand } from "@/lib/native-protocol/ExtensionCommand"
-import type { ExtensionToHost } from "@/lib/native-protocol/ExtensionToHost"
 import { NativeRpcClient } from "./rpc-client"
 import { NATIVE_REQUEST_TIMEOUT_MS } from "./state"
 

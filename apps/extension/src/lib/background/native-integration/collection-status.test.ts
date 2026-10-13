@@ -1,5 +1,5 @@
+import { parseCollectionStatus } from "@newsnext/sdk/native-protocol"
 import { describe, expect, it } from "vitest"
-import { parseCollectionStatus } from "./collection-status"
 
 const snapshot = {
   initialized: true,
@@ -52,7 +52,7 @@ describe("stream diagnostics parsing", () => {
       expect(() => parseCollectionStatus({
         ...snapshot,
         streams: [{ ...snapshot.streams[0], policy: { ...snapshot.streams[0]!.policy, ...policy } }],
-      })).toThrow("invalid stream diagnostics")
+      })).toThrow("Invalid native protocol value")
     }
     expect(() => parseCollectionStatus({ ...snapshot, streams: [{ ...snapshot.streams[0], activity: "unknown" }] })).toThrow()
     expect(() => parseCollectionStatus({ ...snapshot, streams: [null] })).toThrow()

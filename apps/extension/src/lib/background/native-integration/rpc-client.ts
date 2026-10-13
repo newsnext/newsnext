@@ -1,88 +1,24 @@
+import type { ExtensionCommand, NativeMethods as SharedNativeMethods } from "@newsnext/sdk/native-protocol"
 import type { JSONRPCRequest } from "json-rpc-2.0"
 import type { SourceLoadResponse } from "../../source/load-result"
-import type { RankingHistoryQuery, RankingPosition } from "../ranking-history"
-import type { CollectionStatus } from "@/lib/native-protocol/CollectionStatus"
-import type { CollectionStatusSubscribeParams } from "@/lib/native-protocol/CollectionStatusSubscribeParams"
-import type { ExtensionCommand } from "@/lib/native-protocol/ExtensionCommand"
-import type { LiveCardObservedParams } from "@/lib/native-protocol/LiveCardObservedParams"
-import type { LiveCardSnapshotGetParams } from "@/lib/native-protocol/LiveCardSnapshotGetParams"
-import type { LogEntry } from "@/lib/native-protocol/LogEntry"
-import type { LogsSetLevelParams } from "@/lib/native-protocol/LogsSetLevelParams"
-import type { LogsSubscribeParams } from "@/lib/native-protocol/LogsSubscribeParams"
-import type { SdkOpenParams } from "@/lib/native-protocol/SdkOpenParams"
-import type { SdkStreamParams } from "@/lib/native-protocol/SdkStreamParams"
-import type { WorkerTakeoverParams } from "@/lib/native-protocol/WorkerTakeoverParams"
-import type { WorkspaceCommitParams } from "@/lib/native-protocol/WorkspaceCommitParams"
-import type { WorkspaceCommitResult } from "@/lib/native-protocol/WorkspaceCommitResult"
+import { nativeMethods, parseNativeValue } from "@newsnext/sdk/native-protocol"
 import { JSONRPCClient, JSONRPCErrorException, JSONRPCServer } from "json-rpc-2.0"
 import { createId } from "../../id"
 import { parseExtensionCommand } from "../../native-messaging"
 import { isSourceLoadResponse } from "../../source/load-result"
-import { parseCollectionStatus } from "./collection-status"
-import { parseLocalCardIds, parseLogs, parseRevision } from "./message-values"
 import { isRpcNotification, isRpcRequest, parseRpcNotification, parseRpcRequest, parseRpcResponse } from "./rpc-message"
 
-interface NativeMethods {
-  "localSourceLoad": { params: { sourceId: string, executionId: string, params: Record<string, unknown>, secrets: Record<string, string | undefined> }, result: unknown }
-  "rankingPositionsGet": { params: RankingHistoryQuery, result: RankingPosition[] }
-  "collectionStatusSubscribe": { params: CollectionStatusSubscribeParams, result: null }
-  "sdk.open": { params: SdkOpenParams, result: null }
-  "sdk.next": { params: SdkStreamParams, result: unknown }
-  "sdk.cancel": { params: SdkStreamParams, result: null }
-  "logsGet": { params: Record<string, never>, result: LogEntry[] }
-  "logsSetLevel": { params: LogsSetLevelParams, result: null }
-  "logsSubscribe": { params: LogsSubscribeParams, result: null }
-  "collectionStatusGet": { params: Record<string, never>, result: CollectionStatus }
-  "liveCardSnapshotGet": { params: LiveCardSnapshotGetParams, result: SourceLoadResponse | null }
-  "liveCardObserved": { params: LiveCardObservedParams, result: null }
-  "workspaceCommit": { params: WorkspaceCommitParams, result: WorkspaceCommitResult }
-  "workerTakeover": { params: WorkerTakeoverParams, result: null }
-  "restart": { params: Record<string, never>, result: null }
+type NativeMethods = Omit<SharedNativeMethods, "liveCardSnapshotGet"> & {
+  liveCardSnapshotGet: { params: SharedNativeMethods["liveCardSnapshotGet"]["params"], result: SourceLoadResponse | null }
 }
 
-const parsers: { [Method in keyof NativeMethods]: (value: unknown) => NativeMethods[Method]["result"] } = {
-  "localSourceLoad": value => value,
-  "rankingPositionsGet": (value) => {
-    if (!Array.isArray(value) || !value.every(isRankingPosition)) {
-      throw new Error("The native host returned invalid ranking history")
-    }
-    return value
-  },
-  "collectionStatusSubscribe": parseEmptyResult,
-  "sdk.open": parseEmptyResult,
-  "sdk.next": value => value,
-  "sdk.cancel": parseEmptyResult,
-  "logsGet": parseLogs,
-  "logsSetLevel": parseEmptyResult,
-  "logsSubscribe": parseEmptyResult,
-  "collectionStatusGet": parseCollectionStatus,
-  "liveCardSnapshotGet": (value) => {
-    if (value === null || isSourceLoadResponse(value)) return value
+function parseResult<Method extends keyof NativeMethods>(method: Method, value: unknown): NativeMethods[Method]["result"] {
+  const result = parseNativeValue(nativeMethods[method].result, value)
+  if (method === "liveCardSnapshotGet" && result !== null && !isSourceLoadResponse(result)) {
     throw new Error("The NewsNext Worker returned an invalid Source result")
-  },
-  "liveCardObserved": parseEmptyResult,
-  "workspaceCommit": (value) => {
-    if (!value || typeof value !== "object" || !("revision" in value) || !("localCardIds" in value)) {
-      throw new Error("The native host returned an invalid Workspace commit")
-    }
-    const revision = parseRevision(value.revision, "Workspace")
-    if (revision === 0) throw new Error("The native host returned an invalid Workspace revision")
-    return { revision, localCardIds: parseLocalCardIds(value.localCardIds) }
-  },
-  "workerTakeover": parseEmptyResult,
-  "restart": parseEmptyResult,
-}
-
-function parseEmptyResult(value: unknown): null {
-  if (value !== null) throw new Error("The native host returned an invalid empty RPC result")
-  return null
-}
-
-function isRankingPosition(value: unknown): value is RankingPosition {
-  if (!value || typeof value !== "object") return false
-  const point = value as Partial<RankingPosition>
-  return Number.isSafeInteger(point.observedAt)
-    && (point.position === null || Number.isSafeInteger(point.position))
+  }
+  // The method selects its corresponding schema; Source payloads add domain validation above.
+  return result as NativeMethods[Method]["result"]
 }
 
 // No message reached the transport, so callers must not allocate remote cleanup.
@@ -156,6 +92,11 @@ export class NativeRpcClient {
     timeoutMs = this.timeoutMs,
   ): Promise<NativeMethods[Method]["result"]> {
     if (this.closed) throw new NativeRequestNotSentError("NewsNext CLI disconnected")
+    try {
+      parseNativeValue(nativeMethods[method].params, params)
+    } catch (error) {
+      throw new NativeRequestNotSentError(error instanceof Error ? error.message : "Invalid native request")
+    }
     const cancelling = method === "sdk.cancel"
     // Cleanup has reserved capacity, but cannot accumulate without a bound.
     if (cancelling ? this.cancelling >= 64 : this.outstanding >= 64) {
@@ -167,7 +108,7 @@ export class NativeRpcClient {
     try {
       const value: unknown = await this.client.timeout(timeoutMs).request(method, params)
       if (this.closed) throw new Error("NewsNext CLI disconnected")
-      return parsers[method](value)
+      return parseResult(method, value)
     } catch (error) {
       // An unacknowledged cancellation may leave a child alive. Disconnecting
       // releases every Host-local session instead of silently leaking it.

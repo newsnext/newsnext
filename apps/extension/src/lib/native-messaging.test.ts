@@ -26,16 +26,16 @@ describe("native messaging protocol", () => {
       type: "action.execute",
       name: "board.delete",
       input: null,
-    })).toThrow("Invalid extension command")
+    })).toThrow("Invalid native protocol value")
     expect(() => parseExtensionCommand({
       id: "action-id",
       type: "action.execute",
       name: "",
       input: {},
-    })).toThrow("Invalid extension command")
+    })).toThrow("Invalid native protocol value")
     expect(() => parseExtensionCommand({
       id: "obsolete-id",
       type: "application.query.list",
-    })).toThrow("Invalid extension command")
+    })).toThrow("Invalid native protocol value")
   })
 })

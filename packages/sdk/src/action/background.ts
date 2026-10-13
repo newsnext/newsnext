@@ -1,5 +1,6 @@
-import type { ConnectedFetchInput, FetchResponse, InsightCatalogEntry, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse } from "../models/index.js"
+import type { ConnectedFetchInput, FetchResponse, NativeIntegrationStatus, ResolvedRadarSuggestion, RunDeveloperSourceInput, RunDeveloperSourceOutput, SourceLoadResponse } from "../models/index.js"
 import Type from "typebox"
+import { insightCatalogEntrySchema, logEntrySchema, logsSetLevelParamsSchema, longTaskProgressSchema, offlineWorkerSchema } from "../native-protocol.js"
 import { defineActionContract } from "./definition.js"
 import { EmptyObject, Identifier, RecordValue, stringEnum } from "./schema.js"
 
@@ -22,36 +23,9 @@ const WorkspaceSummaryResult = Type.Object({
   liveWidgets: Type.Integer({ minimum: 0 }),
 }, { additionalProperties: false })
 
-// Built-in `view` and `params` carry the Insight manifest schema; custom views use `url`.
-const InsightCatalogEntryResult = Type.Unsafe<InsightCatalogEntry>(Type.Object({
-  id: Identifier,
-  title: Type.String(),
-  color: Type.String(),
-  width: Type.Integer({ minimum: 1 }),
-  height: Type.Integer({ minimum: 1 }),
-  minWidth: Type.Integer({ minimum: 1 }),
-  minHeight: Type.Integer({ minimum: 1 }),
-  url: Type.Optional(Type.String()),
-  view: Type.Optional(Type.Unknown()),
-  params: Type.Unknown(),
-  dataRevision: Type.String(),
-  dataFiles: Type.Array(Type.String()),
-  viewRevision: Type.String(),
-  hasData: Type.Boolean(),
-  refreshIntervalMs: Type.Number(),
-}, { additionalProperties: false }))
-
 const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.Object({
   ready: Type.Boolean(),
-  initialization: Type.Optional(Type.Object({
-    id: Identifier,
-    label: Type.String(),
-    stage: Type.String(),
-    completedSteps: Type.Integer({ minimum: 0 }),
-    totalSteps: Type.Integer({ minimum: 1 }),
-    startedAt: Type.Integer({ minimum: 0 }),
-    elapsedMs: Type.Integer({ minimum: 0 }),
-  }, { additionalProperties: false })),
+  initialization: Type.Optional(longTaskProgressSchema),
   workspaceConflict: Type.Optional(Type.Object({
     revision: Type.Integer({ minimum: 0 }),
     local: WorkspaceSummaryResult,
@@ -59,10 +33,7 @@ const NativeIntegrationStatusResult = Type.Unsafe<NativeIntegrationStatus>(Type.
   }, { additionalProperties: false })),
   daemonVersion: Type.Optional(Type.String()),
   capabilities: Type.Array(Type.String()),
-  offlineWorkers: Type.Array(Type.Object({
-    id: Identifier,
-    cardIds: Type.Array(Identifier, { minItems: 1, uniqueItems: true }),
-  }, { additionalProperties: false })),
+  offlineWorkers: Type.Array(offlineWorkerSchema),
   connectionError: Type.Optional(Type.Object({
     code: Type.Optional(Type.String()),
     message: Type.String(),
@@ -119,14 +90,6 @@ const developerFetchAction = defineActionContract({
     validateFetch(input)
   },
 })
-
-const AppLogEntryResult = Type.Object({
-  id: Type.Number(),
-  timestamp: Type.String(),
-  level: stringEnum(["error", "warn", "info"] as const),
-  target: Type.String(),
-  message: Type.String(),
-}, { additionalProperties: false })
 
 const DeveloperRunSourceParams = Type.Unsafe<RunDeveloperSourceInput>(Type.Union([
   Type.Object({
@@ -210,7 +173,7 @@ const nativeIntegrationGetInsightsAction = defineActionContract({
   kind: "query",
   description: "List the renderable Insight definitions the daemon last published, including their entry URLs.",
   params: EmptyObject,
-  result: Type.Array(InsightCatalogEntryResult),
+  result: Type.Array(insightCatalogEntrySchema),
 })
 
 const nativeIntegrationGetLogsAction = defineActionContract({
@@ -218,16 +181,14 @@ const nativeIntegrationGetLogsAction = defineActionContract({
   kind: "query",
   description: "Get recent NewsNext CLI service logs.",
   params: EmptyObject,
-  result: Type.Array(AppLogEntryResult),
+  result: Type.Array(logEntrySchema),
 })
 
 const nativeIntegrationSetLogLevelAction = defineActionContract({
   name: "nativeIntegration.setLogLevel",
   kind: "mutation",
   description: "Set the NewsNext CLI service log level (off disables logging entirely).",
-  params: Type.Object({
-    level: stringEnum(["off", "error", "warn", "info"] as const),
-  }, { additionalProperties: false }),
+  params: logsSetLevelParamsSchema,
   result: EmptyObject,
 })
 

@@ -1,4 +1,5 @@
 import type { ConnectedFetchInput, FetchResponse, InsightCatalogEntry, WorkspaceResolution } from "@newsnext/sdk/models"
+import type { CollectionStatus as NativeCollectionStatus, LogEntry as NativeLogEntry } from "@newsnext/sdk/native-protocol"
 import type { ResolvedRadarSuggestion } from "../radar"
 import type { LiveCard } from "../source"
 import type { SourceLoadResponse } from "../source/load-result"
@@ -8,8 +9,6 @@ import type {
   RunDeveloperSourceOutput,
 } from "./developer-source-runner"
 import type { NativeIntegrationStatus } from "./native-integration"
-import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
-import type { LogEntry as NativeLogEntry } from "@/lib/native-protocol/LogEntry"
 import { actionContracts } from "@newsnext/sdk/actions"
 import { defineAction } from "./action-definition"
 
@@ -41,7 +40,7 @@ export interface BackgroundActionContext extends ApplicationActionContext {
   }
   nativeIntegration: {
     getLogs: () => Promise<NativeLogEntry[]>
-    setLogLevel: (input: { level: string }) => Promise<void>
+    setLogLevel: (input: import("@newsnext/sdk/native-protocol").LogsSetLevelParams) => Promise<void>
     getCollectionStatus: () => Promise<NativeCollectionStatus>
     setCollectionSubscribed: (enabled: boolean) => void
     getStatus: () => Promise<NativeIntegrationStatus>

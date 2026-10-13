@@ -1,28 +1,7 @@
-import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
-import type { WorkspacePatch as NativeWorkspacePatch } from "@/lib/native-protocol/WorkspacePatch"
+import type { Workspace as NativeWorkspace, WorkspacePatch as NativeWorkspacePatch } from "@newsnext/sdk/native-protocol"
 import { fromNativeWorkspaceData, toNativeWorkspaceData } from "./native-integration/workspace-data"
 
-export function parseWorkspacePatch(value: unknown): NativeWorkspacePatch {
-  if (!isRecord(value)
-    || !isNonNegativeSafeInteger(value.expectedRevision)
-    || !isNonNegativeSafeInteger(value.updatedAt)
-    || !isIdentifierArray(value.boardOrder)
-    || !isRecord(value.boards)
-    || !isRecord(value.liveCards)
-    || !isRecord(value.liveWidgets)
-    || typeof value.settings !== "string") {
-    throw new Error("The native host returned an invalid Workspace patch")
-  }
-  return {
-    expectedRevision: value.expectedRevision,
-    updatedAt: value.updatedAt,
-    boardOrder: [...value.boardOrder],
-    boards: value.boards as NativeWorkspacePatch["boards"],
-    liveCards: value.liveCards as NativeWorkspacePatch["liveCards"],
-    liveWidgets: value.liveWidgets as NativeWorkspacePatch["liveWidgets"],
-    settings: value.settings,
-  }
-}
+export { parseWorkspacePatch } from "@newsnext/sdk/native-protocol"
 
 export function createWorkspacePatch(current: NativeWorkspace, candidate: NativeWorkspace): NativeWorkspacePatch {
   return {
@@ -74,16 +53,4 @@ function applyEntityPatch<T>(current: Record<string, T>, ids: string[], updates:
     if (!value) throw new Error(`Workspace patch references unknown ${label} '${id}'`)
     return [id, value]
   }))
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
-}
-
-function isNonNegativeSafeInteger(value: unknown): value is number {
-  return Number.isSafeInteger(value) && Number(value) >= 0
-}
-
-function isIdentifierArray(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(id => typeof id === "string" && id.length > 0) && new Set(value).size === value.length
 }

@@ -1,5 +1,5 @@
 import type { WorkspaceSummary } from "@newsnext/sdk/models"
-import type { Workspace } from "@/lib/native-protocol/Workspace"
+import type { Workspace } from "@newsnext/sdk/native-protocol"
 import { stableStringify } from "@newsnext/shared/utils"
 
 export function summarizeWorkspace(workspace: Workspace): WorkspaceSummary {

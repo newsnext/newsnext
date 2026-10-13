@@ -1,4 +1,5 @@
-const MAX_NATIVE_CHUNK_COUNT = 256
+import { nativeChunkSchema, parseNativeValue } from "@newsnext/sdk/native-protocol"
+
 const MAX_REASSEMBLED_NATIVE_MESSAGE_CHARS = 64 * 1024 * 1024
 
 interface NativeChunkTransfer {
@@ -24,20 +25,8 @@ export class NativeMessageChunkAssembler {
     if (!isRecord(value) || value.type !== "chunk") {
       return { complete: true, value }
     }
-    const { data, index, total, transferId } = value
-    if (typeof transferId !== "string"
-      || !transferId
-      || typeof index !== "number"
-      || !Number.isSafeInteger(index)
-      || index < 0
-      || typeof total !== "number"
-      || !Number.isSafeInteger(total)
-      || total < 1
-      || total > MAX_NATIVE_CHUNK_COUNT
-      || index >= total
-      || typeof data !== "string") {
-      throw new Error("The native host returned an invalid message chunk")
-    }
+    const { data, index, total, transferId } = parseNativeValue(nativeChunkSchema, value)
+    if (index >= total) throw new Error("The native host returned an invalid message chunk")
     let transfer = this.#transfers.get(transferId)
     if (!transfer) {
       transfer = {

@@ -1,15 +1,13 @@
 import type { InsightCatalogEntry, OfflineWorker as NativeOfflineWorker } from "@newsnext/sdk/models"
+import type { CollectionStatus as NativeCollectionStatus, Workspace as NativeWorkspace } from "@newsnext/sdk/native-protocol"
 import type { NativeIntegrationState, NativeIntegrationStatus, NativePort } from "./types"
-import type { CollectionStatus as NativeCollectionStatus } from "@/lib/native-protocol/CollectionStatus"
-import type { Workspace as NativeWorkspace } from "@/lib/native-protocol/Workspace"
 import { normalizePersistedSettings } from "../../settings/persisted-settings"
 import { getWorkerId } from "../worker-identity"
 
 export const NATIVE_HOST_NAME = import.meta.env.DEV
   ? "app.newsnext.host.dev"
   : "app.newsnext.host"
-// Transport connects before initialization; startup frames carry task progress.
-export const PROTOCOL_VERSION = 40
+export { PROTOCOL_VERSION } from "@newsnext/sdk/native-protocol"
 export const WORKSPACE_SYNCED_AT_KEY = "newsnext-workspace-synced-at"
 export const WORKSPACE_UPDATED_AT_KEY = "newsnext-workspace-updated-at"
 export const NATIVE_INTEGRATION_RECONNECT_ALARM = "newsnext-native-integration-reconnect"
@@ -31,7 +29,7 @@ function createInitialWorkspace(): NativeWorkspace {
 interface NativeIntegrationRuntime {
   ready: boolean
   initialization: NativeIntegrationStatus["initialization"]
-  startupLogs: import("@/lib/native-protocol/LogEntry").LogEntry[]
+  startupLogs: import("@newsnext/sdk/native-protocol").LogEntry[]
   collectionSubscribed: boolean
   collectionStatus: NativeCollectionStatus | undefined
   logsSubscribed: boolean

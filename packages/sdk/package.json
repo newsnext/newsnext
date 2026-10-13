@@ -15,7 +15,8 @@
     "./actions": "./src/action/index.ts",
     "./extension": "./src/extension.ts",
     "./widget": "./src/widget.ts",
-    "./analytics": "./src/analytics.ts"
+    "./analytics": "./src/analytics.ts",
+    "./native-protocol": "./src/native-protocol.ts"
   },
   "files": [
     "src"

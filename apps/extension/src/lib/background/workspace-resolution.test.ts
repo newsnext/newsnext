@@ -1,4 +1,4 @@
-import type { Workspace } from "@/lib/native-protocol/Workspace"
+import type { Workspace } from "@newsnext/sdk/native-protocol"
 import { describe, expect, it } from "vitest"
 import { mergeWorkspaces, summarizeWorkspace } from "./workspace-resolution"
 

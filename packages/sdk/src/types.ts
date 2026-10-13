@@ -1,7 +1,7 @@
 import type { SourceLoadResponse } from "./models/load-result.js"
-import type { Worker } from "./protocol/Worker.js"
+import type { Worker } from "./native-protocol.js"
 
-export type { Worker } from "./protocol/Worker.js"
+export type { Worker } from "./native-protocol.js"
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
 export interface JsonObject { [key: string]: JsonValue }
