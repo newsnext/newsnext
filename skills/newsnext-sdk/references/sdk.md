@@ -48,7 +48,7 @@ Each capability can be installed without a plugin. Place Actions in
 `~/.config/newsnext/actions/<action-id>/`, Insights in
 `~/.config/newsnext/insights/<insight-id>/`, and Source providers in
 `~/.config/newsnext/sources/`. Sources accept `<provider-id>.json`, `.js`, `.mjs`,
-or `<provider-id>/index.js` / `index.mjs`. JavaScript requires Node.js 22.15+;
+or `<provider-id>/index.js` / `index.mjs`. JavaScript requires Node.js 24+;
 modules load directly without a build step. Relative imports and installed npm
 dependencies use Node resolution; `@newsnext/source-kit` imports resolve to
 the host's built-in library. Author-owned `.js` files are ES modules.

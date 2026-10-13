@@ -388,7 +388,7 @@ function withValidatedLoaderResult<TParams extends SourceParamSchemaMap>(
     const resolvedResult = baseUrl === undefined
       ? result
       : resolveSourceLoaderResultUrls(result, baseUrl)
-    return renderSourceLoaderResult(resolvedResult, annotation)
+    return renderSourceLoaderResult(resolvedResult, annotation, context)
   }
 }
 

@@ -3,9 +3,9 @@ import type { SourceCatalog } from "@newsnext/source-kit/runtime"
 import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
 import { resolveSources } from "@newsnext/registry/sources"
 import { resolveProvider, validateJsonSourceManifest } from "@newsnext/source-kit/registry"
-import { configureSourceCatalog, mergeSourceCatalogs, resolveSourceCatalog } from "@newsnext/source-kit/runtime"
+import { configureSourceCatalog, mergeSourceCatalogs } from "@newsnext/source-kit/runtime"
 import { emitBackgroundEvent } from "./background-events"
-import { createLocalSourceLoader } from "./local-source-runner"
+import { bindLocalSourceProvider, createLocalSourceLoader } from "./local-source-runner"
 import { refreshActiveRadarBadge } from "./radar-badge"
 import { syncConfiguredSourceRequestRules } from "./source-request-rules"
 
@@ -20,12 +20,14 @@ async function loadSourceCatalog(): Promise<SourceCatalog> {
 
 function resolveLocalProvider(providerId: string, value: unknown): SourceCatalog {
   if (!value || typeof value !== "object" || !("kind" in value)) throw new Error("Invalid local Source provider")
-  if (value.kind === "runtime" && "sources" in value) {
-    const sources = resolveSourceCatalog(value.sources, descriptor => createLocalSourceLoader(descriptor.id))
-    if (Object.keys(sources).some(id => !id.startsWith(`${providerId}:`))) {
-      throw new Error(`Source catalog does not belong to Provider '${providerId}'`)
-    }
-    return sources
+  if (value.kind === "module" && "provider" in value && "revision" in value && typeof value.revision === "string") {
+    const revision = value.revision
+    const { provider, requiresSession } = bindLocalSourceProvider(value.provider)
+    const resolved = resolveProvider(providerId, provider)
+    return Object.fromEntries(Object.entries(resolved.sources).map(([key, source]) => {
+      const id = `${providerId}:${key}`
+      return [id, requiresSession(key) ? { ...source, loader: createLocalSourceLoader(id, revision, source.loader) } : source]
+    }))
   }
   if (value.kind === "declarative" && "provider" in value) {
     validateJsonSourceManifest(value.provider, `Source provider '${providerId}'`)

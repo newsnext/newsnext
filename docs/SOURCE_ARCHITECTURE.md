@@ -26,13 +26,21 @@ beside the implementation — linked below).
    Provider. A higher-priority Provider replaces the whole lower-priority
    Provider, preventing mixed identity/defaults; removal restores the next
    available Provider. Invalid definitions are ignored. Local JSON resolves
-   declaratively; local modules publish schema-validated `SourceDescriptor`s
-   and execute through a bound local loader. Executable paths stay in the host.
+   declaratively; local modules publish serializable Provider definitions with
+   references for `load`, `request`, and annotation callbacks. The extension
+   resolves both formats through the same Provider/Source engine; the module
+   host does not compile templates, construct standard loaders, or normalize
+   results. Executable paths stay in the host.
    `ctx.fetch` and `ctx.updateSecrets` return to the originating browser,
    retaining its session, network capabilities, request queue, and secret
-   storage. Node.js 22.15+ loads local ESM modules directly, resolving
+   storage. Node.js 24+ loads local ESM modules directly, resolving
    `@newsnext/source-kit` to the embedded library; no local Source compilation
-   is needed. Fresh workers load the current dependency graph. Runtime code
+   is needed. Function references are bound to a catalog revision. One local
+   task holds the module session while the extension runs the pipeline and
+   calls its functions; annotations receive normalized items in one batch.
+   Final results stay in the extension; session completion returns only an acknowledgment.
+   Cancellation releases the task and pending calls. Purely declarative
+   module Sources execute directly in the extension. Runtime code
    never executes dynamically in the extension. Local directory changes
    replace the catalog live.
 3. Resolution: `flattenProviderConfig`/`resolveProvider`
@@ -60,7 +68,8 @@ beside the implementation — linked below).
    per-source/params protection interval reuses snapshots
    (`apps/extension/src/lib/source/query-policy.ts`); snapshots are
    Worker-local, schema-versioned, discarded after 30 days
-   (`lib/source/source-snapshot.ts`). Storage separates lightweight per-card
+   (`lib/source/source-snapshot.ts`). Both local and bundled loaders use this
+   extension-owned output pipeline. Storage separates lightweight per-card
    snapshots from shared Source result snapshots: a LiveCard record owns its
    last Source presentation and result reference, while cards with the same
    Source identity reuse the items payload. `liveCard.readSnapshot` joins both
@@ -80,5 +89,6 @@ beside the implementation — linked below).
   ≤5 headers). JMESPath length-capped (2000), `__proto__`/constructor
   rejected (`loaders/json.ts`). Template slots whitelisted
   (`core/template-policy.ts`). Registry capped (2MB, ≤1000 sources).
-- Extension enforces permissions at execution; CLI mirrors them natively.
+- Extension enforces permissions for both standard loaders and local callback
+  requests through the bound browser context.
   Never log secret values.

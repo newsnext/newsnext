@@ -1,4 +1,4 @@
-import type { NewsItem, SourceAnnotationFormatter, SourceLoaderResult } from "../types"
+import type { NewsItem, SourceAnnotationFormatter, SourceLoaderContext, SourceLoaderResult } from "../types"
 import type { CompiledSourceTemplate } from "./template"
 import { NEWS_ITEM_STAT_KEYS } from "@newsnext/shared/types"
 import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
@@ -31,18 +31,31 @@ export function validateNewsItems(value: unknown): NewsItem[] {
   })
 }
 
-export function renderSourceLoaderResult(
+export async function renderSourceLoaderResult(
   result: SourceLoaderResult,
   annotation: CompiledSourceTemplate | SourceAnnotationFormatter | undefined,
-): SourceLoaderResult {
+  context?: SourceLoaderContext,
+): Promise<SourceLoaderResult> {
   if (annotation === undefined) return result
+  if (typeof annotation === "function" && annotation.formatItems) {
+    try {
+      const annotations = await annotation.formatItems(result.items, context)
+      if (!Array.isArray(annotations) || annotations.length !== result.items.length || !annotations.every(text => typeof text === "string")) {
+        throw new TypeError("Invalid Source annotations")
+      }
+      return { ...result, annotations: annotations.map(text => text.trim()) }
+    } catch (error) {
+      console.error("Source annotation formatter failed", error)
+      return { ...result, annotations: result.items.map(() => "") }
+    }
+  }
 
   return {
     ...result,
-    annotations: result.items.map((item) => {
+    annotations: await Promise.all(result.items.map(async (item) => {
       try {
         const text = typeof annotation === "function"
-          ? annotation(item)
+          ? await annotation(item, context)
           : annotation.render(createSourceTemplateScope(undefined, { item }))
         return (text ?? "").trim()
       } catch (error) {
@@ -51,7 +64,7 @@ export function renderSourceLoaderResult(
         else reportTemplateError(error)
         return ""
       }
-    }),
+    })),
   }
 }
 

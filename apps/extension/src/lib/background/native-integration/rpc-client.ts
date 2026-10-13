@@ -97,7 +97,7 @@ export class NativeRpcClient {
     } catch (error) {
       throw new NativeRequestNotSentError(error instanceof Error ? error.message : "Invalid native request")
     }
-    const cancelling = method === "sdk.cancel"
+    const cancelling = method === "sdk.cancel" || method === "localSourceCancel"
     // Cleanup has reserved capacity, but cannot accumulate without a bound.
     if (cancelling ? this.cancelling >= 64 : this.outstanding >= 64) {
       if (cancelling) this.failCleanup()

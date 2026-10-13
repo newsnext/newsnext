@@ -9,7 +9,8 @@
     "./registry": "./src/registry/index.ts",
     "./runtime": "./src/runtime/index.ts",
     "./types": "./src/types/index.ts",
-    "./utils": "./src/utils/index.ts"
+    "./utils": "./src/utils/index.ts",
+    "./local": "./src/local/index.ts"
   },
   "scripts": {
     "typecheck": "bun check",

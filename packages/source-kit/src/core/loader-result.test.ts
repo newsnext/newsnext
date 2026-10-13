@@ -1,4 +1,4 @@
-import type { SourceLoaderResult } from "../types"
+import type { NewsItem, SourceLoaderResult } from "../types"
 import { describe, expect, it, vi } from "vitest"
 import { renderSourceLoaderResult, validateSourceLoaderOutput } from "./loader-result"
 import { compileSourceTemplate } from "./template"
@@ -115,7 +115,7 @@ describe("source loader result", () => {
     })).toThrowError("items[0].content.pictures[0] must be a non-empty string")
   })
 
-  it("renders a compiled loader annotation template", () => {
+  it("renders a compiled loader annotation template", async () => {
     const result = {
       items: [{ title: "Example", url: "https://example.com", stats: { likes: 0 } }],
     }
@@ -123,7 +123,7 @@ describe("source loader result", () => {
       location: "example.annotation",
       slot: "annotation",
     })
-    expect(renderSourceLoaderResult(validateSourceLoaderOutput(result), template)).toEqual({
+    expect(await renderSourceLoaderResult(validateSourceLoaderOutput(result), template)).toEqual({
       items: result.items,
       annotations: ["0 likes"],
     })
@@ -134,36 +134,62 @@ describe("source loader result", () => {
     })).toThrowError("expected one of: scope.item")
   })
 
-  it("formats normalized items without adding presentation fields to their data", () => {
+  it("formats normalized items without adding presentation fields to their data", async () => {
     const result = validateSourceLoaderOutput({ items: [
       { title: "First", url: "https://example.com/1", icon: { kind: "author", src: "" }, author: { name: "Author" } },
       { title: "Second", url: "https://example.com/2" },
     ] })
-    const formatted = renderSourceLoaderResult(result, item => item.icon ? undefined : item.author?.name)
+    const formatted = await renderSourceLoaderResult(result, item => item.icon ? undefined : item.author?.name)
     expect(formatted.annotations).toEqual(["Author", ""])
     expect(formatted.items).toBe(result.items)
     expect(formatted.items[0]).not.toHaveProperty("attributes")
-    expect(renderSourceLoaderResult(result, () => "  Label  ").annotations).toEqual(["Label", "Label"])
+    expect((await renderSourceLoaderResult(result, () => "  Label  ")).annotations).toEqual(["Label", "Label"])
   })
 
-  it("keeps formatter failures isolated to the affected item", () => {
+  it("keeps formatter failures isolated to the affected item", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     try {
       const result = validateSourceLoaderOutput({ items: [
         { title: "Broken", url: "https://example.com/1" },
         { title: "Working", url: "https://example.com/2" },
       ] })
-      expect(renderSourceLoaderResult(result, (item) => {
+      expect((await renderSourceLoaderResult(result, (item) => {
         if (item.title === "Broken") throw new Error("Invalid presentation")
         return item.title
-      }).annotations).toEqual(["", "Working"])
+      })).annotations).toEqual(["", "Working"])
       expect(consoleError).toHaveBeenCalledOnce()
     } finally {
       consoleError.mockRestore()
     }
   })
 
-  it("preserves annotation text when optional item information is missing", () => {
+  it("awaits asynchronous annotation results in item order", async () => {
+    const result = validateSourceLoaderOutput({ items: [
+      { title: "First", url: "https://example.com/1" },
+      { title: "Second", url: "https://example.com/2" },
+    ] })
+    expect((await renderSourceLoaderResult(result, async item => ` ${item.title} `)).annotations).toEqual(["First", "Second"])
+  })
+
+  it("formats a normalized batch once and trims its output", async () => {
+    const result = validateSourceLoaderOutput({ items: [
+      { title: "First", url: "https://example.com/1" },
+      { title: "Second", url: "https://example.com/2" },
+    ] })
+    let calls = 0
+    const formatter = Object.assign(() => {
+      throw new Error("Unexpected per-item call")
+    }, {
+      formatItems: async (items: readonly NewsItem[]) => {
+        calls += 1
+        return items.map(item => ` ${item.title} `)
+      },
+    })
+    expect((await renderSourceLoaderResult(result, formatter)).annotations).toEqual(["First", "Second"])
+    expect(calls).toBe(1)
+  })
+
+  it("preserves annotation text when optional item information is missing", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
     const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
@@ -172,7 +198,7 @@ describe("source loader result", () => {
       location: "example.annotation",
       slot: "annotation",
     })
-    expect(renderSourceLoaderResult(result, template)).toEqual({
+    expect(await renderSourceLoaderResult(result, template)).toEqual({
       items: [{ title: "Example", url: "https://example.com" }],
       annotations: ["By  · News"],
     })
@@ -180,7 +206,7 @@ describe("source loader result", () => {
     consoleError.mockRestore()
   })
 
-  it("renders empty annotation text for a missing value", () => {
+  it("renders empty annotation text for a missing value", async () => {
     const result = validateSourceLoaderOutput({
       items: [{ title: "Example", url: "https://example.com" }],
     })
@@ -189,7 +215,7 @@ describe("source loader result", () => {
       slot: "annotation",
     })
 
-    expect(renderSourceLoaderResult(result, template)).toEqual({
+    expect(await renderSourceLoaderResult(result, template)).toEqual({
       items: result.items,
       annotations: [""],
     })

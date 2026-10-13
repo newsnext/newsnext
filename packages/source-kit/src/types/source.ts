@@ -6,8 +6,12 @@ export { CATEGORY_IDS, isSourcePresentationMetadataKey, isSourcePresentationType
 
 export type SourceFetch = KyInstance
 
-/** Synchronous TS-only presentation, evaluated after item normalization and URL resolution. */
-export type SourceAnnotationFormatter = (item: Readonly<NewsItem>) => string | undefined
+/** Presentation evaluated after normalization; local modules may execute it through their host. */
+export interface SourceAnnotationFormatter {
+  (item: Readonly<NewsItem>, context?: SourceLoaderContext): string | undefined | Promise<string | undefined>
+  /** Host adapters can format all normalized items in one call. */
+  formatItems?: (items: readonly NewsItem[], context?: SourceLoaderContext) => Promise<string[]>
+}
 
 export interface SourceLoaderContext {
   // WHY: always use this bound client; ky.create()/global fetch would lose the abort signal, host queue, and capability checks.

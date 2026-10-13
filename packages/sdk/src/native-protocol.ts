@@ -3,7 +3,7 @@ import Type from "typebox"
 import Value from "typebox/value"
 
 /** Increment for breaking wire changes; negotiate additive features through capabilities. */
-export const PROTOCOL_VERSION = 40
+export const PROTOCOL_VERSION = 41
 
 const text = Type.String()
 const id = Type.String({ minLength: 1 })
@@ -209,7 +209,13 @@ const empty = object({})
 const nothing = Type.Null()
 /** Native RPC contracts shared by the host and extension. Domain payloads are validated by their owner. */
 export const nativeMethods = {
-  "localSourceLoad": { params: object({ sourceId: id, executionId: id, params: record, secrets: record }), result: Type.Unknown() },
+  "localSourceLoad": { params: object({ sourceId: id, revision: id, executionId: id, params: record, secrets: record }), result: Type.Null() },
+  "localSourceCall": { params: object({ executionId: id, call: Type.Union([
+    object({ type: Type.Literal("load"), functionId: id }),
+    object({ type: Type.Literal("request"), functionId: id, url: id }),
+    object({ type: Type.Literal("annotation"), functionId: id, items: Type.Array(record, { maxItems: 50 }) }),
+  ]) }), result: Type.Unknown() },
+  "localSourceCancel": { params: object({ executionId: id }), result: Type.Null() },
   "rankingPositionsGet": {
     params: object({ cardId: id, sourceVersion: uint, params: record, url: id }),
     result: Type.Array(object({ observedAt: uint, position: nullable(uint) })),
