@@ -85,7 +85,7 @@ Tailwind utilities. Values here are normative; code comments point back here.
 - Board viewport, board nav, Widget grid, both LiveCard faces, and embedded
   Widget docs use `scrollbar-hidden` — never custom instances there. Keep
   keyboard scroll, scroll refs, virtual lists. Widget docs never scroll; host
-  panel owns scrolling (`INSIGHT_GUIDELINE.md`, `cli/docs/insight-design.md`).
+  panel owns scrolling (`INSIGHT_GUIDELINE.md`).
 - Tracks sit on the surface's outer edge. Settings/Board dialogs: move shell's
   10px right padding into the scroller so text keeps inset, scrollbar reaches
   edge.

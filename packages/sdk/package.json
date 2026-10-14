@@ -25,7 +25,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "bun scripts/generate-json-schemas.ts --check && tsdown && bun scripts/generate-actions-reference.ts && bun scripts/vendor-sdk-bundle.ts",
+    "build": "bun scripts/generate-json-schemas.ts --check && tsdown && bun scripts/generate-actions-reference.ts && bun scripts/build-sdk-bundle.ts",
     "schemas:generate": "bun scripts/generate-json-schemas.ts",
     "schemas:check": "bun scripts/generate-json-schemas.ts --check",
     "typecheck": "bun check"

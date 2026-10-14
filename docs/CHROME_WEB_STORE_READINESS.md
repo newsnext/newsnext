@@ -71,8 +71,8 @@ on the release artifact; implementation boundaries are maintained in
 - Run `bun audit --json`, `bun run typecheck`, `bun run test`, and
   `bun --filter=@newsnext/extension run zip:chrome` from `web/`. Record remaining
   exceptions and inspect the extracted ZIP's manifest and referenced assets.
-- Run the private CLI's applicable checks from `cli/`; the historical desktop UI
-  command is no longer an instruction for this repository.
+- Run the active CLI's applicable checks in its own checkout; historical desktop
+  UI commands are no longer instructions for this repository.
 - Install the exact packed extension and test standalone first run, public and
   authenticated Sources, host grant/denial/revocation, and Clear User Data.
 - Test optional desktop enablement, connection, disablement, and revocation, including
