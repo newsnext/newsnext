@@ -5,14 +5,12 @@ import type { TitleIslandFeature } from "./feature"
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine"
 import { dropTargetForElements, monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { useSetAtom } from "jotai"
-import { m, useReducedMotion } from "motion/react"
 import { useEffect, useEffectEvent, useState } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
 import { isDropWithin } from "@/lib/board/drop-target"
 import { getSortableRemovalTarget } from "@/lib/board/sortable-data"
 import { deleteLiveCardAtom } from "@/store/board"
-import { PhTrash } from "../../icons/ph"
 import { IslandNotification } from "../island-notification"
 import {
   HEADER_NOTIFICATION_DURATION,
@@ -21,6 +19,7 @@ import {
 } from "../notification"
 import { TITLE_ISLAND_FEATURE_PRIORITY } from "./feature"
 import { ThemeFeature } from "./theme"
+import { TrashIcon } from "./trash-icon"
 
 export function useThemeFeature(): {
   feature: TitleIslandFeature | null
@@ -74,7 +73,6 @@ export function useTrashFeature(
   const [isDragging, setIsDragging] = useState(false)
   const [isOverTrash, setIsOverTrash] = useState(false)
   const deleteLiveCard = useSetAtom(deleteLiveCardAtom)
-  const shouldReduceMotion = useReducedMotion()
 
   const deleteDraggedCard = useEffectEvent(async ({ source }: ElementEventBasePayload) => {
     const target = getSortableRemovalTarget(source.data)
@@ -132,14 +130,7 @@ export function useTrashFeature(
         className="flex size-full items-center justify-center gap-2.5 text-red-600 dark:text-red-400"
         aria-label={isOverTrash ? t("releaseToDelete") : t("dropToDelete")}
       >
-        <m.div
-          animate={isOverTrash && !shouldReduceMotion
-            ? { rotate: [-5, 5, 0], scale: 1.12 }
-            : { rotate: 0, scale: 1 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-        >
-          <PhTrash className="size-7" />
-        </m.div>
+        <TrashIcon active={isOverTrash} />
         <span className="text-sm font-semibold">
           {isOverTrash ? t("releaseToDelete") : t("dropToDelete")}
         </span>

@@ -7,7 +7,7 @@ import { Button } from "@newsnext/ui/components/button"
 import { cn } from "@newsnext/ui/lib/utils"
 import confetti from "canvas-confetti"
 import { useAtomValueRawSync, useSetAtom } from "jotai"
-import { animate, motion, useDragControls, useMotionValue, useReducedMotion, useTransform } from "motion/react"
+import { animate, motion, useDragControls, useMotionValue, useTransform } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BoardSelect } from "@/components/common/board-select"
 import { PhArrowCircleLeft, PhCircleDashed, PhPlusCircle } from "@/components/icons/ph"
@@ -214,7 +214,6 @@ function RadarDeckContent({
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
   const dragControls = useDragControls()
   const x = useMotionValue(0)
-  const prefersReducedMotion = useReducedMotion() ?? false
 
   const finishCreation = useCallback(() => {
     if (onCreated) {
@@ -226,14 +225,9 @@ function RadarDeckContent({
 
   useEffect(() => {
     if (!isCreated || onCreationStart) return
-    if (prefersReducedMotion) {
-      finishCreation()
-      return
-    }
-
     const timeout = window.setTimeout(finishCreation, RADAR_CELEBRATION_DURATION)
     return () => window.clearTimeout(timeout)
-  }, [finishCreation, isCreated, onCreationStart, prefersReducedMotion])
+  }, [finishCreation, isCreated, onCreationStart])
 
   useEffect(() => {
     const targetX = getRadarTrackX(activeIndex, trackItemOffset)

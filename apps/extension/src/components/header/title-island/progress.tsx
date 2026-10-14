@@ -1,4 +1,5 @@
 import type { Color } from "@newsnext/shared/types"
+import type { TargetAndTransition } from "motion/react"
 import type { HeaderProgressState } from "../use-header-progress"
 import { ThemeIcon } from "@newsnext/ui/components/theme-icon"
 import {
@@ -6,8 +7,23 @@ import {
   NewsNowWordmarkLogo,
   WordmarkLogo,
 } from "@newsnext/ui/components/wordmark-logo"
-import { AnimatePresence, m } from "motion/react"
+import { m } from "motion/react"
 import { PhArrowFatUp } from "../../icons/ph"
+
+const TITLE_TRANSITION = {
+  duration: 0.32,
+  ease: [0.4, 0, 0.2, 1] as const,
+  times: [0, 0.5, 1],
+}
+// Animate transform directly so the browser can advance both labels while a Board renders.
+const TITLE_ENTER: TargetAndTransition = {
+  opacity: [null, 0, 1],
+  transform: [null, "translateY(6px)", "translateY(0px)"],
+}
+const TITLE_EXIT: TargetAndTransition = {
+  opacity: [null, 0, 0],
+  transform: [null, "translateY(-6px)", "translateY(-6px)"],
+}
 
 export function TitleIslandProgress({
   handleScrollToTop,
@@ -19,7 +35,7 @@ export function TitleIslandProgress({
 }: HeaderProgressState & { themeColor: Color }) {
   return (
     <div
-      className="flex size-full items-center justify-center gap-2"
+      className="relative flex size-full items-center justify-center gap-2"
       onClick={!isAtTop ? handleScrollToTop : undefined}
     >
       <svg className="pointer-events-none absolute inset-0 size-full">
@@ -42,37 +58,28 @@ export function TitleIslandProgress({
           className="text-theme-400"
         />
       </svg>
-      <AnimatePresence mode="popLayout" initial={false}>
-        {isAtTop
-          ? (
-              <m.div
-                key="top"
-                className="flex items-center gap-2"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ThemeIcon className="size-5" color={themeColor} />
-                {isNextLayer
-                  ? <WordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl transition-opacity" />
-                  : <NewsNowWordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl transition-opacity" />}
-              </m.div>
-            )
-          : (
-              <m.div
-                key="go-top"
-                className="flex items-center gap-2"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-              >
-                <PhArrowFatUp className="size-5 text-theme-400" />
-                <GoToTopWordmark className="h-auto w-[4.5em] shrink-0 translate-y-[0.08em] text-xl transition-opacity" />
-              </m.div>
-            )}
-      </AnimatePresence>
+      <m.div
+        aria-hidden={!isAtTop}
+        className="absolute flex items-center gap-2"
+        initial={false}
+        animate={isAtTop ? TITLE_ENTER : TITLE_EXIT}
+        transition={TITLE_TRANSITION}
+      >
+        <ThemeIcon className="size-5" color={themeColor} />
+        {isNextLayer
+          ? <WordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl" />
+          : <NewsNowWordmarkLogo className="h-auto w-[4.5em] shrink-0 text-xl" />}
+      </m.div>
+      <m.div
+        aria-hidden={isAtTop}
+        className="absolute flex items-center gap-2"
+        initial={false}
+        animate={isAtTop ? TITLE_EXIT : TITLE_ENTER}
+        transition={TITLE_TRANSITION}
+      >
+        <PhArrowFatUp className="size-5 text-theme-400" />
+        <GoToTopWordmark className="h-auto w-[4.5em] shrink-0 translate-y-[0.08em] text-xl" />
+      </m.div>
     </div>
   )
 }

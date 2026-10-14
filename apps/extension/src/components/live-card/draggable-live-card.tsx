@@ -5,7 +5,7 @@ import type { LiveCard as LiveCardModel } from "@/lib/source"
 import type { SourceDescriptor } from "@/typings/source"
 import { cn } from "@newsnext/ui/lib/utils"
 import { useAtomValue } from "jotai"
-import { memo, useMemo } from "react"
+import { memo, useMemo, useRef } from "react"
 import { canDragCardHeader, generateCardDragPreview } from "@/components/card-shell/drag-preview"
 import { useSortable } from "@/hooks/use-sortable"
 import { createLiveCard } from "@/lib/source"
@@ -19,7 +19,7 @@ interface DraggableLiveCardProps {
   sortable?: boolean
 }
 
-interface SortableLiveCardProps extends Pick<LiveCardProps, "className" | "eager" | "source"> {
+interface SortableLiveCardProps extends Pick<LiveCardProps, "className" | "eager" | "source" | "visibilityRef"> {
   dragging?: boolean
   sortable?: boolean
 }
@@ -30,6 +30,7 @@ export function SortableLiveCard({
   eager,
   sortable = true,
   source,
+  visibilityRef,
 }: SortableLiveCardProps): ReactNode {
   const id = source.id
   const { setNodeRef, setHandleRef } = useSortable({
@@ -44,6 +45,7 @@ export function SortableLiveCard({
       source={source}
       target={{ kind: "card", cardId: id }}
       eager={eager}
+      visibilityRef={visibilityRef}
       nodeRef={setNodeRef}
       dragHandleRef={sortable ? setHandleRef : undefined}
       className={cn(className, dragging && "card-drag-placeholder")}
@@ -52,17 +54,23 @@ export function SortableLiveCard({
 }
 
 function DraggableLiveCardComponent({ boardId, descriptor, dragging, liveCardAtom, sortable = true }: DraggableLiveCardProps) {
+  const visibilityRef = useRef<HTMLLIElement>(null)
   const card = useAtomValue(liveCardAtom)
   const source = useMemo(
     () => createLiveCard(descriptor, card, boardId),
     [boardId, descriptor, card],
   )
   return (
-    <SortableLiveCard
-      source={source}
-      sortable={sortable}
-      dragging={dragging}
-    />
+    <li ref={visibilityRef} data-live-card-id={card.cardId} className="relative">
+      <div data-live-card-transition>
+        <SortableLiveCard
+          source={source}
+          sortable={sortable}
+          dragging={dragging}
+          visibilityRef={visibilityRef}
+        />
+      </div>
+    </li>
   )
 }
 

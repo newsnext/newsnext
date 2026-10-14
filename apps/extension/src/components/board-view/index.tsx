@@ -1,11 +1,12 @@
 import type { PropsWithChildren } from "react"
+import type { BoardTransitionTimeline } from "./scatter-card-layer"
 import type { Board, BoardLayer } from "@/lib/board"
 import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter"
 import { SquircleBox } from "@newsnext/ui/components/squircle"
 import { useHotkey } from "@tanstack/react-hotkeys"
 import { useNavigate } from "@tanstack/react-router"
 import { useAtomValue, useSetAtom } from "jotai"
-import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState } from "react"
 import { NextLayer } from "@/components/nextlayer"
 import { NowLayer } from "@/components/nowlayer"
 import { useBoardScrollRestoration } from "@/hooks/use-board-scroll-restoration"
@@ -41,6 +42,7 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
   const [outgoingView, setOutgoingView] = useState<RenderedView | null>(null)
   const [isSearchTransferOver, setIsSearchTransferOver] = useState(false)
   const boardDropTargetRef = useRef<HTMLDivElement>(null)
+  const transitionTimelineRef = useRef<BoardTransitionTimeline>({ startTime: null, entranceDelay: 0 })
   const [loadedViewKey, setLoadedViewKey] = useState<string | null>(null)
   const [enteredViewKey, setEnteredViewKey] = useState<string | null>(null)
   const renderedViewKey = `${renderedView.boardId}:${renderedView.layer}:${renderedView.revision}`
@@ -58,6 +60,11 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
     setLoadedViewKey(null)
     setEnteredViewKey(null)
   }
+
+  useLayoutEffect(() => {
+    transitionTimelineRef.current.startTime = null
+    if (!outgoingView) transitionTimelineRef.current.entranceDelay = 0
+  }, [outgoingView, renderedViewKey])
 
   const moveSearchLiveCard = useEffectEvent(async (cardId: string) => {
     try {
@@ -139,9 +146,10 @@ export function BoardView({ board, layer }: { board: Board, layer: BoardLayer })
           <ScatterCardLayer
             key={key}
             state={outgoing ? "outgoing" : "active"}
+            ready={viewReady}
+            transitionTimelineRef={transitionTimelineRef}
             onEnterComplete={handleEnterComplete}
             onExitComplete={() => setOutgoingView(current => current === view ? null : current)}
-            viewReady={outgoing || viewReady}
             itemSelector={view.layer === "next"
               ? "[data-widget-transition]"
               : "[data-live-card-transition]"}

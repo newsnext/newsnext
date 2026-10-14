@@ -166,7 +166,6 @@ export function NewsItemLink({
           setPreviewDialogOpen(false)
           entranceAnimationsRef.current.forEach(animation => animation.cancel())
           entranceAnimationsRef.current = []
-          if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
           const link = activeItem.url === item.url
             ? itemLinkRef.current
             : itemLinkRef.current?.closest("[data-live-card-id]")

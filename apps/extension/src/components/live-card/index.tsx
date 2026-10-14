@@ -1,3 +1,4 @@
+import type { RefObject } from "react"
 import type { CardDragHandleRef } from "@/components/card-shell/card-header"
 import type { LiveCardMetadata, LiveCardPatch } from "@/lib/source"
 import type { LiveCardViewModel } from "@/typings/source"
@@ -34,6 +35,8 @@ export interface LiveCardProps {
   target: LiveCardTarget
   /** Bypass viewport deferral. Only the dialog-portal search preview may set this; board cards always defer. */
   eager?: boolean
+  /** Observe the resting board slot instead of the card's animated position. */
+  visibilityRef?: RefObject<Element | null>
   className?: string
   nodeRef?: (node: HTMLElement | null) => void
   dragHandleRef?: CardDragHandleRef
@@ -169,7 +172,7 @@ export function LiveCard(props: LiveCardProps): React.JSX.Element {
     nodeRef?.(node)
   }, [nodeRef])
 
-  const isInView = useInView(ref, {
+  const isInView = useInView(props.visibilityRef ?? ref, {
     root: rootScrollContainerRef,
     margin: SOURCE_QUERY_PRELOAD_MARGIN,
     once: SOURCE_QUERY_OFFSCREEN_RETENTION_MS,

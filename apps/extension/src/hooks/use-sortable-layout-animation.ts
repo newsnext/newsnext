@@ -23,7 +23,6 @@ export function useSortableLayoutAnimation(
     const animations = animationsRef.current
     const positions = new Map<HTMLElement, Position>()
     const movements: { element: HTMLElement, x: number, y: number }[] = []
-    const shouldAnimate = enabled && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
     let rowTop: number | undefined
     let column = 0
 
@@ -36,7 +35,7 @@ export function useSortableLayoutAnimation(
       const position = { x, y, column }
       positions.set(element, position)
       const previous = positionsRef.current.get(element)
-      if (!shouldAnimate || !previous) continue
+      if (!enabled || !previous) continue
       if (columnChangesOnly && previous.column === column) continue
       const transform = animations.has(element)
         ? new DOMMatrixReadOnly(getComputedStyle(element).transform)
@@ -46,7 +45,7 @@ export function useSortableLayoutAnimation(
       if (Math.abs(deltaX) > 0.5 || Math.abs(deltaY) > 0.5) movements.push({ element, x: deltaX, y: deltaY })
     }
     positionsRef.current = positions
-    if (movements.length === 0 && shouldAnimate) return
+    if (movements.length === 0 && enabled) return
     for (const animation of animations.values()) animation.cancel()
     animations.clear()
     for (const { element, x, y } of movements) {

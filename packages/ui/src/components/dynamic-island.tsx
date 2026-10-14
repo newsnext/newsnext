@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode, Ref } from "react"
 import { useClickAway } from "@newsnext/ui/hooks/use-click-away"
 import { useSquircle } from "@newsnext/ui/hooks/use-squircle"
 import { cn } from "@newsnext/ui/lib/utils"
-import { AnimatePresence, m, useReducedMotion } from "motion/react"
+import { AnimatePresence, m } from "motion/react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import "./dynamic-island.css"
 
@@ -66,7 +66,6 @@ function DynamicIsland({
   const isControlled = expanded !== undefined
   const isSmall = isControlled ? !expanded : uncontrolledIsSmall
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const shouldReduceMotion = useReducedMotion()
   const canUseSquircle = typeof largeRadius === "number"
   const {
     borderRadius: squircleRadius,
@@ -89,9 +88,7 @@ function DynamicIsland({
     onChange?.(true)
   }, [isControlled, isSmall, onChange])
 
-  const shapeTransition = shouldReduceMotion
-    ? { duration: 0.15, ease: "easeOut" as const }
-    : { type: "spring" as const, stiffness: 420, damping: 34, mass: 0.82 }
+  const shapeTransition = { type: "spring" as const, stiffness: 420, damping: 34, mass: 0.82 }
   const collapsedRadius = typeof smallHeight === "number"
     ? smallHeight / 2
     : `calc(${smallHeight} / 2)`
@@ -140,19 +137,19 @@ function DynamicIsland({
           role={isSmall ? "button" : undefined}
           tabIndex={isSmall ? 0 : undefined}
           aria-expanded={isSmall ? false : undefined}
-          initial={initialAnimation && !shouldReduceMotion
-            ? { opacity: 0, scale: 0.88 }
+          initial={initialAnimation
+            ? { opacity: 0, transform: "scale(0.88)" }
             : false}
           animate={{
             width: getVal(isSmall ? smallWidth : largeWidth),
             height: getVal(isSmall ? smallHeight : largeHeight),
             borderRadius: isSmall ? collapsedRadius : expandedRadius,
             opacity: 1,
-            scale: 1,
+            transform: "scale(1)",
           }}
           transition={shapeTransition}
           style={shellStyle}
-          whileTap={isSmall && !shouldReduceMotion ? { scale: 0.975 } : undefined}
+          whileTap={isSmall ? { transform: "scale(0.975)" } : undefined}
           className={cn(
             "dynamic-island-shell relative transform-gpu",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
@@ -180,14 +177,10 @@ function DynamicIsland({
             <AnimatePresence initial={false} mode="popLayout">
               <m.div
                 key={isSmall ? "small" : "large"}
-                initial={shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, scale: 0.92, filter: "blur(5px)" }}
-                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={shouldReduceMotion
-                  ? { opacity: 0 }
-                  : { opacity: 0, scale: 0.96, filter: "blur(3px)" }}
-                transition={{ duration: shouldReduceMotion ? 0.1 : 0.18, ease: "easeOut" }}
+                initial={{ opacity: 0, transform: "scale(0.92)", filter: "blur(5px)" }}
+                animate={{ opacity: 1, transform: "scale(1)", filter: "blur(0px)" }}
+                exit={{ opacity: 0, transform: "scale(0.96)", filter: "blur(3px)" }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
                 className="absolute inset-0 z-1"
               >
                 {children?.(isSmall, { close: onClose })}

@@ -17,7 +17,7 @@ import { loadSourceDescriptor } from "@/lib/source/registry"
 const RSS_SOURCE_ID = "rss:feed"
 
 async function animateCardToBoard(cardId: string, sourceElement: HTMLElement | null): Promise<void> {
-  if (!sourceElement || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+  if (!sourceElement) return
 
   const sourceRect = sourceElement.getBoundingClientRect()
   const clone = sourceElement.cloneNode(true) as HTMLElement

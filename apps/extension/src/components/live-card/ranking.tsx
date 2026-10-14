@@ -81,9 +81,9 @@ function RankChangeBadge({ diff }: { diff?: number }) {
       {!!diff && (
         <m.span
           aria-hidden="true"
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 0.75, y: -6 }}
-          exit={{ opacity: 0, y: -12 }}
+          initial={{ opacity: 0, transform: "translateY(-12px)" }}
+          animate={{ opacity: 0.75, transform: "translateY(-6px)" }}
+          exit={{ opacity: 0, transform: "translateY(-12px)" }}
           transition={{ duration: 0.2 }}
           className={cn(
             "absolute left-1 top-0 text-xs font-medium leading-none",

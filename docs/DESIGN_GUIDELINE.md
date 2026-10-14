@@ -9,6 +9,14 @@ Tailwind utilities. Values here are normative; code comments point back here.
   or CLI. SDK re-exports from shared; no generated copies.
 - NewsNext feels like tactile LiveCards, not a dashboard. Dialogs and controls
   reuse the LiveCard language, never generic overlays.
+- Prefer CSS transitions/keyframes or WAAPI for independently timed UI motion.
+  Use Motion Mini when an imperative DOM animation helper is needed; prefer
+  complete `transform` strings with declarative Motion. Keep JS where gesture
+  tracking, derived values, or layout coordination require it. Preserve
+  interruption behavior; keep display animation parameters consistent without
+  component-level reduced-motion branches. Keep the shared MotionConfig and
+  CSS `motion-reduce` rules. Verify native playback in the target browser;
+  layout and paint costs still apply.
 
 ### Landing page
 
@@ -228,9 +236,9 @@ LiveCards are the primary surface.
   Honor the shared two-unit minimum width and manifest minimums.
 - Iframes stay mounted in stable React slots across geometry changes; disable
   iframe pointer events during drag/resize, restore after. Scatter animations
-  on inner `data-widget-transition` wrapper (420ms entrance, 80ms delay, 10ms
-  stagger, by visual row/column not DOM order). Slot transitions off while
-  scatter pending/entering/exiting; initial measurement settles motion-free.
+  on inner `data-widget-transition` wrapper follow the Board transition rules
+  below. Slot transitions stay off while scatter is pending, entering, or
+  exiting; initial measurement settles motion-free.
   Overflow visible during navigation; horizontal scroll after only if needed.
 - Insight definitions/views/documents/shell: `INSIGHT_GUIDELINE.md`. Here: grid +
   shared layer behavior only.
@@ -244,24 +252,34 @@ LiveCards are the primary surface.
   stays mounted during scatter). Board/Layer/combined changes share the
   post-mount path. Board+Layer navigation transitions directly between complete
   views; departing board never briefly shows destination layer.
-- Transitions are peer-to-peer: incoming entrance overlaps departing exit; at
-  most one outgoing view (rapid switch replaces older only when current ready).
+- Outgoing and incoming rows both proceed top-to-bottom, with 15ms stagger/card
+  left-to-right within each row. Entrance follows departure by 180ms on the
+  shared timeline, while departure is still moving. At most one outgoing view
+  (rapid switch replaces older only when current ready).
+  Prepare and pin outgoing before restoring incoming scroll; start both from
+  one document-timeline timestamp once restoration settles. Empty layers fade
+  their placeholder over the same duration instead of completing immediately.
   Pre-settle skips keep existing exit running, never blank screen. Outgoing
   pinned at viewport position, inert until unmount; incoming inert until scroll
-  settles. Horizontal motion both cards + widgets: left cards exit left, right
-  cards exit right, 80px margin, no vertical displacement. Exit 320ms
-  accelerating (`cubic-bezier(0.4, 0, 1, 1)`), 10ms stagger/visible card.
-  Reduced motion: instant. Never scale/blur full page.
+  settles. Cards and widgets on the left exit left and reenter from the left;
+  right cards exit right and reenter from the right, no vertical displacement.
+  Long distance reaches 80px beyond viewport; short distance is 30% of that
+  offset. Across visible row positions, departure scales from short at the top
+  to long at the bottom; entrance scales from long at the top to short at the
+  bottom. A single visible row exits short and enters long. Exit and entrance
+  both 480ms `cubic-bezier(0.4, 0, 0.2, 1)`.
+  Never scale/blur full page.
 - Detail flips: front/back rotate independently, 600ms
   `cubic-bezier(0.4, 0, 0.2, 1)`, inactive face non-interactive + backface
   hidden. No shared 3D wrapper around scrollable content. Stationary container
   gets centered 1200px perspective; each face translates away by half its
   extent × |sin(angle)| so nearest edge stays at/behind plane (container-
   relative, resize-safe). Reduced motion: instant.
-- Entrance on page load + every board/layer mount (tabs, revisits): converge
-  from exit side, fade 420ms `cubic-bezier(0.22, 1, 0.36, 1)`, start after
-  80ms, 10ms stagger/visible card uncapped (later rows keep rhythm during
-  overlap). Interrupted entrances exit from current position, no added stagger.
+- Entrance on page load and every Board/Layer mount (including revisits)
+  uses the same scatter timing and row order. Initial page entrance starts
+  immediately; navigation follows the entrance phase offset. Empty placeholders
+  fade without that offset.
+  Interrupted entrances exit from current position, no added stagger.
 - Board View restores root scroll the frame after incoming mounts (no idle
   wait). Next Layer signals readiness after manifest list loads + grid mounts
   (empty/error also ready). Starting positions applied pre-reveal; sortable
@@ -303,7 +321,7 @@ LiveCards are the primary surface.
   Nested header controls stay clickable; draggable header gets accessible name
   identifying the card. Both layers share exclusion rules + `card-drag-placeholder`.
 - Live order preview; neighbors animate via native 180ms ease translations on
-  outer items; navigation animation stays on nested wrapper; reduced motion off.
+  outer items; navigation animation stays on the nested wrapper.
   Commit on valid drop only. List itself is the drop target (valid release
   dismisses native preview instead of animating back). Snapshot slots at drag
   start; resolve pointer to nearest row + slot midpoint; always derive from
@@ -543,7 +561,7 @@ Search, Settings, or single-column — all share the modal foundation.
 - Surface animates as one shape; remounted content enters with brief
   scale/opacity/blur inside clipped surface.
 - Expanded content = one task; outside click/scroll closes.
-- Visible keyboard focus; reduced motion honored.
+- Visible keyboard focus.
 
 ## Implementation Checklist
 

@@ -3,11 +3,12 @@ import type { MouseEvent } from "react"
 import { useScrollProgressContext } from "@newsnext/ui/components/scroll-progress-context"
 import { useLocation, useRouter, useSearch } from "@tanstack/react-router"
 import { useAtomValueRawSync } from "jotai"
-import { useMotionValue } from "motion/react"
+import { useMotionValue, useSpring } from "motion/react"
 import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import { currentBoardAtom } from "@/store/board"
 
 const SCROLL_THRESHOLD_VIEWPORT_RATIO = 0.1
+const PROGRESS_SPRING = { stiffness: 400, damping: 40 }
 
 export interface HeaderProgressState {
   handleScrollToTop: (event: MouseEvent) => void
@@ -28,6 +29,9 @@ export function useHeaderProgress(): HeaderProgressState {
   const isAtTopRef = useRef(true)
   const opacity = useMotionValue(0)
   const scrollYProgress = useMotionValue(0)
+  // Smooth the island only; Board scroll restoration remains instant.
+  const smoothOpacity = useSpring(opacity, PROGRESS_SPRING)
+  const smoothScrollYProgress = useSpring(scrollYProgress, PROGRESS_SPRING)
 
   const syncProgress = useCallback((container: HTMLElement | null) => {
     if (!container) return
@@ -94,7 +98,7 @@ export function useHeaderProgress(): HeaderProgressState {
     handleScrollToTop,
     isAtTop,
     isNextLayer,
-    opacity,
-    scrollYProgress,
+    opacity: smoothOpacity,
+    scrollYProgress: smoothScrollYProgress,
   }
 }

@@ -74,21 +74,14 @@ export function LiveCardContainer({
         )}
       >
         {visibleLiveCards.map(({ id, boardId, descriptor, liveCardAtom }) => (
-          <li
+          <DraggableLiveCard
             key={id}
-            data-live-card-id={id}
-            className="relative"
-          >
-            <div data-live-card-transition>
-              <DraggableLiveCard
-                boardId={boardId}
-                descriptor={descriptor}
-                dragging={draggingCardId === id}
-                liveCardAtom={liveCardAtom}
-                sortable={sortable}
-              />
-            </div>
-          </li>
+            boardId={boardId}
+            descriptor={descriptor}
+            dragging={draggingCardId === id}
+            liveCardAtom={liveCardAtom}
+            sortable={sortable}
+          />
         ))}
       </ol>
     </DndContext>

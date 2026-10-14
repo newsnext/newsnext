@@ -129,6 +129,8 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - Extract reusable parsing, normalization, validation, matching, and decision logic into pure functions when it deserves testing.
 - Do not add tests for trivial wiring, type-level guarantees, constants, direct property forwarding, mechanical refactors, styling-only changes, or configuration-only changes.
 - Optimize render performance deliberately rather than by default.
+- Follow the native animation policy in `docs/DESIGN_GUIDELINE.md` when adding
+  or changing UI motion.
 - Avoid `any`; prefer `unknown` when a value is not yet known.
 - Prefer `interface` for object shapes and `type` for unions, intersections, and mapped types.
 - Keep strict typing intact, minimize type assertions, and keep types close to usage unless they are shared.

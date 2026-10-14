@@ -68,6 +68,9 @@ Restore any data mutated by an audit.
 - Keep animation, drag preview, and scroll-restoration work above LiveCard
   content; optimize the content boundary instead of removing renders that
   update Motion props or measured vectors.
+- Board cards observe their resting list slots for viewport deferral, not the
+  animated inner card. Offscreen entrance positions must not postpone content
+  mounting until halfway through navigation.
 - Keep the frontend Application Data mirror read-only with no optimistic
   writes; suppress mirrored-storage echoes against each adapter's own
   snapshot only. See `lib/application` storage subscription.
