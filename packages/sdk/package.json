@@ -10,6 +10,7 @@
       "browser": "./src/widget.ts",
       "default": "./src/index.ts"
     },
+    "./runtime": "./src/runtime.ts",
     "./models": "./src/models/index.ts",
     "./schemas": "./src/schemas/index.ts",
     "./actions": "./src/action/index.ts",
