@@ -2,7 +2,6 @@ import type { SourceRadarPageParam } from "../types"
 import { describe, expect, it } from "vitest"
 import { resolveProvider } from "../registry/provider"
 import { toSourceDescriptor } from "../runtime"
-import { resolveSourceCatalog } from "../runtime/catalog"
 import { resolveRadarPageParamValue } from "./radar-page"
 
 const selected: SourceRadarPageParam = {
@@ -48,19 +47,18 @@ describe("portable Radar parameters", () => {
     }
   })
 
-  it("keeps page rules through Provider resolution and catalog JSON transport", () => {
+  it("keeps page rules through Provider JSON transport and resolution", () => {
     const provider = {
       title: "Example",
       color: "slate" as const,
       sources: { top: {
-        loader: { type: "custom" as const, load: async () => ({ items: [] }) },
+        loader: { type: "json" as const, url: "https://example.com/feed", fields: { title: "title", url: "url" } },
         radar: [{ id: "tabs", match: { hosts: ["example.com"] }, patch: { params: { order: selected } } }],
       } },
     }
-    const source = resolveProvider("example", provider).sources.top!
+    const source = resolveProvider("example", JSON.parse(JSON.stringify(provider))).sources.top!
     const descriptor = toSourceDescriptor("example:top", source)
-    const catalog = resolveSourceCatalog(JSON.parse(JSON.stringify({ [descriptor.id]: descriptor })), () => source.loader)
-    expect(catalog[descriptor.id]?.radar).toEqual(provider.sources.top.radar)
+    expect(descriptor.radar).toEqual(provider.sources.top.radar)
     for (const invalid of [
       { ...selected, reveal: { trigger: ".filter", visible: ".panel", waitMs: 1001 } },
       { type: "query", key: "keyword", decode: 3 },

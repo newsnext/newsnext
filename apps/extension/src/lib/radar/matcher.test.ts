@@ -1,10 +1,9 @@
-import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
-import { resolveSources } from "@newsnext/registry/sources"
+import { resolveSources } from "@newsnext/registry"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./matcher"
 import { getRadarPageQueryKey } from "./page-query"
 
-const sourceDescriptors = Object.entries(resolveSources(bundledSourceRegistry))
+const sourceDescriptors = Object.entries(resolveSources())
   .map(([id, source]) => {
     const { loader: _loader, ...descriptor } = source
     return { ...descriptor, id }

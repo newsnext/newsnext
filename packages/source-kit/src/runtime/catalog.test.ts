@@ -1,6 +1,6 @@
 import type { RuntimeSource, SourceDescriptor, SourceLoader } from "../types"
 import { describe, expect, it } from "vitest"
-import { mergeSourceCatalogs, resolveSourceCatalog } from "./catalog"
+import { mergeSourceCatalogs } from "./catalog"
 
 const loader: SourceLoader = async () => ({ items: [] })
 
@@ -30,28 +30,5 @@ describe("source catalog precedence", () => {
     const bundled = { "example:latest": source("Bundled"), "example:top": source("Bundled") }
     expect(mergeSourceCatalogs({}, plugin, bundled)).toEqual(plugin)
     expect(mergeSourceCatalogs({}, {}, bundled)).toEqual(bundled)
-  })
-})
-
-describe("resolved Source catalog", () => {
-  it("preserves resolved metadata and binds only the execution backend", () => {
-    const input = descriptor("example:latest")
-    const catalog = resolveSourceCatalog({ [input.id]: input }, () => loader)
-    expect(catalog[input.id]).toEqual({ provider: input.provider, version: 3, metadata: input.metadata, capabilities: input.capabilities, loader })
-    expect(input).not.toHaveProperty("loader")
-  })
-
-  it("rejects identity mismatches, authoring loaders, and malformed resolved fields", () => {
-    const input = descriptor("example:latest")
-    for (const invalid of [
-      { ...input, id: "other:latest" },
-      { ...input, loader: { type: "custom" } },
-      { ...input, version: undefined },
-      { ...input, capabilities: {} },
-      { ...input, provider: { title: "Example", color: "unknown" } },
-      { ...input, params: { count: { type: "number", title: "Count", default: "ten" } } },
-    ]) {
-      expect(() => resolveSourceCatalog({ "example:latest": invalid }, () => loader)).toThrow()
-    }
   })
 })

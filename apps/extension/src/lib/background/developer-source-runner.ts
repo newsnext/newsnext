@@ -1,14 +1,9 @@
 import type { RunDeveloperSourceInput, RunDeveloperSourceOutput } from "@newsnext/sdk/models"
-import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceLoaderResult } from "@newsnext/source-kit/types"
 import type { SourceLoadResponse } from "../source/load-result"
 import type { SourcePermissionTarget } from "../source/permissions"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
-import {
-  flattenProviderConfig,
-  resolveSourceRegistry,
-  validateJsonSourceManifest,
-} from "@newsnext/source-kit/registry"
+import { resolveProvider } from "@newsnext/source-kit/registry"
 import { normalizeSourceParams, parseSourceId, prepareSourceRequest } from "@newsnext/source-kit/runtime"
 import { toLoadedSourceDescriptor, toSourceLoadResult } from "../source/load-result"
 import { executeSourceSnapshot } from "./protected-source-loader"
@@ -118,14 +113,9 @@ export async function runDeveloperSource(
   assertIdSegment(input.providerId, "providerId")
   assertIdSegment(input.sourceId, "sourceId")
 
-  validateJsonSourceManifest(input.provider, `Source provider "${input.providerId}"`)
-  const registry = flattenProviderConfig(
-    input.providerId,
-    input.provider as ProviderConfig,
-  )
-  const serializedRegistry: unknown = JSON.parse(JSON.stringify(registry))
+  const provider = resolveProvider(input.providerId, input.provider)
   const sourceId = `${input.providerId}:${input.sourceId}`
-  const source = resolveSourceRegistry(serializedRegistry)[sourceId]
+  const source = provider.sources[input.sourceId]
   if (!source) {
     throw new Error(`Source "${sourceId}" not found`)
   }

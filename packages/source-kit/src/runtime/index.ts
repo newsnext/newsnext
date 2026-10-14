@@ -9,7 +9,7 @@ import { parseSourceParams } from "../core/params"
 import { parseRegistrySourceId } from "../registry/validation"
 import { SourceParamValueError } from "../types"
 
-export { mergeSourceCatalogs, resolveSourceCatalog } from "./catalog"
+export { mergeSourceCatalogs } from "./catalog"
 export type { SourceCatalog } from "./catalog"
 
 export type SourceErrorCode

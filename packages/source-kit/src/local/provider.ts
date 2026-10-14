@@ -27,7 +27,7 @@ export function serializeLocalProvider(value: unknown): { provider: LocalProvide
   const functions = new Map<string, LocalFunction>()
   const ancestors = new Set<object>()
   function visit(input: unknown, path: string[]): LocalProviderValue {
-    if (path.length > 32) throw new TypeError("Local Provider nesting exceeds 32 levels")
+    if (path.length > 32) throw new TypeError("Provider nesting exceeds 32 levels")
     if (typeof input === "function") {
       const slot = functionSlot(path)
       if (!slot) throw new TypeError(`Unsupported Source function at ${path.join(".")}`)
@@ -54,18 +54,18 @@ export function serializeLocalProvider(value: unknown): { provider: LocalProvide
   }
   const provider = visit(value, [])
   if (!provider || Array.isArray(provider) || typeof provider !== "object" || !provider.sources || Array.isArray(provider.sources) || typeof provider.sources !== "object") {
-    throw new TypeError("Local Provider must define sources")
+    throw new TypeError("Provider must define sources")
   }
   const count = Object.keys(provider.sources).length
-  if (!count || count > SOURCE_REGISTRY_LIMITS.maxSources) throw new TypeError("Invalid local Provider Source count")
-  if (new TextEncoder().encode(JSON.stringify(provider)).length > SOURCE_REGISTRY_LIMITS.maxBytes) throw new TypeError("Local Provider exceeds 2 MiB")
+  if (!count || count > SOURCE_REGISTRY_LIMITS.maxSources) throw new TypeError("Invalid Provider Source count")
+  if (new TextEncoder().encode(JSON.stringify(provider)).length > SOURCE_REGISTRY_LIMITS.maxBytes) throw new TypeError("Provider exceeds 2 MiB")
   return { provider, functions }
 }
 
 /** Restore only supported callbacks; the extension's regular resolver validates the definition. */
 export function bindLocalProvider(value: unknown, bind: (reference: LocalFunctionReference, source?: string) => (...args: never[]) => unknown): ProviderConfig {
   function visit(input: unknown, path: string[]): unknown {
-    if (path.length > 32) throw new TypeError("Local Provider nesting exceeds 32 levels")
+    if (path.length > 32) throw new TypeError("Provider nesting exceeds 32 levels")
     if (!input || typeof input !== "object") return input
     if (Array.isArray(input)) return input.map((child, index) => visit(child, [...path, String(index)]))
     if ("$sourceFunction" in input) {

@@ -42,8 +42,9 @@ export default {
 
 - JSON for declarative loaders, JavaScript for custom loaders/helpers.
   Filename (or parent dir of nested `index.js`) becomes the provider ID;
-  one provider uses one format. Never edit `registry/registry.json` or
-  `registry/sources.js` — build with `bun --filter=@newsnext/registry run build`.
+  one provider uses one format. Never edit the generated `registry/sources.js` import index.
+  Validate locally with `bun --filter=@newsnext/registry run validate`;
+  build refreshes the index with `bun --filter=@newsnext/registry run build`.
 - Source IDs are `<provider>:<source>`.
 
 ## Local sources

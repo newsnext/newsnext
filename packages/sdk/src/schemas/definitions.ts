@@ -1,4 +1,3 @@
-import type { SourceDescriptor } from "../models/source"
 import Type from "typebox"
 
 const nonBlank = () => Type.String({ pattern: "\\S" })
@@ -171,7 +170,6 @@ const sourceMetadata = strictObject({
 const stringArray = () => Type.Array(Type.String())
 const sourceLoader = strictObject({
   type: Type.Optional(Type.Union([
-    Type.Literal("external"),
     Type.Literal("html"),
     Type.Literal("json"),
     Type.Literal("rss"),
@@ -274,28 +272,18 @@ const sourceProvider = strictObject({
 
 const sourceManifestBase = strictObject({
   ...sourceProvider.properties,
-  defaults: Type.Optional(sourceConfig),
-  sources: Type.Record(Type.String({ pattern: "^[^:\\s]+$" }), sourceConfig, {
+  defaults: Type.Optional(Type.Unsafe({ $ref: "#/$defs/sourceConfig" })),
+  sources: Type.Record(Type.String({ pattern: "^[^:\\s]+$" }), Type.Unsafe({ $ref: "#/$defs/sourceConfig" }), {
     additionalProperties: false,
     minProperties: 1,
   }),
 })
 
-/** Resolved Source data travels independently of its executable loader. */
-export const sourceDescriptorDefinition = Type.Unsafe<SourceDescriptor>(strictObject({
-  ...Type.Omit(sourceConfig, ["loader"]).properties,
-  id: Type.String({ pattern: "^[^:\\s]+:[^:\\s]+$" }),
-  provider: sourceProvider,
-  version: Type.Integer({ minimum: 1 }),
-  metadata: sourceMetadata,
-  capabilities: strictObject({ network: stringArray(), cookies: stringArray() }),
-}))
-
 // JSON Schema expresses whether individual Sources must provide a loader type
 // when the provider defaults do not provide one.
-export const sourceManifestDefinition = Type.Unsafe({
+const sourceManifest = {
   ...sourceManifestBase,
-  $defs: { fieldTransforms: fieldTransformsDefinition, sourceField, sourceFields },
+  $defs: { sourceConfig, fieldTransforms: fieldTransformsDefinition, sourceField, sourceFields },
   if: {
     properties: {
       defaults: {
@@ -318,6 +306,30 @@ export const sourceManifestDefinition = Type.Unsafe({
       },
     },
   },
+}
+
+export const sourceManifestDefinition = Type.Unsafe(sourceManifest)
+
+const sourceCallback = Type.Function([], Type.Unknown())
+/** Runtime validation shares the JSON contract and additionally accepts loader callbacks. */
+export const sourceProviderDefinition = Type.Unsafe({
+  ...sourceManifest,
+  $defs: {
+    ...sourceManifest.$defs,
+    sourceConfig: strictObject({
+      ...sourceConfig.properties,
+      loader: Type.Optional(strictObject({
+        ...sourceLoader.properties,
+        type: Type.Optional(Type.Union([
+          ...sourceLoader.properties.type.anyOf,
+          Type.Literal("custom"),
+        ])),
+        load: Type.Optional(sourceCallback),
+        request: Type.Optional(sourceCallback),
+        annotation: Type.Optional(Type.Union([Type.String(), sourceCallback])),
+      })),
+    }),
+  },
 })
 
 const jsonSchemaDraft = "https://json-schema.org/draft/2020-12/schema"
@@ -329,10 +341,9 @@ const portableJsonSchema = <TSchema extends object>(schema: TSchema) => ({
 })
 
 export const portableJsonSchemas = {
-  "action": portableJsonSchema(actionManifestDefinition),
-  "params": portableJsonSchema(paramsDefinition),
-  "plugin": portableJsonSchema(pluginManifestDefinition),
-  "source": portableJsonSchema(sourceManifestDefinition),
-  "source-descriptor": portableJsonSchema(sourceDescriptorDefinition),
-  "insight": portableJsonSchema(insightManifestDefinition),
+  action: portableJsonSchema(actionManifestDefinition),
+  params: portableJsonSchema(paramsDefinition),
+  plugin: portableJsonSchema(pluginManifestDefinition),
+  source: portableJsonSchema(sourceManifestDefinition),
+  insight: portableJsonSchema(insightManifestDefinition),
 }

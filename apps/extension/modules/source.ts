@@ -5,7 +5,7 @@ import { defineWxtModule } from "wxt/modules"
 
 const REGISTRY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../registry")
 const REGISTRY_SOURCE_DIR = resolve(REGISTRY_ROOT, "src")
-const REGISTRY_OUTPUT_PATH = resolve(REGISTRY_ROOT, "registry.json")
+const REGISTRY_OUTPUT_PATH = resolve(REGISTRY_ROOT, "sources.js")
 const SOURCE_CHANGE_EVENTS = new Set(["add", "change", "unlink"])
 const TEST_FILE_REGEX = /\.(?:test|spec)\.js$/
 

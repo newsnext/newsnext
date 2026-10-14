@@ -37,7 +37,7 @@ describe("portable manifest schemas", () => {
     expect(firstJsonSchemaIssue(sourceManifestSchema, {
       title: "Feed",
       color: "slate",
-      sources: { latest: { loader: { type: "external" } } },
+      sources: { latest: { loader: { type: "rss", url: "https://example.com/feed" } } },
     })).toBeUndefined()
     expect(firstJsonSchemaIssue(sourceManifestSchema, {
       title: "Feed",

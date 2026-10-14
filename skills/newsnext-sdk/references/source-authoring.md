@@ -59,7 +59,8 @@ reload automatically. A Provider and all its Sources use one format. Local
 Providers take priority over plugin and bundled Providers as a whole; choose
 a distinct Provider ID unless replacing an existing Provider is intended.
 For an explicitly requested bundled contribution, use `registry/src` and
-regenerate its artifacts; never edit `registry.json` or `sources.js` directly.
+follow that repository's local validation workflow and regenerate its import index;
+never edit generated `sources.js` directly.
 
 Keep the configuration focused:
 

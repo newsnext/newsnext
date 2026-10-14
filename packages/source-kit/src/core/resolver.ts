@@ -22,7 +22,6 @@ import type { CompiledSourceRequest } from "./request-templates"
 import type { CompiledSourceTemplate } from "./template"
 
 import { createDefu } from "defu"
-import { isSourcePresentationMetadataKey, isSourcePresentationType } from "../types"
 import {
   parseSourceBaseUrl,
   resolveSourceLoaderResultUrls,
@@ -134,15 +133,11 @@ interface CompiledSourceTemplates {
   request: CompiledSourceRequest | undefined
 }
 
-export function compileSourceTemplates(
+function compileSourceTemplates(
   sourceId: string,
   config: SourceConfig,
 ): CompiledSourceTemplates {
-  if (config.baseUrl !== undefined) {
-    parseSourceBaseUrl(config.baseUrl, `${sourceId}.baseUrl`)
-  }
-  validateSourceVars(config.vars, `${sourceId}.vars`)
-  validateSourceMetadata(config.metadata, `${sourceId}.metadata`)
+  validateSourceMetadataTemplates(config.metadata, `${sourceId}.metadata`)
   const annotation = compileSourceAnnotation(sourceId, config.loader.annotation)
 
   const { loader } = config
@@ -188,59 +183,17 @@ function compileSourceAnnotation(
   })
 }
 
-function validateSourceMetadata(
+function validateSourceMetadataTemplates(
   metadata: SourceConfig["metadata"],
   location: string,
 ): void {
   for (const [key, value] of Object.entries(metadata ?? {})) {
-    if (!isSourcePresentationMetadataKey(key)) {
-      throw new TypeError(`${location}.${key} is not supported`)
-    }
-    if (key === "type" && !isSourcePresentationType(value)) {
-      throw new TypeError(`${location}.type must be "list" or "ranking"`)
-    }
     if (typeof value === "string" && isTemplate(value)) {
       throw new TypeError(
         `Source templates are not allowed at ${location}.${key}; use a Radar metadata patch for dynamic values`,
       )
     }
   }
-}
-
-function validateSourceVars(
-  vars: unknown,
-  location: string,
-): void {
-  if (vars === undefined) {
-    return
-  }
-  if (!isRecord(vars)) {
-    throw new TypeError(`${location} must be an object`)
-  }
-
-  validateSourceVarValue(vars, location)
-}
-
-function validateSourceVarValue(value: unknown, location: string): void {
-  if (
-    value === null
-    || typeof value === "string"
-    || typeof value === "boolean"
-    || (typeof value === "number" && Number.isFinite(value))
-  ) {
-    return
-  }
-  if (Array.isArray(value)) {
-    value.forEach((child, index) => validateSourceVarValue(child, `${location}.${index}`))
-    return
-  }
-  if (isRecord(value)) {
-    Object.entries(value).forEach(([key, child]) => {
-      validateSourceVarValue(child, `${location}.${key}`)
-    })
-    return
-  }
-  throw new TypeError(`${location} must contain only serializable values`)
 }
 
 function validateJsonFieldExpressions(value: unknown, location: string): void {
@@ -442,9 +395,6 @@ export function resolveRuntimeSource(
   config: SourceConfig,
   provider: SourceProvider,
 ): RuntimeSource {
-  if (Object.hasOwn(config, "cache")) {
-    throw new Error(`${sourceId}.cache is not supported`)
-  }
   const templates = compileSourceTemplates(sourceId, config)
   const source = resolveSource(sourceId, config, templates)
 

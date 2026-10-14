@@ -1,6 +1,5 @@
-import type { RuntimeSource, SourceDescriptor, SourceLoader } from "../types"
-import { parseSourceDescriptor } from "@newsnext/sdk/schemas"
-import { isRecord, parseRegistrySourceId } from "../registry/validation"
+import type { RuntimeSource } from "../types"
+import { parseRegistrySourceId } from "../registry/validation"
 
 export type SourceCatalog = Record<string, RuntimeSource>
 
@@ -18,19 +17,4 @@ export function mergeSourceCatalogs(...catalogs: SourceCatalog[]): SourceCatalog
     for (const providerId of currentProviders) selectedProviders.add(providerId)
   }
   return merged
-}
-
-/** Bind an execution backend to serialized descriptors without re-resolving authoring config. */
-export function resolveSourceCatalog(
-  value: unknown,
-  createLoader: (descriptor: SourceDescriptor) => SourceLoader,
-): SourceCatalog {
-  if (!isRecord(value)) throw new TypeError("Source catalog must be an object")
-  return Object.fromEntries(Object.entries(value).map(([id, input]) => {
-    parseRegistrySourceId(id)
-    const descriptor = parseSourceDescriptor(input)
-    if (descriptor.id !== id) throw new TypeError(`Source catalog ID '${id}' does not match its descriptor`)
-    const { id: _id, ...source } = descriptor
-    return [id, { ...source, loader: createLoader(descriptor) }]
-  }))
 }

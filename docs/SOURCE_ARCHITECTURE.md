@@ -5,12 +5,12 @@ beside the implementation — linked below).
 
 ## Boundaries
 
-- `registry/`: author input (`src/`) → build (`build.ts`) →
-  generated `registry.json` + `sources.js`. Registry is the only writer of
-  generated artifacts.
+- `registry/`: original Provider definitions (`src/`) → validated import index
+  (`sources.js`). Build emits no merged or serialized Source configurations.
 - `packages/source-kit/`: expansion (`registry/*`), a host-supplied Source
   catalog (`runtime/catalog.ts`), execution (`core/`, `utils/request/`).
-- Hosts supply Provider catalogs and bind execution backends to descriptors.
+- Hosts supply original Provider definitions; the extension resolves Sources
+  and binds local callback references to their execution backend.
   Local modules and bundled modules share the same Source contract; origin
   does not change LiveCard, parameter, permission, or snapshot semantics.
 - Action/Typed-SDK/Widget/CLI contracts belong to their packages; this doc
@@ -18,10 +18,12 @@ beside the implementation — linked below).
 
 ## Pipeline
 
-1. Build: parse → validate (`registry/validation.ts`, `parser.ts`,
-   `core/limits.ts`) → expand defaults → emit declarative sources to
-   `registry.json`, executable ones to `sources.js`. Duplicate source IDs
-   (or duplicate executable provider IDs) fail the build (`registry/build.ts`).
+1. Build: collect JSON/JavaScript Providers → validate original definitions
+   and resolve them with the runtime engine → emit only imports (`registry/build.ts`).
+   Duplicate Provider IDs fail the build. The local `registry` validate command
+   runs the same checks without writing artifacts or fetching Source data.
+   JSON and JavaScript use the same `resolveProvider` validation and resolution;
+   module callbacks are allowed only in loader `load`, `request`, and `annotation` slots.
 2. Catalog priority is standalone local Provider → plugin Provider → bundled
    Provider. A higher-priority Provider replaces the whole lower-priority
    Provider, preventing mixed identity/defaults; removal restores the next
@@ -43,7 +45,7 @@ beside the implementation — linked below).
    module Sources execute directly in the extension. Runtime code
    never executes dynamically in the extension. Local directory changes
    replace the catalog live.
-3. Resolution: `flattenProviderConfig`/`resolveProvider`
+3. Resolution: `resolveProvider`
    (`core/resolver.ts`) → `baseUrl` joins (`core/base-url.ts`) → params
    validate/coerce (`core/params.ts`) → Radar matches page → patch applies
    (`core/radar.ts`). Radar `priority` breaks equal-specificity ties only;

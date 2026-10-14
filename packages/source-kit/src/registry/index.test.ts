@@ -1,12 +1,8 @@
 import type { SourceLoaderContext, SourceRadarRule, SourceRequestRule } from "../types"
-import type { ProviderConfig, SourceConfig } from "./index"
+import type { SourceConfig } from "./index"
 import { describe, expect, it } from "vitest"
 import { createSourceFetch } from "../utils"
-import {
-  flattenProviderConfig,
-  resolveProvider,
-  resolveSourceRegistry,
-} from "./index"
+import { resolveProvider } from "./index"
 
 function createLoaderContext(): SourceLoaderContext {
   const signal = new AbortController().signal
@@ -430,7 +426,7 @@ describe("source template vars", () => {
         hosts: ["example.com"],
         url: { regex: "/users/" },
       },
-    } as unknown as SourceRadarRule]))).toThrow("match must be a structured Radar match")
+    } as unknown as SourceRadarRule]))).toThrow("radar.0.match.url")
   })
 
   it("rejects unsupported Radar locations", () => {
@@ -440,7 +436,7 @@ describe("source template vars", () => {
         hosts: ["example.com"],
         location: "fragment",
       },
-    } as unknown as SourceRadarRule]))).toThrow("match.location must be \"url\" or \"hash\"")
+    } as unknown as SourceRadarRule]))).toThrow("radar.0.match.location")
   })
 
   it("rejects Radar-side parameter validation", () => {
@@ -453,7 +449,7 @@ describe("source template vars", () => {
           params: { id: { format: "digits" } },
         }],
       },
-    } as unknown as SourceRadarRule]))).toThrow("match.paths.0 must be a Radar path")
+    } as unknown as SourceRadarRule]))).toThrow("radar.0.match.paths.0")
 
     expect(() => resolveTestSource(createSourceConfig([{
       id: "test",
@@ -461,7 +457,7 @@ describe("source template vars", () => {
         hosts: ["example.com"],
         query: { id: { format: "digits" } },
       },
-    } as unknown as SourceRadarRule]))).toThrow("match.query must be a non-empty array of unique query keys")
+    } as unknown as SourceRadarRule]))).toThrow("radar.0.match.query")
   })
 
   it("rejects unsafe parameter validation regexes", () => {
@@ -499,7 +495,7 @@ describe("source template vars", () => {
         icon: "source-icon",
       },
     } as unknown as SourceConfig)).toThrow(
-      "test:test.metadata.icon is not supported",
+      "sources.test.metadata.icon",
     )
 
     expect(() => resolveTestSource({
@@ -509,7 +505,7 @@ describe("source template vars", () => {
         color: "red",
       },
     } as unknown as SourceConfig)).toThrow(
-      "test:test.metadata.color is not supported",
+      "sources.test.metadata.color",
     )
   })
 
@@ -602,7 +598,7 @@ describe("source template vars", () => {
         id: "test",
         match: { hosts: ["example.com"] },
         priority,
-      }]))).toThrow("test:test.radar.0.priority must be a safe integer")
+      }]))).toThrow(/radar\.0\.priority/)
     },
   )
 
@@ -647,7 +643,7 @@ describe("source template vars", () => {
       ...createSourceConfig([]),
       metadata: { type: "timeline" },
     } as unknown as SourceConfig)).toThrow(
-      "test:test.metadata.type must be \"list\" or \"ranking\"",
+      "sources.test.metadata.type",
     )
 
     expect(() => resolveTestSource(createSourceConfig([{
@@ -667,7 +663,7 @@ describe("source template vars", () => {
         category: "social",
       },
     } as unknown as SourceConfig)).toThrow(
-      "test:test.metadata.category is not supported",
+      "sources.test.metadata.category",
     )
 
     expect(() => resolveTestSource(createSourceConfig([
@@ -728,42 +724,42 @@ describe("source template vars", () => {
   })
 })
 
-describe("source registry", () => {
+describe("source Provider validation", () => {
   it("requires valid provider color metadata", () => {
-    expect(() => flattenProviderConfig("test", {
+    expect(() => resolveProvider("test", {
       title: "Provider",
-      sources: {},
-    } as unknown as ProviderConfig)).toThrow(
-      "Provider \"test\" has invalid metadata",
+      sources: { latest: { loader: { type: "rss", url: "https://example.com/feed" } } },
+    })).toThrow(
+      "color",
     )
 
-    expect(() => flattenProviderConfig("test", {
+    expect(() => resolveProvider("test", {
       title: "Provider",
       color: "invalid",
-      sources: {},
-    } as unknown as ProviderConfig)).toThrow(
-      "Provider \"test\" has invalid metadata",
+      sources: { latest: { loader: { type: "rss", url: "https://example.com/feed" } } },
+    })).toThrow(
+      "color",
     )
   })
 
   it("validates provider authoring containers and IDs at runtime", () => {
-    expect(() => flattenProviderConfig("test", {
+    expect(() => resolveProvider("test", {
       title: "Provider",
       color: "blue",
       sources: {},
-    })).not.toThrow()
+    })).toThrow("Source count")
 
-    expect(() => flattenProviderConfig("test", {
+    expect(() => resolveProvider("test", {
       title: "Provider",
       category: "social",
       color: "blue",
       defaults: "invalid",
-      sources: {},
-    } as unknown as ProviderConfig)).toThrow(
-      "Provider \"test\" has invalid defaults",
+      sources: { latest: { loader: { type: "rss", url: "https://example.com/feed" } } },
+    })).toThrow(
+      "defaults",
     )
 
-    expect(() => flattenProviderConfig("test", {
+    expect(() => resolveProvider("test", {
       title: "Provider",
       category: "social",
       color: "blue",
@@ -776,7 +772,7 @@ describe("source registry", () => {
         },
       },
     })).toThrow(
-      "Provider \"test\" has invalid source ID \"invalid:id\"",
+      "invalid:id",
     )
   })
 
@@ -797,82 +793,14 @@ describe("source registry", () => {
           },
         },
       },
-    } as unknown as ProviderConfig
+    }
 
-    expect(() => flattenProviderConfig("test", provider)).toThrow(
-      "test:latest.metadata.icon is not supported",
+    expect(() => resolveProvider("test", provider)).toThrow(
+      "sources.latest.metadata.icon",
     )
   })
 
-  it("flattens provider source defaults into declarative sources", () => {
-    const registry = flattenProviderConfig("test", {
-      title: "Test Provider",
-      category: "social",
-      icon: "https://icons.folo.is/example.com",
-      color: "blue",
-      defaults: {
-        vars: {
-          endpoint: {
-            origin: "https://example.com",
-            version: "v1",
-          },
-        },
-        loader: {
-          type: "rss",
-          url: "{{ source.vars.endpoint.origin }}/default.xml",
-        },
-        metadata: {
-          home: "https://example.com",
-        },
-      },
-      sources: {
-        latest: {
-          metadata: {
-            title: "Latest",
-          },
-          vars: {
-            endpoint: {
-              optional: null,
-              version: "v2",
-            },
-          },
-          loader: {
-            url: "{{ source.vars.endpoint.origin }}/feed.xml",
-          },
-        },
-      },
-    })
-
-    expect(registry["test:latest"]?.vars).toEqual({
-      endpoint: {
-        origin: "https://example.com",
-        optional: null,
-        version: "v2",
-      },
-    })
-    expect(registry["test:latest"]?.loader).toEqual({
-      type: "rss",
-      url: "{{ source.vars.endpoint.origin }}/feed.xml",
-    })
-    expect(registry["test:latest"]?.provider).toEqual({
-      title: "Test Provider",
-      category: "social",
-      icon: "https://icons.folo.is/example.com",
-      color: "blue",
-    })
-    expect(resolveSourceRegistry(JSON.parse(JSON.stringify(registry)))["test:latest"]).toMatchObject({
-      version: 2,
-      metadata: {
-        title: "Latest",
-      },
-      provider: {
-        icon: "https://icons.folo.is/example.com",
-        color: "blue",
-      },
-    })
-  })
-
-  it("rejects invalid Source versions and removed cache configuration", () => {
+  it("rejects invalid Source versions and unknown configuration", () => {
     const createProvider = (version: unknown) => ({
       title: "Test Provider",
       color: "blue",
@@ -887,181 +815,21 @@ describe("source registry", () => {
       },
     })
 
-    expect(() => flattenProviderConfig("test", createProvider(0) as never))
-      .toThrow("test:latest.version must be a positive safe integer")
-    expect(() => flattenProviderConfig("test", createProvider(1.5) as never))
-      .toThrow("test:latest.version must be a positive safe integer")
-    expect(() => flattenProviderConfig("test", {
+    expect(() => resolveProvider("test", createProvider(0)))
+      .toThrow("version")
+    expect(() => resolveProvider("test", createProvider(1.5)))
+      .toThrow("version")
+    expect(() => resolveProvider("test", {
       ...createProvider(undefined),
       sources: {
         latest: {
-          cache: "5m",
+          unknown: true,
           loader: {
             type: "rss",
             url: "https://example.com/feed.xml",
           },
         },
       },
-    } as never)).toThrow("test:latest.cache is not supported")
-  })
-
-  it("resolves a flat registry produced from provider authoring config", () => {
-    const registry = flattenProviderConfig("test", {
-      title: "Test Provider",
-      category: "social",
-      color: "blue",
-      sources: {
-        latest: {
-          loader: {
-            type: "rss",
-            url: "https://example.com/feed.xml",
-          },
-        },
-      },
-    })
-
-    const serializedRegistry = JSON.parse(JSON.stringify(registry))
-    expect(resolveSourceRegistry(serializedRegistry)["test:latest"]).toMatchObject({
-      provider: {
-        title: "Test Provider",
-        category: "social",
-        color: "blue",
-      },
-    })
-  })
-
-  it("rejects provider containers and executable registry sources", () => {
-    expect(() => resolveSourceRegistry({
-      test: {
-        sources: {},
-      },
-    })).toThrow("Invalid registry source ID")
-
-    const invalidRegistry = {
-      "test:latest": {
-        provider: {
-          title: "Test",
-          category: "social",
-          color: "blue",
-        },
-        capabilities: {
-          network: [],
-        },
-      },
-    }
-    expect(() => resolveSourceRegistry(invalidRegistry))
-      .toThrow("uses an unsupported loader type")
-
-    expect(() => resolveSourceRegistry({
-      "test:scripted": {
-        ...invalidRegistry["test:latest"],
-        loader: {
-          type: "rss",
-          url: "https://example.com/feed.xml",
-        },
-        radar: [{
-          id: "scripted",
-          match: { hosts: ["example.com"] },
-          patch: { params: { value: () => "not-json" } },
-        }],
-      },
-    })).toThrow("must contain only JSON values")
-  })
-
-  it("rejects inconsistent provider metadata across flat sources", () => {
-    const first = flattenProviderConfig("test", {
-      title: "Provider",
-      category: "social",
-      color: "blue",
-      sources: {
-        first: {
-          loader: {
-            type: "rss",
-            url: "https://example.com/first.xml",
-          },
-        },
-      },
-    })
-    const second = flattenProviderConfig("test", {
-      title: "Provider",
-      category: "forum",
-      color: "blue",
-      sources: {
-        second: {
-          loader: {
-            type: "rss",
-            url: "https://example.com/second.xml",
-          },
-        },
-      },
-    })
-
-    const registry = JSON.parse(JSON.stringify({ ...first, ...second }))
-    expect(() => resolveSourceRegistry(registry))
-      .toThrow("Provider \"test\" has inconsistent metadata")
-  })
-
-  it("rejects invalid display and provider metadata in flat registries", () => {
-    expect(() => resolveSourceRegistry({
-      "test:latest": {
-        provider: {
-          title: "Test",
-          category: "social",
-          color: "not-a-color",
-        },
-        loader: {
-          type: "rss",
-          url: "https://example.com/feed.xml",
-        },
-      },
-    })).toThrow("Registry source \"test:latest\" has invalid provider metadata")
-
-    expect(() => resolveSourceRegistry({
-      "test:latest": {
-        provider: {
-          title: "Test",
-          category: "invalid",
-          color: "blue",
-        },
-        loader: {
-          type: "rss",
-          url: "https://example.com/feed.xml",
-        },
-      },
-    })).toThrow("Registry source \"test:latest\" has invalid provider metadata")
-  })
-
-  it("rejects request rules for undeclared network hosts", () => {
-    expect(() => resolveSourceRegistry({
-      "test:latest": {
-        provider: {
-          title: "Test",
-          category: "social",
-          color: "blue",
-        },
-        loader: {
-          type: "rss",
-          url: "https://example.com/feed.xml",
-        },
-        requestRules: [
-          {
-            action: {
-              type: "modifyHeaders",
-              requestHeaders: [
-                {
-                  header: "Referer",
-                  operation: "set",
-                  value: "https://example.com/",
-                },
-              ],
-            },
-            condition: {
-              requestDomains: ["other.example"],
-              resourceTypes: ["xmlhttprequest"],
-            },
-          },
-        ],
-      },
-    })).toThrow("uses undeclared domain")
+    })).toThrow("sources.latest.unknown")
   })
 })

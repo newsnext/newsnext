@@ -1,8 +1,6 @@
-import type { ProviderConfig } from "@newsnext/source-kit/registry"
 import type { SourceCatalog } from "@newsnext/source-kit/runtime"
-import bundledSourceRegistry from "@newsnext/registry" with { type: "json" }
-import { resolveSources } from "@newsnext/registry/sources"
-import { resolveProvider, validateJsonSourceManifest } from "@newsnext/source-kit/registry"
+import { resolveSources } from "@newsnext/registry"
+import { resolveProvider } from "@newsnext/source-kit/registry"
 import { configureSourceCatalog, mergeSourceCatalogs } from "@newsnext/source-kit/runtime"
 import { emitBackgroundEvent } from "./background-events"
 import { bindLocalSourceProvider, createLocalSourceLoader } from "./local-source-runner"
@@ -13,28 +11,31 @@ let localCatalog: SourceCatalog = {}
 let bundledCatalog: SourceCatalog | undefined
 
 async function loadSourceCatalog(): Promise<SourceCatalog> {
-  bundledCatalog ??= resolveSources(bundledSourceRegistry)
+  bundledCatalog ??= resolveSources()
   // Local standalone/plugin precedence is already resolved by the connected host.
   return mergeSourceCatalogs(localCatalog, bundledCatalog)
 }
 
 function resolveLocalProvider(providerId: string, value: unknown): SourceCatalog {
-  if (!value || typeof value !== "object" || !("kind" in value)) throw new Error("Invalid local Source provider")
-  if (value.kind === "module" && "provider" in value && "revision" in value && typeof value.revision === "string") {
-    const revision = value.revision
-    const { provider, requiresSession } = bindLocalSourceProvider(value.provider)
-    const resolved = resolveProvider(providerId, provider)
-    return Object.fromEntries(Object.entries(resolved.sources).map(([key, source]) => {
-      const id = `${providerId}:${key}`
-      return [id, requiresSession(key) ? { ...source, loader: createLocalSourceLoader(id, revision, source.loader) } : source]
-    }))
+  if (!value || typeof value !== "object" || !("kind" in value) || !("provider" in value)) {
+    throw new Error("Invalid local Source provider")
   }
-  if (value.kind === "declarative" && "provider" in value) {
-    validateJsonSourceManifest(value.provider, `Source provider '${providerId}'`)
-    const provider = resolveProvider(providerId, value.provider as ProviderConfig)
-    return Object.fromEntries(Object.entries(provider.sources).map(([key, source]) => [`${providerId}:${key}`, source]))
+  let provider: unknown = value.provider
+  let session: { revision: string, requiresSession: (key: string) => boolean } | undefined
+  if (value.kind === "module" && "revision" in value && typeof value.revision === "string") {
+    const bound = bindLocalSourceProvider(provider)
+    provider = bound.provider
+    session = { revision: value.revision, requiresSession: bound.requiresSession }
+  } else if (value.kind !== "declarative") {
+    throw new Error("Unsupported local Source provider")
   }
-  throw new Error("Unsupported local Source provider")
+  const resolved = resolveProvider(providerId, provider)
+  return Object.fromEntries(Object.entries(resolved.sources).map(([key, source]) => {
+    const id = `${providerId}:${key}`
+    return [id, session?.requiresSession(key)
+      ? { ...source, loader: createLocalSourceLoader(id, session.revision, source.loader) }
+      : source]
+  }))
 }
 
 export function setLocalSourceProviders(providers: Record<string, unknown>): void {
