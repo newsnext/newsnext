@@ -22,5 +22,5 @@ export default defineConfig({
   target: "node22",
   dts: { eager: true },
   outExtensions: () => ({ js: ".js", dts: ".d.ts" }),
-  deps: { alwaysBundle: ["@newsnext/shared", "@newsnext/date-parser"] },
+  deps: { alwaysBundle: [/^@newsnext\/(?:shared|date-parser)(?:\/|$)/] },
 })
