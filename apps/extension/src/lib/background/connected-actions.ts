@@ -1,7 +1,7 @@
 import type { FetchResponse } from "@newsnext/sdk/models"
 import type { SourcePermissionTarget } from "../source/permissions"
 import type { ConnectedFetchInput } from "./background-actions"
-import { createSourceFetch } from "@newsnext/source-kit/utils"
+import { createSourceFetch } from "@newsnext/sdk/source/core"
 import { getPermissionRequestForSource } from "../source/permissions"
 import { requestCliPermission } from "./cli-permission"
 

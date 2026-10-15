@@ -1,5 +1,5 @@
 import type { RadarPageParam } from "./matcher"
-import { resolveRadarPageParamValue } from "@newsnext/source-kit/core"
+import { resolveRadarPageParamValue } from "@newsnext/sdk/source/core"
 
 /** URL parameters use the scan URL and never require page script access. */
 export function resolveRadarUrlParamValues(

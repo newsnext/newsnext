@@ -1,5 +1,5 @@
 import { parseZhihuColumn, parseZhihuFollowing, ZHIHU_ORIGIN } from "./shared.js"
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "知乎",
   category: "forum",

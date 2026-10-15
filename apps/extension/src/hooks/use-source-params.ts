@@ -1,6 +1,6 @@
-import type { SourceParamSchema } from "@newsnext/source-kit/types"
+import type { SourceParamSchema } from "@newsnext/sdk/models"
 import type { SourceParamValues } from "@/lib/source"
-import { validateSourceParamPatch } from "@newsnext/source-kit/core"
+import { validateSourceParamPatch } from "@newsnext/sdk/source/core"
 import { useCallback, useState } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 import { sanitizeSourceParamPatch } from "@/lib/source"

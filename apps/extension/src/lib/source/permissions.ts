@@ -1,8 +1,4 @@
-import type {
-  SourceDescriptor,
-  SourceParamSchema,
-  SourceProvider,
-} from "@newsnext/source-kit/types"
+import type { SourceDescriptor, SourceParamSchema, SourceProvider } from "@newsnext/sdk/models"
 import type { OptionalSourcePermission } from "./permission-constants"
 import { browser } from "#imports"
 import { getHostPermissionOrigins } from "./host-permissions"

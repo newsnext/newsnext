@@ -1,7 +1,7 @@
 import type { LiveCard } from "../source"
 import type { BackgroundActionContext } from "./background-actions"
 import type { RankingHistoryQuery, RankingPosition } from "./ranking-history"
-import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
+import { loadSourceDescriptors } from "@newsnext/sdk/source/runtime"
 import { readLiveCardSnapshotResponse, writeLiveCardSnapshot } from "../source/source-snapshot"
 import {
   mutateApplicationData,

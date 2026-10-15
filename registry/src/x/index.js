@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 import { LOCATION_OPTIONS } from "./locations.js"
 import { createXLoggedInHeaders, entriesToNewsItems, formatXAnnotation, getTimelineEntries, getXUserTimelineUrl, HOME_LATEST_TIMELINE_QUERY_ID, HOME_LATEST_TIMELINE_URL, LIST_LATEST_TWEETS_URL, normalizeXSearchUrl, PLACE_TRENDS_URL, sortNewsItemsByNewest, USER_BY_SCREEN_NAME_URL, X_CSRF_TOKEN_SECRET_KEY, X_ORIGIN, X_TIMELINE_COUNT, X_TIMELINE_FEATURES, X_USER_FEATURES } from "./utils.js"
 
@@ -132,7 +132,7 @@ const capabilities = {
   network: ["x.com", "api.x.com"],
   cookies: ["x.com"],
 }
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "X",
   category: "social",

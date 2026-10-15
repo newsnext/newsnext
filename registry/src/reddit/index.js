@@ -127,7 +127,7 @@ const subredditRadarRules = [
     },
   })),
 ]
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "Reddit",
   category: "forum",

@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 
 export const X_ORIGIN = "https://x.com"
 export function formatXAnnotation(item) {

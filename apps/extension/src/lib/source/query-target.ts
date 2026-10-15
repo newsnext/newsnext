@@ -1,5 +1,5 @@
-import type { RuntimeSource } from "@newsnext/source-kit/types"
-import { normalizeSourceParams } from "@newsnext/source-kit/runtime"
+import type { RuntimeSource } from "@newsnext/sdk/source"
+import { normalizeSourceParams } from "@newsnext/sdk/source/runtime"
 import { hashKey } from "@tanstack/react-query"
 
 export const SOURCE_QUERY_KEY = ["source"] as const

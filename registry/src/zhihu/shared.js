@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 
 export const ZHIHU_ORIGIN = "https://www.zhihu.com"
 function contentId(value) {

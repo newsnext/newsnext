@@ -1,4 +1,4 @@
-import type { SourceParamSchema } from "@newsnext/source-kit/types"
+import type { SourceParamSchema } from "@newsnext/sdk/models"
 import { Button } from "@newsnext/ui/components/button"
 import {
   Select,

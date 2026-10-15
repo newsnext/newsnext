@@ -1,4 +1,4 @@
-import type { SourcePresentationType } from "@newsnext/source-kit/types"
+import type { SourcePresentationType } from "@newsnext/sdk/models"
 import type { NewsItem } from "@/typings/source"
 
 export type NewsItemsPresentation

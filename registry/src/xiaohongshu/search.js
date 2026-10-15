@@ -1,4 +1,4 @@
-import { parseRelativeDate } from "@newsnext/source-kit/utils"
+import { parseRelativeDate } from "@newsnext/sdk/source"
 import { parseXiaohongshuNoteTimestamp, sortXiaohongshuItemsByNewest, xiaohongshuFeedItemToNewsItem } from "./shared.js"
 import { signXiaohongshuPost } from "./signing.js"
 

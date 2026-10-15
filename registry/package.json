@@ -14,10 +14,9 @@
     "validate": "bun run build.ts --check"
   },
   "dependencies": {
-    "@newsnext/source-kit": "workspace:*"
+    "@newsnext/sdk": "workspace:*"
   },
   "devDependencies": {
-    "@newsnext/sdk": "workspace:*",
     "@newsnext/tsconfigs": "workspace:*"
   }
 }

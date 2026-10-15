@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0-alpha.1",
   "private": true,
-  "description": "Typed programmatic access to the NewsNext CLI",
+  "description": "Shared NewsNext contracts, clients, and Source tooling",
   "license": "MPL-2.0",
   "exports": {
     ".": {
@@ -17,7 +17,12 @@
     "./extension": "./src/extension.ts",
     "./widget": "./src/widget.ts",
     "./analytics": "./src/analytics.ts",
-    "./native-protocol": "./src/native-protocol.ts"
+    "./native-protocol": "./src/native-protocol.ts",
+    "./source": "./src/source/index.ts",
+    "./source/core": "./src/source/core/index.ts",
+    "./source/registry": "./src/source/registry/index.ts",
+    "./source/runtime": "./src/source/runtime/index.ts",
+    "./source/local": "./src/source/local/index.ts"
   },
   "files": [
     "src"
@@ -26,18 +31,35 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "bun scripts/generate-json-schemas.ts --check && tsdown && bun scripts/generate-actions-reference.ts && bun scripts/build-sdk-bundle.ts",
+    "build": "bun scripts/generate-json-schemas.ts --check && tsdown && bun scripts/generate-actions-reference.ts && bun scripts/build-runtime-bundles.ts",
     "schemas:generate": "bun scripts/generate-json-schemas.ts",
     "schemas:check": "bun scripts/generate-json-schemas.ts --check",
     "typecheck": "bun check"
   },
   "dependencies": {
+    "@newsnext/date-parser": "workspace:*",
+    "@newsnext/shared": "workspace:*",
+    "@smithy/md5-js": "^4.5.2",
     "@wxt-dev/browser": "^0.2.9",
-    "typebox": "^1.3.29"
+    "cheerio": "catalog:",
+    "defu": "catalog:",
+    "entities": "^7.0.1",
+    "fast-xml-parser": "^5.11.1",
+    "jmespath": "^0.16.0",
+    "ky": "catalog:",
+    "p-queue": "^9.3.3",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-stringify": "^11.0.0",
+    "typebox": "^1.3.29",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
-    "@newsnext/shared": "workspace:*",
+    "@newsnext/tsconfigs": "workspace:*",
+    "@types/jmespath": "^0.15.2",
     "@types/node": "catalog:",
+    "domhandler": "^5.0.3",
     "tsdown": "^0.23.0",
     "vitest": "catalog:"
   }

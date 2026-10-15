@@ -7,14 +7,23 @@ beside the implementation — linked below).
 
 - `registry/`: original Provider definitions (`src/`) → validated import index
   (`sources.js`). Build emits no merged or serialized Source configurations.
-- `packages/source-kit/`: expansion (`registry/*`), a host-supplied Source
-  catalog (`runtime/catalog.ts`), execution (`core/`, `utils/request/`).
+- `packages/sdk/src/models/` and `schemas/` own shared contracts; they do not
+  import the Source engine or client transports.
+- `packages/sdk/src/source/`: portable author helpers (`@newsnext/sdk/source`),
+  Provider expansion (`source/registry`), a host-supplied catalog
+  (`source/runtime`), execution (`source/core`), and the local
+  callback bridge (`source/local`). Contracts are imported from `sdk/models`;
+  `sdk/source` exports only author helpers and Source execution types. These
+  are separate SDK entry points; importing the client does not load the
+  Source engine.
 - Hosts supply original Provider definitions; the extension resolves Sources
   and binds local callback references to their execution backend.
   Local modules and bundled modules share the same Source contract; origin
   does not change LiveCard, parameter, permission, or snapshot semantics.
-- Action/Typed-SDK/Widget/CLI contracts belong to their packages; this doc
-  covers source flow only.
+- The CLI embeds separate client and local Source bundles. The local bundle
+  contains author helpers and callback serialization, not Provider resolution
+  or the full Source engine. Hosts own browser permissions, secrets, transport,
+  and module sessions; the SDK does not choose an execution host.
 
 ## Pipeline
 
@@ -36,7 +45,8 @@ beside the implementation — linked below).
    `ctx.fetch` and `ctx.updateSecrets` return to the originating browser,
    retaining its session, network capabilities, request queue, and secret
    storage. Node.js 24+ loads local ESM modules directly, resolving
-   `@newsnext/source-kit` to the embedded library; no local Source compilation
+   `@newsnext/sdk/source` to the embedded author helpers. Engine subpaths are
+   host-only imports; no local Source compilation
    is needed. Function references are bound to a catalog revision. One local
    task holds the module session while the extension runs the pipeline and
    calls its functions; annotations receive normalized items in one batch.
@@ -46,7 +56,7 @@ beside the implementation — linked below).
    never executes dynamically in the extension. Local directory changes
    replace the catalog live.
 3. Resolution: `resolveProvider`
-   (`core/resolver.ts`) → `baseUrl` joins (`core/base-url.ts`) → params
+   (`registry/provider.ts`, `core/resolver.ts`) → `baseUrl` joins (`core/base-url.ts`) → params
    validate/coerce (`core/params.ts`) → Radar matches page → patch applies
    (`core/radar.ts`). Radar `priority` breaks equal-specificity ties only;
    it never overrides a structurally more specific match.

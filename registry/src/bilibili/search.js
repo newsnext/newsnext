@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 import { bilibiliApiCapabilities, normalizeBilibiliUrl, parseBilibiliNumericCount, parseBilibiliTimestamp } from "./shared.js"
 import { getBilibiliWbiKeys, signBilibiliWbiParams } from "./wbi.js"
 

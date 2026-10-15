@@ -1,5 +1,5 @@
 import type { NewsItem } from "@/typings/source"
-import { validateNewsItems } from "@newsnext/source-kit/core"
+import { validateNewsItems } from "@newsnext/sdk/source/core"
 
 export function parseWidgetItems(value: unknown): NewsItem[] {
   if (!value || typeof value !== "object" || !("items" in value) || !Array.isArray(value.items)) {

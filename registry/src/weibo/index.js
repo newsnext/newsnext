@@ -43,7 +43,7 @@ const weiboSearchRequestRules = [
     },
   },
 ]
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "微博",
   category: "social",

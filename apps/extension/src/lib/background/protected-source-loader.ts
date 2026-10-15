@@ -1,7 +1,7 @@
 import type { SourceLoadResponse, SourceLoadResult } from "../source/load-result"
 import type { SourceSnapshotTarget } from "../source/source-snapshot"
 import type { SourceLoaderInvoker } from "./source-loader-invoker"
-import { prepareSourceRequest } from "@newsnext/source-kit/runtime"
+import { prepareSourceRequest } from "@newsnext/sdk/source/runtime"
 import { toLoadedSourceDescriptor } from "../source/load-result"
 import { isSourceRequestProtected } from "../source/query-policy"
 import { getSourceQueryHash } from "../source/query-target"

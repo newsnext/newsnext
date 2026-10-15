@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 
 const INITIAL_STATE_MARKER = "window.__INITIAL_STATE__="
 const SCRIPT_END = "</script>"

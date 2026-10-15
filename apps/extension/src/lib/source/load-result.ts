@@ -1,5 +1,5 @@
 import type { SourceLoaderResult, SourceLoadResponse, SourceLoadResult } from "@newsnext/sdk/models"
-import type { RuntimeSource } from "@newsnext/source-kit/types"
+import type { RuntimeSource } from "@newsnext/sdk/source"
 
 export type { LoadedSourceDescriptor, SourceLoadResponse, SourceLoadResult } from "@newsnext/sdk/models"
 

@@ -34,7 +34,6 @@
         "@newsnext/registry": "workspace:*",
         "@newsnext/sdk": "workspace:*",
         "@newsnext/shared": "workspace:*",
-        "@newsnext/source-kit": "workspace:*",
         "@newsnext/ui": "workspace:*",
         "@tanstack/react-hotkeys": "catalog:",
         "@tanstack/react-query": "catalog:",
@@ -148,30 +147,10 @@
       "name": "@newsnext/sdk",
       "version": "1.0.0-alpha.1",
       "dependencies": {
-        "@wxt-dev/browser": "^0.2.9",
-        "typebox": "^1.3.29",
-      },
-      "devDependencies": {
-        "@newsnext/shared": "workspace:*",
-        "@types/node": "catalog:",
-        "tsdown": "^0.23.0",
-        "vitest": "catalog:",
-      },
-    },
-    "packages/shared": {
-      "name": "@newsnext/shared",
-      "devDependencies": {
-        "@newsnext/tsconfigs": "workspace:*",
-        "vitest": "catalog:",
-      },
-    },
-    "packages/source-kit": {
-      "name": "@newsnext/source-kit",
-      "dependencies": {
         "@newsnext/date-parser": "workspace:*",
-        "@newsnext/sdk": "workspace:*",
         "@newsnext/shared": "workspace:*",
         "@smithy/md5-js": "^4.5.2",
+        "@wxt-dev/browser": "^0.2.9",
         "cheerio": "catalog:",
         "defu": "catalog:",
         "entities": "^7.0.1",
@@ -183,13 +162,22 @@
         "rehype-remark": "^10.0.1",
         "remark-gfm": "^4.0.1",
         "remark-stringify": "^11.0.0",
+        "typebox": "^1.3.29",
         "unified": "^11.0.5",
       },
       "devDependencies": {
         "@newsnext/tsconfigs": "workspace:*",
         "@types/jmespath": "^0.15.2",
-        "@wxt-dev/browser": "catalog:",
+        "@types/node": "catalog:",
         "domhandler": "^5.0.3",
+        "tsdown": "^0.23.0",
+        "vitest": "catalog:",
+      },
+    },
+    "packages/shared": {
+      "name": "@newsnext/shared",
+      "devDependencies": {
+        "@newsnext/tsconfigs": "workspace:*",
         "vitest": "catalog:",
       },
     },
@@ -222,10 +210,9 @@
     "registry": {
       "name": "@newsnext/registry",
       "dependencies": {
-        "@newsnext/source-kit": "workspace:*",
+        "@newsnext/sdk": "workspace:*",
       },
       "devDependencies": {
-        "@newsnext/sdk": "workspace:*",
         "@newsnext/tsconfigs": "workspace:*",
       },
     },
@@ -577,8 +564,6 @@
     "@newsnext/sdk": ["@newsnext/sdk@workspace:packages/sdk"],
 
     "@newsnext/shared": ["@newsnext/shared@workspace:packages/shared"],
-
-    "@newsnext/source-kit": ["@newsnext/source-kit@workspace:packages/source-kit"],
 
     "@newsnext/tsconfigs": ["@newsnext/tsconfigs@workspace:packages/tsconfigs"],
 

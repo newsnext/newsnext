@@ -1,5 +1,4 @@
-import type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, LiveWidget } from "@newsnext/sdk/models"
-import type { SourceDescriptor } from "@newsnext/source-kit/types"
+import type { ApplicationBoardContext, ApplicationNextLayerLiveWidget, ApplicationNowLayerLiveCard, LiveWidget, SourceDescriptor } from "@newsnext/sdk/models"
 import type { Board } from "../board"
 import type { LiveCard } from "../source/live-cards"
 import type { ApplicationData } from "./data"

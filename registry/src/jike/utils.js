@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 
 export const JIKE_WEB_ORIGIN = "https://web.okjike.com"
 const JIKE_SHARE_ORIGIN = "https://m.okjike.com"

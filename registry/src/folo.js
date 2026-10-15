@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 
 async function loadFoloEntries(payload, context) {
   const isList = "listId" in payload
@@ -49,7 +49,7 @@ async function loadFoloEntries(payload, context) {
   }
 }
 const FOLO_ANNOTATION_TEMPLATE = "{{ scope.item.author.name ?? scope.item.attributes.source }}"
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "Folo",
   category: "news",

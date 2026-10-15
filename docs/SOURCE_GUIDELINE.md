@@ -3,25 +3,25 @@
 Field semantics live as TSDoc on the types — links below.
 
 - Provider/source shape: `ProviderConfig` in
-  `packages/source-kit/src/registry/types.ts` (provider identity in
+  `packages/sdk/src/source/registry/types.ts` (provider identity in
   `sdk/src/models/source.ts:SourceProvider`).
 - Params (text/url/number/switch/select/multiselect + validation):
-  `sdk/src/models/params.ts`, `source-kit/src/core/params.ts`.
-- Loaders: JSON (`source-kit/src/core/loaders/json.ts`), HTML (`.../html.ts`),
+  `sdk/src/models/params.ts`, `sdk/src/source/core/params.ts`.
+- Loaders: JSON (`sdk/src/source/core/loaders/json.ts`), HTML (`.../html.ts`),
   RSS (`.../rss.ts`), custom (`types/source.ts:SourceLoaderDefinition`).
   Output contract (`SourceLoaderOutput`, 50 items max, order preserved):
   `sdk/src/models/source.ts`.
-- Templates/filters/scope: `source-kit/src/core/template.ts`. Request
-  options/rules: `source-kit/src/utils/request/*`, `core/base-url.ts`,
+- Templates/filters/scope: `sdk/src/source/core/template.ts`. Request
+  options/rules: `sdk/src/source/utils/request/*`, `core/base-url.ts`,
   `core/capabilities.ts`. Radar matching: `sdk/src/models/source.ts:SourceRadarRule`
-  + `source-kit/src/core/radar.ts`. Validation/errors:
+  + `sdk/src/source/core/radar.ts`. Validation/errors:
   `registry/validation.ts`, `core/source-error.ts`, `core/limits.ts`.
 - Internals: see `SOURCE_ARCHITECTURE.md`. Real examples: `registry/src/*`.
 
 ## Quick start
 
 ```js
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "Example",
   color: "blue",

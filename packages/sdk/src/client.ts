@@ -84,7 +84,7 @@ export class NewsNextClient {
   }
 
   fetch(input: FetchInput, options: ActionOptions = {}): Promise<FetchResult> {
-    // HTTP defaults mirror the Source runtime (see source-kit request config):
+    // HTTP defaults mirror the Source runtime (see source request config):
     // 10s per-attempt timeout, shared retry policy, HTTP errors reject.
     // The RPC timeout stays at the SDK default so retries/backoff can complete.
     const timeoutOverride = options.timeoutMs ?? this.options.timeoutMs

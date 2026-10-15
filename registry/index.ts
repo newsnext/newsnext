@@ -1,5 +1,5 @@
-import type { RuntimeSource } from "@newsnext/source-kit/types"
-import { resolveProvider } from "@newsnext/source-kit/registry"
+import type { RuntimeSource } from "@newsnext/sdk/source"
+import { resolveProvider } from "@newsnext/sdk/source/registry"
 import providers from "./sources.js"
 
 export function resolveSources(): Record<string, RuntimeSource> {

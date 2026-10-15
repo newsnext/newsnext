@@ -1,5 +1,6 @@
-import type { RuntimeSource, SourceSecretDefinition, SourceSecrets } from "@newsnext/source-kit/types"
-import { SourceLoginRequiredError } from "@newsnext/source-kit/core"
+import type { SourceSecretDefinition, SourceSecrets } from "@newsnext/sdk/models"
+import type { RuntimeSource } from "@newsnext/sdk/source"
+import { SourceLoginRequiredError } from "@newsnext/sdk/source"
 import { storage } from "wxt/utils/storage"
 import { browser } from "#imports"
 import { PERSISTED_DATA_SLICES } from "../settings/persisted-data"

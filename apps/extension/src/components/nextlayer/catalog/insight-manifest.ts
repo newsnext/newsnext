@@ -1,8 +1,7 @@
-import type { InsightWordCloudView } from "@newsnext/sdk/models"
+import type { InsightWordCloudView, SourceParamSchemaMap } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
-import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import { isThemeColor, MIN_WIDGET_WIDTH, parseInsightWordCloudView } from "@newsnext/sdk/models"
-import { validateSourceParamDefinitions } from "@newsnext/source-kit/core"
+import { validateSourceParamDefinitions } from "@newsnext/sdk/source/core"
 
 /** `insight.json.view` selector. The daemon selects a custom view when `index.html` exists. */
 export type InsightView

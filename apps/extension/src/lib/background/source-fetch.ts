@@ -1,7 +1,6 @@
 import type { BackgroundSourceFetchResult } from "@newsnext/sdk/models"
-import type { SourceFetch } from "@newsnext/source-kit/types"
-import { assertNetworkCapability } from "@newsnext/source-kit/core"
-import { createSourceFetch } from "@newsnext/source-kit/utils"
+import type { SourceFetch } from "@newsnext/sdk/source"
+import { assertNetworkCapability, createSourceFetch } from "@newsnext/sdk/source/core"
 
 export type { BackgroundSourceFetchResult } from "@newsnext/sdk/models"
 

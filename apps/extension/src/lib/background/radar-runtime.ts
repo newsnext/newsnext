@@ -1,6 +1,6 @@
-import type { SourceDescriptor } from "@newsnext/source-kit/types"
+import type { SourceDescriptor } from "@newsnext/sdk/models"
 import type { RadarMatcher } from "@/lib/radar"
-import { getSourceCatalogRevision, loadSourceDescriptors } from "@newsnext/source-kit/runtime"
+import { getSourceCatalogRevision, loadSourceDescriptors } from "@newsnext/sdk/source/runtime"
 import { createRadarMatcher } from "@/lib/radar"
 
 export interface RadarRuntime {

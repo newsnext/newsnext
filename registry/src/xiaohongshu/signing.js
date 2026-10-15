@@ -1,4 +1,4 @@
-import { md5 } from "@newsnext/source-kit/utils"
+import { md5 } from "@newsnext/sdk/source"
 /*
  * Browser-safe adaptation of lucasygu/redbook's XYS signer.
  *

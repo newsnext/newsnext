@@ -1,11 +1,11 @@
-import type { SourceDescriptor } from "@newsnext/source-kit/types"
+import type { SourceDescriptor } from "@newsnext/sdk/models"
 import type {
   ApplicationData,
   ApplicationMutationDependencies,
   ApplicationMutationExecution,
   ApplicationMutationResult,
 } from "../application"
-import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
+import { loadSourceDescriptors } from "@newsnext/sdk/source/runtime"
 import { browser } from "#imports"
 import { ensureApplicationDataIntegrity } from "../application"
 import { i18next } from "../i18n"

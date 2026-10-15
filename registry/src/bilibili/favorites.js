@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 import { BILIBILI_WEB_LOCATION, bilibiliApiCapabilities, normalizeBilibiliUrl } from "./shared.js"
 
 const FAVORITE_FOLDERS_URL = "https://api.bilibili.com/x/v3/fav/folder/created/list-all"

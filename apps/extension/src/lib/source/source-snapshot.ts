@@ -1,4 +1,4 @@
-import type { SourceLoaderResult } from "@newsnext/source-kit/types"
+import type { SourceLoaderResult } from "@newsnext/sdk/models"
 import type { SourceLoadResponse, SourceLoadResult } from "./load-result"
 import Dexie from "dexie"
 import { getSourceQueryHash } from "./query-target"

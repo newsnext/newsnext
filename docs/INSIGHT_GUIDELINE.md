@@ -77,7 +77,7 @@ schedule. Placement metadata/params overrides apply via
   are half-LiveCard grid units; layout clamping lives in `grid/widget-layout.ts`.
 - Source-style `params` schema, loaders, templates, and query semantics:
   [Source Authoring Guide](SOURCE_GUIDELINE.md) and
-  `@newsnext/source-kit` / `packages/sdk` TSDoc.
+  `@newsnext/sdk/source` / `packages/sdk` TSDoc.
 - Host lifecycle and layering:
   [Application Architecture](APPLICATION_ARCHITECTURE.md#layers-and-widgets).
 

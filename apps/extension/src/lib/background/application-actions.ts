@@ -1,4 +1,4 @@
-import type { SourceDescriptor } from "@newsnext/source-kit/types"
+import type { SourceDescriptor } from "@newsnext/sdk/models"
 import type {
   ApplicationData,
   ApplicationMutationDependencies,
@@ -6,7 +6,7 @@ import type {
   ApplicationMutationResult,
 } from "../application"
 import { actionContracts } from "@newsnext/sdk/actions"
-import { loadSourceDescriptor } from "@newsnext/source-kit/runtime"
+import { loadSourceDescriptor } from "@newsnext/sdk/source/runtime"
 import {
   configureLiveCardMutation,
   configureLiveWidgetMutation,

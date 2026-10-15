@@ -1,7 +1,7 @@
 import type { SourceLoadResponse } from "./load-result"
 import {
   normalizeSourceParams,
-} from "@newsnext/source-kit/runtime"
+} from "@newsnext/sdk/source/runtime"
 import { createId } from "@/lib/id"
 import { actions } from "../actions"
 import { loadSourceDescriptor } from "./registry"

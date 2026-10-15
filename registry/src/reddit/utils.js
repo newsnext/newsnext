@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 
 export const REDDIT_ORIGIN = "https://www.reddit.com"
 function normalizeRedditImageUrl(url) {

@@ -1,4 +1,4 @@
-import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
+import type { SourceParamSchemaMap } from "@newsnext/sdk/models"
 import { useState } from "react"
 import { ParamField } from "@/components/card-shell/settings/param-field"
 import { CardSettingsSection } from "@/components/card-shell/settings/settings-section"

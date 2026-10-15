@@ -4,11 +4,6 @@ import process from "node:process"
 import { defineConfig } from "vitest/config"
 
 const rootDir = process.cwd()
-const workspaceAliasRoots = [
-  "apps/extension",
-  "packages/source-kit",
-]
-
 export default defineConfig({
   plugins: [
     {
@@ -20,12 +15,11 @@ export default defineConfig({
         }
 
         const normalizedImporter = importer.split(path.sep).join("/")
-        const workspace = workspaceAliasRoots.find(root => normalizedImporter.includes(`/${root}/`))
-        if (!workspace) {
+        if (!normalizedImporter.includes("/apps/extension/")) {
           return null
         }
 
-        const resolved = path.resolve(rootDir, workspace, "src", source.slice(2))
+        const resolved = path.resolve(rootDir, "apps/extension/src", source.slice(2))
         return resolveExistingModule(resolved)
       },
     },
@@ -37,7 +31,6 @@ export default defineConfig({
       "packages/cmdk/**/*.{test,spec}.{ts,tsx}",
       "packages/date-parser/**/*.{test,spec}.{ts,tsx}",
       "packages/shared/**/*.{test,spec}.{ts,tsx}",
-      "packages/source-kit/**/*.{test,spec}.{ts,tsx}",
       "packages/sdk/**/*.{test,spec}.{ts,tsx}",
       "packages/ui/**/*.{test,spec}.{ts,tsx}",
     ],

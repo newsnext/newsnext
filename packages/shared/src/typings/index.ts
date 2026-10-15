@@ -5,5 +5,4 @@
 export * from "./api.ts"
 export * from "./color.ts"
 export * from "./items.ts"
-export * from "./source.ts"
 export * from "./util.ts"

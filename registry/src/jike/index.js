@@ -1,4 +1,4 @@
-import { isJwtExpired } from "@newsnext/source-kit/utils"
+import { isJwtExpired } from "@newsnext/sdk/source"
 import { buildJikeTopicFeedUrl, createJikeHeaders, formatJikeAnnotation, formatJikeAuthorAnnotation, getJikeUserAvatar, isPinnedPersonalUpdate, JIKE_WEB_ORIGIN, jikePostsToNewsItems } from "./utils.js"
 
 export { jikePostsToNewsItems } from "./utils.js"
@@ -178,7 +178,7 @@ function createJikeSearchRadar(id, sortBy) {
     },
   }
 }
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "即刻",
   category: "social",

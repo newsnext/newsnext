@@ -1,4 +1,4 @@
-import type { SourceParamSchema } from "@newsnext/source-kit/types"
+import type { SourceParamSchema } from "@newsnext/sdk/models"
 
 export type SourceParamValues = Record<string, unknown>
 

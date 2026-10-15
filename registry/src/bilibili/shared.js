@@ -1,4 +1,4 @@
-import { fieldTransforms } from "@newsnext/source-kit/core"
+import { fieldTransforms } from "@newsnext/sdk/source"
 
 export const BILIBILI_WEB_LOCATION = "333.1365"
 const BILIBILI_TIMEZONE = "Asia/Shanghai"

@@ -1,4 +1,4 @@
-import { md5 } from "@newsnext/source-kit/utils"
+import { md5 } from "@newsnext/sdk/source"
 
 const WBI_NAV_URL = "https://api.bilibili.com/x/web-interface/nav"
 const WBI_MIXIN_KEY_ENC_TAB = [

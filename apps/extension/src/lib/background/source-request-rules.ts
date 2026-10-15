@@ -1,5 +1,5 @@
-import type { SourceRequestRule } from "@newsnext/source-kit/types"
-import { loadSourceDescriptors } from "@newsnext/source-kit/runtime"
+import type { SourceRequestRule } from "@newsnext/sdk/models"
+import { loadSourceDescriptors } from "@newsnext/sdk/source/runtime"
 import { browser } from "#imports"
 
 const MANAGED_RULE_ID_START = 1_000_000_000

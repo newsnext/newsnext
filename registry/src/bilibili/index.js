@@ -3,7 +3,7 @@ import { favoriteSources } from "./favorites.js"
 import { rankingSource } from "./ranking.js"
 import { searchSource } from "./search.js"
 import { upSources } from "./up.js"
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "哔哩哔哩",
   category: "social",

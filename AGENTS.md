@@ -34,7 +34,7 @@ Newsnext is a personalized web crawler that runs inside a browser extension (mv3
 - `docs/SOURCE_GUIDELINE.md` keeps only author-facing entry points and one
   minimal end-to-end example. Field semantics, loader options, template filters,
   and Radar matching belong as TSDoc on the corresponding types in
-  `packages/source-kit` / `packages/sdk`.
+  `packages/sdk`.
 - `docs/SOURCE_ARCHITECTURE.md` keeps only the cross-package pipeline and
   security boundaries. Per-loader normalization and single-function behavior
   belong as comments in the implementation.

@@ -1,6 +1,5 @@
-import type { WidgetMetadata } from "@newsnext/sdk/models"
+import type { SourceParamSchemaMap, WidgetMetadata } from "@newsnext/sdk/models"
 import type { Color } from "@newsnext/shared/types"
-import type { SourceParamSchemaMap } from "@newsnext/source-kit/types"
 import type { ReactNode, RefObject } from "react"
 import type { InsightAppearanceSnapshot } from "./catalog/insight-appearance"
 import type { InsightCatalog, InsightView } from "./catalog/insight-manifest"

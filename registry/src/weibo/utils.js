@@ -1,5 +1,4 @@
-import { fieldTransforms, SourceLoginRequiredError } from "@newsnext/source-kit/core"
-import { parseHtml } from "@newsnext/source-kit/utils"
+import { fieldTransforms, parseHtml, SourceLoginRequiredError } from "@newsnext/sdk/source"
 
 const WEIBO_ORIGIN = "https://weibo.com"
 const WEIBO_MOBILE_ORIGIN = "https://m.weibo.cn"

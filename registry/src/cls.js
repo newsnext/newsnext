@@ -1,4 +1,4 @@
-import { md5, myCrypto } from "@newsnext/source-kit/utils"
+import { md5, myCrypto } from "@newsnext/sdk/source"
 
 const CLS_BASE_PARAMS = {
   appName: "CailianpressWeb",
@@ -14,7 +14,7 @@ async function getSearchParams(moreParams = {}) {
   searchParams.append("sign", await md5(await myCrypto(searchParams.toString(), "SHA-1")))
   return searchParams
 }
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "财联社",
   category: "finance",

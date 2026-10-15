@@ -1,11 +1,9 @@
-import type {
-  RuntimeSource,
-} from "@newsnext/source-kit/types"
+import type { RuntimeSource } from "@newsnext/sdk/source"
 import type { SourceLoadResult } from "../source/load-result"
 import type { BackgroundSourceFetchResult } from "./source-fetch"
 import {
   parseSourceId,
-} from "@newsnext/source-kit/runtime"
+} from "@newsnext/sdk/source/runtime"
 import { toSourceLoadResult } from "../source/load-result"
 import { createBackgroundSourceFetch } from "./source-fetch"
 import { resolveSourceSecrets, updateSourceSecrets } from "./source-secrets"

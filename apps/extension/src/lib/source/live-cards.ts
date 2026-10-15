@@ -1,9 +1,6 @@
-import type { LiveCard, LiveCardPatch } from "@newsnext/sdk/models"
-import type {
-  SourcePresentationMetadata,
-} from "@newsnext/source-kit/types"
+import type { LiveCard, LiveCardPatch, SourcePresentationMetadata } from "@newsnext/sdk/models"
 import type { LiveCardViewModel, SourceDescriptor } from "@/typings/source"
-import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/source-kit"
+import { SOURCE_PRESENTATION_METADATA_KEYS } from "@newsnext/sdk/models"
 import { pick } from "es-toolkit"
 import { mergeSourceParamValues } from "./params"
 

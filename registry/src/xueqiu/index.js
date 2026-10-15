@@ -3,7 +3,7 @@ import { marketSources } from "./market.js"
 import { rankingSources } from "./rankings.js"
 import { XUEQIU_ORIGIN } from "./shared.js"
 import { stockSources } from "./stocks.js"
-/** @type {import("@newsnext/source-kit/registry").ProviderConfig} */
+/** @type {import("@newsnext/sdk/source/registry").ProviderConfig} */
 export default {
   title: "雪球",
   category: "finance",
