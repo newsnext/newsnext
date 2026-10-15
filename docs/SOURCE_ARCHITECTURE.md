@@ -55,6 +55,12 @@ beside the implementation — linked below).
    module Sources execute directly in the extension. Runtime code
    never executes dynamically in the extension. Local directory changes
    replace the catalog live.
+   Local callbacks may explicitly use native `globalThis.fetch`, an imported ky
+   client, or `ctx.fetch.extend({ fetch: globalThis.fetch })` to request from the
+   module host. These requests use the host network without browser cookies,
+   request rules, permission enforcement, or the browser queue. The extended
+   context client retains ky's execution signal, retry, and timeout policy;
+   direct clients must bind `ctx.signal` themselves.
 3. Resolution: `resolveProvider`
    (`registry/provider.ts`, `core/resolver.ts`) → `baseUrl` joins (`core/base-url.ts`) → params
    validate/coerce (`core/params.ts`) → Radar matches page → patch applies
@@ -103,4 +109,6 @@ beside the implementation — linked below).
   (`core/template-policy.ts`). Registry capped (2MB, ≤1000 sources).
 - Extension enforces permissions for both standard loaders and local callback
   requests through the bound browser context.
+  Local JavaScript modules are trusted host code; direct host networking is
+  outside that browser permission boundary.
   Never log secret values.

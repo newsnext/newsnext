@@ -85,7 +85,7 @@ scraping with CSS selectors and ranking metadata). Copy the closest example to
 the local `sources/<provider-id>.json`, substitute a real stream, and run it after
 every meaningful change with the script under **Validate Sources**.
 
-Use JavaScript custom loaders as a last resort. They must use `context.fetch`, declare network and cookie capabilities, propagate cancellation, return `{ items, metadata? }`, and normalize multiple response shapes through shared helpers. Collect required website values through declared cookie or local-storage secrets; do not expose or commit actual secret values.
+Use JavaScript custom loaders as a last resort. Use `context.fetch` for browser requests and declare network and cookie capabilities. Local callbacks may also request directly from the module host as shown below. Propagate cancellation, return `{ items, metadata? }`, and normalize multiple response shapes through shared helpers. Collect required website values through declared cookie or local-storage secrets; do not expose or commit actual secret values.
 
 ## Investigate requests
 
@@ -142,8 +142,25 @@ return { execution: result.execution, itemCount: result.data.length, sample: res
 
 Local JSON and JavaScript use this same validation path; no registry build is
 needed. JavaScript loads directly as ESM in the Node.js 24+ module host, while `ctx.fetch` and
-`ctx.updateSecrets` use the originating browser. Use these context APIs;
-`window`, `document`, and extension APIs are unavailable in the local worker.
+`ctx.updateSecrets` use the originating browser.
+Local JavaScript callbacks may opt into host-side networking per request:
+
+```js
+// Run ky locally, keeping the context's execution signal, retries, and timeout.
+const localFetch = ctx.fetch.extend({ fetch: globalThis.fetch })
+const data = await localFetch.get(url).json()
+
+// Or use the runtime's native fetch and pass cancellation explicitly.
+const response = await globalThis.fetch(url, { signal: ctx.signal })
+```
+
+Host-side requests use the CLI runtime's network environment. They do not use
+browser cookies, extension request rules, browser capability checks, or the
+browser host queue. Keep `ctx.fetch` for requests that need browser login state.
+An independently imported ky client also runs locally; bind `ctx.signal` to it.
+This choice applies to local JavaScript callbacks; declarative loaders and
+bundled Sources still execute in the extension. `window`, `document`, and
+extension APIs are unavailable in the local worker.
 Registered Sources use their Provider's stored secrets automatically.
 For a temporary JSON preview, pass `providerId`, `provider`, and an unqualified
 `sourceId` to `client.run`; `useProviderSecrets: true` opts that preview into the

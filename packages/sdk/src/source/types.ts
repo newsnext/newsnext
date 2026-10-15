@@ -11,7 +11,13 @@ export interface SourceAnnotationFormatter {
 }
 
 export interface SourceLoaderContext {
-  // WHY: always use this bound client; ky.create()/global fetch would lose the abort signal, host queue, and capability checks.
+  /**
+   * Browser-backed ky client with the execution signal, request queue, and capability checks.
+   * Local JavaScript callbacks may use `fetch.extend({ fetch: globalThis.fetch })`
+   * for host-side networking while retaining ky's execution signal, retries, and timeout.
+   * Native requests do not use browser cookies, request rules, or network permission checks.
+   * Direct global fetch is also supported locally; pass `signal` explicitly.
+   */
   fetch: SourceFetch
   secrets?: SourceSecrets
   signal: AbortSignal
