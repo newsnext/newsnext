@@ -3,5 +3,5 @@ export type {
   SourceConfig,
   SourceConfigDefaults,
 } from "../core/resolver"
-export { resolveProvider } from "./provider"
+export { resolveProvider, resolveSources } from "./provider"
 export type { ProviderConfig } from "./types"

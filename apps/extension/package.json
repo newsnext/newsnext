@@ -21,7 +21,6 @@
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
-    "@newsnext/registry": "workspace:*",
     "@newsnext/sdk": "workspace:*",
     "@newsnext/shared": "workspace:*",
     "@newsnext/ui": "workspace:*",

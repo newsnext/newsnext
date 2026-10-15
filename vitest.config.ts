@@ -5,6 +5,12 @@ import { defineConfig } from "vitest/config"
 
 const rootDir = process.cwd()
 export default defineConfig({
+  resolve: {
+    alias: [
+      { find: "@registry", replacement: path.resolve(rootDir, "../registry") },
+      { find: /^@newsnext\/sdk\/source$/, replacement: path.resolve(rootDir, "packages/sdk/src/source/index.ts") },
+    ],
+  },
   plugins: [
     {
       name: "newsnext:workspace-local-alias",

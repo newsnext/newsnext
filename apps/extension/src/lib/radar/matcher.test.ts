@@ -1,9 +1,32 @@
-import { resolveSources } from "@newsnext/registry"
+import { resolveSources } from "@newsnext/sdk/source/registry"
+import bilibili from "@registry/sources/bilibili/index.js"
+import folo from "@registry/sources/folo.js"
+import github from "@registry/sources/github.json"
+import jike from "@registry/sources/jike/index.js"
+import neteaseMusic from "@registry/sources/netease-music.json"
+import newsnow from "@registry/sources/newsnow.json"
+import reddit from "@registry/sources/reddit/index.js"
+import weibo from "@registry/sources/weibo/index.js"
+import x from "@registry/sources/x/index.js"
+import xueqiu from "@registry/sources/xueqiu/index.js"
+import zhihu from "@registry/sources/zhihu/index.js"
 import { describe, expect, it } from "vitest"
 import { createRadarMatcher, getRadarSuggestions } from "./matcher"
 import { getRadarPageQueryKey } from "./page-query"
 
-const sourceDescriptors = Object.entries(resolveSources())
+const sourceDescriptors = Object.entries(resolveSources({
+  bilibili,
+  folo,
+  github,
+  jike,
+  "netease-music": neteaseMusic,
+  newsnow,
+  reddit,
+  weibo,
+  x,
+  xueqiu,
+  zhihu,
+}))
   .map(([id, source]) => {
     const { loader: _loader, ...descriptor } = source
     return { ...descriptor, id }

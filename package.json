@@ -7,8 +7,7 @@
   "workspaces": {
     "packages": [
       "apps/*",
-      "packages/*",
-      "registry"
+      "packages/*"
     ],
     "catalog": {
       "@atlaskit/pragmatic-drag-and-drop": "^3.1.0",
@@ -46,6 +45,7 @@
     }
   },
   "scripts": {
+    "registry:validate": "bun scripts/validate-registry.ts",
     "lint": "bun run --bun eslint .",
     "test": "vitest",
     "typecheck": "bun --filter=@newsnext/sdk run schemas:check && bun check -b",
@@ -67,6 +67,7 @@
     "@antfu/eslint-config": "^9.5.1",
     "@eslint-react/eslint-plugin": "^5.27.1",
     "@eslint/js": "^10.0.1",
+    "@newsnext/sdk": "workspace:*",
     "@newsnext/tsconfigs": "workspace:*",
     "@types/bun": "^1.4.3",
     "@types/node": "catalog:",

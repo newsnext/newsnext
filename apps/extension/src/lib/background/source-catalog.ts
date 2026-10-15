@@ -1,8 +1,8 @@
 import type { SourceCatalog } from "@newsnext/sdk/source/runtime"
-import { resolveSources } from "@newsnext/registry"
 import { resolveProvider } from "@newsnext/sdk/source/registry"
 import { configureSourceCatalog, mergeSourceCatalogs } from "@newsnext/sdk/source/runtime"
 import { emitBackgroundEvent } from "./background-events"
+import { resolveBundledSources } from "./bundled-sources"
 import { bindLocalSourceProvider, createLocalSourceLoader } from "./local-source-runner"
 import { refreshActiveRadarBadge } from "./radar-badge"
 import { syncConfiguredSourceRequestRules } from "./source-request-rules"
@@ -11,7 +11,7 @@ let localCatalog: SourceCatalog = {}
 let bundledCatalog: SourceCatalog | undefined
 
 async function loadSourceCatalog(): Promise<SourceCatalog> {
-  bundledCatalog ??= resolveSources()
+  bundledCatalog ??= resolveBundledSources()
   // Local standalone/plugin precedence is already resolved by the connected host.
   return mergeSourceCatalogs(localCatalog, bundledCatalog)
 }

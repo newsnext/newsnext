@@ -5,8 +5,12 @@ beside the implementation — linked below).
 
 ## Boundaries
 
-- `registry/`: original Provider definitions (`src/`) → validated import index
-  (`sources.js`). Build emits no merged or serialized Source configurations.
+- `../registry/` is the separate public `newsnext/registry` checkout. Its root
+  `sources/` directory contains original Provider definitions and is read directly
+  by registry hosts. The extension explicitly imports its bundled
+  Providers in `apps/extension/src/lib/background/bundled-sources.ts`; registry
+  membership alone never bundles a Provider. Registry is a resource repository,
+  with validation and resolution owned by web and its SDK. No generated index is required.
 - `packages/sdk/src/models/` and `schemas/` own shared contracts; they do not
   import the Source engine or client transports.
 - `packages/sdk/src/source/`: portable author helpers (`@newsnext/sdk/source`),
@@ -27,14 +31,15 @@ beside the implementation — linked below).
 
 ## Pipeline
 
-1. Build: collect JSON/JavaScript Providers → validate original definitions
-   and resolve them with the runtime engine → emit only imports (`registry/build.ts`).
-   Duplicate Provider IDs fail the build. The local `registry` validate command
-   runs the same checks without writing artifacts or fetching Source data.
+1. Discovery: scan `sources/` for JSON/JavaScript Providers → validate original
+   definitions and resolve them with the runtime engine.
+   Duplicate Provider IDs fail validation. The web `registry:validate` command
+   (`scripts/validate-registry.ts`) checks definitions without writing artifacts
+   or fetching Source data.
    JSON and JavaScript use the same `resolveProvider` validation and resolution;
    module callbacks are allowed only in loader `load`, `request`, and `annotation` slots.
-2. Catalog priority is standalone local Provider → plugin Provider → bundled
-   Provider. A higher-priority Provider replaces the whole lower-priority
+2. Catalog priority is standalone local Provider → plugin Provider → registered
+   registry Provider → extension bundled Provider. A higher-priority Provider replaces the whole lower-priority
    Provider, preventing mixed identity/defaults; removal restores the next
    available Provider. Invalid definitions are ignored. Local JSON resolves
    declaratively; local modules publish serializable Provider definitions with

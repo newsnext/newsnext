@@ -3,6 +3,9 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "paths": {
+      "@registry/*": [
+        "../../../registry/*"
+      ],
       "#/*": [
         "./src/*"
       ],

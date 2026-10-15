@@ -2,9 +2,8 @@
 
 Use this workflow when creating or changing a NewsNext Source. Create local
 Providers by default in `~/.config/newsnext/sources/` (`newsnext.dev` for the
-development CLI, or `NEWSNEXT_SOURCES_PATH` when configured). A web repository
-checkout is only needed when explicitly contributing a bundled Provider to
-`registry/src`. Local and bundled Providers share the same authoring contract.
+development CLI, or `NEWSNEXT_SOURCES_PATH` when configured). A registry checkout
+is only needed when explicitly contributing a shared Provider. Local and bundled Providers share the same authoring contract.
 
 ## Start from the user's intent
 
@@ -39,14 +38,15 @@ JavaScript Providers use standard ESM with explicit relative file extensions (`.
 
 ## Reference existing Sources first
 
-Before writing a new provider, inspect the installed examples and, when a web
-checkout is available, `registry/src`. Select the closest existing Source by
+Before writing a new provider, inspect the installed examples and, when a registry
+checkout is available, its `sources/` directory. Paths below are relative to
+the registry checkout. Select the closest existing Source by
 transport, parameter shape, metadata, and discovery behavior. Prefer JSON examples:
 
-- RSS: `registry/src/rss.json`
-- Public JSON API: `registry/src/36kr.json` or `registry/src/netease-music.json`
-- HTML: `registry/src/hackernews.json`, `registry/src/github.json`, or `registry/src/telegram.json`
-- Authenticated custom API, only when required: `registry/src/x/index.js`, `registry/src/jike/index.js`, or the relevant nested JavaScript provider
+- RSS: `sources/rss.json`
+- Public JSON API: `sources/36kr.json` or `sources/netease-music.json`
+- HTML: `sources/hackernews.json`, `sources/github.json`, or `sources/telegram.json`
+- Authenticated custom API, only when required: `sources/x/index.js`, `sources/jike/index.js`, or the relevant nested JavaScript provider
 
 Reuse established shapes and field semantics; do not copy provider-specific selectors, tokens, headers, or workarounds. Search for a closer example when the repository has evolved beyond this list.
 
@@ -56,11 +56,12 @@ For a new declarative Provider, create `sources/<provider-id>.json`. For
 JavaScript, use `sources/<provider-id>.js`, `.mjs`, or
 `sources/<provider-id>/index.js` / `index.mjs` with imported helpers. Changes
 reload automatically. A Provider and all its Sources use one format. Local
-Providers take priority over plugin and bundled Providers as a whole; choose
+Providers take priority over plugin, registered registry, and extension bundled
+Providers as a whole; choose
 a distinct Provider ID unless replacing an existing Provider is intended.
-For an explicitly requested bundled contribution, use `registry/src` and
-follow that repository's local validation workflow and regenerate its import index;
-never edit generated `sources.js` directly.
+For an explicitly requested registry contribution, use its `sources/` directory and
+follow that repository's local validation workflow. Bundling into a host requires
+an explicit import in that host.
 
 Keep the configuration focused:
 
@@ -189,8 +190,8 @@ If Radar is present, revisit every matching page and meaningful URL or in-page s
 ## Finish repository verification
 
 After live behavior is correct, run the applicable syntax/type checks and diff
-hygiene checks. For bundled contributions, regenerate registry artifacts with
-the repository's build and follow its `AGENTS.md`. Then:
+hygiene checks. For registry contributions, run the repository's Source validation
+and follow its `AGENTS.md`. Then:
 
 1. Confirm no credentials, session identifiers, transient request headers, or debug response data entered the diff.
 2. Report the chosen transport, the existing Source used as a model, live

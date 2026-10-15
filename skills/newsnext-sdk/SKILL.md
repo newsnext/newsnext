@@ -18,6 +18,13 @@ the final value for JSON output, and use `await import(...)` for modules. Read
 Call `client.actions.<domain>.<method>` using the signatures in the generated
 [Actions catalog](references/actions.md). Use `history.export()` for complete
 observations.
+The `official` registry is preconfigured at `https://github.com/newsnext/registry`;
+use `newsnext registry update official` to download and register all its Sources.
+Use `newsnext registry add NAME URL_OR_DIRECTORY` to enable another registry's Sources,
+`newsnext registry update [NAME]` to refresh Sources, and
+`newsnext registry remove NAME` to remove a registry and its Sources.
+Use `newsnext registry list NAME` to discover available Source Providers.
+Each registry must have a root `sources/` directory, which the CLI reads directly.
 Use `client.plugins.list()` to discover locally installed packages and
 `client.plugins.actions()` / `client.plugins.execute()` for their Actions; see
 [SDK reference](references/sdk.md#local-capabilities-and-plugins). When authoring

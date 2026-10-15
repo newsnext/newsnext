@@ -33,6 +33,7 @@ export default defineConfig({
   outDir: "dist",
   alias: {
     "@": path.resolve(__dirname, "src"),
+    "@registry": path.resolve(__dirname, "../../../registry"),
     // The browser entry uses document; Markdown also runs in the background worker.
     "decode-named-character-reference": createRequire(import.meta.url).resolve("decode-named-character-reference"),
   },
@@ -144,6 +145,12 @@ export default defineConfig({
   },
   vite: () => {
     return {
+      resolve: {
+        alias: [{
+          find: /^@newsnext\/sdk\/source$/,
+          replacement: path.resolve(__dirname, "../../packages/sdk/src/source/index.ts"),
+        }],
+      },
       plugins: [
         tailwindcss(),
         TurboConsole(),

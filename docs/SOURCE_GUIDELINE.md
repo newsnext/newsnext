@@ -16,7 +16,7 @@ Field semantics live as TSDoc on the types — links below.
   `core/capabilities.ts`. Radar matching: `sdk/src/models/source.ts:SourceRadarRule`
   + `sdk/src/source/core/radar.ts`. Validation/errors:
   `registry/validation.ts`, `core/source-error.ts`, `core/limits.ts`.
-- Internals: see `SOURCE_ARCHITECTURE.md`. Real examples: `registry/src/*`.
+- Internals: see `SOURCE_ARCHITECTURE.md`. Real examples: `../registry/sources/*`.
 
 ## Quick start
 
@@ -42,9 +42,10 @@ export default {
 
 - JSON for declarative loaders, JavaScript for custom loaders/helpers.
   Filename (or parent dir of nested `index.js`) becomes the provider ID;
-  one provider uses one format. Never edit the generated `registry/sources.js` import index.
-  Validate locally with `bun --filter=@newsnext/registry run validate`;
-  build refreshes the index with `bun --filter=@newsnext/registry run build`.
+  one provider uses one format.
+  Validate locally with `bun run registry:validate`; no registry build is required.
+  Bundling is opt-in: add explicit imports to
+  `apps/extension/src/lib/background/bundled-sources.ts`.
 - Source IDs are `<provider>:<source>`.
 
 ## Local sources

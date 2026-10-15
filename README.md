@@ -20,3 +20,12 @@ The next official version of [ourongxing/newsnow](https://github.com/ourongxing/
 The browser extension works on its own. Use it with the CLI and SDK for the full
 experience. The CLI is currently closed source, but will be open-sourced when
 the time is right.
+
+The public [registry](https://github.com/newsnext/registry) contains Source
+Providers. Clone it beside this checkout before building
+the extension. It contains resources and has no package dependencies:
+
+```sh
+git clone https://github.com/newsnext/registry.git ../registry
+bun install
+```

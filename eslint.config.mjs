@@ -15,8 +15,6 @@ export default antfu(
       "apps/landing/src/routeTree.gen.ts",
       "public/**",
       "packages/sdk/src/protocol/**",
-      "registry/sources.js",
-      "registry/sources.d.ts",
     ],
     rules: {
       "antfu/curly": "error",
@@ -28,7 +26,7 @@ export default antfu(
   {
     name: "newsnext/command-line-scripts",
     files: [
-      "registry/build.ts",
+      "scripts/**/*.ts",
       "packages/ui/scripts/**/*.ts",
     ],
     rules: {
@@ -47,7 +45,7 @@ export default antfu(
     name: "newsnext/esm-top-level-await",
     files: [
       "**/*.{test,spec}.{js,ts,tsx}",
-      "registry/build.ts",
+      "scripts/**/*.ts",
     ],
     rules: {
       "antfu/no-top-level-await": "off",

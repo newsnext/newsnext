@@ -1,11 +1,21 @@
 import type { SourceProvider } from "../../models/index.js"
 import type { SourceConfig } from "../core/resolver"
-import type { ProviderDefinition } from "../types"
+import type { ProviderDefinition, RuntimeSource } from "../types"
 import type { ProviderConfig } from "./types"
 import { firstJsonSchemaIssue, sourceProviderSchema } from "../../schemas/index.js"
 import { assignSourceDefaults, mergeSourceVars, resolveRuntimeSource } from "../core/resolver"
 import { serializeLocalProvider } from "../local/provider"
 import { isRecord, isStructuredLoaderType, isValidIdSegment, parseRegistrySourceId } from "./validation"
+
+/** Resolve only the Providers explicitly supplied by the host. */
+export function resolveSources(providers: Record<string, unknown>): Record<string, RuntimeSource> {
+  return Object.fromEntries(
+    Object.entries(providers).flatMap(([providerId, config]) => (
+      Object.entries(resolveProvider(providerId, config).sources)
+        .map(([sourceId, source]) => [`${providerId}:${sourceId}`, source])
+    )),
+  )
+}
 
 /** Validate original definitions and resolve JSON and module Providers through the same engine. */
 export function resolveProvider(providerId: string, value: unknown): ProviderDefinition {
