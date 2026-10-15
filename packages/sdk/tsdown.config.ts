@@ -16,6 +16,8 @@ export default defineConfig({
     "schemas/index": "src/schemas/index.ts",
     "native-protocol": "src/native-protocol.ts",
     "action/index": "src/action/index.ts",
+    "action/client": "src/action/client.ts",
+    "action/events": "src/action/events.ts",
   },
   target: "node22",
   dts: { eager: true },

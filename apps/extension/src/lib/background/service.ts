@@ -1,17 +1,8 @@
-import type { ProxyServiceKey } from "@webext-core/proxy-service"
 import type { BackgroundActionDependencies } from "./action-context"
-import type { BackgroundActionService } from "./action-service"
+import type { BackgroundService } from "./contract"
 import type { BackgroundDiagnosticsService } from "./diagnostics-service"
 import { createBackgroundActionService } from "./action-service"
 import { createBackgroundDiagnosticsService } from "./diagnostics-service"
-
-export interface BackgroundService {
-  action: BackgroundActionService
-  diagnostics: BackgroundDiagnosticsService
-  rankingHistory: BackgroundActionDependencies["rankingHistory"]
-}
-
-export const BACKGROUND_SERVICE_KEY = "newsnext-background-service" as ProxyServiceKey<BackgroundService>
 
 const unavailableDiagnosticsService: BackgroundDiagnosticsService = {
   clearActions: rejectBackgroundDiagnostics,

@@ -2,12 +2,13 @@ import { registerService } from "@webext-core/proxy-service"
 import { i18n } from "#i18n"
 import { browser, defineBackground } from "#imports"
 import { openAppTab } from "@/lib/app-tab"
+import { BACKGROUND_SERVICE_KEY } from "@/lib/background/contract"
 import {
   backgroundActionDependencies,
   registerNativeIntegration,
 } from "@/lib/background/native-integration"
 import { registerRadarBadge } from "@/lib/background/radar-badge"
-import { BACKGROUND_SERVICE_KEY, createBackgroundService } from "@/lib/background/service"
+import { createBackgroundService } from "@/lib/background/service"
 import { registerSourceCatalog } from "@/lib/background/source-catalog"
 
 const APP_MENU_ID = "app"

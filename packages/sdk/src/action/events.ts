@@ -1,5 +1,6 @@
+import type { Static } from "typebox"
 import { Type } from "typebox"
-import { defineEventContract } from "./definition.js"
+import { createEventCatalog, defineEventContract } from "./definition.js"
 import { EmptyObject } from "./schema.js"
 
 // Background-to-UI broadcasts. Payloads stay empty signals: receivers re-pull
@@ -40,9 +41,11 @@ const sourceCatalogChangedEvent = defineEventContract({
   payload: EmptyObject,
 })
 
-export const backgroundEventContracts = [
+export const eventContracts = createEventCatalog([
   nativeIntegrationStatusChangedEvent,
   nativeIntegrationLogsChangedEvent,
   diagnosticsChangedEvent,
   sourceCatalogChangedEvent,
-] as const
+])
+export type AllEventName = keyof typeof eventContracts
+export type EventPayload<Name extends AllEventName> = Static<typeof eventContracts[Name]["payload"]>

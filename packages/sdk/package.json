@@ -5,6 +5,7 @@
   "private": true,
   "description": "Shared NewsNext contracts, clients, and Source tooling",
   "license": "MPL-2.0",
+  "sideEffects": false,
   "exports": {
     ".": {
       "browser": "./src/widget.ts",
@@ -14,6 +15,8 @@
     "./models": "./src/models/index.ts",
     "./schemas": "./src/schemas/index.ts",
     "./actions": "./src/action/index.ts",
+    "./actions/client": "./src/action/client.ts",
+    "./actions/events": "./src/action/events.ts",
     "./extension": "./src/extension.ts",
     "./widget": "./src/widget.ts",
     "./analytics": "./src/analytics.ts",
@@ -39,7 +42,7 @@
   "dependencies": {
     "@newsnext/date-parser": "workspace:*",
     "@newsnext/shared": "workspace:*",
-    "@smithy/md5-js": "^4.5.2",
+    "@noble/hashes": "^2.4.0",
     "@wxt-dev/browser": "^0.2.9",
     "cheerio": "catalog:",
     "defu": "catalog:",

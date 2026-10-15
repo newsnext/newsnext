@@ -1,5 +1,5 @@
-import type { AllEventName, EventPayload } from "@newsnext/sdk/actions"
-import { eventContracts } from "@newsnext/sdk/actions"
+import type { AllEventName, EventPayload } from "@newsnext/sdk/actions/events"
+import { eventContracts } from "@newsnext/sdk/actions/events"
 import Value from "typebox/value"
 import { browser } from "#imports"
 

@@ -12,6 +12,7 @@ import { createBackgroundActionContext } from "../action-context"
 import { actionRegistry, executeRegisteredAction } from "../action-registry"
 import { readApplicationData } from "../application-service"
 import { emitBackgroundEvent } from "../background-events"
+import { BACKGROUND_LOGS_PORT } from "../contract"
 import { executeLocalSourceContext } from "../local-source-runner"
 import { setLocalSourceProviders } from "../source-catalog"
 import { initializeWorkerIdentity } from "../worker-identity"
@@ -149,8 +150,6 @@ function sendLogsSubscription(): void {
     })
   }
 }
-
-export const BACKGROUND_LOGS_PORT = "newsnext.background-logs.subscription"
 
 // Pushes the persisted log switch/level to the daemon.
 async function sendLogLevel(): Promise<void> {

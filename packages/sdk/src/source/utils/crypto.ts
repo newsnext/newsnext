@@ -1,12 +1,8 @@
-import { Md5 } from "@smithy/md5-js"
+import { md5 as hashMd5 } from "@noble/hashes/legacy.js"
+import { bytesToHex } from "@noble/hashes/utils.js"
 
 export async function md5(s: string): Promise<string> {
-  const hasher = new Md5()
-  hasher.update(s)
-  const result = await hasher.digest()
-  return Array.from(result)
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("")
+  return bytesToHex(hashMd5(new TextEncoder().encode(s)))
 }
 
 type Algorithm = "SHA-1" | "SHA-256" | "SHA-384" | "SHA-512"

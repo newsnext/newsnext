@@ -1,5 +1,5 @@
 import type { AllActionContract } from "@newsnext/sdk/actions"
-import { createActionsClient } from "@newsnext/sdk/actions"
+import { createActionsClient } from "@newsnext/sdk/actions/client"
 import { createBackgroundClient } from "./background"
 
 const actionService = createBackgroundClient().action

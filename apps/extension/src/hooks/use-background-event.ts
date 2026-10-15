@@ -1,4 +1,4 @@
-import type { AllEventName, EventPayload } from "@newsnext/sdk/actions"
+import type { AllEventName, EventPayload } from "@newsnext/sdk/actions/events"
 import { useEffect, useEffectEvent } from "react"
 import { browser } from "#imports"
 import {

@@ -13,7 +13,7 @@ import { useAsyncAction } from "@/hooks/use-async-action"
 import { useBackgroundEvent } from "@/hooks/use-background-event"
 import { useI18n } from "@/hooks/use-i18n"
 import { actions } from "@/lib/actions"
-import { BACKGROUND_LOGS_PORT } from "@/lib/background/native-integration"
+import { BACKGROUND_LOGS_PORT } from "@/lib/background/contract"
 import { NATIVE_INTEGRATION_PERMISSIONS } from "@/lib/background/native-integration/permission"
 import { logsEnabledAtom, logsIssuesOnlyAtom, nativeIntegrationEnabledAtom } from "@/store/settings"
 
