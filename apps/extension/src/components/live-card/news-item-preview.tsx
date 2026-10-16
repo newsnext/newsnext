@@ -15,8 +15,9 @@ import { Markdown } from "@newsnext/ui/components/markdown"
 import { ProxiedImage } from "@newsnext/ui/components/proxied-image"
 import { overlayScrollbarsRef } from "@newsnext/ui/hooks/use-overlay-scrollbars"
 import { cn } from "@newsnext/ui/lib/utils"
+import { useHotkeys } from "@tanstack/react-hotkeys"
 import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ExternalLink } from "lucide-react"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { CardAvatar } from "@/components/card-shell/card-avatar"
 import { SourceIcon } from "@/components/card-shell/source-icon"
 import { useI18n } from "@/hooks/use-i18n"
@@ -38,6 +39,10 @@ function getPictures(item: NewsItem): string[] {
   const pictures = item.content?.pictures
   if (!pictures) return []
   return Array.isArray(pictures) ? pictures : [pictures]
+}
+
+function getNextPictureIndex(index: number, offset: number, count: number): number {
+  return (Math.min(index, count - 1) + offset + count) % count
 }
 
 interface NewsItemPreviewIdentityProps {
@@ -166,13 +171,12 @@ function NewsItemPictureCarousel({
   const picture = pictures[index]
   if (!picture) return null
 
-  const setIndex = (nextIndex: number): void => {
-    const wrappedIndex = (nextIndex + pictures.length) % pictures.length
-    onIndexChange(wrappedIndex)
+  const changePicture = (offset: number): void => {
+    onIndexChange(getNextPictureIndex(index, offset, pictures.length))
   }
 
-  const previous = (): void => setIndex(index - 1)
-  const next = (): void => setIndex(index + 1)
+  const previous = (): void => changePicture(-1)
+  const next = (): void => changePicture(1)
 
   return (
     <div
@@ -183,7 +187,7 @@ function NewsItemPictureCarousel({
           : "aspect-video w-full bg-black/5 dark:bg-white/5",
       )}
       onKeyDown={(event) => {
-        if (!hasMultiplePictures) return
+        if (expanded || !hasMultiplePictures) return
         if (event.key === "ArrowLeft") {
           event.preventDefault()
           previous()
@@ -249,6 +253,8 @@ function PictureNavigationButton({
     <button
       type="button"
       aria-label={label}
+      aria-keyshortcuts={direction === "previous" ? "ArrowLeft" : "ArrowRight"}
+      title={`${label} (${direction === "previous" ? "←" : "→"})`}
       onClick={(event) => {
         event.stopPropagation()
         onClick()
@@ -294,11 +300,51 @@ export function NewsItemPreviewDialog({
 }: NewsItemPreviewDialogProps): ReactNode {
   const { t } = useI18n()
   const previewTitleRef = useRef<HTMLHeadingElement>(null)
+  const originalLinkRef = useRef<HTMLAnchorElement>(null)
+  const [dialogElement, setDialogElement] = useState<HTMLDivElement | null>(null)
   const pictures = getPictures(item)
   const { content } = item
 
   const hasMedia = pictures.length > 0
   const hasBody = Boolean(content?.markdown || content?.text)
+
+  const changePicture = (offset: number): void => {
+    onIndexChange(getNextPictureIndex(index, offset, pictures.length))
+  }
+
+  useHotkeys(
+    [
+      {
+        hotkey: "ArrowUp",
+        callback: () => onPreviousItem?.(),
+        options: { meta: { name: t("previousItem") } },
+      },
+      {
+        hotkey: "ArrowDown",
+        callback: () => onNextItem?.(),
+        options: { meta: { name: t("nextItem") } },
+      },
+      {
+        hotkey: "ArrowLeft",
+        callback: () => changePicture(-1),
+        options: { enabled: open && pictures.length > 1, meta: { name: t("previousImage") } },
+      },
+      {
+        hotkey: "ArrowRight",
+        callback: () => changePicture(1),
+        options: { enabled: open && pictures.length > 1, meta: { name: t("nextImage") } },
+      },
+      {
+        hotkey: "O",
+        callback: () => originalLinkRef.current?.click(),
+        options: { requireReset: true, meta: { name: t("openOriginal") } },
+      },
+    ],
+    {
+      target: { current: dialogElement },
+      enabled: open,
+    },
+  )
 
   return (
     <Dialog
@@ -308,6 +354,7 @@ export function NewsItemPreviewDialog({
       }}
     >
       <DialogContent
+        ref={setDialogElement}
         variant="bare"
         className="h-[calc(100dvh-3rem)] w-[calc(100%-3rem)] [text-autospace:normal] sm:max-w-6xl lg:w-[calc(100%-11rem)]"
         surfaceClassName="overflow-hidden bg-background shadow-2xl"
@@ -378,11 +425,13 @@ export function NewsItemPreviewDialog({
                   </>
                 )}
                 <a
+                  ref={originalLinkRef}
                   href={item.url}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={t("openOriginal")}
-                  title={t("openOriginal")}
+                  aria-keyshortcuts="o"
+                  title={`${t("openOriginal")} (o)`}
                   className="flex size-9 shrink-0 items-center justify-center rounded-full outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-theme-400"
                 >
                   <ExternalLink className="size-5" />
@@ -406,7 +455,8 @@ function ItemNavigationButton({ direction, label, onClick }: {
     <button
       type="button"
       aria-label={label}
-      title={label}
+      aria-keyshortcuts={direction === "previous" ? "ArrowUp" : "ArrowDown"}
+      title={`${label} (${direction === "previous" ? "↑" : "↓"})`}
       disabled={!onClick}
       onClick={onClick}
       className="flex size-9 shrink-0 items-center justify-center rounded-full outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-theme-400 disabled:pointer-events-none disabled:opacity-30"
