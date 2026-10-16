@@ -22,6 +22,7 @@ import { NativeIntegrationSettings } from "./native-integration"
 import { PermissionsSettings } from "./permissions"
 import { ShortcutsSettings } from "./shortcuts"
 import { SourceIconSettings } from "./source-icon"
+import { SourcesSettings } from "./sources"
 
 const LAST_USED_BOARD_VALUE = "__last_used__"
 
@@ -79,6 +80,7 @@ function SettingsModalContent({
       onTabChange={setActiveTab}
     >
       <TabsContent value="general"><GeneralSettings /></TabsContent>
+      <TabsContent value="sources" className="h-full min-h-0"><SourcesSettings /></TabsContent>
       <TabsContent value="cli"><NativeIntegrationSettings /></TabsContent>
       <TabsContent value="shortcuts"><ShortcutsSettings /></TabsContent>
       <TabsContent value="permissions">

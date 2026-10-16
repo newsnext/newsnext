@@ -9,6 +9,7 @@ import {
 import { PillGroupIndicator, pillGroupItemClassName } from "@newsnext/ui/components/pill-group"
 import { Tabs, TabsList, TabsTrigger } from "@newsnext/ui/components/tabs"
 import { overlayScrollbarsRef, useOverlayScrollbars } from "@newsnext/ui/hooks/use-overlay-scrollbars"
+import { cn } from "@newsnext/ui/lib/utils"
 import { useEffect, useRef } from "react"
 import { useI18n } from "@/hooks/use-i18n"
 
@@ -24,6 +25,7 @@ interface SettingsModalShellProps {
 
 const SETTINGS_TABS: Array<{ id: SettingsTabId, labelKey: StaticMessageKey }> = [
   { id: "general", labelKey: "general" },
+  { id: "sources", labelKey: "sources" },
   { id: "cli", labelKey: "integration" },
   { id: "shortcuts", labelKey: "shortcuts" },
   { id: "permissions", labelKey: "permissions" },
@@ -40,6 +42,7 @@ export function SettingsModalShell({
   const { t } = useI18n()
   const contentRef = useRef<HTMLDivElement>(null)
   const contentScrollRef = useOverlayScrollbars(contentRef)
+  const hasListScroll = activeTab === "sources"
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 })
@@ -79,7 +82,15 @@ export function SettingsModalShell({
               ))}
             </TabsList>
           </div>
-          <div ref={contentScrollRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto border-l border-border/60 py-6.5 pr-6.5 pl-4 sm:py-8.5 sm:pr-8.5 sm:pl-6">
+          <div
+            ref={hasListScroll ? contentRef : contentScrollRef}
+            className={cn(
+              "min-h-0 min-w-0 flex-1 border-l border-border/60",
+              hasListScroll
+                ? "overflow-hidden"
+                : "overflow-y-auto py-6.5 pr-6.5 pl-4 sm:py-8.5 sm:pr-8.5 sm:pl-6",
+            )}
+          >
             {children}
           </div>
         </Tabs>

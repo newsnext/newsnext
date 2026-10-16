@@ -16,7 +16,7 @@ export function AppProvider({
 }: PropsWithChildren<AppProviderProps>) {
   useBackgroundEvent("source.catalogChanged", () => {
     void queryClient.invalidateQueries({
-      predicate: query => ["source-descriptor", "source", "card"].includes(String(query.queryKey[0])),
+      predicate: query => ["source-catalog", "source-descriptor", "source", "card"].includes(String(query.queryKey[0])),
     })
   })
   useEffect(() => {

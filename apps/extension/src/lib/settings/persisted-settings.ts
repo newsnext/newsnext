@@ -10,7 +10,7 @@ import { DEFAULT_SHORTCUT_SETTINGS, normalizeShortcutSettings } from "./shortcut
 
 export const PERSISTED_SETTINGS_VERSION = 1
 
-export type SettingsTabId = "general" | "cli" | "shortcuts" | "permissions" | "data"
+export type SettingsTabId = "general" | "sources" | "cli" | "shortcuts" | "permissions" | "data"
 
 export interface PersistedSettings {
   appearance: {
@@ -121,6 +121,7 @@ export function normalizePersistedDeviceState(value: unknown): PersistedDeviceSt
 
 export function isSettingsTabId(value: unknown): value is SettingsTabId {
   return value === "general"
+    || value === "sources"
     || value === "cli"
     || value === "shortcuts"
     || value === "permissions"
