@@ -44,6 +44,16 @@ describe("persisted settings", () => {
     }).shortcuts).toEqual(DEFAULT_SHORTCUT_SETTINGS)
   })
 
+  it("discards obsolete board shortcut preferences", () => {
+    expect(normalizePersistedSettings({
+      shortcuts: { previousBoard: "Mod+H", nextBoard: null, search: "Mod+F" },
+      version: 1,
+    }).shortcuts).toEqual({
+      ...DEFAULT_SHORTCUT_SETTINGS,
+      search: "Mod+F",
+    })
+  })
+
   it("normalizes invalid device-only fields", () => {
     expect(normalizePersistedDeviceState({
       currentBoardId: 42,

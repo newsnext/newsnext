@@ -20,8 +20,6 @@ import {
 import { shortcutSettingsAtom } from "@/store/settings"
 
 const SHORTCUT_MESSAGES: Record<ShortcutId, { descriptionKey: StaticMessageKey, labelKey: StaticMessageKey }> = {
-  nextBoard: { descriptionKey: "nextBoardDescription", labelKey: "nextBoard" },
-  previousBoard: { descriptionKey: "previousBoardDescription", labelKey: "previousBoard" },
   search: { descriptionKey: "searchShortcutDescription", labelKey: "search" },
   toggleNextLayer: { descriptionKey: "toggleNextLayerDescription", labelKey: "toggleNextLayer" },
 }
@@ -44,15 +42,17 @@ export function ShortcutsSettings(): React.JSX.Element {
   const recorder = useHotkeyRecorder({
     onRecord: (hotkey) => {
       if (!editingShortcut) return
+      const boardConflict = hotkey === "ArrowLeft" ? "previousBoard" : hotkey === "ArrowRight" ? "nextBoard" : undefined
       const conflict = hotkey
         ? SHORTCUT_ORDER.find(shortcutId => (
             shortcutId !== editingShortcut && shortcuts[shortcutId] === hotkey
           ))
         : undefined
-      if (conflict) {
+      const conflictLabel = boardConflict ?? (conflict ? SHORTCUT_MESSAGES[conflict].labelKey : undefined)
+      if (conflictLabel) {
         setStatus(t("shortcutConflict", {
           hotkey: formatForDisplay(hotkey),
-          label: t(SHORTCUT_MESSAGES[conflict].labelKey),
+          label: t(conflictLabel),
         }))
         setEditingShortcut(null)
         return

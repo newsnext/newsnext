@@ -24,7 +24,6 @@ import { PhCircleDashed, PhFileArrowUp, PhPlusCircle } from "@/components/icons/
 import { useI18n } from "@/hooks/use-i18n"
 import { getAdjacentBoardId } from "@/lib/board"
 import { OpmlImportError, parseOpml } from "@/lib/opml"
-import { DEFAULT_SHORTCUT_SETTINGS, SHORTCUT_DEFINITIONS } from "@/lib/settings"
 import {
   boardsAtom,
   createBoardAtom,
@@ -32,7 +31,7 @@ import {
   deleteBoardAtom,
   updateBoardAtom,
 } from "@/store/board"
-import { currentBoardIdAtom, shortcutSettingsAtom } from "@/store/settings"
+import { currentBoardIdAtom } from "@/store/settings"
 
 const INTERACTIVE_BOARD_NAV_SELECTOR = [
   "button",
@@ -59,7 +58,6 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   const navigate = useNavigate()
   const { layer } = useSearch({ strict: false })
   const currentBoardId = useAtomValue(currentBoardIdAtom)
-  const shortcuts = useAtomValue(shortcutSettingsAtom)
   const addBoard = useSetAtom(createBoardAtom)
   const addBoardFromOpml = useSetAtom(createBoardFromOpmlAtom)
   const updateBoard = useSetAtom(updateBoardAtom)
@@ -111,24 +109,20 @@ export function BoardNav({ onNotify }: BoardNavProps) {
   useHotkeys(
     [
       {
-        hotkey: shortcuts.previousBoard ?? DEFAULT_SHORTCUT_SETTINGS.previousBoard,
+        hotkey: "ArrowLeft",
         callback: event => switchBoard(-1, event),
         options: {
-          enabled: shortcuts.previousBoard !== null,
           meta: {
-            name: SHORTCUT_DEFINITIONS.previousBoard.label,
-            description: SHORTCUT_DEFINITIONS.previousBoard.description,
+            name: t("previousBoard"),
           },
         },
       },
       {
-        hotkey: shortcuts.nextBoard ?? DEFAULT_SHORTCUT_SETTINGS.nextBoard,
+        hotkey: "ArrowRight",
         callback: event => switchBoard(1, event),
         options: {
-          enabled: shortcuts.nextBoard !== null,
           meta: {
-            name: SHORTCUT_DEFINITIONS.nextBoard.label,
-            description: SHORTCUT_DEFINITIONS.nextBoard.description,
+            name: t("nextBoard"),
           },
         },
       },
