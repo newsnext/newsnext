@@ -25,9 +25,18 @@
 
 @layer base {
   body {
-    @apply zenith-theme-400/60;
     min-height: 100svh;
     margin: 0;
+    /* Precompose the wash in sRGB to reduce low-alpha banding. */
+    background-image: radial-gradient(
+      ellipse 120% 95% at 50% -25% in srgb,
+      color-mix(in srgb, var(--color-theme-400) 14.4%, var(--background)) 0%,
+      color-mix(in srgb, var(--color-theme-400) 8.4%, var(--background)) 38%,
+      color-mix(in srgb, var(--color-theme-400) 3%, var(--background)) 64%,
+      var(--background) 88%
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 115%;
     background-attachment: fixed;
   }
 

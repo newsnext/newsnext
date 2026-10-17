@@ -39,7 +39,8 @@ Tailwind utilities. Values here are normative; code comments point back here.
   underlined repo link) + Privacy/Support separated by middle dot, links
   `min-h-8 px-2`, no brand header, no footer divider.
 - Dark mode + reduced motion throughout. Background: extension gradient SVG
-  icon, shared light/dark tokens, `zenith-theme-400/60` wash from above,
+  icon, shared light/dark tokens, 60% zenith wash from above with stops
+  precomposed against `--background` in sRGB to reduce low-alpha banding,
   `page-background.css` masked grid below, fixed to viewport on long pages.
 - Supporting pages: `max-w-2xl` column, plain headings, home link, own
   title/description/canonical URL. Shared landing footer holds Privacy +
